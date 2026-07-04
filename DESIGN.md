@@ -150,12 +150,65 @@ SEMES는 반도체 장비 회사로, 고객사(삼성전자)로부터 고객 요
 - [ ] 워크스테이션 GPU 사양 (VRAM, 전용/공용 여부) → AI 모델 크기 결정에 직결
 - [ ] 사내 Bitbucket 형태 (Server/Data Center vs Cloud) → 연동 방식(웹훅 vs 폴링) 결정
 - [ ] 사내 패키지/모델 반입 절차 (인터넷 미러 여부)
+- [ ] 사내 Oracle DB 실제 설치/반입 가능 버전 (23ai 벡터 검색 활용 가능 여부에 직결, 9.1 참고)
 
 ## 8. 향후 진행 순서 (제안)
 
 1. 오픈 이슈(GPU 사양, Bitbucket 형태) 확인
-2. AI 모듈(A, B) 프로토타입 — 소규모 모델 + 프롬프트로 실제 명세서 샘플 테스트
+2. ✅ AI 모듈(A) 프로토타입 — 소규모 모델 + 프롬프트로 실제 명세서 샘플 테스트 (진행 기록: [docs/spike-ambiguity-detector.md](docs/spike-ambiguity-detector.md))
 3. 데이터 모델/ID 체계 확정 및 Spring 백엔드 스키마 설계
 4. 프론트엔드(React) 와이어프레임
 5. Bitbucket 연동(C) 설계 확정
 6. 확장 기능(1~6) 순차 적용
+
+## 9. 기술 스택
+
+| 계층 | 언어 | 프레임워크/주요 라이브러리 |
+|---|---|---|
+| DB | - | Oracle Database (버전은 9.1 참고) |
+| 프론트엔드 | TypeScript | React + Next.js, Tailwind CSS, TanStack Query, 차트(Recharts/ECharts) |
+| 백엔드 | Java | Spring Boot (Web, Data JPA/MyBatis, Security, Scheduler) |
+| AI 추론 서버 | Python | FastAPI, python-docx, Pydantic, LLM 서빙(Ollama/llama.cpp/vLLM) |
+
+### 9.1 DB — Oracle (최신 버전 기준)
+
+- 최신 버전은 **Oracle Database 23ai**(23c의 정식 명칭, 23.4 이상). AI Vector Search(`VECTOR` 타입 + 벡터 유사도 검색)가 내장된 최신 장기지원판이다.
+- 다만 폐쇄망 특성상 사내 실제 설치 버전은 더 낮을 수 있다(예: 19c LTS가 여전히 많이 쓰임) — 반입 전 DBA팀에 현재/설치 가능 버전을 확인해야 한다 (오픈 이슈에 추가, 7번 참고).
+- 활용 포인트: 사내 버전이 23ai라면, 2번(요구사항 개정판 diff)에서 필요한 임베딩 유사도 매칭을 Oracle의 벡터 검색 기능으로 바로 처리할 수 있어 별도 벡터DB(Milvus, pgvector 등)를 폐쇄망에 추가로 반입할 필요가 없다. 19c 이하라면 이 이점은 못 쓰고 AI 서버 쪽에서 별도 임베딩 저장 방식을 마련해야 한다.
+
+### 9.2 프론트엔드
+
+- 언어: TypeScript
+- 프레임워크: React 18/19 + Next.js
+- UI: Tailwind CSS + shadcn/ui (또는 Ant Design — 사내 UI 표준이 있으면 그에 맞춤)
+- 차트: Recharts 또는 ECharts — 5번 SCCB 단계별 진행률 시각화에 사용
+- 데이터 페칭: TanStack Query (React Query)
+- 패키지 매니저: pnpm
+
+### 9.3 백엔드
+
+- 언어: Java 21 (LTS, 최소 17) — 사내 반입 가능 JDK 버전 확인 필요
+- 프레임워크: Spring Boot 3.3.x
+  - Spring Web — REST API
+  - Spring Data JPA 또는 MyBatis (국내 SI 환경에서 SQL을 직접 제어하고 싶으면 MyBatis도 고려)
+  - Spring Security — 인증/인가
+  - Spring Scheduler(`@Scheduled`) — Bitbucket 폴링(C번), 리포트 자동 생성(5번)
+- DB 드라이버: Oracle JDBC (`ojdbc11`)
+- 빌드 도구: Maven (또는 Gradle)
+- DB 마이그레이션: Flyway 또는 Liquibase
+
+### 9.4 AI 추론 서버
+
+- 언어: Python 3.11+
+- 프레임워크: FastAPI + Uvicorn
+- 문서 파싱: python-docx
+- LLM 서빙: 경량 우선 — Ollama 또는 llama.cpp (공용 워크스테이션 대응), 전용 GPU 확보 시 vLLM 고려
+- 구조화 출력 강제: Pydantic + outlines(또는 guidance)
+- 임베딩(2번 diff용): sentence-transformers, 또는 Oracle 23ai 벡터 기능으로 대체 가능 (9.1 참고)
+- 패키지 관리: Poetry 또는 pip + requirements.txt
+
+### 9.5 연동/인프라
+
+- Bitbucket 연동: Spring `WebClient`/`RestTemplate`으로 REST API 폴링
+- 컨테이너화: Docker (사내 레지스트리로 이미지 배포)
+- 리버스 프록시: Nginx (프론트/백엔드 라우팅)
