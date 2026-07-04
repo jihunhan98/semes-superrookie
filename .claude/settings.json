@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git switch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git stash*)",
+      "Bash(git tag*)",
+      "Bash(git remote -v)",
+      "Bash(git remote show*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(git merge*)",
+      "Bash(git config --get*)",
+      "Bash(git config --list*)",
+
+      "Bash(npm install*)",
+      "Bash(npm ci*)",
+      "Bash(npm run*)",
+      "Bash(npm test*)",
+      "Bash(npm list*)",
+      "Bash(npm outdated*)",
+      "Bash(npm audit*)",
+      "Bash(yarn install*)",
+      "Bash(yarn add*)",
+      "Bash(yarn run*)",
+      "Bash(yarn test*)",
+      "Bash(pnpm install*)",
+      "Bash(pnpm add*)",
+      "Bash(pnpm run*)",
+      "Bash(pnpm test*)",
+
+      "Bash(pip install*)",
+      "Bash(pip list*)",
+      "Bash(pip freeze*)",
+      "Bash(python -m venv*)",
+      "Bash(python -m pytest*)",
+      "Bash(python -m pip*)",
+      "Bash(pytest*)",
+
+      "Bash(gh repo view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh issue list*)",
+      "Bash(gh auth status*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
