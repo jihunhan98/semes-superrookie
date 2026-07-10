@@ -304,20 +304,25 @@ Content-Type: application/json
 ## 9. 향후 진행 순서 (제안)
 
 1. 표준 포맷 확정 (timestamp 시간대 등 남은 오픈 이슈 먼저 정리)
-2. Log Collector 스파이크 — Operation의 `AMR_STATUS`만으로 REST 수집 → 최소 구현, 트래픽 실측
-3. **실시간 라이브 맵 뷰(B) 먼저 구현** — `.dat` 맵 포맷 전달받는 대로 `MapLoader` + WebSocket 스트림으로 AMR 위치 실시간 표시
-4. AMR 상태 시계열(C), Job/Task 간트차트(D) 추가 — 실시간 기본 + 시간 범위 조회 옵션
-5. 같은 맵 컴포넌트에 시간 슬라이더를 얹어 리플레이(E) 완성
-6. 나머지 확장 기능(1~5) 순차 적용
+2. ✅ **실시간 모니터 스파이크 완료** — Spring Boot(Java 21) 더미 시뮬레이터 + 웹 화면으로 "표준 envelope 로그만으로 화면 전체가 그려진다"는 것 검증. 코드: [log-visualizer-spike/](log-visualizer-spike/), 진행 기록: [docs/spike-log-visualizer.md](docs/spike-log-visualizer.md)
+3. 시뮬레이터를 실제 모듈들의 `POST /api/logs` 전송으로 교체 + Oracle 저장, `AMR_STATUS` 트래픽 실측
+4. `.dat` 맵 포맷 전달받는 대로 `MapLoader` 구현 (스파이크의 하드코딩 맵 교체)
+5. AMR 상태 시계열(C), Job/Task 간트차트(D) 추가 — 실시간 기본 + 시간 범위 조회 옵션
+6. 같은 맵 컴포넌트에 시간 슬라이더를 얹어 리플레이(E) 완성, 폴링 → WebSocket 전환
+7. 나머지 확장 기능(1~5) 순차 적용
 
-## 10. 기술 스택 (제안)
+### 9.1 스파이크 실행 화면
+
+![스파이크 실행 화면](docs/img/spike-log-visualizer.png)
+
+## 10. 기술 스택
 
 | 계층 | 언어 | 프레임워크/주요 라이브러리 |
 |---|---|---|
 | DB | - | Oracle Database |
-| Log Collector | Java 또는 Python | REST 수신 + 검증 + 저장 (Spring Boot 또는 FastAPI) |
-| 프론트엔드 | TypeScript | React + Next.js, 맵/궤적 렌더링은 Canvas 또는 WebGL(예: PixiJS), 차트는 Recharts/ECharts |
-| 실시간 스트림 | - | WebSocket (또는 SSE) |
+| Log Collector / 백엔드 | **Java 21** | **Spring Boot** (REST 수신 + 검증 + 저장) — VCS APP과 동일 스택으로 확정 |
+| 프론트엔드 | TypeScript | React + Next.js, 맵/궤적 렌더링은 Canvas 또는 WebGL(예: PixiJS), 차트는 Recharts/ECharts (스파이크는 순수 HTML/JS + Canvas로 검증) |
+| 실시간 스트림 | - | WebSocket (또는 SSE) — 스파이크는 0.7초 폴링으로 대체 |
 
 ---
 
