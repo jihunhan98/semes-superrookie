@@ -80,7 +80,83 @@ Job 1건(왕복)의 Task 8단계 분해는 [VCS_PROJECT_OVERVIEW.md](VCS_PROJECT
 }
 ```
 
-나머지 4개 모듈(HostInterface, UnitDevice, MapUpdater, ParameterManagement)의 로그 필드는 아직 정의되지 않음 — 3번 표준 포맷 작업 시 함께 확정 필요 (8번 오픈 이슈).
+### 2.5 HostInterface
+
+상위 시스템 newAMOS와 주고받는 내용 그대로 로그화 — Job을 받는 시점과, 진행상태/완료/고장을 보고하는 시점.
+
+```json
+{
+  "timestamp": "2026-07-10T09:10:38.700Z",
+  "module": "HostInterface",
+  "type": "JOB_RECEIVED",
+  "jobId": "JOB-2026-000112",
+  "sourceId": "STOCKER-04",
+  "targetId": "PROBER-02",
+  "requestedBy": "newAMOS"
+}
+```
+```json
+{
+  "timestamp": "2026-07-10T09:15:12.330Z",
+  "module": "HostInterface",
+  "type": "JOB_REPORTED",
+  "jobId": "JOB-2026-000112",
+  "amrId": "AMR-03",
+  "reportType": "FAULT",
+  "detail": "AL-4821 발생으로 Task 5 중단"
+}
+```
+`reportType`: `IN_PROGRESS` / `COMPLETED` / `FAULT`
+
+### 2.6 UnitDevice — 충전소 상태
+
+```json
+{
+  "timestamp": "2026-07-10T09:11:00.010Z",
+  "module": "UnitDevice",
+  "type": "CHARGER_STATUS",
+  "chargerId": "CHG-02",
+  "state": "CHARGING",
+  "connectedAmrId": "AMR-07",
+  "batteryLevel": 41.2
+}
+```
+`state`: `IDLE` / `CHARGING` / `FAULT`, `connectedAmrId`는 비어있으면 `null`.
+
+### 2.7 MapUpdater — 맵 업데이트
+
+일시적으로만 발생하는 이벤트라 다른 모듈보다 로그 빈도가 훨씬 낮음.
+
+```json
+{
+  "timestamp": "2026-07-10T08:00:05.000Z",
+  "module": "MapUpdater",
+  "type": "MAP_UPDATED",
+  "mapVersion": "v1.4.2",
+  "changeType": "EDGE_CHANGED",
+  "changedNodeIds": ["NODE-A09", "NODE-A10"],
+  "triggeredBy": "operator:kim"
+}
+```
+`changeType`: `NODE_ADDED` / `NODE_REMOVED` / `EDGE_CHANGED` / `FULL_RELOAD`
+
+### 2.8 ParameterManagement — 파라미터 변경
+
+```json
+{
+  "timestamp": "2026-07-10T08:30:00.000Z",
+  "module": "ParameterManagement",
+  "type": "PARAM_CHANGED",
+  "paramKey": "AMR_MAX_SPEED",
+  "oldValue": "1.0",
+  "newValue": "0.8",
+  "changedBy": "operator:kim"
+}
+```
+
+### 2.9 NATS — 별도 로그 없음 (결정)
+
+NATS는 모듈 간 메시지를 중계하는 브로커일 뿐 자체 도메인 이벤트가 없다. 다른 7개 모듈이 이미 각자 로그를 남기므로 NATS만의 로그 타입은 만들지 않는다. 다만 브로커 자체의 헬스(연결 끊김, 큐 적체)는 이 도구가 아니라 별도 인프라 모니터링 영역으로 남겨둔다 (필요해지면 추후 `BROKER_HEALTH` 같은 운영 지표로 분리 검토).
 
 ## 3. 표준 로그 포맷 (가장 중요한 선행 작업)
 
@@ -114,18 +190,20 @@ Job 1건(왕복)의 Task 8단계 분해는 [VCS_PROJECT_OVERVIEW.md](VCS_PROJECT
 }
 ```
 
-### 3.2 모듈별 `type` 정의 현황
+### 3.2 모듈별 `type` 정의
 
-| 모듈 | 확정된 type | 상태 |
+| 모듈 | type | 발생 빈도 |
 |---|---|---|
-| Operation | `AMR_STATUS`, `TASK_UPDATE` | 확정 (2번 예시 기준) |
-| JobAssign | `TASK_ASSIGNED` | 확정 |
-| PathSearch | `PATH_RESULT` | 확정 |
-| HostInterface | (예상) `JOB_RECEIVED`, `JOB_REPORTED` | 미정 — newAMOS와 주고받는 내용 기준으로 확정 필요 |
-| UnitDevice | (예상) `CHARGER_STATUS` | 미정 |
-| MapUpdater | (예상) `MAP_UPDATED` | 미정 |
-| ParameterManagement | (예상) `PARAM_CHANGED` | 미정 |
-| NATS | - | NATS는 메시지 브로커(전달 경로)라 자체 도메인 로그가 필요 없을 수도 있음 — 다른 7개 모듈 로그로 충분한지 확인 필요 (8번 오픈 이슈) |
+| Operation | `AMR_STATUS`, `TASK_UPDATE` | 매우 높음 (주기적) |
+| JobAssign | `TASK_ASSIGNED` | Task 생성 시마다 |
+| PathSearch | `PATH_RESULT` | Task 생성 시마다 |
+| HostInterface | `JOB_RECEIVED`, `JOB_REPORTED` | Job 단위 (낮음) |
+| UnitDevice | `CHARGER_STATUS` | 중간 (충전소 상태 변화 시) |
+| MapUpdater | `MAP_UPDATED` | 매우 낮음 (맵 변경 시에만) |
+| ParameterManagement | `PARAM_CHANGED` | 매우 낮음 (설정 변경 시에만) |
+| NATS | (없음) | 자체 도메인 로그 없음 — 2.9 참고 |
+
+세부 payload 필드는 2번(예시 로그) 참고. 8개 모듈 담당자와 실제 코드 기준으로 최종 확인은 필요하지만, 어제 정리한 모듈별 역할([VCS_PROJECT_OVERVIEW.md](VCS_PROJECT_OVERVIEW.md) 5번)로 1차 초안은 이걸로 확정.
 
 ### 3.3 REST 수집 엔드포인트
 
@@ -176,23 +254,27 @@ Content-Type: application/json
 
 ## 5. 기능 목록
 
+**우선순위 결정**: 실시간 모니터링과 리플레이(디버깅) 둘 다 만든다 — 다만 **실시간을 먼저** 구현한다. 그래서 핵심 뷰(맵/시계열/간트차트)는 처음부터 "실시간 스트림 모드"를 기본값으로 만들고, 같은 화면에 시간 범위를 지정하면 과거를 조회하는 "리플레이 모드"를 나중에 얹는 구조로 설계한다 (뷰를 두 벌 만들지 않아도 됨).
+
 ### 5.1 핵심 모듈 (Must-have)
 
 | # | 기능 | 설명 |
 |---|---|---|
 | A | 표준 로그 수집 파이프라인 | 8개 모듈 → REST → Log Collector → Oracle 저장. 3번 표준 포맷 기반 |
-| B | AMR 상태 시계열 뷰 | AMR별 배터리/상태 변화를 시간순 그래프로 |
-| C | Job/Task 간트차트 | Job 1건이 8개 Task로 어떻게 진행됐는지, 어느 AMR이 언제 맡았는지 |
-| D | 맵 기반 AMR 이동 리플레이 | `.dat` 맵 위에 AMR 궤적을 시간 슬라이더로 재생 |
+| B | 실시간 라이브 맵 뷰 | `.dat` 맵 위에 지금 이 순간 AMR들의 위치/상태를 실시간으로 표시 (WebSocket). **가장 먼저 구현** |
+| C | AMR 상태 시계열 뷰 | AMR별 배터리/상태 변화를 시간순 그래프로. 기본은 최근 N분 실시간, 시간 범위 지정 시 과거 조회 |
+| D | Job/Task 간트차트 | Job 1건이 8개 Task로 어떻게 진행됐는지, 어느 AMR이 언제 맡았는지. 진행 중인 Job은 실시간 갱신 |
+| E | 맵 기반 AMR 이동 리플레이 | B와 같은 맵 컴포넌트에 시간 슬라이더를 추가해 과거 특정 구간을 재생 |
 
 ### 5.2 확장 기능
 
 | # | 기능 | 설명 |
 |---|---|---|
-| 1 | 계획 경로 vs 실제 궤적 오버레이 | PathSearch 결과(계획 경로)와 AMR_STATUS 궤적(실제 이동)을 맵 위에 겹쳐서 이탈/우회 확인 |
+| 1 | 계획 경로 vs 실제 궤적 오버레이 | PathSearch 결과(계획 경로)와 AMR_STATUS 궤적(실제 이동)을 맵 위에 겹쳐서 이탈/우회 확인. 실시간·리플레이 모두 적용 |
 | 2 | JobAssign 의사결정 뷰 | 후보 AMR들과 비교해 왜 이 AMR이 선택됐는지 시각화 |
-| 3 | 실시간 라이브 모드 | 리플레이가 아니라 지금 이 순간의 AMR 위치를 실시간으로 |
-| 4 | 이상 구간 하이라이트 | 정체 구간, 저배터리 상태로 이동 중인 AMR 등을 자동 강조 |
+| 3 | HostInterface 연동 타임라인 | newAMOS로부터 Job을 받은 시점 ~ 완료/고장 보고 시점까지를 Job 단위로 한눈에 |
+| 4 | 충전소(UnitDevice) 현황판 | 충전소별 상태(IDLE/CHARGING/FAULT)와 대기 중인 AMR을 별도 패널로 |
+| 5 | 이상 구간 하이라이트 | 정체 구간, 저배터리 상태로 이동 중인 AMR 등을 자동 강조 |
 
 ## 6. 데이터 모델
 
@@ -212,20 +294,21 @@ Content-Type: application/json
 ## 8. 오픈 이슈 (확인 필요)
 
 - [ ] `.dat` 맵 파일의 실제 포맷 스펙 (전달 예정)
-- [ ] 나머지 4개 모듈(HostInterface, UnitDevice, MapUpdater, ParameterManagement)의 로그 필드/타입 확정
-- [ ] NATS 모듈 자체도 별도 로그 타입이 필요한지, 아니면 다른 모듈 로그로 충분한지
-- [ ] 로그 REST 전송 시 Content 배치 크기/주기 — `AMR_STATUS` 트래픽 규모 실측 필요
+- [ ] 로그 REST 전송 시 배치 크기/주기 — `AMR_STATUS` 트래픽 규모(AMR 대수 × 주기) 실측 필요. 특히 실시간 뷰(B)를 먼저 만들기로 했으므로 이 부분이 초반부터 성능에 직결됨
 - [ ] `timestamp` 시간대 통일 (UTC vs KST) 및 각 모듈 서버 간 시계 동기화 여부
-- [ ] 로그 보존 기간 (Oracle DB 용량 고려)
-- [ ] **이 도구의 메인 용도가 "장애 리플레이(디버깅)"인지 "실시간 모니터링"인지** — 둘 다 결국 필요하겠지만 어느 쪽을 먼저 만들지 우선순위 결정 필요 (아직 미확정)
+- [ ] 로그 보존 기간 (Oracle DB 용량 고려 — 리플레이용 원본은 얼마나 남길지)
+- [ ] 3.2에서 1차로 정의한 모듈별 `type`/payload는 실제 코드/담당자 확인 후 최종 확정 필요
+
+**해결된 사항**: 우선순위(실시간 먼저, 리플레이 나중), 나머지 4개 모듈의 로그 타입 1차 정의(2.5~2.8), NATS는 별도 로그 없음(2.9).
 
 ## 9. 향후 진행 순서 (제안)
 
-1. 8번 오픈 이슈 중 표준 포맷 관련 항목(나머지 모듈 type 정의, timestamp 시간대) 먼저 확정
-2. Log Collector 스파이크 — Operation의 `AMR_STATUS`/`TASK_UPDATE`만으로 REST 수집 → Oracle 저장까지 최소 구현
-3. `.dat` 맵 포맷 전달받는 대로 `MapLoader` 구현 + 맵 렌더링
-4. AMR 궤적 리플레이(D) 붙이기 — 여기가 제일 "보여줄 게 있는" 부분
-5. 나머지 확장 기능(1~4) 순차 적용
+1. 표준 포맷 확정 (timestamp 시간대 등 남은 오픈 이슈 먼저 정리)
+2. Log Collector 스파이크 — Operation의 `AMR_STATUS`만으로 REST 수집 → 최소 구현, 트래픽 실측
+3. **실시간 라이브 맵 뷰(B) 먼저 구현** — `.dat` 맵 포맷 전달받는 대로 `MapLoader` + WebSocket 스트림으로 AMR 위치 실시간 표시
+4. AMR 상태 시계열(C), Job/Task 간트차트(D) 추가 — 실시간 기본 + 시간 범위 조회 옵션
+5. 같은 맵 컴포넌트에 시간 슬라이더를 얹어 리플레이(E) 완성
+6. 나머지 확장 기능(1~5) 순차 적용
 
 ## 10. 기술 스택 (제안)
 
