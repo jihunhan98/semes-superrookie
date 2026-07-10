@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VCS 로그 모니터 — 스파이크</title>
+<style>
+  :root {
+    --bg: #0d1218;
+    --panel: #141b24;
+    --panel2: #101720;
+    --border: #223041;
+    --text: #dce6ee;
+    --dim: #7f93a4;
+    --accent: #e8a33d;
+    --running: #4da3ff;
+    --idle: #75879a;
+    --charging: #46c07a;
+    --error: #e06552;
+    --eds: #c78a3b;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    font-size: 13px; line-height: 1.45;
+  }
+  .top {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel);
+  }
+  .top h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: .02em; }
+  .live { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--charging); }
+  .live .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--charging); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .top .spacer { flex: 1; }
+  .kpi { display: flex; gap: 8px; }
+  .chip {
+    font-family: var(--mono); font-size: 11px; color: var(--dim);
+    border: 1px solid var(--border); border-radius: 4px; padding: 3px 9px; background: var(--panel2);
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+
+  .layout {
+    display: grid; grid-template-columns: 1fr 292px; grid-template-rows: minmax(380px, 54vh) minmax(240px, 1fr);
+    gap: 10px; padding: 10px 12px; height: calc(100vh - 45px);
+  }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .panel > .head {
+    display: flex; align-items: baseline; gap: 8px; padding: 8px 12px;
+    border-bottom: 1px solid var(--border); font-weight: 650; font-size: 12.5px;
+  }
+  .panel > .head .sub { color: var(--dim); font-weight: 400; font-size: 11px; font-family: var(--mono); }
+  .panel > .body { flex: 1; min-height: 0; overflow: auto; }
+
+  #mapPanel { grid-row: 1; grid-column: 1; }
+  #mapWrap { flex: 1; min-height: 0; position: relative; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #amrPanel { grid-row: 1; grid-column: 2; }
+  .amr-card { border-bottom: 1px solid var(--border); padding: 8px 12px; }
+  .amr-card .row1 { display: flex; align-items: center; gap: 8px; }
+  .amr-card .cid { font-family: var(--mono); font-weight: 700; font-size: 12.5px; }
+  .state {
+    font-family: var(--mono); font-size: 10px; padding: 1px 7px; border-radius: 3px;
+    letter-spacing: .04em;
+  }
+  .st-RUNNING { background: rgba(77,163,255,.15); color: var(--running); }
+  .st-IDLE { background: rgba(117,135,154,.15); color: var(--idle); }
+  .st-CHARGING { background: rgba(70,192,122,.15); color: var(--charging); }
+  .st-ERROR { background: rgba(224,101,82,.18); color: var(--error); }
+  .amr-card .task { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--accent); }
+  .amr-card .row2 { display: flex; align-items: center; gap: 8px; margin-top: 5px; color: var(--dim); font-family: var(--mono); font-size: 10.5px; }
+  .batt { flex: 1; height: 5px; background: #1c2733; border-radius: 3px; overflow: hidden; }
+  .batt i { display: block; height: 100%; border-radius: 3px; background: var(--charging); }
+  .batt i.low { background: var(--error); }
+  .batt i.mid { background: var(--accent); }
+
+  #jobPanel { grid-row: 2; grid-column: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--panel); color: var(--dim); font-weight: 600; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; }
+  td.mono, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .jstate { font-family: var(--mono); font-size: 10px; padding: 1px 7px; border-radius: 3px; }
+  .js-PENDING { background: rgba(117,135,154,.15); color: var(--idle); }
+  .js-IN_PROGRESS { background: rgba(77,163,255,.15); color: var(--running); }
+  .js-EDS_TESTING { background: rgba(199,138,59,.18); color: var(--eds); }
+  .js-COMPLETED { background: rgba(70,192,122,.13); color: var(--charging); }
+  .prog { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+  .prog b { color: var(--text); }
+
+  #logPanel { grid-row: 2; grid-column: 2; }
+  #logFeed { font-family: var(--mono); font-size: 10.5px; padding: 6px 10px; }
+  .logline { display: flex; gap: 6px; padding: 1.5px 0; color: var(--dim); }
+  .logline .t { color: #55677a; }
+  .logline .m { min-width: 86px; font-weight: 600; }
+  .m-Operation { color: var(--running); }
+  .m-JobAssign { color: var(--accent); }
+  .m-PathSearch { color: #c584f5; }
+  .m-HostInterface { color: #5fd0c7; }
+  .m-UnitDevice { color: var(--charging); }
+  .m-MapUpdater { color: #e0a1c0; }
+  .m-ParameterManagement { color: #b9c46a; }
+  .logline .s { color: var(--text); opacity: .8; overflow: hidden; text-overflow: ellipsis; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: 50vh auto auto auto; height: auto; }
+    #mapPanel { grid-column: 1; } #amrPanel { grid-column: 1; grid-row: 2; }
+    #jobPanel { grid-column: 1; grid-row: 3; } #logPanel { grid-column: 1; grid-row: 4; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>VCS 로그 모니터</h1>
+  <span class="live"><span class="dot"></span>LIVE</span>
+  <span class="chip">MAP <b id="mapVer">-</b></span>
+  <div class="spacer"></div>
+  <div class="kpi">
+    <span class="chip">대기 <b id="kPending">0</b></span>
+    <span class="chip">진행중 <b id="kActive">0</b></span>
+    <span class="chip">EDS 테스트 <b id="kEds">0</b></span>
+    <span class="chip">완료 <b id="kDone">0</b></span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="panel" id="mapPanel">
+    <div class="head">라인 맵 <span class="sub">Stocker · Prober · ChargeStation · AMR 실시간 위치</span></div>
+    <div id="mapWrap"><canvas id="cv"></canvas></div>
+  </div>
+
+  <div class="panel" id="amrPanel">
+    <div class="head">AMR 상태 <span class="sub">Operation · AMR_STATUS</span></div>
+    <div class="body" id="amrCards"></div>
+  </div>
+
+  <div class="panel" id="jobPanel">
+    <div class="head">Job / Task 현황 <span class="sub">newAMOS → HostInterface · JobAssign · Operation</span></div>
+    <div class="body"><table>
+      <thead><tr>
+        <th>Job</th><th>PCard</th><th>경로</th><th>AMR</th><th>진행 (Task)</th><th>상태</th>
+      </tr></thead>
+      <tbody id="jobRows"></tbody>
+    </table></div>
+  </div>
+
+  <div class="panel" id="logPanel">
+    <div class="head">로그 피드 <span class="sub">envelope 원본</span></div>
+    <div class="body" id="logFeed"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------
+// 상태 — 전부 로그(envelope)에서만 파생시킨다. (설계 원칙: 뷰는 로그의 함수)
+// ---------------------------------------------------------------------
+const S = {
+  mapVersion: "-",
+  nodes: new Map(),      // id -> {id,type,x,y}
+  links: [],
+  amrs: new Map(),       // id -> {x,y,dispX,dispY,node,state,battery,taskId}
+  tasks: new Map(),      // taskId -> {jobId,seq,type,origin,dest,status}
+  paths: new Map(),      // taskId -> [nodeId,...]
+  jobs: new Map(),       // jobId -> {pcard,source,target,status,amrId,curSeq,curType}
+  feed: [],
+};
+const AMR_HUE = { "AMR-01": "#4da3ff", "AMR-02": "#c584f5", "AMR-03": "#e8a33d",
+                  "AMR-04": "#5fd0c7", "AMR-05": "#e0a1c0" };
+
+// ---------------------------------------------------------------------
+// 로그 수집 (폴링) + 타입별 반영
+// ---------------------------------------------------------------------
+let since = 0;
+
+function applyLog(log) {
+  const p = log.payload, c = log.correlationIds || {};
+  switch (log.type) {
+    case "MAP_UPDATED":
+      S.mapVersion = p.mapVersion; break;
+    case "AMR_STATUS": {
+      let a = S.amrs.get(c.amrId);
+      if (!a) { a = { dispX: p.position.x, dispY: p.position.y }; S.amrs.set(c.amrId, a); }
+      a.x = p.position.x; a.y = p.position.y; a.node = p.position.nodeId;
+      a.state = p.state; a.battery = p.battery; a.taskId = c.taskId || null;
+      break;
+    }
+    case "JOB_RECEIVED":
+      S.jobs.set(c.jobId, { pcard: p.pcardId, source: p.sourceId, target: p.targetId,
+                            status: "PENDING", amrId: null, curSeq: 0, curType: "-" });
+      break;
+    case "TASK_ASSIGNED": {
+      const j = S.jobs.get(c.jobId);
+      if (j) { j.amrId = p.assignedAmrId; j.status = "IN_PROGRESS"; }
+      break;
+    }
+    case "TASK_UPDATE": {
+      S.tasks.set(c.taskId, { jobId: c.jobId, seq: p.taskSeq, type: p.taskType,
+                              origin: p.origin, dest: p.destination, status: p.status });
+      const j = S.jobs.get(c.jobId);
+      if (j) {
+        if (p.status === "IN_PROGRESS") { j.status = "IN_PROGRESS"; j.curSeq = p.taskSeq; j.curType = p.taskType; }
+        if (p.status === "COMPLETED" && p.taskSeq === 4) { j.status = "EDS_TESTING"; j.curType = "EDS 테스트"; }
+      }
+      break;
+    }
+    case "JOB_REPORTED": {
+      const j = S.jobs.get(c.jobId);
+      if (j && p.reportType === "COMPLETED") { j.status = "COMPLETED"; j.curSeq = 8; j.curType = "-"; }
+      break;
+    }
+    case "PATH_RESULT":
+      S.paths.set(c.taskId, p.path); break;
+  }
+  // 로그 피드
+  S.feed.push(log);
+  if (S.feed.length > 200) S.feed.splice(0, S.feed.length - 200);
+}
+
+async function poll() {
+  try {
+    const r = await fetch(`/api/logs?since=${since}&limit=800`);
+    const d = await r.json();
+    d.logs.forEach(applyLog);
+    since = d.nextSeq;
+    if (d.logs.length) { renderPanels(); }
+  } catch (e) { /* 서버 재시작 등 — 다음 폴링에서 복구 */ }
+  setTimeout(poll, 700);
+}
+
+async function init() {
+  const m = await (await fetch("/api/map")).json();
+  S.mapVersion = m.version;
+  m.nodes.forEach(n => S.nodes.set(n.id, n));
+  S.links = m.links;
+  poll();
+  requestAnimationFrame(drawLoop);
+}
+
+// ---------------------------------------------------------------------
+// 우측/하단 패널 렌더링
+// ---------------------------------------------------------------------
+function summary(log) {
+  const p = log.payload, c = log.correlationIds || {};
+  switch (log.type) {
+    case "AMR_STATUS": return `${c.amrId} (${p.position.x},${p.position.y}) ${p.state} ${p.battery}%`;
+    case "TASK_UPDATE": return `${c.amrId} #${p.taskSeq} ${p.taskType} ${p.status}`;
+    case "TASK_ASSIGNED": return `${c.jobId.slice(-6)} → ${p.assignedAmrId}`;
+    case "PATH_RESULT": return `${p.origin}→${p.destination} ${p.path.length}노드 ${p.distanceM}m`;
+    case "JOB_RECEIVED": return `${c.jobId.slice(-6)} ${p.sourceId}→${p.targetId} ${p.pcardId}`;
+    case "JOB_REPORTED": return `${c.jobId.slice(-6)} ${p.reportType}`;
+    case "CHARGER_STATUS": return `${p.chargerId} ${p.state} ${p.connectedAmrId ?? ""}`;
+    case "MAP_UPDATED": return `${p.mapVersion} ${p.changeType}`;
+    case "PARAM_CHANGED": return `${p.paramKey}: ${p.oldValue}→${p.newValue}`;
+    default: return "";
+  }
+}
+
+function renderPanels() {
+  document.getElementById("mapVer").textContent = S.mapVersion;
+
+  // KPI
+  let pend = 0, act = 0, eds = 0, done = 0;
+  S.jobs.forEach(j => {
+    if (j.status === "PENDING") pend++;
+    else if (j.status === "IN_PROGRESS") act++;
+    else if (j.status === "EDS_TESTING") eds++;
+    else done++;
+  });
+  kPending.textContent = pend; kActive.textContent = act;
+  kEds.textContent = eds; kDone.textContent = done;
+
+  // AMR 카드
+  const cards = [];
+  [...S.amrs.keys()].sort().forEach(id => {
+    const a = S.amrs.get(id);
+    const t = a.taskId ? S.tasks.get(a.taskId) : null;
+    const lv = a.battery < 25 ? "low" : a.battery < 50 ? "mid" : "";
+    cards.push(`<div class="amr-card">
+      <div class="row1">
+        <span style="width:9px;height:9px;border-radius:50%;background:${AMR_HUE[id] || "#888"}"></span>
+        <span class="cid">${id}</span>
+        <span class="state st-${a.state}">${a.state}</span>
+        <span class="task">${t ? `#${t.seq} ${t.type}` : "-"}</span>
+      </div>
+      <div class="row2">
+        <span>${a.node}</span>
+        ${t && t.type.startsWith("MOVE") ? `<span>→ ${t.dest}</span>` : ""}
+        <div class="batt"><i class="${lv}" style="width:${a.battery}%"></i></div>
+        <span>${a.battery?.toFixed(0)}%</span>
+      </div>
+    </div>`);
+  });
+  amrCards.innerHTML = cards.join("");
+
+  // Job 테이블 — 활성 우선, 최근순
+  const order = { PENDING: 0, IN_PROGRESS: 1, EDS_TESTING: 1, COMPLETED: 2 };
+  const rows = [...S.jobs.entries()]
+    .sort((a, b) => (order[a[1].status] - order[b[1].status]) || b[0].localeCompare(a[0]))
+    .slice(0, 14)
+    .map(([id, j]) => `<tr>
+      <td class="mono">${id.replace("JOB-2026-", "J-")}</td>
+      <td class="mono">${j.pcard}</td>
+      <td class="mono">${j.source} → ${j.target}</td>
+      <td class="mono">${j.amrId ?? "-"}</td>
+      <td class="prog"><b>${j.curSeq}</b>/8 ${j.curType}</td>
+      <td><span class="jstate js-${j.status}">${
+        { PENDING: "대기", IN_PROGRESS: "진행중", EDS_TESTING: "EDS 테스트중", COMPLETED: "완료" }[j.status]
+      }</span></td>
+    </tr>`);
+  jobRows.innerHTML = rows.join("");
+
+  // 로그 피드
+  const el = document.getElementById("logFeed");
+  const stick = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
+  el.innerHTML = S.feed.slice(-120).map(l => `<div class="logline">
+    <span class="t">${l.timestamp.slice(11, 19)}</span>
+    <span class="m m-${l.module}">${l.module}</span>
+    <span class="s">${l.type} · ${summary(l)}</span>
+  </div>`).join("");
+  if (stick) el.scrollTop = el.scrollHeight;
+}
+
+// ---------------------------------------------------------------------
+// 맵 캔버스 — 노드/링크 + AMR 실시간 위치 + 계획 경로
+// ---------------------------------------------------------------------
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+
+function fit() {
+  const r = cv.parentElement.getBoundingClientRect();
+  const w = Math.round(r.width * devicePixelRatio);
+  const h = Math.round(r.height * devicePixelRatio);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+}
+window.addEventListener("resize", fit);
+
+function makeScale() {
+  // 맵 좌표 범위 → 캔버스 (여백 포함, 비율 유지)
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  S.nodes.forEach(n => {
+    minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+    minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+  });
+  const pad = 46 * devicePixelRatio;
+  const sx = (cv.width - pad * 2) / (maxX - minX);
+  const sy = (cv.height - pad * 2) / (maxY - minY);
+  const s = Math.min(sx, sy);
+  const ox = (cv.width - (maxX - minX) * s) / 2;
+  const oy = (cv.height - (maxY - minY) * s) / 2;
+  return p => [ox + (p.x - minX) * s, oy + (p.y - minY) * s];
+}
+
+const NODE_STYLE = {
+  STOCKER: { fill: "#2b5b8f", stroke: "#4da3ff", label: true, r: 11 },
+  PROBER: { fill: "#5b3f7e", stroke: "#c584f5", label: true, r: 11 },
+  CHARGE_STATION: { fill: "#1f5c3c", stroke: "#46c07a", label: true, r: 11 },
+  WAYPOINT: { fill: "#1c2733", stroke: "#31435a", label: false, r: 4 },
+};
+
+function drawLoop() {
+  fit();
+  const P = makeScale();
+  const dpr = devicePixelRatio;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // 링크
+  ctx.lineWidth = 1.2 * dpr;
+  ctx.strokeStyle = "#243447";
+  S.links.forEach(l => {
+    const a = S.nodes.get(l.from), b = S.nodes.get(l.to);
+    if (!a || !b) return;
+    const [ax, ay] = P(a), [bx, by] = P(b);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  });
+
+  // 진행 중 Task의 계획 경로 (PathSearch 결과)
+  S.amrs.forEach((a, id) => {
+    if (!a.taskId) return;
+    const path = S.paths.get(a.taskId);
+    const t = S.tasks.get(a.taskId);
+    if (!path || !t || t.status !== "IN_PROGRESS" || !t.type.startsWith("MOVE")) return;
+    ctx.lineWidth = 2.4 * dpr;
+    ctx.strokeStyle = (AMR_HUE[id] || "#888") + "55";
+    ctx.beginPath();
+    path.forEach((nid, i) => {
+      const n = S.nodes.get(nid); if (!n) return;
+      const [x, y] = P(n);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // 목적지 하이라이트
+    const destN = S.nodes.get(t.dest);
+    if (destN) {
+      const [dx, dy] = P(destN);
+      ctx.strokeStyle = AMR_HUE[id] || "#888";
+      ctx.lineWidth = 1.6 * dpr;
+      ctx.beginPath(); ctx.arc(dx, dy, 15 * dpr, 0, Math.PI * 2); ctx.stroke();
+    }
+  });
+
+  // 노드
+  ctx.textAlign = "center";
+  S.nodes.forEach(n => {
+    const st = NODE_STYLE[n.type];
+    const [x, y] = P(n);
+    const r = st.r * dpr;
+    ctx.fillStyle = st.fill;
+    ctx.strokeStyle = st.stroke;
+    ctx.lineWidth = 1.4 * dpr;
+    if (n.type === "WAYPOINT") {
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.roundRect(x - r, y - r, r * 2, r * 2, 3 * dpr); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#dce6ee";
+      ctx.font = `600 ${10 * dpr}px ui-monospace, monospace`;
+      ctx.fillText(n.id, x, y - r - 5 * dpr);
+    }
+  });
+
+  // AMR (표시 좌표는 최신 로그 좌표로 부드럽게 보간)
+  const STATE_FILL = { RUNNING: "#4da3ff", IDLE: "#75879a", CHARGING: "#46c07a", ERROR: "#e06552" };
+  S.amrs.forEach((a, id) => {
+    a.dispX += (a.x - a.dispX) * 0.15;
+    a.dispY += (a.y - a.dispY) * 0.15;
+    const [x, y] = P({ x: a.dispX, y: a.dispY });
+    const r = 8 * dpr;
+    ctx.fillStyle = STATE_FILL[a.state] || "#888";
+    ctx.strokeStyle = AMR_HUE[id] || "#fff";
+    ctx.lineWidth = 2.2 * dpr;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#eef4f9";
+    ctx.font = `700 ${9.5 * dpr}px ui-monospace, monospace`;
+    ctx.fillText(id.replace("AMR-0", "A"), x, y + 3.5 * dpr);
+    // 현재 taskType 라벨
+    const t = a.taskId ? S.tasks.get(a.taskId) : null;
+    ctx.fillStyle = "#9fb2c4";
+    ctx.font = `${8.5 * dpr}px ui-monospace, monospace`;
+    ctx.fillText(t ? t.type : a.state, x, y + r + 11 * dpr);
+  });
+
+  requestAnimationFrame(drawLoop);
+}
+
+init();
+</script>
+</body>
+</html>

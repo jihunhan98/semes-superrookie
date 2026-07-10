@@ -30,6 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-store/
 
+# ===== Java / Maven =====
+target/
+
 # ===== Python (backend / AI) =====
 __pycache__/
 *.py[cod]
