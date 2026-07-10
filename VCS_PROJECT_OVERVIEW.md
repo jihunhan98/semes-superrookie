@@ -16,6 +16,19 @@ AMR이 옮기는 대상은 **Probe Card**이며, Stocker와 Prober 사이를 왕
 | Stocker → Prober | EDS 테스트를 진행해야 하는 Probe Card를 투입 |
 | Prober → Stocker | EDS 테스트가 끝난 Probe Card를 회수 |
 
+newAMOS가 VCS에게 "Stocker에서 PCard 빼서 Prober에 넣고, EDS 테스트가 끝나면 다시 Prober에서 빼서 Stocker에 넣어라"라고 명령하면(Job), VCS는 이를 Task 단위로 쪼갠다. 왕복 1회(Job 1건)는 아래처럼 8개 Task로 구성된다.
+
+| seq | taskType | 설명 |
+|---|---|---|
+| 1 | MOVE_TO_UNLOAD | AMR이 Stocker까지 이동 |
+| 2 | UNLOAD | Stocker에서 PCard를 빼서 AMR에 싣기 |
+| 3 | MOVE_TO_LOAD | AMR이 Prober까지 이동 |
+| 4 | LOAD | Prober에 PCard 투입 (→ EDS 테스트 시작) |
+| 5 | MOVE_TO_UNLOAD | (테스트 종료 후) AMR이 Prober까지 이동 |
+| 6 | UNLOAD | Prober에서 PCard를 빼서 AMR에 싣기 |
+| 7 | MOVE_TO_LOAD | AMR이 Stocker까지 이동 |
+| 8 | LOAD | Stocker에 PCard 반납 |
+
 ## 3. 시스템 계층 구조 (3-tier)
 
 ```
