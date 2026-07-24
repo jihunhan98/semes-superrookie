@@ -11,15 +11,16 @@
 - 프론트: **React + Vite** (`web/`)
 - 백엔드: **FastAPI** (`app.py`) — Ollama에 `qwen3:8b`가 떠 있으면 실제 LLM 판정, 없으면 mock 폴백 (상단 배지로 모드 표시)
 
-## 세팅 (한 번만)
+## 세팅
 
-- **Node.js** 설치 필요 — [nodejs.org](https://nodejs.org) LTS. (React 빌드용)
-- **Python** 설치 필요 (백엔드용)
-- 둘 다 인바운드(다운로드)만 있으면 되고, 반출 없음.
+- **Python** 만 있으면 됩니다. (백엔드용)
+- **Node.js는 불필요** — 빌드된 React 결과물(`web/dist/`)을 저장소에 포함해 뒀다. 그대로 서빙된다.
+  (사내 프록시 때문에 `npm install`이 인증서 오류로 막혀도 실행에는 지장 없음 — 빌드는 이미 돼 있음.)
+  UI 소스(`web/src`)를 **직접 고칠 때만** npm 빌드가 필요하다.
 
 ## 실행 (Windows)
 
-`run.bat` 더블클릭 → React 빌드 + FastAPI 서버 기동 후 http://localhost:8010 자동 오픈.
+`run.bat` 더블클릭 → (빌드된 dist 사용) FastAPI 서버 기동 후 http://localhost:8010 자동 오픈.
 
 수동:
 ```

@@ -1,17 +1,19 @@
 @echo off
-REM 요구사항 모호성 해결 데모 실행 (Windows) — React 빌드 + FastAPI 서버
-REM 전제: Node.js, Python 설치됨. (Ollama에 qwen3:8b 있으면 실제 판정, 없으면 mock)
+REM 요구사항 모호성 해결 데모 실행 (Windows)
+REM 전제: Python 설치. React는 미리 빌드된 web/dist 를 쓰므로 npm/Node 불필요.
 setlocal
 
-echo [1/3] React 의존성 설치 + 빌드
-cd web
-call npm install
-call npm run build
-cd ..
+if exist "web\dist\index.html" (
+  echo [1/2] 빌드된 React(web/dist) 사용 - npm/Node 불필요
+) else (
+  echo [1/2] web/dist 없음 - React 빌드 시도 (이 경우에만 Node/npm 필요)
+  cd web
+  call npm install
+  call npm run build
+  cd ..
+)
 
-echo [2/3] Python 의존성 설치
+echo [2/2] Python 의존성 + 서버 시작: http://localhost:8010  (종료: Ctrl+C)
 pip install fastapi "uvicorn[standard]" >nul 2>nul
-
-echo [3/3] 서버 시작: http://localhost:8010  (종료: Ctrl+C)
 start "" http://localhost:8010
 python -m uvicorn app:app --port 8010
