@@ -49,6 +49,8 @@ huggingface_cache/
 **/models/*.safetensors
 **/models/*.pt
 **/models/*.onnx
+*.gguf
+ai-model/models/
 *.ckpt
 wandb/
 mlruns/
