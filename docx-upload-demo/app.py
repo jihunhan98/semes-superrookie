@@ -23,13 +23,27 @@ def index():
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...)):
     name = file.filename or ""
-    if not name.lower().endswith(".docx"):
-        return {"ok": False, "error": ".docx 파일만 업로드하세요.", "filename": name}
+    data = await file.read()
+    if not data:
+        return {"ok": False, "error": "빈 파일입니다.", "filename": name}
+
+    # 파일 형식 감지 (.docx 는 실제로 zip = 'PK'로 시작)
+    head = data[:8]
+    if head[:2] != b"PK":
+        if head[:4] == b"\xd0\xcf\x11\xe0":  # OLE 복합문서
+            hint = ("구버전 Word(.doc) 또는 한글(.hwp) 파일로 보입니다. "
+                    "Word/한글에서 '다른 이름으로 저장 → .docx(Word 문서)'로 변환 후 다시 올리세요.")
+        else:
+            hint = "확장자만 .docx 이고 실제 내용은 다른 형식일 수 있습니다. 원본 형식을 확인하세요."
+        return {"ok": False, "error": f"'{name}' 은(는) docx(zip) 형식이 아닙니다. {hint}",
+                "filename": name}
+
     try:
-        data = await file.read()
         doc = Document(io.BytesIO(data))
     except Exception as e:
-        return {"ok": False, "error": f"파싱 실패: {e}", "filename": name}
+        return {"ok": False,
+                "error": f"zip이지만 docx로 열리지 않습니다: {e} (한글 hwpx 등 다른 zip 형식일 수 있음)",
+                "filename": name}
 
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     tables = []
