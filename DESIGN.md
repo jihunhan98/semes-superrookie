@@ -112,8 +112,25 @@ React 프론트엔드 ─REST─ Spring Boot 백엔드 ─REST─ Python(FastAPI
 - **VCS APP**은 8개 모듈([PROJECT.md](PROJECT.md) 5번: pathsearch / operation / jobassign / parametermanagement / hostinterface / mapupdater / watchdog / nats)로 나뉘므로, 사용자가 **모듈을 선택해 모듈별로 따로 관리**할 수 있게 한다.
 - 예) "태스크 스텝 전개" 기능 →
   - **VCS UI 기능명세**: 스텝 전개 메뉴/버튼, 현재 스텝·요건 충족 여부 표시
-  - **VCS APP 기능명세**: `operation` 모듈의 스텝 전개 처리·상태 갱신 (실제로는 REST가 아니라 **NATS 메시지 브로커** 기반이라, 모듈별 메시지 명세로 이어진다)
-- APP 쪽의 상세 API/메시지 명세 도출은 이후 단계에서 다룬다.
+  - **VCS APP 기능명세**: `operation` 모듈의 스텝 전개 처리·상태 갱신
+- 위 그림은 **추출 요약본**이다. 각 항목을 열면 아래처럼 상세를 편집한다.
+
+#### 3.2.1 기능명세 상세 (편집)
+
+APP 기능명세는 **소속 모듈**, **통신 방식(Req-Rep / Pub-Sub)**, **subject**, **기대 입력/출력값**을 지정하고, 이 화면에서 직접 수정한다.
+
+![기능명세 상세 편집](docs/img/design-fig2b.png)
+
+- **통신 방식에 따라 입출력이 달라진다.** (MSA/NATS 특성)
+  - **Req-Rep**: REST처럼 `subject`(=URL 자리) + 요청 payload → 응답 payload.
+  - **Pub-Sub**: 응답이 없으므로 `subject` + 발행 payload + 트리거 + 구독 모듈을 명세.
+- **명세 범위 원칙**: 모듈 경계를 넘나드는 메시지는 정밀 명세(subject·payload), 모듈 내부 계산 로직은 "처리 요약" 한두 줄로만 남긴다. (전부 필드 단위로 적지 않음)
+
+#### 3.2.2 모듈별 기능명세 정리
+
+여러 요구사항에서 나온 APP 기능명세를 **모듈 기준으로 모아** 본다.
+
+![모듈별 기능명세 정리](docs/img/design-fig2c.png)
 
 ### 3.3 요구사항 ↔ 기능 연결
 
