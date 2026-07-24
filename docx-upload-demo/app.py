@@ -29,14 +29,17 @@ async def upload(file: UploadFile = File(...)):
 
     # 파일 형식 감지 (.docx 는 실제로 zip = 'PK'로 시작)
     head = data[:8]
+    head_hex = " ".join(f"{b:02X}" for b in head)
     if head[:2] != b"PK":
         if head[:4] == b"\xd0\xcf\x11\xe0":  # OLE 복합문서
-            hint = ("구버전 Word(.doc) 또는 한글(.hwp) 파일로 보입니다. "
-                    "Word/한글에서 '다른 이름으로 저장 → .docx(Word 문서)'로 변환 후 다시 올리세요.")
+            hint = ("구버전 Word(.doc) / 한글(.hwp) / 암호·DRM(문서보안) 걸린 docx 로 보입니다. "
+                    "Word에선 열려도 실제 파일은 암호화돼 zip이 아닙니다. "
+                    "DRM이면 보안 해제된 사본으로, .doc/.hwp면 .docx로 변환해 올리세요.")
         else:
-            hint = "확장자만 .docx 이고 실제 내용은 다른 형식일 수 있습니다. 원본 형식을 확인하세요."
-        return {"ok": False, "error": f"'{name}' 은(는) docx(zip) 형식이 아닙니다. {hint}",
-                "filename": name}
+            hint = "확장자만 .docx 이고 실제 내용은 다른 형식일 수 있습니다. (원본 형식/보안 상태 확인)"
+        return {"ok": False,
+                "error": f"'{name}' 은(는) docx(zip) 형식이 아닙니다. {hint} [파일 시그니처: {head_hex}]",
+                "filename": name, "head_hex": head_hex}
 
     try:
         doc = Document(io.BytesIO(data))
