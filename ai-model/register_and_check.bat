@@ -28,7 +28,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [3/3] 모델 점검 실행 (동작/속도/출력)
+echo [3/3] 의존성 설치 + 모델 점검 (main.py /analyze 재사용)
+pip install fastapi "uvicorn[standard]" >nul 2>nul
 python check_model.py
 if errorlevel 1 python3 check_model.py
 

@@ -49,6 +49,7 @@ def analyze(req: AnalyzeRequest):
         "prompt": prompt,
         "format": "json",
         "stream": False,
+        "think": False,  # Qwen3 thinking 모드 OFF (JSON 출력 안정 + 속도)
     }).encode("utf-8")
 
     request = urllib.request.Request(
