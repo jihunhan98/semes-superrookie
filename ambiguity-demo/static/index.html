@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요구사항 모호성 해결 데모</title>
+<style>
+  :root{
+    --bg:#f3f5f8; --card:#fff; --line:#dde3ea; --ink:#1c2431; --muted:#64707e;
+    --accent:#3a5bd9; --accent-soft:#e6ebfb;
+    --amber:#b9770f; --amber-bg:#fbe9c6; --amber-line:#e2a53d;
+    --green:#1f7a49; --green-bg:#dcefe2; --green-line:#5cae82;
+    --mono:"SFMono-Regular",ui-monospace,Consolas,monospace;
+    --sans:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 18px 60px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  h1{font-size:20px;margin:0;font-weight:800}
+  .mode{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .mode.ollama{background:var(--green-bg);color:var(--green)}
+  .mode.mock{background:var(--amber-bg);color:var(--amber)}
+  .mode.none{background:#e7ebf0;color:var(--muted)}
+  p.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:18px}
+  .panel h2{font-size:13px;margin:0 0 10px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+  textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:13.5px;line-height:1.7;resize:vertical;color:var(--ink)}
+  .row{display:flex;gap:10px;align-items:center;margin-top:12px}
+  button{font-family:var(--sans);font-weight:700;font-size:13.5px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 16px;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.small{padding:6px 12px;font-size:12.5px}
+  button.ghost{color:var(--muted)}
+  button.ok{border-color:var(--green);color:var(--green)}
+  .kpis{margin-left:auto;display:flex;gap:8px;font-size:12px;color:var(--muted)}
+  .kpis b{color:var(--ink)}
+
+  .clause{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:11px;background:#fff}
+  .clause.amb{border-color:var(--amber-line);background:#fffdf7}
+  .clause.resolved{border-color:var(--green-line);background:#f4faf6}
+  .clause.skipped{opacity:.6}
+  .chead{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+  .rid{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:4px;font-weight:700}
+  .badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:5px}
+  .badge.amb{background:var(--amber-bg);color:var(--amber)}
+  .badge.clear{background:var(--green-bg);color:var(--green)}
+  .badge.done{background:var(--green);color:#fff}
+  .badge.skip{background:#e7ebf0;color:var(--muted)}
+  .ctext{font-size:14px;line-height:1.65}
+  .clause.amb .ctext{background:linear-gradient(transparent 60%, var(--amber-bg) 60%)}
+  .reason{font-size:12px;color:var(--muted);margin-top:6px}
+  .actions{display:flex;gap:8px;margin-top:11px}
+  .resolvebox{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px;display:none}
+  .resolvebox.show{display:block}
+  .resolvebox label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px}
+  .resolvebox textarea{min-height:56px;font-size:13px}
+  .ba{margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px}
+  .ba .before,.ba .after{border-radius:8px;padding:9px 11px}
+  .ba .before{background:var(--amber-bg);color:#4a3200}
+  .ba .after{background:var(--green-bg);color:#123}
+  .ba .lab{font-size:10.5px;font-weight:800;letter-spacing:.03em;display:block;margin-bottom:4px;opacity:.8}
+  .empty{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>요구사항 모호성 해결 데모</h1>
+    <span id="modeBadge" class="mode none">판정기 확인 중…</span>
+  </header>
+  <p class="sub">요구사항 원문(한 줄에 조항 하나)을 붙여넣고 분석 → 모호 조항 검출 → 해결(해석 입력) 또는 넘어가기.</p>
+
+  <div class="panel">
+    <h2>1. 요구사항 입력</h2>
+    <textarea id="input">태스크 각 스텝별 진행에 필요한 필수 요건이 충족된 상태인 경우에 한하여 태스크를 재전개할 수 있어야 한다.
+장비는 충분한 내구성을 가져야 한다.
+알람 발생 시 관련 부서와 협의하여 적절히 조치한다.
+AMR은 IEC 60204-1 안전 규격을 만족해야 한다.
+통신 끊김 시 빠른 시일 내 복구한다.
+진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.</textarea>
+    <div class="row">
+      <button class="primary" id="analyzeBtn" onclick="analyze()">분석</button>
+      <span id="status" style="font-size:12.5px;color:var(--muted)"></span>
+      <span class="kpis" id="kpis"></span>
+    </div>
+  </div>
+
+  <div class="panel" id="resultPanel" style="display:none">
+    <h2>2. 검출 &amp; 해결</h2>
+    <div id="results"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+let CLAUSES = [];
+
+async function analyze(){
+  const btn = document.getElementById("analyzeBtn");
+  const st = document.getElementById("status");
+  btn.disabled = true; st.textContent = "분석 중… (모델 첫 호출이면 수십 초 걸릴 수 있음)";
+  try{
+    const r = await fetch("/api/analyze", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({text: document.getElementById("input").value})
+    });
+    const d = await r.json();
+    setMode(d.mode);
+    CLAUSES = d.clauses.map(c => ({...c, state: c.ambiguous ? "open" : "clear"}));
+    render();
+    st.textContent = "";
+  }catch(e){
+    st.textContent = "실패: " + e;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function setMode(mode){
+  const b = document.getElementById("modeBadge");
+  if(mode==="ollama"){ b.className="mode ollama"; b.textContent="LLM: Qwen3-8B (실제 판정)"; }
+  else { b.className="mode mock"; b.textContent="mock 판정 (Ollama 미실행 — 규칙 기반)"; }
+}
+
+function counts(){
+  let amb=0,done=0;
+  CLAUSES.forEach(c=>{ if(c.ambiguous) amb++; if(c.state==="resolved") done++; });
+  return {total:CLAUSES.length, amb, done};
+}
+
+function render(){
+  document.getElementById("resultPanel").style.display = "block";
+  const k = counts();
+  document.getElementById("kpis").innerHTML =
+    `전체 <b>${k.total}</b> · 모호 <b>${k.amb}</b> · 해결 <b>${k.done}</b>`;
+
+  document.getElementById("results").innerHTML = CLAUSES.map((c,i)=>{
+    if(!c.ambiguous){
+      return `<div class="clause">
+        <div class="chead"><span class="rid">${c.id}</span><span class="badge clear">명확</span></div>
+        <div class="ctext">${esc(c.text)}</div></div>`;
+    }
+    if(c.state==="resolved"){
+      return `<div class="clause resolved">
+        <div class="chead"><span class="rid">${c.id}</span><span class="badge done">✔ 확정</span></div>
+        <div class="ba">
+          <div class="before"><span class="lab">해결 전 (원본)</span>${esc(c.text)}</div>
+          <div class="after"><span class="lab">해결 후 (확정 해석)</span>${esc(c.resolution)}</div>
+        </div></div>`;
+    }
+    if(c.state==="skipped"){
+      return `<div class="clause skipped">
+        <div class="chead"><span class="rid">${c.id}</span><span class="badge skip">해결 불필요</span></div>
+        <div class="ctext">${esc(c.text)}</div></div>`;
+    }
+    // open (모호, 미해결)
+    return `<div class="clause amb">
+      <div class="chead"><span class="rid">${c.id}</span><span class="badge amb">${esc(c.type||"모호")}</span></div>
+      <div class="ctext">${esc(c.text)}</div>
+      ${c.reason?`<div class="reason">사유: ${esc(c.reason)}</div>`:""}
+      <div class="actions">
+        <button class="small primary" onclick="openResolve(${i})">해결하기</button>
+        <button class="small ghost" onclick="skip(${i})">해결 불필요 · 넘어가기</button>
+      </div>
+      <div class="resolvebox" id="rb${i}">
+        <label>확정 해석 입력</label>
+        <textarea id="ri${i}" placeholder="이 조항을 어떻게 해석·확정할지 입력">${suggest(c)}</textarea>
+        <div class="actions"><button class="small ok" onclick="confirmResolve(${i})">확정</button></div>
+      </div></div>`;
+  }).join("");
+}
+
+function openResolve(i){ document.getElementById("rb"+i).classList.add("show"); }
+function skip(i){ CLAUSES[i].state="skipped"; render(); }
+function confirmResolve(i){
+  const v = document.getElementById("ri"+i).value.trim();
+  if(!v){ alert("확정 해석을 입력하세요."); return; }
+  CLAUSES[i].resolution = v; CLAUSES[i].state="resolved"; render();
+}
+function suggest(c){
+  return `[${c.type||"모호"}] 기준을 구체 수치/조건으로 정의: ` ;
+}
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+</script>
+</body>
+</html>
