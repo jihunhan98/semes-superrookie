@@ -13,30 +13,29 @@
 | 현재 `main.py` 설정 | `qwen2.5:7b-instruct` (스파이크 검증본) — Qwen3-8B로 교체 예정 |
 
 > 학습(파인튜닝) 불필요 — 이미 학습된 모델을 받아 프롬프트만 넣으면 된다.
-> 대용량 가중치 파일(.gguf)은 git에 올리지 않는다(용량·폐쇄망 반입 특성).
+> 대용량 가중치 파일(.gguf)은 git에 올리지 않는다(GitHub 100MB 파일 제한 · 용량).
 
-## 절차 (폐쇄망 기준)
+## 절차
 
-### 1) 인터넷 되는 PC에서 모델 다운로드
+> **네트워크: 반입 O / 반출 X.** 인터넷에서 받아오는 건 되므로(반입 가능) **워크스테이션에서 바로 다운로드**해도 되고, 필요하면 다른 PC에서 받아 옮겨도 된다. 외부로 데이터를 내보내는 것(반출)만 막힌다.
+
+### 1) 모델 다운로드 (워크스테이션에서 바로 실행 가능)
 ```bash
 cd ai-model
 ./download_model.sh          # ./models/Qwen3-8B-Q5_K_M.gguf 생성
 ```
 
-### 2) `.gguf` 파일을 폐쇄망 워크스테이션으로 반입
-USB 등 사내 반입 절차 사용.
-
-### 3) 워크스테이션에서 모델 등록·실행 (Ollama)
+### 2) 워크스테이션에서 모델 등록·실행 (Ollama)
 ```bash
 # models/ 옆에 Modelfile 작성:  echo 'FROM ./models/Qwen3-8B-Q5_K_M.gguf' > Modelfile
 ollama create qwen3-8b -f Modelfile
 ollama run qwen3-8b            # 동작 확인
 ```
-`main.py` 8번 줄 `MODEL_NAME` 을 `"qwen3-8b"` 로 바꾸면 기존 코드 그대로 동작한다.
+`main.py` 의 `MODEL_NAME` 은 이미 `"qwen3-8b"` 로 설정돼 있어 위 태그와 그대로 맞물린다.
 
 *(대안: llama.cpp — `./llama-server -m models/Qwen3-8B-Q5_K_M.gguf -ngl 99 -c 4096`. `-ngl 99`=전 레이어 GPU 적재, `-c`=컨텍스트. 8GB를 넘기지 않도록 컨텍스트는 조항 단위로 짧게.)*
 
-### 4) AI 서버 실행
+### 3) AI 서버 실행
 ```bash
 pip install fastapi "uvicorn[standard]"
 uvicorn main:app --host 0.0.0.0 --port 8001
