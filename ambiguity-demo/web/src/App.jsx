@@ -34,7 +34,7 @@ export default function App() {
       setClauses(d.clauses.map((c) => ({
         ...c,
         state: c.ambiguous ? 'open' : 'clear',
-        resolveOpen: false, draft: '', resolution: '',
+        resolveOpen: false, draft: c.suggestion || '', resolution: '',
       })))
       setAnalyzed(true)
       setStatus('')
@@ -128,6 +128,7 @@ function Clause({ c, i, update, confirmResolve }) {
       <div className="chead"><span className="rid">{c.id}</span><span className="badge amb">{c.type || '모호'}</span></div>
       <div className="ctext">{c.text}</div>
       {c.reason && <div className="reason">사유: {c.reason}</div>}
+      {c.suggestion && <div className="suggest">✎ 이렇게 쓰면 명확: {c.suggestion}</div>}
       <div className="actions">
         <button className="small primary" onClick={() => update(i, { resolveOpen: true })}>해결하기</button>
         <button className="small ghost" onClick={() => update(i, { state: 'skipped' })}>해결 불필요 · 넘어가기</button>

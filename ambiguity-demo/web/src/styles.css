@@ -45,6 +45,7 @@ button.ok{border-color:var(--green);color:var(--green)}
 .ctext{font-size:14px;line-height:1.65}
 .clause.amb .ctext{background:linear-gradient(transparent 60%, var(--amber-bg) 60%)}
 .reason{font-size:12px;color:var(--muted);margin-top:6px}
+.suggest{font-size:12.5px;color:var(--green);background:var(--green-bg);border-radius:6px;padding:7px 10px;margin-top:7px}
 .actions{display:flex;gap:8px;margin-top:11px}
 .resolvebox{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px}
 .resolvebox label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px}

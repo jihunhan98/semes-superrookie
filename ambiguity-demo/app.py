@@ -24,15 +24,28 @@ MODEL_NAME = "qwen3:8b"
 SYSTEM_PROMPT = """당신은 반도체 장비 요구사항 명세서에서 모호한 표현을 찾는 검토자입니다.
 
 [도메인 용어] 아래는 이 시스템(VCS)의 정상 용어다. 모르는 말이라는 이유로 모호로 판정하지 마라.
-- VCS: AMR들을 제어하는 차량 제어 시스템 / AMR: Probe Card를 옮기는 무인이송로봇
+- VCS: AMR들을 제어하는 차량 제어 시스템 / AMR: Probe Card(PCard)를 옮기는 무인이송로봇
 - newAMOS: 상위 시스템(MES), VCS에 Task를 내림 / Task·Job: 이송 작업 단위
-- Stocker·Prober: 설비 노드(Prober에서 EDS 테스트) / 이적재: AMR의 적재·하역 동작 / NACK: 거절 응답
+- Stocker·Prober: 설비 노드. Prober에서 EDS 테스트를 수행한다
+- LOAD: AMR이 PCard를 설비(Prober 또는 Stocker)로 옮겨 싣는 동작 (AMR → 설비)
+- UNLOAD: 설비에서 PCard를 AMR으로 빼내는 동작 (설비 → AMR)
+- 이적재: LOAD/UNLOAD 등 적재·하역 동작 / NACK: 거절 응답
 - 태스크 스텝: ASSIGNED → MOVE_TO_LOAD → MOVE_TO_UNLOAD → LOAD → UNLOAD
 
-다음 유형 중 하나로 분류하세요: 정량 기준 부재 / 모호한 정도부사 / 주어·주체 불명확 / 조건 발생 시점 불명확 / 예외·경계 조건 누락 / 접속사 범위 모호 / 시간·일정 모호 / 해당없음
+모호 유형(하나 선택): 정량 기준 부재 / 모호한 정도부사 / 주어·주체 불명확 / 조건 발생 시점 불명확 / 예외·경계 조건 누락 / 접속사 범위 모호 / 시간·일정 모호 / 해당없음
 
-반드시 아래 JSON 형식으로만 답하세요:
-{"ambiguous": true or false, "type": "...", "reason": "..."}
+각 문장을 판정해 아래 JSON으로만 답하라. 모호하면 "suggestion"에 **명확하게 다시 쓴 예시 문장**(이렇게 작성하라는 예)을 넣어라. 모호하지 않으면 type/reason/suggestion 은 null.
+{"ambiguous": true or false, "type": "...", "reason": "...", "suggestion": "..."}
+
+예시)
+입력: "장비는 충분한 내구성을 가져야 한다."
+출력: {"ambiguous": true, "type": "정량 기준 부재", "reason": "'충분한'의 기준이 수치로 정의되지 않음", "suggestion": "장비는 MTBF 10,000시간 이상의 내구성을 가져야 한다."}
+
+입력: "통신 끊김 시 빠른 시일 내 복구한다."
+출력: {"ambiguous": true, "type": "시간·일정 모호", "reason": "'빠른 시일'의 구체 기한이 없음", "suggestion": "통신 끊김 발생 후 30초 이내에 자동 복구한다."}
+
+입력: "AMR은 IEC 60204-1 안전 규격을 만족해야 한다."
+출력: {"ambiguous": false, "type": null, "reason": null, "suggestion": null}
 """
 
 # mock 폴백 규칙 (키워드 → 유형)
@@ -80,8 +93,9 @@ def mock_analyze(sentence):
         for kw in kws:
             if kw in sentence:
                 return {"ambiguous": True, "type": typ,
-                        "reason": f"'{kw}' 표현이 기준 없이 모호함"}
-    return {"ambiguous": False, "type": None, "reason": None}
+                        "reason": f"'{kw}' 표현이 기준 없이 모호함",
+                        "suggestion": f"'{kw}'을(를) 구체 수치·조건으로 바꿔 다시 작성하세요."}
+    return {"ambiguous": False, "type": None, "reason": None, "suggestion": None}
 
 
 def split_clauses(text):
@@ -109,6 +123,7 @@ def analyze(req: AnalyzeReq):
             "ambiguous": bool(res.get("ambiguous")),
             "type": res.get("type"),
             "reason": res.get("reason"),
+            "suggestion": res.get("suggestion"),
         })
     return {"mode": mode, "clauses": clauses}
 
