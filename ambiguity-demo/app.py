@@ -13,7 +13,7 @@ import re
 import urllib.request
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -86,11 +86,6 @@ def split_clauses(text):
     return clauses
 
 
-@app.get("/")
-def index():
-    return FileResponse(os.path.join(HERE, "static", "index.html"))
-
-
 @app.post("/api/analyze")
 def analyze(req: AnalyzeReq):
     mode = "ollama" if ollama_up() else "mock"
@@ -109,3 +104,10 @@ def analyze(req: AnalyzeReq):
             "reason": res.get("reason"),
         })
     return {"mode": mode, "clauses": clauses}
+
+
+# 빌드된 React 앱(web/dist)이 있으면 그대로 서빙 (/ 에서 UI 제공).
+# 개발 중에는 `npm run dev`(:5173)를 쓰고 /api 는 프록시로 이 백엔드에 붙는다.
+_DIST = os.path.join(HERE, "web", "dist")
+if os.path.isdir(_DIST):
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="web")
