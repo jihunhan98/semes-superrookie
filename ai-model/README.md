@@ -1,50 +1,31 @@
 # ai-model — AI 추론 서버
 
-요구사항 문장을 받아 모호성 판정 등을 반환하는 FastAPI 서버([`main.py`](main.py))와,
-로컬 LLM(Ollama 서빙) 구성 안내.
-
-## 모델
+요구사항 문장을 받아 모호성 판정을 반환하는 FastAPI 서버([`main.py`](main.py))와,
+로컬 LLM(Ollama 서빙) 구성.
 
 | 항목 | 값 |
 |---|---|
-| 대상 하드웨어 | 사내 워크스테이션 — Quadro P4000 **VRAM 8GB** · Xeon Gold 5122 · RAM 32GB |
-| 1차 후보 모델 | **Qwen3-8B** — 8GB VRAM에 통째로 올라감 |
-| `main.py` 설정 | `MODEL_NAME = "qwen3:8b"` (스파이크 검증본은 `qwen2.5:7b-instruct`) |
+| 대상 하드웨어 | 워크스테이션 — Quadro P4000 VRAM 8GB · Xeon Gold 5122 · RAM 32GB |
+| 모델 | **Qwen3-8B** (`qwen3:8b`) — GGUF, 8GB VRAM에 통째로 올라감 |
+| 네트워크 | 반입 O / 반출 X — 다운로드(인바운드)는 됨 |
 
-> 학습(파인튜닝) 불필요 — 이미 학습된 모델을 받아 프롬프트만 넣으면 된다.
-> 모델 가중치는 git에 올리지 않는다(GitHub 100MB 파일 제한 · 용량).
-> **네트워크: 반입 O / 반출 X** — 다운로드(인바운드)는 되므로 워크스테이션에서 바로 받으면 된다.
+## 파일
 
-## 설치 (제일 쉬운 길 — Ollama)
+| 파일 | 역할 |
+|---|---|
+| `main.py` | FastAPI 서버 (`/analyze`, `/health`) — Ollama 호출 |
+| `check_model.py` | 모델 점검 — 동작 / 속도·GPU / 출력값. `main.py`의 `/analyze`를 재사용 |
+| `register_and_check.bat` | (Windows) 받은 GGUF를 `qwen3:8b`로 등록 + 점검까지 한 번에 |
 
-워크스테이션 OS에 맞는 스크립트를 실행하면 Ollama 준비 + 모델 다운로드(`ollama pull qwen3:8b`)까지 끝난다.
+## 실행 절차 (Windows)
 
-- **Windows**: [`setup_ollama.bat`](setup_ollama.bat) 더블클릭
-- **Linux**: `cd ai-model && ./setup_ollama.sh`
+**사전 준비** — cmd에서 `ollama --version`, `python --version` 이 되는지 확인.
+안 되면 각각 설치: Ollama([ollama.com/download](https://ollama.com/download)), Python([python.org](https://www.python.org/downloads/), 설치 시 "Add to PATH" 체크). 설치 후 cmd를 새로 연다.
 
-**OS별 실행 파일**
-- **Windows** (`.sh`는 Windows에서 안 됨): [`setup_ollama.bat`](setup_ollama.bat) 더블클릭 — Ollama 설치 확인 후 `ollama pull qwen3:8b` 실행. Ollama 자체는 [ollama.com/download](https://ollama.com/download)의 OllamaSetup.exe로 먼저 설치(또는 `winget install --id Ollama.Ollama -e`).
-- **Linux**: [`setup_ollama.sh`](setup_ollama.sh). 설치 중 `sudo` 암호를 물을 수 있음.
+1. 받은 `Qwen3-8B-Q5_K_M.gguf` 파일을 이 `ai-model` 폴더 안에 둔다.
+2. `register_and_check.bat` 더블클릭 (또는 이 폴더에서 실행).
+   - ① GGUF를 `qwen3:8b`로 등록(`ollama create`) → ② 의존성 설치 → ③ `check_model.py` 실행
+3. 결과 확인 — 판정 정확도 / 문장당 속도 / GPU·CPU 적재 위치가 출력된다.
 
-**GPU 가속(P4000)**: NVIDIA 드라이버가 있으면 자동 사용(`nvidia-smi` 동작). 없으면 CPU로 동작 → 되긴 하지만 느림.
-
-## AI 서버 실행
-
-```bash
-pip install fastapi "uvicorn[standard]"
-uvicorn main:app --host 0.0.0.0 --port 8001
-```
-`main.py`의 `MODEL_NAME`이 `qwen3:8b`라 위에서 받은 모델과 그대로 물린다.
-
----
-
-### (대안) HuggingFace에서 GGUF 파일로 직접 받기
-
-Ollama 레지스트리 대신 파일을 직접 관리하고 싶을 때. [`download_model.sh`](download_model.sh) 실행 →
-`./models/Qwen3-8B-Q5_K_M.gguf`(≈5.85GB) 생성 → Ollama에 같은 이름으로 등록:
-
-```bash
-echo 'FROM ./models/Qwen3-8B-Q5_K_M.gguf' > Modelfile
-ollama create qwen3:8b -f Modelfile
-```
-*(또는 llama.cpp: `./llama-server -m models/Qwen3-8B-Q5_K_M.gguf -ngl 99 -c 4096`. `-ngl 99`=전 레이어 GPU 적재, `-c`=컨텍스트. 8GB를 넘기지 않도록 컨텍스트는 짧게.)*
+> 서버만 따로 띄우려면: `pip install fastapi "uvicorn[standard]"` 후 `uvicorn main:app --port 8001`.
+> 모델 가중치(.gguf)는 용량 때문에 git에 올리지 않는다.
