@@ -17,19 +17,16 @@
 
 ## 설치 (제일 쉬운 길 — Ollama)
 
-워크스테이션에서 스크립트 한 번 실행하면 Ollama 설치 + 모델 다운로드까지 끝.
+워크스테이션 OS에 맞는 스크립트를 실행하면 Ollama 준비 + 모델 다운로드(`ollama pull qwen3:8b`)까지 끝난다.
 
-```bash
-cd ai-model
-./setup_ollama.sh
-```
+- **Windows**: [`setup_ollama.bat`](setup_ollama.bat) 더블클릭
+- **Linux**: `cd ai-model && ./setup_ollama.sh`
 
-이게 하는 일: ① Ollama 설치(`curl`) → ② GPU 드라이버 확인 → ③ Ollama 서버 시작 → ④ `ollama pull qwen3:8b`.
+**OS별 실행 파일**
+- **Windows** (`.sh`는 Windows에서 안 됨): [`setup_ollama.bat`](setup_ollama.bat) 더블클릭 — Ollama 설치 확인 후 `ollama pull qwen3:8b` 실행. Ollama 자체는 [ollama.com/download](https://ollama.com/download)의 OllamaSetup.exe로 먼저 설치(또는 `winget install --id Ollama.Ollama -e`).
+- **Linux**: [`setup_ollama.sh`](setup_ollama.sh). 설치 중 `sudo` 암호를 물을 수 있음.
 
-**설정 참고**
-- **Linux**: 위 스크립트 그대로. 설치 중 `sudo` 암호를 물을 수 있음.
-- **GPU 가속(P4000)**: NVIDIA 드라이버가 있어야 함(`nvidia-smi` 동작). 없으면 자동으로 CPU로 동작 → 되긴 하지만 느림.
-- **Windows**: 스크립트 대신 [ollama.com/download](https://ollama.com/download)에서 설치 프로그램(OllamaSetup.exe) 실행 후, 명령프롬프트에서 `ollama pull qwen3:8b`.
+**GPU 가속(P4000)**: NVIDIA 드라이버가 있으면 자동 사용(`nvidia-smi` 동작). 없으면 CPU로 동작 → 되긴 하지만 느림.
 
 ## AI 서버 실행
 
