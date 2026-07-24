@@ -8,35 +8,46 @@
 | 항목 | 값 |
 |---|---|
 | 대상 하드웨어 | 사내 워크스테이션 — Quadro P4000 **VRAM 8GB** · Xeon Gold 5122 · RAM 32GB |
-| 1차 후보 모델 | **Qwen3-8B** (GGUF, `Q5_K_M` ≈ 5.85GB) — 8GB VRAM에 통째로 올라감 |
-| HF 저장소 | [`Qwen/Qwen3-8B-GGUF`](https://huggingface.co/Qwen/Qwen3-8B-GGUF) |
-| 현재 `main.py` 설정 | `qwen2.5:7b-instruct` (스파이크 검증본) — Qwen3-8B로 교체 예정 |
+| 1차 후보 모델 | **Qwen3-8B** — 8GB VRAM에 통째로 올라감 |
+| `main.py` 설정 | `MODEL_NAME = "qwen3:8b"` (스파이크 검증본은 `qwen2.5:7b-instruct`) |
 
 > 학습(파인튜닝) 불필요 — 이미 학습된 모델을 받아 프롬프트만 넣으면 된다.
-> 대용량 가중치 파일(.gguf)은 git에 올리지 않는다(GitHub 100MB 파일 제한 · 용량).
+> 모델 가중치는 git에 올리지 않는다(GitHub 100MB 파일 제한 · 용량).
+> **네트워크: 반입 O / 반출 X** — 다운로드(인바운드)는 되므로 워크스테이션에서 바로 받으면 된다.
 
-## 절차
+## 설치 (제일 쉬운 길 — Ollama)
 
-> **네트워크: 반입 O / 반출 X.** 인터넷에서 받아오는 건 되므로(반입 가능) **워크스테이션에서 바로 다운로드**해도 되고, 필요하면 다른 PC에서 받아 옮겨도 된다. 외부로 데이터를 내보내는 것(반출)만 막힌다.
+워크스테이션에서 스크립트 한 번 실행하면 Ollama 설치 + 모델 다운로드까지 끝.
 
-### 1) 모델 다운로드 (워크스테이션에서 바로 실행 가능)
 ```bash
 cd ai-model
-./download_model.sh          # ./models/Qwen3-8B-Q5_K_M.gguf 생성
+./setup_ollama.sh
 ```
 
-### 2) 워크스테이션에서 모델 등록·실행 (Ollama)
-```bash
-# models/ 옆에 Modelfile 작성:  echo 'FROM ./models/Qwen3-8B-Q5_K_M.gguf' > Modelfile
-ollama create qwen3-8b -f Modelfile
-ollama run qwen3-8b            # 동작 확인
-```
-`main.py` 의 `MODEL_NAME` 은 이미 `"qwen3-8b"` 로 설정돼 있어 위 태그와 그대로 맞물린다.
+이게 하는 일: ① Ollama 설치(`curl`) → ② GPU 드라이버 확인 → ③ Ollama 서버 시작 → ④ `ollama pull qwen3:8b`.
 
-*(대안: llama.cpp — `./llama-server -m models/Qwen3-8B-Q5_K_M.gguf -ngl 99 -c 4096`. `-ngl 99`=전 레이어 GPU 적재, `-c`=컨텍스트. 8GB를 넘기지 않도록 컨텍스트는 조항 단위로 짧게.)*
+**설정 참고**
+- **Linux**: 위 스크립트 그대로. 설치 중 `sudo` 암호를 물을 수 있음.
+- **GPU 가속(P4000)**: NVIDIA 드라이버가 있어야 함(`nvidia-smi` 동작). 없으면 자동으로 CPU로 동작 → 되긴 하지만 느림.
+- **Windows**: 스크립트 대신 [ollama.com/download](https://ollama.com/download)에서 설치 프로그램(OllamaSetup.exe) 실행 후, 명령프롬프트에서 `ollama pull qwen3:8b`.
 
-### 3) AI 서버 실행
+## AI 서버 실행
+
 ```bash
 pip install fastapi "uvicorn[standard]"
 uvicorn main:app --host 0.0.0.0 --port 8001
 ```
+`main.py`의 `MODEL_NAME`이 `qwen3:8b`라 위에서 받은 모델과 그대로 물린다.
+
+---
+
+### (대안) HuggingFace에서 GGUF 파일로 직접 받기
+
+Ollama 레지스트리 대신 파일을 직접 관리하고 싶을 때. [`download_model.sh`](download_model.sh) 실행 →
+`./models/Qwen3-8B-Q5_K_M.gguf`(≈5.85GB) 생성 → Ollama에 같은 이름으로 등록:
+
+```bash
+echo 'FROM ./models/Qwen3-8B-Q5_K_M.gguf' > Modelfile
+ollama create qwen3:8b -f Modelfile
+```
+*(또는 llama.cpp: `./llama-server -m models/Qwen3-8B-Q5_K_M.gguf -ngl 99 -c 4096`. `-ngl 99`=전 레이어 GPU 적재, `-c`=컨텍스트. 8GB를 넘기지 않도록 컨텍스트는 짧게.)*

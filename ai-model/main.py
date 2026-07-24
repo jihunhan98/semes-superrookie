@@ -5,9 +5,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-# 워크스테이션(P4000 8GB)용 1차 후보 — Qwen3-8B (GGUF Q5_K_M).
-# 모델 준비 절차는 ai-model/README.md 참고. (스파이크 검증본은 qwen2.5:7b-instruct)
-MODEL_NAME = "qwen3-8b"
+# 워크스테이션(P4000 8GB)용 1차 후보 — Qwen3-8B.
+# 준비: `./setup_ollama.sh` (= ollama pull qwen3:8b). 스파이크 검증본은 qwen2.5:7b-instruct.
+MODEL_NAME = "qwen3:8b"
 
 SYSTEM_PROMPT = """당신은 반도체 장비 요구사항 명세서에서 모호한 표현을 찾는 검토자입니다.
 다음 유형 중 하나로 분류하세요: 정량 기준 부재 / 모호한 정도부사 / 주어·주체 불명확 / 조건 발생 시점 불명확 / 예외·경계 조건 누락 / 접속사 범위 모호 / 시간·일정 모호 / 해당없음
