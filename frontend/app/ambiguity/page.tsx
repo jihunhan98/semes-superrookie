@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { analyze } from "../lib/api";
+import { analyze, type Engine, type Mode } from "../lib/api";
 import { ClauseCard, type WorkingClause } from "../components/ClauseCard";
+
+// 실제로 응답한 판정기 → 배지 라벨/색
+const MODE_BADGE: Record<Mode, { label: string; cls: string }> = {
+  ollama: { label: "로컬 AI · Qwen3-8B", cls: "bg-indigo-100 text-indigo-700" },
+  playground: { label: "사내 LLM · Playground", cls: "bg-violet-100 text-violet-700" },
+  mock: { label: "mock · 규칙 기반", cls: "bg-gray-200 text-gray-600" },
+};
 
 const SAMPLE = `1. 태스크 각 스텝별 진행에 필요한 필수 요건이 충족된 상태인 경우에 한하여 태스크를 재전개할 수 있어야 한다.
 2. 장비는 충분한 내구성을 가져야 한다.
@@ -15,8 +22,9 @@ type Tab = "text" | "docx";
 export default function AmbiguityPage() {
   const [tab, setTab] = useState<Tab>("text");
   const [text, setText] = useState(SAMPLE);
+  const [engine, setEngine] = useState<Engine>("local");
   const [clauses, setClauses] = useState<WorkingClause[]>([]);
-  const [mode, setMode] = useState<"ollama" | "mock" | null>(null);
+  const [mode, setMode] = useState<Mode | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
@@ -25,7 +33,7 @@ export default function AmbiguityPage() {
     setBusy(true);
     setError(null);
     try {
-      const data = await analyze(text);
+      const data = await analyze(text, engine);
       setMode(data.mode);
       setClauses(
         data.clauses.map((c) => ({
@@ -73,13 +81,9 @@ export default function AmbiguityPage() {
           <h1 className="text-2xl font-bold text-gray-900">모호성 해결</h1>
           {mode && (
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                mode === "ollama"
-                  ? "bg-indigo-100 text-indigo-700"
-                  : "bg-gray-200 text-gray-600"
-              }`}
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${MODE_BADGE[mode].cls}`}
             >
-              {mode === "ollama" ? "LLM 판정 (Qwen3-8B)" : "mock 판정 (규칙 기반)"}
+              판정: {MODE_BADGE[mode].label}
             </span>
           )}
         </div>
@@ -112,6 +116,28 @@ export default function AmbiguityPage() {
               onChange={(e) => setText(e.target.value)}
               className="h-40 w-full rounded-lg border border-gray-300 p-3 text-sm leading-relaxed focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             />
+
+            {/* 판정 엔진 선택 — 로컬 AI vs 사내 LLM 비교 */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">판정 엔진</span>
+              <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+                <EngineBtn active={engine === "local"} onClick={() => setEngine("local")}>
+                  로컬 AI · Qwen3-8B
+                </EngineBtn>
+                <EngineBtn
+                  active={engine === "playground"}
+                  onClick={() => setEngine("playground")}
+                >
+                  사내 LLM · Playground
+                </EngineBtn>
+              </div>
+              <span className="text-xs text-gray-400">
+                {engine === "local"
+                  ? "사내 워크스테이션 Ollama"
+                  : "사내 LLM API 서비스(OpenAI 호환)"}
+              </span>
+            </div>
+
             <div className="mt-3 flex items-center gap-3">
               <button
                 onClick={runAnalyze}
@@ -184,6 +210,29 @@ function TabButton({
         active
           ? "border-indigo-600 text-indigo-600"
           : "border-transparent text-gray-400 hover:text-gray-600"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EngineBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+        active
+          ? "bg-white text-indigo-700 shadow-sm"
+          : "text-gray-500 hover:text-gray-700"
       }`}
     >
       {children}

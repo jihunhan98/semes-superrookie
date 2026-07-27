@@ -9,23 +9,36 @@ DESIGN.md 2장 스펙 구현:
 이 서버는 무상태(stateless)다. 문장 하나를 받아 구조화 JSON 하나를 돌려줄 뿐,
 조항 분리·REQ-ID 부여·취합·저장은 백엔드(Spring Boot)가 담당한다.
 
-- Ollama(qwen3:8b)가 떠 있으면 실제 LLM으로 판정하고,
-  없으면 규칙 기반 mock으로 폴백한다(개발/시연이 항상 되도록).
-- 반출 차단 환경이라 외부 AI API는 쓰지 않고 사내 로컬 모델만 사용한다.
+판정 엔진(engine)은 두 가지를 지원하며, 같은 형식(JSON)으로 결과를 낸다:
+  - "local"      : 사내 워크스테이션의 Ollama(qwen3:8b) 로컬 LLM
+  - "playground" : 사내 LLM API 서비스(OpenAI 호환 엔드포인트)
+어느 쪽도 붙지 않으면 규칙 기반 mock으로 폴백한다(개발/시연이 항상 되도록).
+반출 차단 환경이라 둘 다 사내 서버이며, 외부(Claude/GPT) API는 쓰지 않는다.
 """
 from __future__ import annotations
 
 import json
 import re
+import socket
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+# ── 엔진 1: 로컬 Ollama ─────────────────────────────────────────────────
 OLLAMA_URL = "http://localhost:11434"
 OLLAMA_MODEL = "qwen3:8b"
+
+# ── 엔진 2: 사내 LLM API 서비스 (OpenAI 호환) ────────────────────────────
+# OpenAI 파이썬 라이브러리와 동일한 규격(/v1/chat/completions)을 표준 라이브러리로 호출.
+#   client = OpenAI(api_key="EMPTY", base_url="http://23.43.51.216:6100/v1")
+#   client.chat.completions.create(model="gpt-4", messages=[...])
+PLAYGROUND_BASE = "http://23.43.51.216:6100/v1"
+PLAYGROUND_MODEL = "gpt-4"   # 서버가 서빙하는 모델명(gpt-oss 등). 서버에 맞게 조정.
+PLAYGROUND_KEY = "EMPTY"
 
 # ── DESIGN 2.1 모호성 유형 (7종) ─────────────────────────────────────────
 AMBIGUITY_TYPES = [
@@ -106,6 +119,7 @@ app.add_middleware(
 
 class AnalyzeRequest(BaseModel):
     sentence: str = Field(..., description="판정할 요구사항 문장 하나")
+    engine: str = Field("local", description="판정 엔진: local(Ollama) | playground(사내 LLM API)")
 
 
 class Finding(BaseModel):
@@ -115,20 +129,32 @@ class Finding(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    mode: str = Field(..., description="ollama | mock — 어떤 판정기가 응답했는지")
+    mode: str = Field(..., description="ollama | playground | mock — 실제로 응답한 판정기")
     ambiguous: bool
     findings: list[Finding] = []
     suggestion: str = ""
 
 
-def _http_post_json(url: str, payload: dict, timeout: float) -> dict:
-    """표준 라이브러리(urllib)로 JSON POST. (httpx 등 외부 의존성 없음)"""
+def _http_post_json(url: str, payload: dict, timeout: float, headers: dict | None = None) -> dict:
+    """표준 라이브러리(urllib)로 JSON POST. (httpx/openai 등 외부 의존성 없음)"""
     data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=data, headers={"Content-Type": "application/json"}, method="POST"
-    )
+    h = {"Content-Type": "application/json"}
+    if headers:
+        h.update(headers)
+    req = urllib.request.Request(url, data=data, headers=h, method="POST")
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8"))
+
+
+def _reachable(url: str, timeout: float = 2.0) -> bool:
+    """host:port로 소켓 연결이 되는지 빠르게 확인(엔진 가용성 프리체크)."""
+    try:
+        u = urlparse(url)
+        port = u.port or (443 if u.scheme == "https" else 80)
+        with socket.create_connection((u.hostname, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
 
 
 def ollama_up() -> bool:
@@ -157,6 +183,30 @@ def call_ollama(sentence: str) -> dict:
         timeout=120,
     )
     content = body["message"]["content"]
+    data = _parse_json(content)
+    return _normalize(data)
+
+
+def call_playground(sentence: str) -> dict:
+    """사내 LLM API 서비스(OpenAI 호환)에 Chat Completions로 판정을 요청한다.
+
+    OpenAI 라이브러리의 client.chat.completions.create(...) 와 동일한 HTTP 요청을
+    표준 라이브러리로 보낸다(POST /v1/chat/completions).
+    """
+    body = _http_post_json(
+        f"{PLAYGROUND_BASE}/chat/completions",
+        {
+            "model": PLAYGROUND_MODEL,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": sentence},
+            ],
+            "temperature": 0,
+        },
+        timeout=120,
+        headers={"Authorization": f"Bearer {PLAYGROUND_KEY}"},
+    )
+    content = body["choices"][0]["message"]["content"]
     data = _parse_json(content)
     return _normalize(data)
 
@@ -215,7 +265,13 @@ def mock_analyze(sentence: str) -> dict:
 
 @app.get("/health")
 def health():
-    return {"mode": "ollama" if ollama_up() else "mock", "model": OLLAMA_MODEL}
+    """두 엔진의 가용성. 프론트가 어떤 엔진이 실제로 붙는지 표시하는 데 쓴다."""
+    return {
+        "local": "ollama" if ollama_up() else "mock",
+        "playground": "up" if _reachable(PLAYGROUND_BASE) else "down",
+        "ollama_model": OLLAMA_MODEL,
+        "playground_model": PLAYGROUND_MODEL,
+    }
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
@@ -223,6 +279,19 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     sentence = (req.sentence or "").strip()
     if not sentence:
         return AnalyzeResponse(mode="mock", ambiguous=False)
+
+    engine = (req.engine or "local").lower()
+
+    # 엔진 2: 사내 LLM API 서비스(OpenAI 호환)
+    if engine == "playground":
+        if _reachable(PLAYGROUND_BASE):
+            try:
+                return AnalyzeResponse(mode="playground", **call_playground(sentence))
+            except Exception:
+                pass  # 실패 시 mock 폴백
+        return AnalyzeResponse(mode="mock", **mock_analyze(sentence))
+
+    # 엔진 1: 로컬 Ollama (기본)
     if ollama_up():
         try:
             return AnalyzeResponse(mode="ollama", **call_ollama(sentence))

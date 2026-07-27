@@ -29,16 +29,25 @@ export type ClauseResult = {
   suggestion: string;
 };
 
+/** 판정 엔진: local=사내 로컬 Ollama, playground=사내 LLM API 서비스. */
+export type Engine = "local" | "playground";
+
+/** 실제로 응답한 판정기. */
+export type Mode = "ollama" | "playground" | "mock";
+
 export type AnalyzeResponse = {
-  mode: "ollama" | "mock";
+  mode: Mode;
   clauses: ClauseResult[];
 };
 
-export async function analyze(text: string): Promise<AnalyzeResponse> {
+export async function analyze(
+  text: string,
+  engine: Engine = "local",
+): Promise<AnalyzeResponse> {
   const res = await fetch(`${BACKEND}/api/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, engine }),
   });
   if (!res.ok) throw new Error(`백엔드 오류 (${res.status})`);
   return res.json();

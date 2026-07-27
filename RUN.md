@@ -45,11 +45,19 @@
 > - 백엔드: `cd backend && mvnw.cmd -DskipTests package` → `target\app.jar` → `backend\app.jar`로 복사
 > - AI deps: `pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org fastapi uvicorn`
 
-## AI 판정기 확인 (mock ↔ LLM)
+## 판정 엔진 (2가지 비교)
 
-- 화면 우상단 배지가 `mock 판정` 이면 Ollama가 꺼져 있는 것. `ollama serve` + 모델이 있으면
-  `LLM 판정 (Qwen3-8B)` 로 바뀐다.
-- `curl http://localhost:8001/health` → `{"mode":"ollama"|"mock"}`
+모호성 해결 화면에서 **판정 엔진**을 골라 같은 형식의 결과를 비교할 수 있다.
+
+| 엔진 | 무엇 | 안 붙으면 |
+|---|---|---|
+| **로컬 AI · Qwen3-8B** | 사내 워크스테이션 Ollama(`localhost:11434`) | mock 폴백 |
+| **사내 LLM · Playground** | 사내 LLM API 서비스(OpenAI 호환, `ai-server/app.py`의 `PLAYGROUND_BASE`) | mock 폴백 |
+
+- 화면 우상단 배지가 실제로 응답한 판정기(`로컬 AI` / `사내 LLM` / `mock`)를 보여준다.
+- 사내 LLM은 OpenAI 라이브러리와 동일한 규격(`POST /v1/chat/completions`, **Chat Completions**)으로
+  호출한다. (모델명·주소는 `ai-server/app.py` 상단 `PLAYGROUND_*` 상수에서 조정)
+- `curl http://localhost:8001/health` → `{"local":"ollama|mock","playground":"up|down", ...}`
 
 ## 아직 안 된 것 (다음 단계)
 

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM 요구사항 모호성 데모 — React + Spring Boot + FastAPI 3개 전부 실행 (Windows)
 REM 전제: JDK 21, Python 설치. (선택) Ollama + qwen3:8b 실행 시 실제 판정.
 REM       Node/npm/Maven 불필요 — React 빌드본(web/dist)과 Spring Boot 빌드본(backend/app.jar) 포함.

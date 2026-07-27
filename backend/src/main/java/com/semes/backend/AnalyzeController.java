@@ -41,10 +41,11 @@ public class AnalyzeController {
     public AnalyzeResponse analyze(@RequestBody AnalyzeRequest req) {
         List<ClauseResult> clauses = new ArrayList<>();
         String mode = "mock";
+        String engine = req.engine() != null ? req.engine() : "local";
         int i = 1;
         for (String text : splitClauses(req.text())) {
             String reqId = "REQ-2026-%03d".formatted(i++);
-            AiResponse res = callAi(text);
+            AiResponse res = callAi(text, engine);
             if (res != null) {
                 if (res.mode() != null) {
                     mode = res.mode();
@@ -59,13 +60,13 @@ public class AnalyzeController {
         return new AnalyzeResponse(mode, clauses);
     }
 
-    /** 조항 하나의 모호성 판정을 AI 서버에 요청한다. */
-    private AiResponse callAi(String sentence) {
+    /** 조항 하나의 모호성 판정을 AI 서버에 요청한다(엔진 선택 포함). */
+    private AiResponse callAi(String sentence, String engine) {
         try {
             return ai.post()
                     .uri("/analyze")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("sentence", sentence))
+                    .body(Map.of("sentence", sentence, "engine", engine))
                     .retrieve()
                     .body(AiResponse.class);
         } catch (Exception e) {
