@@ -16,37 +16,34 @@
 
 - **frontend/** (Next.js + TypeScript + Tailwind): 입력(텍스트) → 분석 → 조항별 모호 지점 표시 →
   해결하기/넘어가기 → 해결 전·후 비교. 백엔드의 `/api/analyze` 하나만 호출한다.
+  **정적 빌드본 `frontend/out` 포함** → npm 없이 바로 서빙.
 - **backend/** (Spring Boot 4 · Java 21): 원문을 조항 단위로 나눠 `REQ-2026-NNN`을 부여하고,
-  조항마다 AI 서버에 판정을 위임해 취합한다.
+  조항마다 AI 서버에 판정을 위임해 취합한다. **빌드본 `backend/app.jar` 포함** → Maven 없이 바로 실행.
 - **ai-server/** (FastAPI): 문장 하나를 받아 모호성 유형(7종)·근거·고쳐쓰기 예시를 JSON으로 낸다.
   Ollama(qwen3:8b)가 떠 있으면 실제 LLM, 없으면 규칙 기반 mock으로 폴백(개발/시연 항상 가능).
+  **외부 의존성 없음** — 표준 라이브러리로 Ollama 호출(httpx 불필요), `fastapi`·`uvicorn`만 있으면 됨.
 
-## 사전 준비 (한 번만)
+## 실행 (npm/Maven 불필요)
 
-| 대상 | 필요한 것 | 설치 |
-|---|---|---|
-| ai-server | Python 3.11+ | `cd ai-server && pip install -r requirements.txt` |
-| frontend | Node 20+ | `cd frontend && npm install` |
-| backend | JDK 21 | (Maven은 `mvnw` 래퍼가 자동) |
-| (선택) AI | Ollama + qwen3:8b | `ollama pull qwen3:8b` — 없으면 mock |
-
-> **사내 프록시(SSL 검사)로 npm/pip/Maven이 막히면**
-> - npm: `npm config set strict-ssl false` 또는 `set NODE_OPTIONS=--use-system-ca`
-> - pip: `pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt`
-> - Maven: `~/.m2/settings.xml`에 사내 프록시 설정
-
-## 실행
+빌드본이 포함돼 있어 **JDK 21 + Python** 만 있으면 된다.
 
 - **한 번에**: `run-dev.bat` 더블클릭 → 서버 3개가 각각 창으로 뜨고 브라우저가 자동 오픈.
 - **개별 실행**:
   ```
-  cd ai-server && python -m uvicorn app:app --port 8001
-  cd backend   && mvnw.cmd spring-boot:run          (mac/linux: ./mvnw spring-boot:run)
-  cd frontend  && npm run dev
+  cd ai-server && pip install fastapi uvicorn && python -m uvicorn app:app --port 8001
+  java -jar backend\app.jar
+  python -m http.server 3000 --directory frontend\out
   ```
+- (선택) 실제 LLM: `ollama pull qwen3:8b` 후 `ollama serve` — 없으면 mock
 
 - 프론트: http://localhost:3000
 - AI 서버 문서(Swagger UI 유사): http://localhost:8001/docs
+
+> **프론트/백엔드를 직접 다시 빌드할 때** (사내 프록시로 npm/Maven이 막히면 아래 참고)
+> - 프론트: `cd frontend && npm install && npm run build` → `out/` 갱신
+>   (프록시: `npm config set strict-ssl false` 또는 `set NODE_OPTIONS=--use-system-ca`)
+> - 백엔드: `cd backend && mvnw.cmd -DskipTests package` → `target\app.jar` → `backend\app.jar`로 복사
+> - AI deps: `pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org fastapi uvicorn`
 
 ## AI 판정기 확인 (mock ↔ LLM)
 

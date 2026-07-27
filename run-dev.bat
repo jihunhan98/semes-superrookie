@@ -1,29 +1,29 @@
 @echo off
 REM ============================================================
-REM  요구사항 모호성 해결 (핵심 기능 1) — 개발 모드 실행 (Windows)
+REM  요구사항 모호성 해결 (핵심 기능 1) — 실행 (Windows)
 REM  React(Next.js) + Spring Boot + FastAPI 3개 서버를 각각 띄운다.
 REM
-REM  [사전 준비 — 한 번만] RUN.md 참고
-REM   - frontend:  npm install   (Node 필요)
-REM   - ai-server: pip install -r requirements.txt   (Python 필요)
-REM   - backend:   JDK 21 (Maven은 mvnw 래퍼가 자동 처리)
+REM  필요한 것: JDK 21, Python  (npm/Maven 불필요 — 빌드본 포함)
+REM   - 프론트: frontend/out (Next.js 정적 빌드본) → python http.server
+REM   - 백엔드: backend/app.jar (Spring Boot 빌드본)  → java -jar
+REM   - AI    : ai-server (FastAPI) → uvicorn (fastapi, uvicorn만 필요)
 REM   - (선택) Ollama + qwen3:8b 실행 시 실제 LLM 판정, 없으면 mock
 REM ============================================================
 setlocal
 cd /d "%~dp0"
 
 echo [1/3] AI 서버 (FastAPI) - http://localhost:8001
-start "AI 서버 (FastAPI :8001)" cmd /k "cd /d %~dp0ai-server && python -m uvicorn app:app --port 8001"
+start "AI 서버 (FastAPI :8001)" cmd /k "cd /d %~dp0ai-server && pip install fastapi uvicorn >nul 2>nul && python -m uvicorn app:app --port 8001"
 
 echo [2/3] 백엔드 (Spring Boot) - http://localhost:8080
-start "백엔드 (Spring Boot :8080)" cmd /k "cd /d %~dp0backend && mvnw.cmd spring-boot:run"
+start "백엔드 (Spring Boot :8080)" cmd /k "java -jar %~dp0backend\app.jar"
 
-echo [3/3] 프론트 (Next.js) - http://localhost:3000
-start "프론트 (Next.js :3000)" cmd /k "cd /d %~dp0frontend && npm run dev"
+echo [3/3] 프론트 (Next.js 빌드본) - http://localhost:3000
+start "프론트 (Next.js :3000)" cmd /k "python -m http.server 3000 --directory %~dp0frontend\out"
 
 echo.
-echo 서버 3개 기동 중... (백엔드 Maven 첫 실행 시 의존성 내려받느라 오래 걸릴 수 있음)
-timeout /t 25 >nul
+echo 서버 3개 기동 중... (백엔드 준비에 10~20초)
+timeout /t 14 >nul
 start "" http://localhost:3000
 
 echo.

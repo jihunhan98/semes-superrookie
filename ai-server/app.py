@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import json
 import re
+import urllib.error
+import urllib.request
 
-import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -120,19 +121,29 @@ class AnalyzeResponse(BaseModel):
     suggestion: str = ""
 
 
+def _http_post_json(url: str, payload: dict, timeout: float) -> dict:
+    """표준 라이브러리(urllib)로 JSON POST. (httpx 등 외부 의존성 없음)"""
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=data, headers={"Content-Type": "application/json"}, method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
 def ollama_up() -> bool:
     try:
-        r = httpx.get(f"{OLLAMA_URL}/api/tags", timeout=1.5)
-        return r.status_code == 200
+        with urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=1.5) as r:
+            return r.status == 200
     except Exception:
         return False
 
 
 def call_ollama(sentence: str) -> dict:
     """Ollama에 판정을 요청하고 JSON을 파싱한다."""
-    r = httpx.post(
+    body = _http_post_json(
         f"{OLLAMA_URL}/api/chat",
-        json={
+        {
             "model": OLLAMA_MODEL,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -145,8 +156,7 @@ def call_ollama(sentence: str) -> dict:
         },
         timeout=120,
     )
-    r.raise_for_status()
-    content = r.json()["message"]["content"]
+    content = body["message"]["content"]
     data = _parse_json(content)
     return _normalize(data)
 
