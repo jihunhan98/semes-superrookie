@@ -32,19 +32,15 @@
   <text class="tt" x="520" y="200" fill="#2A8A57">Spring Boot</text>
   <text class="sub" x="520" y="228">백엔드 (REST API)</text>
 
-  <!-- AI server -->
-  <rect class="box" x="735" y="150" width="250" height="115" rx="12" stroke="#C67F17"/>
-  <text class="tt" x="860" y="196" fill="#C67F17">AI 서버 (FastAPI)</text>
-  <text class="sub" x="860" y="224">Qwen3-8B (로컬 LLM)</text>
-  <text class="sub" x="860" y="244" font-size="12" fill="#8a96a3">모호성 검출 · 기능 도출</text>
+  <!-- AI server (bigger, 2 options) -->
+  <rect class="box" x="715" y="150" width="272" height="196" rx="12" stroke="#C67F17"/>
+  <text class="tt" x="851" y="192" fill="#C67F17">AI 서버 (FastAPI)</text>
+  <line x1="740" y1="210" x2="962" y2="210" stroke="#ecdfc8" stroke-width="1.5"/>
+  <text x="742" y="247" font-size="15" fill="#1F2733"><tspan font-weight="700">① Qwen3-8B</tspan> · 로컬 LLM</text>
+  <text x="742" y="284" font-size="15" fill="#1F2733"><tspan font-weight="700">② 사내 playground</tspan> · API</text>
+  <text x="851" y="323" font-size="12" fill="#8a96a3" text-anchor="middle">둘 중 선택 · 모호성 검출 / 기능 도출</text>
 
   <!-- Row 2 -->
-  <!-- Liquibase note (백엔드가 DB 스키마 적용에 쓰는 도구) -->
-  <text x="70" y="424" font-size="15" font-weight="700" fill="#6B4C9A">Liquibase</text>
-  <text x="70" y="450" font-size="13" fill="#63707E">Spring Boot가 DB에 스키마를</text>
-  <text x="70" y="470" font-size="13" fill="#63707E">적용할 때 쓰는 도구</text>
-  <text x="70" y="490" font-size="13" fill="#63707E">(최종 changelog → 개인 스키마 pull)</text>
-
   <!-- Oracle DB -->
   <rect class="box" x="395" y="380" width="250" height="115" rx="12" stroke="#B23B2E"/>
   <text class="tt" x="520" y="430" fill="#B23B2E">Oracle DB</text>
@@ -55,12 +51,12 @@
   <line class="edge" x1="305" y1="207" x2="388" y2="207" marker-end="url(#arrow)"/>
   <text class="lbl" x="346" y="197">REST</text>
   <!-- Spring -> AI -->
-  <line class="edge" x1="645" y1="207" x2="728" y2="207" marker-end="url(#arrow)"/>
-  <text class="lbl" x="686" y="197">분석요청</text>
-  <!-- Spring -> Oracle (JDBC + Liquibase) -->
+  <line class="edge" x1="645" y1="207" x2="710" y2="207" marker-end="url(#arrow)"/>
+  <text class="lbl" x="678" y="197">분석요청</text>
+  <!-- Spring -> Oracle : 백엔드가 Liquibase를 실행해 스키마 적용 -->
   <line class="edge" x1="520" y1="265" x2="520" y2="373" marker-end="url(#arrow)"/>
-  <text class="lbl" x="533" y="306" text-anchor="start" font-weight="700">JDBC · Liquibase</text>
-  <text class="lbl" x="533" y="325" text-anchor="start" fill="#63707E">스키마 마이그레이션(pull)</text>
+  <text class="lbl" x="507" y="303" text-anchor="end" font-weight="700">JDBC (데이터)</text>
+  <text class="lbl" x="507" y="322" text-anchor="end" fill="#4a5663">Liquibase 실행 → 스키마 적용(pull)</text>
 
   <!-- hardware note -->
   <text x="520" y="537" font-size="13" fill="#63707E" text-anchor="middle">워크스테이션: Quadro P4000 8GB · Xeon Gold 5122 · RAM 32GB</text>
