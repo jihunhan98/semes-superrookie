@@ -7,6 +7,9 @@ AMR은 IEC 60204-1 안전 규격을 만족해야 한다.
 통신 끊김 시 빠른 시일 내 복구한다.
 진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.`
 
+// 백엔드(Spring Boot) 주소 — 프론트는 이 REST API만 호출한다.
+const API = 'http://localhost:8080'
+
 const MODE = {
   ollama: ['ollama', 'LLM: Qwen3-8B (실제 판정)'],
   mock: ['mock', 'mock 판정 (Ollama 미실행 — 규칙 기반)'],
@@ -24,7 +27,7 @@ export default function App() {
     setBusy(true)
     setStatus('분석 중… (모델 첫 호출이면 수십 초 걸릴 수 있음)')
     try {
-      const r = await fetch('/api/analyze', {
+      const r = await fetch(API + '/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),

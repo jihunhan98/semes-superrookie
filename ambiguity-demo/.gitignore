@@ -1,0 +1,5 @@
+# build/artifact dirs — 빌드본은 backend/app.jar 와 web/dist 로만 커밋한다
+backend/target/
+web/node_modules/
+**/__pycache__/
+*.pyc
