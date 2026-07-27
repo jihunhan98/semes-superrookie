@@ -1,10 +1,12 @@
 package com.semes.backend.dto;
 
+import java.util.List;
+
 /**
- * 프론트가 보내는 분석 요청.
+ * 분석 요청 — 요구사항 여러 건(표의 여러 행)을 한 번에 보낸다.
  *
- * @param text   요구사항 원문(여러 조항이 줄바꿈으로 구분됨)
+ * @param reqs   요구사항 목록
  * @param engine 판정 엔진: "local"(Ollama) | "playground"(사내 LLM API). null이면 local.
  */
-public record AnalyzeRequest(String text, String engine) {
+public record AnalyzeRequest(List<ReqInput> reqs, String engine) {
 }

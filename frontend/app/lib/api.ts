@@ -14,40 +14,46 @@ export const AMBIGUITY_TYPES = [
   "시간·일정 모호",
 ] as const;
 
-export type Finding = {
-  span: string;
-  type: string;
-  reason: string;
-};
-
-/** 백엔드가 돌려주는 조항 하나의 분석 결과. */
-export type ClauseResult = {
-  reqId: string;
-  text: string;
-  ambiguous: boolean;
-  findings: Finding[];
-  suggestion: string;
-};
-
 /** 판정 엔진: local=사내 로컬 Ollama, playground=사내 LLM API 서비스. */
 export type Engine = "local" | "playground";
 
 /** 실제로 응답한 판정기. */
 export type Mode = "ollama" | "playground" | "mock";
 
+/** 요구사항 한 건 (docx 표의 한 행). */
+export type ReqInput = {
+  id: string;
+  category: string; // 분류
+  content: string; // 내용
+  remark: string; // 비고
+};
+
+export type Finding = {
+  span: string;
+  type: string;
+  reason: string;
+};
+
+/** 백엔드가 돌려주는 요구사항 한 건의 분석 결과. */
+export type ReqResult = ReqInput & {
+  ambiguous: boolean;
+  findings: Finding[];
+  suggestion: string;
+};
+
 export type AnalyzeResponse = {
   mode: Mode;
-  clauses: ClauseResult[];
+  reqs: ReqResult[];
 };
 
 export async function analyze(
-  text: string,
+  reqs: ReqInput[],
   engine: Engine = "local",
 ): Promise<AnalyzeResponse> {
   const res = await fetch(`${BACKEND}/api/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, engine }),
+    body: JSON.stringify({ reqs, engine }),
   });
   if (!res.ok) throw new Error(`백엔드 오류 (${res.status})`);
   return res.json();

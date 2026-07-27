@@ -64,8 +64,11 @@ GLOSSARY = """[도메인 용어집 — 아래는 모호한 표현이 '아니다'
 위 용어 자체는 이미 정의된 도메인 용어이므로 모호하다고 판정하지 말 것."""
 
 SYSTEM_PROMPT = f"""너는 반도체 장비사(SEMES)의 요구사항 명세서 검토 AI다.
-고객사(삼성전자)가 작성한 요구사항 문장 하나를 받아, 사람마다 다르게 해석될 수 있는
-'모호한 표현'을 찾아낸다.
+고객사(삼성전자)가 작성한 요구사항 하나(요구사항의 '내용'과 '비고'로 구성)를 받아,
+그 안에서 사람마다 다르게 해석될 수 있는 '모호한 표현'을 모두 찾아낸다.
+
+- '분류'는 이 요구사항이 속한 기능군일 뿐 배경 맥락이다. 분류 자체는 판정 대상이 아니다.
+- '내용'과 '비고'의 문장들만 판정한다. 여러 문장에 걸쳐 모호한 곳이 여러 개일 수 있다.
 
 {GLOSSARY}
 
@@ -73,14 +76,14 @@ SYSTEM_PROMPT = f"""너는 반도체 장비사(SEMES)의 요구사항 명세서 
 {chr(10).join(f"- {t}" for t in AMBIGUITY_TYPES)}
 
 [판정 규칙]
-1. 문장에 모호한 부분이 있으면 ambiguous=true, 없으면 false.
+1. 내용/비고에 모호한 부분이 하나라도 있으면 ambiguous=true, 없으면 false.
 2. 모호한 부분마다 findings 배열에 항목을 추가한다.
-   - span: 문장에서 모호한 '부분 문자열'(원문 그대로 발췌)
+   - span: 내용/비고 원문에서 모호한 '부분 문자열'(그대로 발췌)
    - type: 위 7종 중 하나(정확히 그 문자열)
    - reason: 왜 모호한지 한 문장(근거)
 3. 근거를 지어내지 말 것. 모호하지 않으면 findings는 빈 배열.
-4. suggestion: 모호함이 있으면, 이 문장을 어떻게 고쳐 쓰면 명확해지는지
-   '다시 쓴 예시 문장' 하나. 없으면 빈 문자열.
+4. suggestion: 모호함이 있으면, 이 요구사항을 어떻게 보완하면 명확해지는지
+   한두 문장 요약. 없으면 빈 문자열.
 
 [출력은 반드시 아래 JSON 하나만. 다른 말/설명 금지]
 {{"ambiguous": true, "findings": [{{"span": "...", "type": "...", "reason": "..."}}], "suggestion": "..."}}"""
@@ -106,6 +109,9 @@ MOCK_RULES: list[tuple[str, str, str, str]] = [
     ("등을", "접속사 범위 모호", "'등'이 가리키는 범위가 불명확", "대상 항목을 열거로 확정"),
     ("등의", "접속사 범위 모호", "'등'이 가리키는 범위가 불명확", "대상 항목을 열거로 확정"),
     ("필수 요건", "정량 기준 부재", "'필수 요건'이 무엇인지 정의되지 않음", "요건 항목을 구체적으로 열거"),
+    ("간주한다", "예외/경계 조건 누락", "실제 확인 없이 '확인된 것으로 간주' — 예외 상황이 정의되지 않음", "확인 절차·실패 시 처리를 정의"),
+    ("허용 여부", "조건 발생 시점 불명확", "'허용 여부'의 판단 기준이 정의되지 않음", "허용 조건을 구체적으로 정의"),
+    ("상세 제약 조건", "정량 기준 부재", "'상세 제약 조건'의 실제 항목이 정의되지 않음", "제약 항목을 구체적으로 열거"),
 ]
 
 app = FastAPI(title="요구사항 모호성 검출 AI 서버", version="1.0")
@@ -118,7 +124,10 @@ app.add_middleware(
 
 
 class AnalyzeRequest(BaseModel):
-    sentence: str = Field(..., description="판정할 요구사항 문장 하나")
+    """요구사항 하나(docx 표의 한 행). 내용+비고를 통째로 판정한다."""
+    category: str = Field("", description="분류 — 배경 맥락(판정 대상 아님)")
+    content: str = Field("", description="내용 — 요구사항 본문")
+    remark: str = Field("", description="비고 — 제약·정의 항목")
     engine: str = Field("local", description="판정 엔진: local(Ollama) | playground(사내 LLM API)")
 
 
@@ -165,15 +174,27 @@ def ollama_up() -> bool:
         return False
 
 
-def call_ollama(sentence: str) -> dict:
-    """Ollama에 판정을 요청하고 JSON을 파싱한다."""
+def _build_user_msg(category: str, content: str, remark: str) -> str:
+    """요구사항 한 건(분류/내용/비고)을 LLM 입력 텍스트로 만든다."""
+    lines = []
+    if category.strip():
+        lines.append(f"분류: {category.strip()}")
+    if content.strip():
+        lines.append(f"[내용]\n{content.strip()}")
+    if remark.strip():
+        lines.append(f"[비고]\n{remark.strip()}")
+    return "\n\n".join(lines)
+
+
+def call_ollama(category: str, content: str, remark: str) -> dict:
+    """Ollama에 요구사항 한 건의 판정을 요청하고 JSON을 파싱한다."""
     body = _http_post_json(
         f"{OLLAMA_URL}/api/chat",
         {
             "model": OLLAMA_MODEL,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": sentence},
+                {"role": "user", "content": _build_user_msg(category, content, remark)},
             ],
             "stream": False,
             "think": False,          # qwen3 사고 과정 출력 끄기(속도)
@@ -182,12 +203,11 @@ def call_ollama(sentence: str) -> dict:
         },
         timeout=120,
     )
-    content = body["message"]["content"]
-    data = _parse_json(content)
+    data = _parse_json(body["message"]["content"])
     return _normalize(data)
 
 
-def call_playground(sentence: str) -> dict:
+def call_playground(category: str, content: str, remark: str) -> dict:
     """사내 LLM API 서비스(OpenAI 호환)에 Chat Completions로 판정을 요청한다.
 
     OpenAI 라이브러리의 client.chat.completions.create(...) 와 동일한 HTTP 요청을
@@ -199,15 +219,14 @@ def call_playground(sentence: str) -> dict:
             "model": PLAYGROUND_MODEL,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": sentence},
+                {"role": "user", "content": _build_user_msg(category, content, remark)},
             ],
             "temperature": 0,
         },
         timeout=120,
         headers={"Authorization": f"Bearer {PLAYGROUND_KEY}"},
     )
-    content = body["choices"][0]["message"]["content"]
-    data = _parse_json(content)
+    data = _parse_json(body["choices"][0]["message"]["content"])
     return _normalize(data)
 
 
@@ -250,16 +269,17 @@ def _closest_type(t: str) -> str:
     return AMBIGUITY_TYPES[0]  # 최후 폴백: 정량 기준 부재
 
 
-def mock_analyze(sentence: str) -> dict:
+def mock_analyze(category: str, content: str, remark: str) -> dict:
+    text = f"{content}\n{remark}"
     findings, hints = [], []
     for kw, typ, reason, hint in MOCK_RULES:
-        if kw in sentence:
+        if kw in text:
             findings.append({"span": kw, "type": typ, "reason": reason})
             hints.append(hint)
     ambiguous = len(findings) > 0
     suggestion = ""
     if ambiguous:
-        suggestion = f"{sentence.rstrip('.')} — 단, {', '.join(dict.fromkeys(hints))}."
+        suggestion = f"다음을 보완: {', '.join(dict.fromkeys(hints))}."
     return {"ambiguous": ambiguous, "findings": findings, "suggestion": suggestion}
 
 
@@ -276,8 +296,10 @@ def health():
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
-    sentence = (req.sentence or "").strip()
-    if not sentence:
+    category = (req.category or "").strip()
+    content = (req.content or "").strip()
+    remark = (req.remark or "").strip()
+    if not content and not remark:
         return AnalyzeResponse(mode="mock", ambiguous=False)
 
     engine = (req.engine or "local").lower()
@@ -286,15 +308,15 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     if engine == "playground":
         if _reachable(PLAYGROUND_BASE):
             try:
-                return AnalyzeResponse(mode="playground", **call_playground(sentence))
+                return AnalyzeResponse(mode="playground", **call_playground(category, content, remark))
             except Exception:
                 pass  # 실패 시 mock 폴백
-        return AnalyzeResponse(mode="mock", **mock_analyze(sentence))
+        return AnalyzeResponse(mode="mock", **mock_analyze(category, content, remark))
 
     # 엔진 1: 로컬 Ollama (기본)
     if ollama_up():
         try:
-            return AnalyzeResponse(mode="ollama", **call_ollama(sentence))
+            return AnalyzeResponse(mode="ollama", **call_ollama(category, content, remark))
         except Exception:
             pass  # LLM 실패 시 mock으로 폴백
-    return AnalyzeResponse(mode="mock", **mock_analyze(sentence))
+    return AnalyzeResponse(mode="mock", **mock_analyze(category, content, remark))
