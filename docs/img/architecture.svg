@@ -39,10 +39,11 @@
   <text class="sub" x="860" y="244" font-size="12" fill="#8a96a3">모호성 검출 · 기능 도출</text>
 
   <!-- Row 2 -->
-  <!-- Liquibase -->
-  <rect class="box" x="55" y="380" width="250" height="115" rx="12" stroke="#6B4C9A"/>
-  <text class="tt" x="180" y="430" fill="#6B4C9A">Liquibase</text>
-  <text class="sub" x="180" y="458">스키마 버전관리 · 동기화(pull)</text>
+  <!-- Liquibase note (백엔드가 DB 스키마 적용에 쓰는 도구) -->
+  <text x="70" y="424" font-size="15" font-weight="700" fill="#6B4C9A">Liquibase</text>
+  <text x="70" y="450" font-size="13" fill="#63707E">Spring Boot가 DB에 스키마를</text>
+  <text x="70" y="470" font-size="13" fill="#63707E">적용할 때 쓰는 도구</text>
+  <text x="70" y="490" font-size="13" fill="#63707E">(최종 changelog → 개인 스키마 pull)</text>
 
   <!-- Oracle DB -->
   <rect class="box" x="395" y="380" width="250" height="115" rx="12" stroke="#B23B2E"/>
@@ -56,12 +57,10 @@
   <!-- Spring -> AI -->
   <line class="edge" x1="645" y1="207" x2="728" y2="207" marker-end="url(#arrow)"/>
   <text class="lbl" x="686" y="197">분석요청</text>
-  <!-- Spring -> Oracle -->
+  <!-- Spring -> Oracle (JDBC + Liquibase) -->
   <line class="edge" x1="520" y1="265" x2="520" y2="373" marker-end="url(#arrow)"/>
-  <text class="lbl" x="520" y="325" text-anchor="start" dx="10">JDBC</text>
-  <!-- Liquibase -> Oracle -->
-  <line class="edge" x1="305" y1="437" x2="388" y2="437" marker-end="url(#arrow)"/>
-  <text class="lbl" x="346" y="427">스키마 동기화</text>
+  <text class="lbl" x="533" y="306" text-anchor="start" font-weight="700">JDBC · Liquibase</text>
+  <text class="lbl" x="533" y="325" text-anchor="start" fill="#63707E">스키마 마이그레이션(pull)</text>
 
   <!-- hardware note -->
   <text x="520" y="537" font-size="13" fill="#63707E" text-anchor="middle">워크스테이션: Quadro P4000 8GB · Xeon Gold 5122 · RAM 32GB</text>
