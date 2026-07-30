@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 600" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#7d8a99"/>
+    </marker>
+    <style>
+      .box  { fill:#ffffff; stroke-width:2; rx:12; }
+      .tt   { font-size:24px; font-weight:800; text-anchor:middle; }
+      .sub  { font-size:14px; fill:#63707E; text-anchor:middle; }
+      .edge { stroke:#7d8a99; stroke-width:2; fill:none; }
+    </style>
+  </defs>
+
+  <!-- title -->
+  <text x="30" y="42" font-size="26" font-weight="800" fill="#1B2A4A">시스템 아키텍처</text>
+
+  <!-- closed-network boundary -->
+  <rect x="28" y="86" width="984" height="452" rx="16" fill="#f5f8fb" stroke="#1B2A4A" stroke-width="1.5" stroke-dasharray="7 6"/>
+
+  <!-- Row 1 -->
+  <!-- Frontend -->
+  <rect class="box" x="55" y="165" width="250" height="120" rx="12" stroke="#2C7A8C"/>
+  <text class="tt" x="180" y="218" fill="#2C7A8C">프론트엔드 (웹 UI)</text>
+  <text class="sub" x="180" y="248">React</text>
+
+  <!-- Backend -->
+  <rect class="box" x="395" y="165" width="250" height="120" rx="12" stroke="#2A8A57"/>
+  <text class="tt" x="520" y="218" fill="#2A8A57">백엔드</text>
+  <text class="sub" x="520" y="248">Spring Boot</text>
+
+  <!-- AI server -->
+  <rect class="box" x="735" y="165" width="250" height="120" rx="12" stroke="#C67F17"/>
+  <text class="tt" x="860" y="210" fill="#C67F17">AI 서버</text>
+  <text class="sub" x="860" y="238">FastAPI</text>
+  <text class="sub" x="860" y="262" font-size="12.5">사내 playground API · gpt-oss 120B</text>
+
+  <!-- Row 2 -->
+  <!-- Database -->
+  <rect class="box" x="395" y="395" width="250" height="120" rx="12" stroke="#B23B2E"/>
+  <text class="tt" x="520" y="448" fill="#B23B2E">데이터베이스</text>
+  <text class="sub" x="520" y="478">Oracle</text>
+
+  <!-- edges (no labels) -->
+  <line class="edge" x1="305" y1="225" x2="388" y2="225" marker-end="url(#arrow)"/>
+  <line class="edge" x1="645" y1="225" x2="728" y2="225" marker-end="url(#arrow)"/>
+  <line class="edge" x1="520" y1="285" x2="520" y2="388" marker-end="url(#arrow)"/>
+</svg>

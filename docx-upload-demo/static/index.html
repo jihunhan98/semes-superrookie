@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>docx 업로드 확인</title>
+<style>
+  :root{
+    --bg:#f3f5f8;--card:#fff;--line:#dde3ea;--ink:#1c2431;--muted:#64707e;
+    --accent:#3a5bd9;--accent-soft:#e6ebfb;--green:#1f7a49;--green-bg:#dcefe2;--red:#b8402f;--red-bg:#f6ddd7;
+    --mono:"SFMono-Regular",ui-monospace,Consolas,monospace;
+    --sans:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:20px;margin:0 0 4px;font-weight:800}
+  p.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:18px}
+  .panel h2{font-size:13px;margin:0 0 12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  input[type=file]{font-family:var(--sans);font-size:13px}
+  button{font-family:var(--sans);font-weight:700;font-size:13.5px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 16px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+  .chip b{color:var(--ink)}
+  .err{background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 12px;font-size:13px}
+  .ok{background:var(--green-bg);color:var(--green);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;margin-bottom:14px}
+  .para{border-bottom:1px solid var(--line);padding:8px 4px;font-size:13.5px;display:flex;gap:10px}
+  .para .n{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:34px}
+  table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:12.5px}
+  td{border:1px solid var(--line);padding:6px 9px}
+  .tlabel{font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>docx 업로드 확인</h1>
+  <p class="sub">docx 파일을 올리면 문단·표를 파싱해서 그대로 보여줍니다. (업로드·파싱이 되는지 확인 전용)</p>
+
+  <div class="panel">
+    <h2>파일 업로드</h2>
+    <div class="row">
+      <input type="file" id="file" accept=".docx">
+      <button id="btn" onclick="upload()">업로드</button>
+      <span id="status" style="font-size:12.5px;color:var(--muted)"></span>
+    </div>
+  </div>
+
+  <div class="panel" id="result" style="display:none">
+    <h2>파싱 결과</h2>
+    <div id="body"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+async function upload(){
+  const f = document.getElementById("file").files[0];
+  const st = document.getElementById("status");
+  if(!f){ st.textContent = "파일을 선택하세요."; return; }
+  const btn = document.getElementById("btn"); btn.disabled = true; st.textContent = "업로드 중…";
+  try{
+    const fd = new FormData(); fd.append("file", f);
+    const r = await fetch("/api/upload", { method:"POST", body: fd });
+    const d = await r.json();
+    render(d); st.textContent = "";
+  }catch(e){ st.textContent = "실패: " + e; }
+  finally{ btn.disabled = false; }
+}
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(d){
+  document.getElementById("result").style.display = "block";
+  const body = document.getElementById("body");
+  if(!d.ok){ body.innerHTML = `<div class="err">${esc(d.error)} (${esc(d.filename)})</div>`; return; }
+
+  let html = `<div class="ok">✔ 업로드·파싱 성공</div>
+    <div class="meta">
+      <span class="chip">파일 <b>${esc(d.filename)}</b></span>
+      <span class="chip">크기 <b>${d.size_kb} KB</b></span>
+      <span class="chip">문단 <b>${d.paragraph_count}</b></span>
+      <span class="chip">표 <b>${d.table_count}</b></span>
+    </div>`;
+
+  html += d.paragraphs.map((p,i)=>`<div class="para"><span class="n">${i+1}</span><span>${esc(p)}</span></div>`).join("");
+
+  d.tables.forEach((t,ti)=>{
+    html += `<div class="tlabel">표 ${ti+1}</div><table>` +
+      t.map(row=>`<tr>${row.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("") + `</table>`;
+  });
+  body.innerHTML = html;
+}
+</script>
+</body>
+</html>
