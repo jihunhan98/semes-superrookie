@@ -88,6 +88,12 @@ SEMES는 고객사(삼성전자)로부터 요구사항을 받아 개발한다. �
 
 ![요구사항 검토 ② — 제안·협의·확정 (Before / After)](docs/img/ppt-review-2.png)
 
+**실제 요구사항 예시** — `req-ta-01`「태스크 할당 기준」을 통과시킨 결과.
+
+![실제 예시 — 검출 & AI 제안](docs/img/ppt-review-real-1.png)
+
+![실제 예시 — Before / After](docs/img/ppt-review-real-2.png)
+
 ### 2.4 검토 이력 (감사 추적)
 
 - 확정 해석 + 시점 + 확정자 + AI가 제시한 원래 근거를 함께 영구 보관한다.
