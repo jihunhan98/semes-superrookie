@@ -16,8 +16,6 @@
 
   <!-- closed-network boundary -->
   <rect x="28" y="86" width="984" height="452" rx="16" fill="#f5f8fb" stroke="#1B2A4A" stroke-width="1.5" stroke-dasharray="7 6"/>
-  <rect x="52" y="78" width="290" height="20" fill="#ffffff"/>
-  <text x="60" y="93" font-size="13" font-weight="700" fill="#1B2A4A" font-family="monospace">사내 폐쇄망 · 반출(외부 전송) 차단</text>
 
   <!-- Row 1 -->
   <!-- Frontend -->
@@ -32,8 +30,9 @@
 
   <!-- AI server -->
   <rect class="box" x="735" y="165" width="250" height="120" rx="12" stroke="#C67F17"/>
-  <text class="tt" x="860" y="218" fill="#C67F17">AI 서버</text>
-  <text class="sub" x="860" y="248">FastAPI</text>
+  <text class="tt" x="860" y="210" fill="#C67F17">AI 서버</text>
+  <text class="sub" x="860" y="238">FastAPI</text>
+  <text class="sub" x="860" y="262" font-size="12.5">사내 playground API · gpt-oss 120B</text>
 
   <!-- Row 2 -->
   <!-- Database -->
