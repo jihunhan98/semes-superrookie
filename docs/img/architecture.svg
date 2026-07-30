@@ -5,59 +5,44 @@
     </marker>
     <style>
       .box  { fill:#ffffff; stroke-width:2; rx:12; }
-      .tt   { font-size:21px; font-weight:700; text-anchor:middle; }
-      .sub  { font-size:13px; fill:#63707E; text-anchor:middle; }
-      .lbl  { font-size:12px; fill:#4a5663; text-anchor:middle; }
+      .tt   { font-size:24px; font-weight:800; text-anchor:middle; }
+      .sub  { font-size:14px; fill:#63707E; text-anchor:middle; }
       .edge { stroke:#7d8a99; stroke-width:2; fill:none; }
     </style>
   </defs>
 
   <!-- title -->
   <text x="30" y="42" font-size="26" font-weight="800" fill="#1B2A4A">시스템 아키텍처</text>
-  <text x="30" y="66" font-size="14" fill="#63707E">React → Spring Boot → AI 서버 · Oracle DB — 전 구성요소는 사내 폐쇄망 안에서 동작</text>
 
   <!-- closed-network boundary -->
-  <rect x="28" y="86" width="984" height="474" rx="16" fill="#f5f8fb" stroke="#1B2A4A" stroke-width="1.5" stroke-dasharray="7 6"/>
+  <rect x="28" y="86" width="984" height="452" rx="16" fill="#f5f8fb" stroke="#1B2A4A" stroke-width="1.5" stroke-dasharray="7 6"/>
   <rect x="52" y="78" width="290" height="20" fill="#ffffff"/>
   <text x="60" y="93" font-size="13" font-weight="700" fill="#1B2A4A" font-family="monospace">사내 폐쇄망 · 반출(외부 전송) 차단</text>
 
   <!-- Row 1 -->
-  <!-- React -->
-  <rect class="box" x="55" y="150" width="250" height="115" rx="12" stroke="#2C7A8C"/>
-  <text class="tt" x="180" y="200" fill="#2C7A8C">React</text>
-  <text class="sub" x="180" y="228">프론트엔드 (웹 UI)</text>
+  <!-- Frontend -->
+  <rect class="box" x="55" y="165" width="250" height="120" rx="12" stroke="#2C7A8C"/>
+  <text class="tt" x="180" y="218" fill="#2C7A8C">프론트엔드 (웹 UI)</text>
+  <text class="sub" x="180" y="248">React</text>
 
-  <!-- Spring Boot -->
-  <rect class="box" x="395" y="150" width="250" height="115" rx="12" stroke="#2A8A57"/>
-  <text class="tt" x="520" y="200" fill="#2A8A57">Spring Boot</text>
-  <text class="sub" x="520" y="228">백엔드 (REST API)</text>
+  <!-- Backend -->
+  <rect class="box" x="395" y="165" width="250" height="120" rx="12" stroke="#2A8A57"/>
+  <text class="tt" x="520" y="218" fill="#2A8A57">백엔드</text>
+  <text class="sub" x="520" y="248">Spring Boot</text>
 
-  <!-- AI server (bigger, 2 options) -->
-  <rect class="box" x="715" y="150" width="272" height="196" rx="12" stroke="#C67F17"/>
-  <text class="tt" x="851" y="192" fill="#C67F17">AI 서버 (FastAPI)</text>
-  <line x1="740" y1="210" x2="962" y2="210" stroke="#ecdfc8" stroke-width="1.5"/>
-  <text x="742" y="247" font-size="15" fill="#1F2733"><tspan font-weight="700">① Qwen3-8B</tspan> · 로컬 LLM</text>
-  <text x="742" y="284" font-size="15" fill="#1F2733"><tspan font-weight="700">② 사내 playground</tspan> · API</text>
-  <text x="851" y="323" font-size="12" fill="#8a96a3" text-anchor="middle">둘 중 선택 · 모호성 검출 / 기능 도출</text>
+  <!-- AI server -->
+  <rect class="box" x="735" y="165" width="250" height="120" rx="12" stroke="#C67F17"/>
+  <text class="tt" x="860" y="218" fill="#C67F17">AI 서버</text>
+  <text class="sub" x="860" y="248">FastAPI</text>
 
   <!-- Row 2 -->
-  <!-- Oracle DB -->
-  <rect class="box" x="395" y="380" width="250" height="115" rx="12" stroke="#B23B2E"/>
-  <text class="tt" x="520" y="430" fill="#B23B2E">Oracle DB</text>
-  <text class="sub" x="520" y="458">개인 스키마 / 최종 스키마</text>
+  <!-- Database -->
+  <rect class="box" x="395" y="395" width="250" height="120" rx="12" stroke="#B23B2E"/>
+  <text class="tt" x="520" y="448" fill="#B23B2E">데이터베이스</text>
+  <text class="sub" x="520" y="478">Oracle</text>
 
-  <!-- edges -->
-  <!-- React -> Spring -->
-  <line class="edge" x1="305" y1="207" x2="388" y2="207" marker-end="url(#arrow)"/>
-  <text class="lbl" x="346" y="197">REST</text>
-  <!-- Spring -> AI -->
-  <line class="edge" x1="645" y1="207" x2="710" y2="207" marker-end="url(#arrow)"/>
-  <text class="lbl" x="678" y="197">분석요청</text>
-  <!-- Spring -> Oracle : 백엔드가 Liquibase를 실행해 스키마 적용 -->
-  <line class="edge" x1="520" y1="265" x2="520" y2="373" marker-end="url(#arrow)"/>
-  <text class="lbl" x="507" y="303" text-anchor="end" font-weight="700">JDBC (데이터)</text>
-  <text class="lbl" x="507" y="322" text-anchor="end" fill="#4a5663">Liquibase 실행 → 스키마 적용(pull)</text>
-
-  <!-- hardware note -->
-  <text x="520" y="537" font-size="13" fill="#63707E" text-anchor="middle">워크스테이션: Quadro P4000 8GB · Xeon Gold 5122 · RAM 32GB</text>
+  <!-- edges (no labels) -->
+  <line class="edge" x1="305" y1="225" x2="388" y2="225" marker-end="url(#arrow)"/>
+  <line class="edge" x1="645" y1="225" x2="728" y2="225" marker-end="url(#arrow)"/>
+  <line class="edge" x1="520" y1="285" x2="520" y2="388" marker-end="url(#arrow)"/>
 </svg>
