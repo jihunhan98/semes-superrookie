@@ -90,9 +90,11 @@ SEMES는 고객사(삼성전자)로부터 요구사항을 받아 개발한다. �
 
 **실제 요구사항 예시** — `req-ta-01`「태스크 할당 기준」을 통과시킨 결과.
 
-![실제 예시 — 검출 & AI 제안](docs/img/ppt-review-real-1.png)
+![실제 예시 — 입력 → 검출 & AI 제안](docs/img/ppt-review-real-1.png)
 
-![실제 예시 — Before / After](docs/img/ppt-review-real-2.png)
+![실제 예시 — Before / After (항목별)](docs/img/ppt-review-real-2.png)
+
+![실제 예시 — Before / After (전체 요구사항)](docs/img/ppt-review-real-3.png)
 
 ### 2.4 검토 이력 (감사 추적)
 
