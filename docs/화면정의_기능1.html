@@ -131,30 +131,49 @@
   .gh .iss .im{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .gh .iss .im .mid{font-family:var(--mono);}
   .gh .iss .rcol{margin-left:auto;display:flex;align-items:center;gap:14px;}
-  /* requirements board (Jira feel) */
-  .gh .vtoggle{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden;}
-  .gh .vtoggle span{padding:7px 13px;font-size:13px;font-weight:600;color:var(--fgm);display:flex;align-items:center;gap:6px;}
-  .gh .vtoggle span.on{background:var(--cvi);color:var(--fg);}
-  .gh .flt{display:flex;align-items:center;gap:12px;margin:16px 0 18px;flex-wrap:wrap;}
-  .gh .flt .fsrch{flex:1;min-width:200px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:8px 12px;color:var(--fgf);font-size:13.5px;}
-  .gh .flt .chip{font-size:13px;font-weight:600;color:var(--fgm);padding:6px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);}
-  .gh .flt .chip.on{background:var(--cvi);color:var(--fg);}
+  /* requirements list (grouped, clean) */
+  .gh .rqbar{display:flex;align-items:center;gap:10px;margin:16px 0 8px;flex-wrap:wrap;}
+  .gh .seg{display:inline-flex;background:var(--cvi);border-radius:9px;padding:3px;}
+  .gh .seg span{padding:6px 14px;font-size:13px;font-weight:600;color:var(--fgm);border-radius:7px;}
+  .gh .seg span.on{background:var(--cv);color:var(--fg);box-shadow:0 1px 2px rgba(31,35,40,.12);}
+  .gh .rqbar .srch{flex:1;min-width:180px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:8px 12px;color:var(--fgf);font-size:13.5px;}
+  .gh .rqbar .t{border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--fgm);font-weight:600;background:var(--cv);}
+  .gh .rqlist{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
+  .gh .grp+.grp{border-top:1px solid var(--bd);}
+  .gh .grph{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--cvs);font-size:13px;font-weight:700;color:var(--fgm);}
+  .gh .grph .chev{color:var(--fgf);font-size:11px;} .gh .grph .gname{color:var(--fg);}
+  .gh .grph .cnt{font-size:12px;color:var(--fgf);background:var(--cv);border:1px solid var(--bd);border-radius:999px;padding:0 9px;}
+  .gh .grph .prog{margin-left:auto;font-size:12px;color:var(--fgf);}
+  .gh .rqrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--bdm);}
+  .gh .grph+.rqrow{border-top:none;}
+  .gh .rqrow:hover{background:var(--cvs);}
+  .gh .rqrow .sdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;}
+  .gh .rqrow .rtit{font-size:14.5px;font-weight:600;color:var(--fg);}
+  .gh .rqrow .rmid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);margin-left:9px;}
+  .gh .rqrow .rt{margin-left:auto;display:flex;align-items:center;gap:16px;}
+  .gh .rqrow .rup{font-size:12px;color:var(--fgf);width:64px;text-align:right;}
   .gh .avstack{display:flex;align-items:center;} .gh .avstack .av2{margin-left:-7px;border:2px solid var(--cv);width:28px;height:28px;flex:0 0 28px;}
   .gh .avstack .more{margin-left:-7px;width:28px;height:28px;border-radius:50%;background:var(--cvi);color:var(--fgm);border:2px solid var(--cv);display:grid;place-items:center;font-size:11px;font-weight:700;}
-  .gh .board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;}
-  .gh .bcol{background:var(--cvs);border:1px solid var(--bd);border-radius:12px;padding:10px 10px 6px;}
-  .gh .bch{display:flex;align-items:center;gap:8px;padding:5px 8px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--fgm);}
-  .gh .bch .cdot{width:9px;height:9px;border-radius:50%;} .gh .bch .cn{margin-left:auto;font-size:12px;background:var(--cv);border:1px solid var(--bd);border-radius:999px;padding:1px 9px;color:var(--fgm);}
-  .gh .kc{position:relative;background:var(--cv);border:1px solid var(--bd);border-radius:10px;padding:12px 13px 12px 15px;margin-bottom:10px;box-shadow:0 1px 0 rgba(31,35,40,.04);}
-  .gh .kc .acc{position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;}
-  .gh .kc .ktop{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
-  .gh .kc .kt{font-size:14.5px;font-weight:600;line-height:1.4;color:var(--fg);}
-  .gh .kc .kid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);margin-top:7px;}
-  .gh .kc .kf{display:flex;align-items:center;gap:8px;margin-top:11px;}
-  .gh .kc .kf .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
-  .gh .kc .warn{font-size:11.5px;font-weight:700;color:var(--amber);background:var(--amber-s);border-radius:6px;padding:2px 8px;}
-  .gh .prio{font-size:14px;line-height:1;} .gh .prio.hi{color:var(--red);} .gh .prio.mid{color:var(--amber);} .gh .prio.lo{color:var(--fgf);}
-  .gh .addcard{text-align:center;color:var(--fgf);font-size:13px;font-weight:600;padding:9px;border-radius:8px;}
+  /* version compare (git-like) */
+  .gh .cmpbar{display:flex;align-items:center;gap:12px;background:var(--cvs);border:1px solid var(--bd);border-radius:10px;padding:11px 14px;margin-bottom:8px;flex-wrap:wrap;}
+  .gh .cmpbar .lbl0{font-size:13px;font-weight:700;color:var(--fgm);}
+  .gh .cmpsel{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:6px 12px;font-size:13px;font-weight:600;}
+  .gh .cmpsel .car{color:var(--fgf);} .gh .cmpsel .tagv{padding:1px 8px;}
+  .gh .cmparr{color:var(--fgm);font-size:16px;}
+  .gh .cmpstat{margin-left:auto;font-size:13px;color:var(--fgm);} .gh .cmpstat .add{color:var(--green);font-weight:700;} .gh .cmpstat .del{color:var(--red);font-weight:700;}
+  .gh .difftoggle{display:inline-flex;border:1px solid var(--bd);border-radius:7px;overflow:hidden;} .gh .difftoggle span{padding:5px 11px;font-size:12px;font-weight:600;color:var(--fgm);} .gh .difftoggle span.on{background:var(--cvi);color:var(--fg);}
+  .gh .diff2{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:18px;}
+  .gh .diff2 .dfh{background:var(--cvs);border-bottom:1px solid var(--bd);padding:10px 14px;font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:8px;}
+  .gh .split2{display:grid;grid-template-columns:1fr 1fr;}
+  .gh .split2 .sh{font-size:11.5px;font-weight:700;color:var(--fgm);padding:6px 14px;background:var(--cvs);border-bottom:1px solid var(--bdm);}
+  .gh .split2 .sc1{border-right:1px solid var(--bd);}
+  .gh .dln{display:flex;font-family:var(--mono);font-size:13px;line-height:1.75;}
+  .gh .dln .no{width:36px;flex:0 0 36px;text-align:right;padding:1px 8px;color:var(--fgf);background:var(--cvs);border-right:1px solid var(--bdm);user-select:none;}
+  .gh .dln .lc{padding:1px 12px;flex:1;white-space:pre-wrap;word-break:break-all;}
+  .gh .dln.ctx .lc{color:var(--fg);}
+  .gh .dln.del{background:#ffebe9;} .gh .dln.del .lc{color:#82071e;} .gh .dln.del .no{background:#ffd8d3;}
+  .gh .dln.add{background:#e6ffec;} .gh .dln.add .lc{color:#0a3622;} .gh .dln.add .no{background:#ccffd8;}
+  .gh .dln.emp{background:#f6f8fa;}
   /* version history (commits style) */
   .gh .crumb{font-size:14px;color:var(--fgm);margin-bottom:6px;} .gh .crumb b{color:var(--blue);font-weight:600;}
   .gh .rtabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin:16px 0 0;}
@@ -346,66 +365,35 @@
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
-            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항</h1>
-              <div style="display:flex;align-items:center;gap:10px">
-                <div class="vtoggle"><span class="on">▦ 보드</span><span>☰ 리스트</span></div>
-                <span class="btn prim">＋ 새 요구사항</span></div>
+            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항 <span style="color:var(--fgf);font-weight:600;font-size:16px">24</span></h1><span class="btn prim">＋ 새 요구사항</span></div>
+            <div class="rqbar">
+              <div class="seg"><span class="on">전체</span><span>검토중 6</span><span>확정 18</span></div>
+              <span class="srch">🔍 제목·ID·담당자로 검색</span>
+              <span class="t">분류별 묶기 ▾</span><span class="t">정렬 ▾</span>
             </div>
-            <div class="flt">
-              <span class="chip on">전체</span><span class="chip">내 담당</span>
-              <div class="avstack"><span class="av2 a-h">한</span><span class="av2 a-l">이</span><span class="av2 a-k">김</span><span class="more">+2</span></div>
-              <span class="fsrch">🔍 요구사항 검색 · Epic · 담당자…</span>
-              <span class="chip">분류 ▾</span>
-            </div>
-            <div class="board">
-              <!-- 접수 -->
-              <div class="bcol">
-                <div class="bch"><span class="cdot" style="background:var(--fgf)"></span>접수<span class="cn">2</span></div>
-                <div class="kc"><span class="acc" style="background:var(--fgf)"></span>
-                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio mid" style="margin-left:auto">＝</span></div>
-                  <div class="kt">할당 조건 사용자 설정</div><div class="kid">req-js-03</div>
-                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">원문 접수 · 미검토</span><span class="rt"><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span></span></div>
-                </div>
-                <div class="kc"><span class="acc" style="background:var(--fgf)"></span>
-                  <div class="ktop"><span class="lbl purple" style="padding:1px 8px">맵</span><span class="prio lo" style="margin-left:auto">▽</span></div>
-                  <div class="kt">경로 우선순위 정책</div><div class="kid">req-mp-04</div>
-                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">원문 접수</span><span class="rt"><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span></span></div>
-                </div>
-                <div class="addcard">＋ 요구사항 추가</div>
+            <div class="rqlist">
+              <div class="grp">
+                <div class="grph"><span class="chev">▾</span><span class="gname">태스크</span><span class="cnt">3</span><span class="prog">확정 0 · 검토중 2 · 접수 1</span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--amber)"></span><span class="rtit">태스크 할당 기준</span><span class="rmid">req-ta-01</span>
+                  <span class="rt"><span class="lbl amber" style="padding:1px 9px">검토중 · 검출 2</span><span class="av2 a-l">이</span><span class="rup">2일 전</span></span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--amber)"></span><span class="rtit">알람 복구 재할당</span><span class="rmid">req-ta-02</span>
+                  <span class="rt"><span class="lbl amber" style="padding:1px 9px">검토중 · 검출 1</span><span class="av2 a-h">한</span><span class="rup">1일 전</span></span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--fgf)"></span><span class="rtit">할당 조건 사용자 설정</span><span class="rmid">req-js-03</span>
+                  <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">접수 · 미검토</span><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span><span class="rup">오늘</span></span></div>
               </div>
-              <!-- 검토중 -->
-              <div class="bcol">
-                <div class="bch"><span class="cdot" style="background:var(--amber)"></span>검토중<span class="cn">4</span></div>
-                <div class="kc"><span class="acc" style="background:var(--amber)"></span>
-                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio hi" style="margin-left:auto">△</span></div>
-                  <div class="kt">태스크 할당 기준</div><div class="kid">req-ta-01</div>
-                  <div class="kf"><span class="warn">⚠ 검출 2건</span><span class="rt"><span class="av2 a-l">이</span></span></div>
-                </div>
-                <div class="kc"><span class="acc" style="background:var(--amber)"></span>
-                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio mid" style="margin-left:auto">＝</span></div>
-                  <div class="kt">알람 복구 재할당</div><div class="kid">req-ta-02</div>
-                  <div class="kf"><span class="warn">⚠ 검출 1건</span><span class="rt"><span class="av2 a-h">한</span></span></div>
-                </div>
-                <div class="addcard">＋ 요구사항 추가</div>
+              <div class="grp">
+                <div class="grph"><span class="chev">▾</span><span class="gname">태스크 전개</span><span class="cnt">2</span><span class="prog">확정 2</span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--green)"></span><span class="rtit">신규 태스크 생성</span><span class="rmid">req-tf-01</span>
+                  <span class="rt"><span class="tagv">🏷 v1.0.1</span><span class="av2 a-h">한</span><span class="rup">어제</span></span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--green)"></span><span class="rtit">진행상황 보고 항목</span><span class="rmid">req-tf-02</span>
+                  <span class="rt"><span class="tagv">🏷 v1.0.0</span><span class="av2 a-k">김</span><span class="rup">3일 전</span></span></div>
               </div>
-              <!-- 확정 -->
-              <div class="bcol">
-                <div class="bch"><span class="cdot" style="background:var(--green)"></span>확정<span class="cn">18</span></div>
-                <div class="kc"><span class="acc" style="background:var(--green)"></span>
-                  <div class="ktop"><span class="lbl purple" style="padding:1px 8px">맵</span><span class="tagv" style="margin-left:auto">🏷 v1.1.0</span></div>
-                  <div class="kt">입출고지 와일드카드</div><div class="kid">req-mp-01</div>
-                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 3 · 오늘</span><span class="rt"><span class="av2 a-h">한</span></span></div>
-                </div>
-                <div class="kc"><span class="acc" style="background:var(--green)"></span>
-                  <div class="ktop"><span class="lbl teal" style="padding:1px 8px;background:var(--teal100,#ccfbf1);color:var(--teal700,#0f766e)">태스크 전개</span><span class="tagv" style="margin-left:auto">🏷 v1.0.1</span></div>
-                  <div class="kt">신규 태스크 생성</div><div class="kid">req-tf-01</div>
-                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 4 · 어제</span><span class="rt"><span class="av2 a-h">한</span></span></div>
-                </div>
-                <div class="kc"><span class="acc" style="background:var(--green)"></span>
-                  <div class="ktop"><span class="lbl teal" style="padding:1px 8px;background:#ccfbf1;color:#0f766e">태스크 전개</span><span class="tagv" style="margin-left:auto">🏷 v1.0.0</span></div>
-                  <div class="kt">진행상황 보고 항목</div><div class="kid">req-tf-02</div>
-                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 2 · 3일 전</span><span class="rt"><span class="av2 a-k">김</span></span></div>
-                </div>
+              <div class="grp">
+                <div class="grph"><span class="chev">▾</span><span class="gname">맵</span><span class="cnt">2</span><span class="prog">확정 1 · 접수 1</span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--green)"></span><span class="rtit">입출고지 와일드카드</span><span class="rmid">req-mp-01</span>
+                  <span class="rt"><span class="tagv">🏷 v1.1.0</span><span class="av2 a-h">한</span><span class="rup">오늘</span></span></div>
+                <div class="rqrow"><span class="sdot" style="background:var(--fgf)"></span><span class="rtit">경로 우선순위 정책</span><span class="rmid">req-mp-04</span>
+                  <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">접수</span><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span><span class="rup">2일 전</span></span></div>
               </div>
             </div>
           </div>
@@ -413,10 +401,10 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>보드(Jira 느낌)</b> 접수 → 검토중 → 확정 워크플로우 · 보드/리스트 토글</span>
-      <span class="chipspec"><b>카드</b> Epic 라벨·우선순위·담당자 아바타·검출/버전 (GitHub 정갈함)</span>
-      <span class="chipspec"><b>작성자</b> 담당자 아바타 · 확정 시 버전 태그</span>
-      <span class="chipspec api">GET /requirements?view=board&state=</span>
+      <span class="chipspec"><b>새 디자인</b> 분류별 그룹 리스트(태스크·태스크 전개·맵) — 정갈하고 밀도 높게</span>
+      <span class="chipspec"><b>행</b> 상태 점·제목·ID · 상태/버전 태그·담당자·수정시각</span>
+      <span class="chipspec"><b>상단</b> 전체/검토중/확정 세그먼트 · 검색 · 묶기/정렬</span>
+      <span class="chipspec api">GET /requirements?group=category&state=</span>
     </div>
   </section>
 
@@ -451,12 +439,40 @@
               <a class="on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 4.5a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Zm.75-4a3.25 3.25 0 0 1 .5 6.462V10.5a2.75 2.75 0 0 1-2.75 2.75H8.185a3.251 3.251 0 1 1 0-1.5h2.065c.69 0 1.25-.56 1.25-1.25V6.962A3.25 3.25 0 0 1 12.5.5Z"/></svg>버전 이력<span class="ct">3</span></a>
             </div>
             <div class="vwrap">
-              <div class="vday">📌 3개 버전 · 확정할 때마다 새 버전이 커밋처럼 기록됩니다</div>
+              <!-- 비교 바 (Git compare) -->
+              <div class="cmpbar">
+                <span class="lbl0">버전 비교</span>
+                <span class="cmpsel">base <span class="tagv" style="color:var(--fgm)">🏷 v1.0.0</span><span class="car">▾</span></span>
+                <span class="cmparr">…</span>
+                <span class="cmpsel">compare <span class="tagv">🏷 v1.0.1</span><span class="car">▾</span></span>
+                <span class="cmpstat"><span class="add">＋1</span> <span class="del">−1</span> · 본문 1곳 변경</span>
+                <span class="difftoggle" style="margin-left:12px"><span class="on">split</span><span>unified</span></span>
+              </div>
+              <!-- split diff (git) -->
+              <div class="diff2">
+                <div class="dfh">📄 요구사항 본문 · <b style="font-family:var(--mono)">req-tf-01</b> <span style="color:var(--fgm);font-weight:500">— 한지훈 · PATCH(문구 보완) · 2026-08-04</span></div>
+                <div class="split2">
+                  <div class="sc1">
+                    <div class="sh">🏷 v1.0.0 (base)</div>
+                    <div class="dln ctx"><span class="no">1</span><span class="lc">우선순위 순 할당, 동일 우선순위는 요청 순.</span></div>
+                    <div class="dln del"><span class="no">2</span><span class="lc">- newAMOS로부터 <b style="background:#ffc9c2">약속된 형식</b>의 메시지를 수신…</span></div>
+                    <div class="dln ctx"><span class="no">3</span><span class="lc">AMR 매칭 시 가용 AMR 중 가장 가까운 것 선택.</span></div>
+                  </div>
+                  <div>
+                    <div class="sh">🏷 v1.0.1 (compare)</div>
+                    <div class="dln ctx"><span class="no">1</span><span class="lc">우선순위 순 할당, 동일 우선순위는 요청 순.</span></div>
+                    <div class="dln add"><span class="no">2</span><span class="lc">+ newAMOS로부터 <b style="background:#a0e6b4">IF 명세서 v1.2 형식</b>의 메시지를 수신…</span></div>
+                    <div class="dln ctx"><span class="no">3</span><span class="lc">AMR 매칭 시 가용 AMR 중 가장 가까운 것 선택.</span></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 버전(커밋) 이력 -->
+              <div class="vday">📌 버전 이력 · 확정·수정할 때마다 커밋처럼 쌓입니다</div>
               <div class="commits">
                 <div class="cm">
                   <span class="av2 a-h">한</span>
                   <div class="cmain"><div class="ctitle">‘약속된 형식’을 인터페이스 명세서 v1.2 기준으로 명확화</div>
-                    <div class="cmeta"><b>한지훈</b>님이 확정 · 2026-08-04 14:30 · 사유: 고객 협의</div></div>
+                    <div class="cmeta"><b>한지훈</b>님이 수정·확정 · 2026-08-04 14:30 · 사유: 고객 협의</div></div>
                   <div class="cright"><span class="kind patch">PATCH</span><span class="verpill cur">v1.0.1</span></div>
                 </div>
                 <div class="cm">
@@ -472,12 +488,6 @@
                   <div class="cright"><span class="verpill old">draft</span></div>
                 </div>
               </div>
-
-              <div class="diffbox">
-                <div class="diffh">🏷 <b>v1.0.0</b> → <b>v1.0.1</b> 변경 내용 · <span style="color:var(--fgm)">한지훈 · PATCH(문구 보완)</span></div>
-                <div class="diffl del"><span class="sign">−</span><span class="tx">외부 시스템(newAMOS)으로부터 <b style="background:#ffd7d5;padding:0 2px">약속된 형식</b>의 이벤트 메시지를 수신…</span></div>
-                <div class="diffl add"><span class="sign">＋</span><span class="tx">외부 시스템(newAMOS)으로부터 <b style="background:#abf2bc;padding:0 2px">인터페이스 명세서 v1.2 형식</b>의 이벤트 메시지를 수신…</span></div>
-              </div>
               <div class="semver">
                 <div class="mj"><b>MAJOR</b> 1.x→2.0.0 · 요구 자체 변경(상충 해소)</div>
                 <div class="mn"><b>MINOR</b> 1.0→1.1.0 · 해석 확정·조건 추가</div>
@@ -489,10 +499,10 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>모델</b> 확정=새 버전 생성 / 수정=다음 버전 (Git 커밋처럼)</span>
+      <span class="chipspec"><b>비교(Git)</b> base ↔ compare 버전 선택 → split diff(±)로 변화 확인</span>
+      <span class="chipspec"><b>모델</b> 확정=새 버전 / 수정=다음 버전, 커밋처럼 쌓임</span>
       <span class="chipspec"><b>작성자</b> 버전마다 확정자·시각·사유 기록(로그인 기반)</span>
-      <span class="chipspec"><b>벤치마킹</b> GitHub 커밋 목록 + diff(±)</span>
-      <span class="chipspec api">GET /requirements/{id}/versions · /diff</span>
+      <span class="chipspec api">GET /requirements/{id}/compare?base=&head=</span>
     </div>
   </section>
 
