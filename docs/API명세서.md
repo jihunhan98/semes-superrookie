@@ -192,19 +192,33 @@
 
 ## 6. 산출물 도출 (기능 2 · 준비중)
 
-### `POST /api/requirements/{reqId}/artifacts/derive` — 산출물 5종 초안 도출
+### `POST /api/requirements/{reqId}/artifacts/derive` — 도출 (요구사항 → 개발 이슈 N개, 각 4종)
+요구사항 1개에서 개발 이슈(티켓) N개를 만들고, 개발 이슈마다 4종 산출물을 1:1로 생성한다.
 ```json
 // res 200
 {
-  "artifacts": [
-    { "type": "개발이슈", "id": "AMVCS30-77", "fields": { "현상기록": "…", "개선요청사항": "…" }, "authorship": { "현상기록": "human", "개선요청사항": "ai" } },
-    { "type": "기능요구사항", "id": "FR-02", "fields": { "개요": "…", "동작정의": [ /* 9행 */ ], "제약사항": "…" }, "authorship": "ai" }
+  "reqId": "req-ta-01",
+  "issues": [                                  // 개발 이슈 N개
+    {
+      "id": "AMVCS30-77", "title": "AMR 매칭", "status": "개발중",
+      "body": {                                // 개발 이슈 본문(3 카테고리)
+        "현상기록": "…", "개선요청사항": "…", "변경범위": "…", "제약사항": "…", "변경전": "…", "변경후": "…"
+      },
+      "artifacts": {                           // 개발 이슈 1개당 4종(각 1개)
+        "swvoc":     { "id": "AMSWV-2163", "fields": { "요청자": "…", "요청사항": "…", "특이사항": "…" } },
+        "functional":{ "id": "AMVCS30-80", "fields": { "개요": "…", "동작정의": [ /* 9행 */ ], "제약사항": "…" } },
+        "nonfunctional": { "id": "AMVCS30-82", "fields": { "개요": "…", "동작정의": [ /* 9행 */ ], "제약사항": "…" } },
+        "detailDesign":  { "id": "AMVCS30-81", "fields": { "설명": "…", "classDiagram": "…", "sequence": { "asIs": "…", "toBe": "…" } } }
+      }
+    }
+    // … 개발 이슈 #2 … #N
   ]
 }
 ```
+- 각 필드에는 작성 주체(`ai`/`human`) 메타가 함께 온다(판단 기준). 예: `현상기록=human`, `개선요청사항=ai`.
 
-### `GET /api/requirements/{reqId}/artifacts` · `PUT /api/artifacts/{artifactId}` · `POST /api/artifacts/{artifactId}/confirm`
-- 산출물 조회 · 편집 · 확정. (상세 스키마는 기능 2 착수 시 확정)
+### `GET /api/requirements/{reqId}/issues` · `PUT /api/artifacts/{artifactId}` · `POST /api/artifacts/{artifactId}/confirm`
+- 개발 이슈·하위 산출물 조회 · 편집 · 확정. (상세 스키마는 기능 2 착수 시 확정)
 
 ---
 

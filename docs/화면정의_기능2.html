@@ -294,6 +294,22 @@
   .gh .arow2 .anm{font-size:14px;font-weight:600;} .gh .arow2 .aid2{font-family:var(--mono);font-size:11.5px;color:var(--fgf);}
   .gh .arow2 .rt{margin-left:auto;display:flex;align-items:center;gap:12px;}
   .gh .modx{font-size:11.5px;color:var(--fgm);font-family:var(--mono);}
+  /* 개발 이슈 그룹(부모) → 4종(자식) */
+  .gh .issgrp{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px;background:var(--cv);}
+  .gh .issh{display:flex;align-items:center;gap:11px;padding:13px 16px;background:#f5f3ff;border-bottom:1px solid #e9e5f7;}
+  .gh .issh .ic2{width:30px;height:30px;border-radius:8px;background:#8b5cf6;color:#fff;display:grid;place-items:center;font-size:15px;flex:0 0 30px;}
+  .gh .issh .tkl{font-size:11px;font-weight:800;color:#6d28d9;background:#fff;border:1px solid #ddd6fe;border-radius:6px;padding:2px 8px;}
+  .gh .issh .iid{font-family:var(--mono);font-size:12.5px;font-weight:800;color:#3730a3;}
+  .gh .issh .inm{font-size:14.5px;font-weight:800;color:#111827;}
+  .gh .issh .rt{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .gh .issh .ist{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .gh .issh .ist.dev{background:#dbeafe;color:#1d4ed8;} .gh .issh .ist.wait{background:var(--cvi);color:var(--fgm);}
+  .gh .subart{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 22px;border-top:1px solid var(--bdm);}
+  .gh .subart:first-of-type{border-top:none;}
+  .gh .subart .saic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex:0 0 30px;background:var(--cvi);}
+  .gh .subart .san{font-size:14px;font-weight:700;} .gh .subart .sadesc{font-size:12px;color:var(--fgm);margin-top:2px;}
+  .gh .subart .rt{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .gh .morex{text-align:center;color:var(--fgf);font-size:13px;font-weight:700;padding:12px;border:1px dashed var(--bd);border-radius:12px;}
 
 </style>
 </head>
@@ -302,13 +318,13 @@
   <header>
     <p class="eyebrow">UI 설계 · 기능 2 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 2 (산출물 도출)</h1>
-    <p class="lede">확정된 요구사항에서 <b>산출물 5종</b>(개발 이슈·Detail Design·SWVOC·기능/비기능 요구사항)의 초안을 자동 도출하고,
+    <p class="lede">확정된 요구사항에서 <b>개발 이슈(티켓) N개</b>를 도출하고, <b>개발 이슈마다</b> SWVOC·기능/비기능 요구사항·Detail Design을 1:1로 생성한다.
       항목별 <b>작성 주체</b>(AI 초안/사람)를 표시해 편집·확정한다. 기능 1과 같은 디자인 시스템·앱 셸을 공유한다.</p>
-    <div class="metarow"><span class="tag">1920 × 1080</span><span class="tag on">산출물 도출</span><span class="tag">요구사항 탭 + 산출물 섹션</span></div>
+    <div class="metarow"><span class="tag">1920 × 1080</span><span class="tag on">산출물 도출</span><span class="tag">요구사항 → 개발이슈 N → 4종</span></div>
     <div class="ia">
       <p class="t">화면 구성</p>
       <div class="row">
-        <div class="col"><h4><span class="b">1</span>산출물 도출(탭)</h4><p>확정 요구사항 → [도출] → <b>5종 결과</b>를 작성 주체·상태와 함께.</p></div>
+        <div class="col"><h4><span class="b">1</span>산출물 도출(탭)</h4><p>요구사항 → <b>개발 이슈 N개</b>, 각 개발 이슈 아래 <b>4종</b>을 작성 주체·상태와 함께.</p></div>
         <div class="col"><h4><span class="b">2</span>기능 요구사항 편집</h4><p>개요 + <b>동작 정의 9행</b>(기본·변형·예외 × 선행·후행·시나리오) + 제약.</p></div>
         <div class="col"><h4><span class="b">3</span>개발 이슈 편집</h4><p>3카테고리 · 항목별 <b>AI 초안/사람</b> 구분.</p></div>
         <div class="col"><h4><span class="b">4</span>산출물 목록</h4><p>프로젝트 전체 산출물 — 근거 요구사항·모듈·상태.</p></div>
@@ -318,7 +334,7 @@
 
   <section class="scr">
     <p class="kicker">화면 1 · 산출물 도출(탭)</p>
-    <div class="scr-head"><span class="route">/requirements/req-ta-01/artifacts</span><h2>산출물 도출 — 5종 자동 생성</h2><span class="st newx">기능 2</span></div>
+    <div class="scr-head"><span class="route">/requirements/req-ta-01/artifacts</span><h2>산출물 도출 — 요구사항 → 개발 이슈 N개 → 각 4종</h2><span class="st newx">기능 2</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -341,27 +357,35 @@
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">태스크 할당 기준</h1><span class="lbl green" style="padding:2px 11px">확정</span><span class="tagv">🏷 v1.0.0</span></div>
             <div class="rtabs">
               <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>검토</a>
-              <a class="on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물 도출<span class="ct">5</span></a>
+              <a class="on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물 도출<span class="ct">3</span></a>
               <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
               <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 4.5a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Zm.75-4a3.25 3.25 0 0 1 .5 6.462V10.5a2.75 2.75 0 0 1-2.75 2.75H8.185a3.251 3.251 0 1 1 0-1.5h2.065c.69 0 1.25-.56 1.25-1.25V6.962A3.25 3.25 0 0 1 12.5.5Z"/></svg>버전 이력<span class="ct">1</span></a>
             </div>
             <div style="margin-top:22px">
-              <div class="derivebar"><span class="dt"><b>확정된 요구사항에서 산출물 5종 초안을 자동 도출합니다.</b> <small>· 마지막 도출: 방금 전 · 한지훈</small></span><span class="btn prim">↻ 재도출</span></div>
-              <div class="authlegend"><span><span class="d" style="background:var(--blue)"></span>AI 초안</span><span><span class="d" style="background:#e3873c"></span>사람</span><span><span class="d" style="background:var(--green)"></span>AI+사람</span><span style="margin-left:auto;color:var(--fgf)">항목별 작성 주체는 편집 화면에서 표시</span></div>
-              <div class="artlist">
-                <div class="artrow"><span class="aic">🎫</span><div><div><span class="an">개발 이슈</span><span class="aid">AMVCS30-77</span></div><div class="adesc">요구사항 접수 · 요구사항 개발 · 변경점 설계</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="artrow"><span class="aic">📐</span><div><div><span class="an">Detail Design</span><span class="aid">AMVCS30-81</span></div><div class="adesc">설명 · Class Diagram · Sequence(as-is·to-be)</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="artrow"><span class="aic">🗣️</span><div><div><span class="an">SWVOC</span><span class="aid">AMSWV-2163</span></div><div class="adesc">요청자 · 요청사항 · 특이사항</div></div><div class="rt"><span class="authchip hu">👤 사람 중심</span><span class="ststep todo">작성 필요</span><span class="btn sm">편집</span></div></div>
-                <div class="artrow"><span class="aic">⚙️</span><div><div><span class="an">기능 요구사항</span><span class="aid">AMVCS30-80</span></div><div class="adesc">개요 · 동작 정의(9행) · 제약사항</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="artrow"><span class="aic">🛡️</span><div><div><span class="an">비기능 요구사항</span><span class="aid">AMVCS30-82</span></div><div class="adesc">개요 · 동작 정의(9행) · 제약사항 (품질 속성)</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+              <div class="derivebar"><span class="dt"><b>요구사항 1개 → 개발 이슈 N개, 개발 이슈마다 산출물 4종을 자동 도출합니다.</b> <small>· 마지막 도출: 방금 전 · 한지훈</small></span><span class="btn prim">↻ 재도출</span></div>
+              <div class="authlegend"><span><span class="d" style="background:var(--blue)"></span>AI 초안</span><span><span class="d" style="background:#e3873c"></span>사람</span><span><span class="d" style="background:var(--green)"></span>AI+사람</span><span style="margin-left:auto;color:var(--fgf)">개발 이슈 1개 = SWVOC · 기능 · 비기능 · Detail Design</span></div>
+              <div class="issgrp">
+                <div class="issh"><span class="ic2">🎫</span><span class="tkl">개발 이슈 · 티켓</span><span class="iid">AMVCS30-77</span><span class="inm">AMR 매칭</span><span class="rt"><span class="ist dev">개발중</span><span class="btn sm">본문 편집</span></span></div>
+                <div class="subart"><span class="saic">🗣️</span><div><div class="san">SWVOC</div><div class="sadesc">요청자 · 요청사항 · 특이사항</div></div><div class="rt"><span class="authchip hu">👤 사람 중심</span><span class="ststep todo">작성 필요</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">⚙️</span><div><div class="san">기능 요구사항</div><div class="sadesc">개요 · 동작 정의(9행) · 제약사항</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">🛡️</span><div><div class="san">비기능 요구사항</div><div class="sadesc">성능·신뢰성·가용성 등 품질 속성</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">📐</span><div><div class="san">Detail Design</div><div class="sadesc">설명 · Class · Sequence(as-is·to-be)</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
               </div>
+              <div class="issgrp">
+                <div class="issh"><span class="ic2">🎫</span><span class="tkl">개발 이슈 · 티켓</span><span class="iid">AMVCS30-78</span><span class="inm">알람 복구 재할당</span><span class="rt"><span class="ist wait">대기</span><span class="btn sm">본문 편집</span></span></div>
+                <div class="subart"><span class="saic">🗣️</span><div><div class="san">SWVOC</div><div class="sadesc">요청자 · 요청사항 · 특이사항</div></div><div class="rt"><span class="authchip hu">👤 사람 중심</span><span class="ststep todo">작성 필요</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">⚙️</span><div><div class="san">기능 요구사항</div><div class="sadesc">개요 · 동작 정의(9행) · 제약사항</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">🛡️</span><div><div class="san">비기능 요구사항</div><div class="sadesc">성능·신뢰성·가용성 등 품질 속성</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+                <div class="subart"><span class="saic">📐</span><div><div class="san">Detail Design</div><div class="sadesc">설명 · Class · Sequence(as-is·to-be)</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
+              </div>
+              <div class="morex">＋ 개발 이슈 #3 … (요구사항에 따라 1개 ~ N개)</div>
             </div>
           </div>
 
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>흐름</b> 확정 요구사항 → [도출] → 5종 결과(작성 주체·상태)</span><span class="chipspec"><b>작성 주체</b> AI 초안 / 사람 / AI+사람 칩</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
+    <div class="specrow"><span class="chipspec"><b>흐름</b> 요구사항 → 개발 이슈 N개 → 개발 이슈마다 4종</span><span class="chipspec"><b>작성 주체</b> AI 초안 / 사람 / AI+사람 칩</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
   </section>
 
   <section class="scr">
@@ -488,18 +512,19 @@
           </aside>
           <div class="main">
             <div class="toolbar"><h1 class="pt" style="margin:0">산출물 <span style="color:var(--fgf);font-weight:600;font-size:16px">42</span></h1><span class="btn">내보내기 ▾</span></div>
-            <div class="rqbar"><div class="seg"><span class="on">전체</span><span>초안 12</span><span>확정 30</span></div><span class="srch">🔍 산출물·요구사항·모듈로 검색</span><span class="t">요구사항별 묶기 ▾</span></div>
+            <div class="rqbar"><div class="seg"><span class="on">전체</span><span>초안 12</span><span>확정 30</span></div><span class="srch">🔍 개발 이슈·산출물·모듈로 검색</span><span class="t">개발 이슈별 묶기 ▾</span></div>
             <div class="agroup">
-              <div class="agh">근거 <span class="rid">req-ta-01</span> · 태스크 할당 기준 <span class="cnt">5</span></div>
-              <div class="arow2"><span class="atype">개발 이슈</span><span class="anm">AMR 매칭 개선</span><span class="aid2">AMVCS30-77</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
-              <div class="arow2"><span class="atype">기능 요구사항</span><span class="anm">가용 AMR 매칭</span><span class="aid2">AMVCS30-80</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
-              <div class="arow2"><span class="atype">Detail Design</span><span class="anm">매칭 시퀀스</span><span class="aid2">AMVCS30-81</span><span class="rt"><span class="modx">pathsearch</span><span class="ststep todo">작성 필요</span></span></div>
+              <div class="agh">🎫 개발 이슈 <span class="rid">AMVCS30-77</span> · AMR 매칭 · 근거 <span class="rid">req-ta-01</span> <span class="cnt">4종</span></div>
               <div class="arow2"><span class="atype">SWVOC</span><span class="anm">할당 기준 요청 원문</span><span class="aid2">AMSWV-2163</span><span class="rt"><span class="modx">—</span><span class="ststep todo">작성 필요</span></span></div>
+              <div class="arow2"><span class="atype">기능 요구사항</span><span class="anm">가용 AMR 매칭</span><span class="aid2">AMVCS30-80</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
+              <div class="arow2"><span class="atype">비기능 요구사항</span><span class="anm">매칭 성능·가용성</span><span class="aid2">AMVCS30-82</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
+              <div class="arow2"><span class="atype">Detail Design</span><span class="anm">매칭 시퀀스</span><span class="aid2">AMVCS30-81</span><span class="rt"><span class="modx">pathsearch</span><span class="ststep todo">작성 필요</span></span></div>
             </div>
             <div class="agroup">
-              <div class="agh">근거 <span class="rid">req-tf-01</span> · 신규 태스크 생성 <span class="cnt">4</span></div>
-              <div class="arow2"><span class="atype">개발 이슈</span><span class="anm">신규 태스크 생성</span><span class="aid2">AMVCS30-83</span><span class="rt"><span class="modx">operation</span><span class="ststep done">확정</span></span></div>
+              <div class="agh">🎫 개발 이슈 <span class="rid">AMVCS30-83</span> · 신규 태스크 생성 · 근거 <span class="rid">req-tf-01</span> <span class="cnt">4종</span></div>
+              <div class="arow2"><span class="atype">SWVOC</span><span class="anm">태스크 생성 요청 원문</span><span class="aid2">AMSWV-2170</span><span class="rt"><span class="modx">—</span><span class="ststep done">확정</span></span></div>
               <div class="arow2"><span class="atype">기능 요구사항</span><span class="anm">이벤트 수신 태스크 생성</span><span class="aid2">AMVCS30-84</span><span class="rt"><span class="modx">hostinterface</span><span class="ststep done">확정</span></span></div>
+              <div class="arow2"><span class="atype">비기능 요구사항</span><span class="anm">수신 신뢰성</span><span class="aid2">AMVCS30-86</span><span class="rt"><span class="modx">hostinterface</span><span class="ststep done">확정</span></span></div>
               <div class="arow2"><span class="atype">Detail Design</span><span class="anm">태스크 생성 시퀀스</span><span class="aid2">AMVCS30-85</span><span class="rt"><span class="modx">operation</span><span class="ststep done">확정</span></span></div>
             </div>
           </div>
@@ -507,7 +532,7 @@
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>그룹</b> 근거 요구사항별 산출물 묶기</span><span class="chipspec"><b>행</b> 유형·이름·ID·모듈·상태</span><span class="chipspec api">GET /projects/{id}/artifacts</span></div>
+    <div class="specrow"><span class="chipspec"><b>그룹</b> 개발 이슈별 묶기(근거 요구사항 표기) · 각 4종</span><span class="chipspec"><b>행</b> 유형·이름·ID·모듈·상태</span><span class="chipspec api">GET /projects/{id}/artifacts</span></div>
   </section>
 
   <p class="foot"><b>범위.</b> 기능 2(산출물 도출) — 도출 · 기능요구사항 편집 · 개발이슈 편집 · 산출물 목록 4화면. 기능 1과 앱 셸·디자인 공유.
