@@ -240,7 +240,10 @@
   .gh .find .fspan2{font-weight:700;font-size:13.5px;} .gh .find .frs2{font-size:12.5px;color:var(--fgm);}
   .gh .find .fsug{margin-top:9px;background:var(--blue-s);border:1px dashed #79c0ff;border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--blue);display:flex;align-items:center;gap:8px;}
   .gh .find .fsug .apply{margin-left:auto;font-weight:700;white-space:nowrap;}
-  .gh .rvfoot{display:flex;align-items:center;gap:12px;margin-top:18px;}
+  .gh .rvcommit{margin-top:18px;border:1px solid var(--bd);border-radius:10px;background:var(--cvs);padding:13px 15px;}
+  .gh .rvcommit .commitin{margin-top:7px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:11px 13px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:8px;}
+  .gh .rvcommit .aihint{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-s);border-radius:999px;padding:2px 10px;white-space:nowrap;}
+  .gh .rvfoot{display:flex;align-items:center;gap:12px;margin-top:16px;}
   .gh .rvfoot .note{font-size:13px;color:var(--fgm);}
 </style>
 </head>
@@ -490,10 +493,15 @@
                   </div>
                 </div>
               </div>
+              <div class="rvcommit">
+                <div class="fieldlab">변경 사유 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— 이 문구가 버전 이력의 제목이 됩니다 (커밋 메시지)</span></div>
+                <div class="commitin">‘약속된 형식’을 인터페이스 명세서 v1.2 기준으로 명확화<span class="aihint">✨ AI 제안 · 편집 가능</span></div>
+              </div>
               <div class="rvfoot">
                 <span class="btn prim">확정 저장 → v1.0.2</span>
+                <span class="btn">넘어가기 · 해결 불필요</span>
                 <span class="btn">취소</span>
-                <span class="note">확정하면 작성자(한지훈)·시각과 함께 <b style="color:var(--fg)">버전 이력</b>에 새 버전으로 남습니다</span>
+                <span class="note">작성자(한지훈)·시각·변경 사유와 함께 <b style="color:var(--fg)">버전 이력</b>에 새 버전으로 남습니다</span>
               </div>
             </div>
           </div>
