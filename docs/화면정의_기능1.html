@@ -131,6 +131,30 @@
   .gh .iss .im{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .gh .iss .im .mid{font-family:var(--mono);}
   .gh .iss .rcol{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  /* requirements board (Jira feel) */
+  .gh .vtoggle{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden;}
+  .gh .vtoggle span{padding:7px 13px;font-size:13px;font-weight:600;color:var(--fgm);display:flex;align-items:center;gap:6px;}
+  .gh .vtoggle span.on{background:var(--cvi);color:var(--fg);}
+  .gh .flt{display:flex;align-items:center;gap:12px;margin:16px 0 18px;flex-wrap:wrap;}
+  .gh .flt .fsrch{flex:1;min-width:200px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:8px 12px;color:var(--fgf);font-size:13.5px;}
+  .gh .flt .chip{font-size:13px;font-weight:600;color:var(--fgm);padding:6px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);}
+  .gh .flt .chip.on{background:var(--cvi);color:var(--fg);}
+  .gh .avstack{display:flex;align-items:center;} .gh .avstack .av2{margin-left:-7px;border:2px solid var(--cv);width:28px;height:28px;flex:0 0 28px;}
+  .gh .avstack .more{margin-left:-7px;width:28px;height:28px;border-radius:50%;background:var(--cvi);color:var(--fgm);border:2px solid var(--cv);display:grid;place-items:center;font-size:11px;font-weight:700;}
+  .gh .board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start;}
+  .gh .bcol{background:var(--cvs);border:1px solid var(--bd);border-radius:12px;padding:10px 10px 6px;}
+  .gh .bch{display:flex;align-items:center;gap:8px;padding:5px 8px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--fgm);}
+  .gh .bch .cdot{width:9px;height:9px;border-radius:50%;} .gh .bch .cn{margin-left:auto;font-size:12px;background:var(--cv);border:1px solid var(--bd);border-radius:999px;padding:1px 9px;color:var(--fgm);}
+  .gh .kc{position:relative;background:var(--cv);border:1px solid var(--bd);border-radius:10px;padding:12px 13px 12px 15px;margin-bottom:10px;box-shadow:0 1px 0 rgba(31,35,40,.04);}
+  .gh .kc .acc{position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;}
+  .gh .kc .ktop{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+  .gh .kc .kt{font-size:14.5px;font-weight:600;line-height:1.4;color:var(--fg);}
+  .gh .kc .kid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);margin-top:7px;}
+  .gh .kc .kf{display:flex;align-items:center;gap:8px;margin-top:11px;}
+  .gh .kc .kf .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .gh .kc .warn{font-size:11.5px;font-weight:700;color:var(--amber);background:var(--amber-s);border-radius:6px;padding:2px 8px;}
+  .gh .prio{font-size:14px;line-height:1;} .gh .prio.hi{color:var(--red);} .gh .prio.mid{color:var(--amber);} .gh .prio.lo{color:var(--fgf);}
+  .gh .addcard{text-align:center;color:var(--fgf);font-size:13px;font-weight:600;padding:9px;border-radius:8px;}
   /* version history (commits style) */
   .gh .crumb{font-size:14px;color:var(--fgm);margin-bottom:6px;} .gh .crumb b{color:var(--blue);font-weight:600;}
   .gh .rtabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin:16px 0 0;}
@@ -322,34 +346,66 @@
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
-            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항</h1><span class="btn prim">＋ 새 요구사항</span></div>
-            <div class="filterbar">
-              <span class="fb"><svg width="15" height="15" viewBox="0 0 16 16" fill="var(--amber)" style="vertical-align:-2px"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/></svg> 검토중 6</span>
-              <span class="fb on">✓ 확정 18</span>
-              <span class="fsearch">🔍 is:confirmed author:한지훈 …</span>
-              <span class="fb" style="border-right:none">정렬 ▾</span>
+            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항</h1>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="vtoggle"><span class="on">▦ 보드</span><span>☰ 리스트</span></div>
+                <span class="btn prim">＋ 새 요구사항</span></div>
             </div>
-            <div style="height:14px"></div>
-            <div class="isslist">
-              <div class="iss">
-                <span class="ico rev"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm9-3v4H7V5Zm0 5v1H7v-1Z"/></svg></span>
-                <div><div class="it">태스크 할당 기준</div><div class="im"><span class="mid">req-ta-01</span> · <span class="lbl purple" style="padding:1px 8px">태스크</span> · <span style="color:var(--amber)">검토중 · 검출 2건</span> · 2일 전 열림</div></div>
-                <div class="rcol"><span class="tagv" style="color:var(--fgf)">미확정</span></div>
+            <div class="flt">
+              <span class="chip on">전체</span><span class="chip">내 담당</span>
+              <div class="avstack"><span class="av2 a-h">한</span><span class="av2 a-l">이</span><span class="av2 a-k">김</span><span class="more">+2</span></div>
+              <span class="fsrch">🔍 요구사항 검색 · Epic · 담당자…</span>
+              <span class="chip">분류 ▾</span>
+            </div>
+            <div class="board">
+              <!-- 접수 -->
+              <div class="bcol">
+                <div class="bch"><span class="cdot" style="background:var(--fgf)"></span>접수<span class="cn">2</span></div>
+                <div class="kc"><span class="acc" style="background:var(--fgf)"></span>
+                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio mid" style="margin-left:auto">＝</span></div>
+                  <div class="kt">할당 조건 사용자 설정</div><div class="kid">req-js-03</div>
+                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">원문 접수 · 미검토</span><span class="rt"><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span></span></div>
+                </div>
+                <div class="kc"><span class="acc" style="background:var(--fgf)"></span>
+                  <div class="ktop"><span class="lbl purple" style="padding:1px 8px">맵</span><span class="prio lo" style="margin-left:auto">▽</span></div>
+                  <div class="kt">경로 우선순위 정책</div><div class="kid">req-mp-04</div>
+                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">원문 접수</span><span class="rt"><span class="av2" style="background:var(--cvi);color:var(--fgm)">?</span></span></div>
+                </div>
+                <div class="addcard">＋ 요구사항 추가</div>
               </div>
-              <div class="iss">
-                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
-                <div><div class="it">신규 태스크 생성</div><div class="im"><span class="mid">req-tf-01</span> · <span class="lbl purple" style="padding:1px 8px">태스크 전개</span> · 확정: <b style="color:var(--fg)">한지훈</b> · 어제 · 산출물 4</div></div>
-                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.0.1</span></div>
+              <!-- 검토중 -->
+              <div class="bcol">
+                <div class="bch"><span class="cdot" style="background:var(--amber)"></span>검토중<span class="cn">4</span></div>
+                <div class="kc"><span class="acc" style="background:var(--amber)"></span>
+                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio hi" style="margin-left:auto">△</span></div>
+                  <div class="kt">태스크 할당 기준</div><div class="kid">req-ta-01</div>
+                  <div class="kf"><span class="warn">⚠ 검출 2건</span><span class="rt"><span class="av2 a-l">이</span></span></div>
+                </div>
+                <div class="kc"><span class="acc" style="background:var(--amber)"></span>
+                  <div class="ktop"><span class="lbl blue" style="padding:1px 8px">태스크</span><span class="prio mid" style="margin-left:auto">＝</span></div>
+                  <div class="kt">알람 복구 재할당</div><div class="kid">req-ta-02</div>
+                  <div class="kf"><span class="warn">⚠ 검출 1건</span><span class="rt"><span class="av2 a-h">한</span></span></div>
+                </div>
+                <div class="addcard">＋ 요구사항 추가</div>
               </div>
-              <div class="iss">
-                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
-                <div><div class="it">입출고지 와일드카드</div><div class="im"><span class="mid">req-mp-01</span> · <span class="lbl purple" style="padding:1px 8px">맵</span> · 확정: <b style="color:var(--fg)">한지훈</b> · 오늘 · 산출물 3</div></div>
-                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.1.0</span></div>
-              </div>
-              <div class="iss">
-                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
-                <div><div class="it">진행상황 보고 항목</div><div class="im"><span class="mid">req-tf-02</span> · <span class="lbl purple" style="padding:1px 8px">태스크 전개</span> · 확정: <b style="color:var(--fg)">김도현</b> · 3일 전 · 산출물 2</div></div>
-                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.0.0</span></div>
+              <!-- 확정 -->
+              <div class="bcol">
+                <div class="bch"><span class="cdot" style="background:var(--green)"></span>확정<span class="cn">18</span></div>
+                <div class="kc"><span class="acc" style="background:var(--green)"></span>
+                  <div class="ktop"><span class="lbl purple" style="padding:1px 8px">맵</span><span class="tagv" style="margin-left:auto">🏷 v1.1.0</span></div>
+                  <div class="kt">입출고지 와일드카드</div><div class="kid">req-mp-01</div>
+                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 3 · 오늘</span><span class="rt"><span class="av2 a-h">한</span></span></div>
+                </div>
+                <div class="kc"><span class="acc" style="background:var(--green)"></span>
+                  <div class="ktop"><span class="lbl teal" style="padding:1px 8px;background:var(--teal100,#ccfbf1);color:var(--teal700,#0f766e)">태스크 전개</span><span class="tagv" style="margin-left:auto">🏷 v1.0.1</span></div>
+                  <div class="kt">신규 태스크 생성</div><div class="kid">req-tf-01</div>
+                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 4 · 어제</span><span class="rt"><span class="av2 a-h">한</span></span></div>
+                </div>
+                <div class="kc"><span class="acc" style="background:var(--green)"></span>
+                  <div class="ktop"><span class="lbl teal" style="padding:1px 8px;background:#ccfbf1;color:#0f766e">태스크 전개</span><span class="tagv" style="margin-left:auto">🏷 v1.0.0</span></div>
+                  <div class="kt">진행상황 보고 항목</div><div class="kid">req-tf-02</div>
+                  <div class="kf"><span style="font-size:12px;color:var(--fgm)">산출물 2 · 3일 전</span><span class="rt"><span class="av2 a-k">김</span></span></div>
+                </div>
               </div>
             </div>
           </div>
@@ -357,10 +413,10 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>중복 해소</b> 요구사항 리스트는 이 섹션에만 (좌측 nav는 섹션)</span>
-      <span class="chipspec"><b>벤치마킹</b> GitHub Issues 리스트(상태 아이콘·라벨·작성자·필터)</span>
-      <span class="chipspec"><b>작성자</b> 각 행에 “확정: 한지훈” 표기</span>
-      <span class="chipspec api">GET /requirements?state=&author=</span>
+      <span class="chipspec"><b>보드(Jira 느낌)</b> 접수 → 검토중 → 확정 워크플로우 · 보드/리스트 토글</span>
+      <span class="chipspec"><b>카드</b> Epic 라벨·우선순위·담당자 아바타·검출/버전 (GitHub 정갈함)</span>
+      <span class="chipspec"><b>작성자</b> 담당자 아바타 · 확정 시 버전 태그</span>
+      <span class="chipspec api">GET /requirements?view=board&state=</span>
     </div>
   </section>
 
