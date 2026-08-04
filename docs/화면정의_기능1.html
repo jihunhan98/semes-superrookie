@@ -3,415 +3,486 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>기능 1 · 요구사항 검토 — 화면 정의</title>
+<title>기능 1 · 요구사항 검토 — UI 설계</title>
 <style>
   :root{
-    --bg:#f7f7fb; --surface:#ffffff; --surface2:#fbfbfe;
-    --ink:#1e2330; --muted:#6b7280; --faint:#9aa0ae;
-    --line:#e8e8f0; --line2:#eef0f6;
-    --accent:#4f46e5; --accent-soft:#eef2ff; --accent-line:#c7d2fe;
-    --navy:#1e1b4b; --navy-ink:#c7d2fe;
-    --ai:#4338ca; --ai-soft:#eef2ff;
-    --human:#c2410c; --human-soft:#fff5ed;
-    --ok:#059669; --ok-soft:#dcfce7;
-    --dev:#2563eb; --dev-soft:#dbeafe;
-    --wait:#94a3b8; --wait-soft:#f1f5f9;
-    --amber:#b45309; --amber-soft:#fef3c7;
-    --shadow:0 1px 2px rgba(30,27,75,.04),0 8px 24px rgba(30,27,75,.06);
-    --shadow-lg:0 2px 6px rgba(30,27,75,.06),0 18px 46px rgba(30,27,75,.12);
-    --radius:14px;
+    --bg:#f6f7f9; --surface:#fff; --card:#fff; --ink:#161a22; --muted:#616b7a; --faint:#9099a8;
+    --line:#e7e9ef; --accent:#4f46e5; --accent-soft:#eef2ff; --accent-line:#c7d2fe;
+    --code:#f4f5f8; --shadow:0 1px 2px rgba(20,24,40,.04),0 10px 30px rgba(20,24,40,.07);
+    --frame-shadow:0 4px 12px rgba(20,24,40,.08),0 30px 70px rgba(20,24,40,.16);
     --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif;
-    --mono:ui-monospace,"SF Mono","JetBrains Mono","D2Coding",Menlo,monospace;
+    --mono:"Geist Mono",ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
   }
   @media (prefers-color-scheme:dark){
-    :root{
-      --bg:#111017; --surface:#1a1922; --surface2:#201f2a;
-      --ink:#e8e9f0; --muted:#a0a6b4; --faint:#767b8a;
-      --line:#2c2b38; --line2:#26252f;
-      --accent:#8b8cf8; --accent-soft:#211f3a; --accent-line:#3b3a63;
-      --navy:#0f0e1a; --navy-ink:#a5b4fc;
-      --ai:#a5b4fc; --ai-soft:#20203a;
-      --human:#f0a87c; --human-soft:#33211a;
-      --ok:#34d399; --ok-soft:#12281f;
-      --dev:#60a5fa; --dev-soft:#152036;
-      --wait:#8891a2; --wait-soft:#20222b;
-      --amber:#fcd34d; --amber-soft:#2a2412;
-      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
-      --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 18px 46px rgba(0,0,0,.5);
-    }
+    :root{--bg:#0f0f14; --surface:#191921; --card:#1b1b24; --ink:#e9eaf0; --muted:#a2a8b6; --faint:#6f7686;
+      --line:#2a2a35; --accent:#8b8cf8; --accent-soft:#20203a; --accent-line:#3a3a63; --code:#212129;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+      --frame-shadow:0 4px 12px rgba(0,0,0,.5),0 30px 70px rgba(0,0,0,.6);}
   }
-  :root[data-theme="light"]{
-    --bg:#f7f7fb; --surface:#ffffff; --surface2:#fbfbfe;
-    --ink:#1e2330; --muted:#6b7280; --faint:#9aa0ae;
-    --line:#e8e8f0; --line2:#eef0f6;
-    --accent:#4f46e5; --accent-soft:#eef2ff; --accent-line:#c7d2fe;
-    --navy:#1e1b4b; --navy-ink:#c7d2fe;
-    --ai:#4338ca; --ai-soft:#eef2ff; --human:#c2410c; --human-soft:#fff5ed;
-    --ok:#059669; --ok-soft:#dcfce7; --dev:#2563eb; --dev-soft:#dbeafe;
-    --wait:#94a3b8; --wait-soft:#f1f5f9; --amber:#b45309; --amber-soft:#fef3c7;
-    --shadow:0 1px 2px rgba(30,27,75,.04),0 8px 24px rgba(30,27,75,.06);
-    --shadow-lg:0 2px 6px rgba(30,27,75,.06),0 18px 46px rgba(30,27,75,.12);
-  }
-  :root[data-theme="dark"]{
-    --bg:#111017; --surface:#1a1922; --surface2:#201f2a;
-    --ink:#e8e9f0; --muted:#a0a6b4; --faint:#767b8a;
-    --line:#2c2b38; --line2:#26252f;
-    --accent:#8b8cf8; --accent-soft:#211f3a; --accent-line:#3b3a63;
-    --navy:#0f0e1a; --navy-ink:#a5b4fc;
-    --ai:#a5b4fc; --ai-soft:#20203a; --human:#f0a87c; --human-soft:#33211a;
-    --ok:#34d399; --ok-soft:#12281f; --dev:#60a5fa; --dev-soft:#152036;
-    --wait:#8891a2; --wait-soft:#20222b; --amber:#fcd34d; --amber-soft:#2a2412;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
-    --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 18px 46px rgba(0,0,0,.5);
-  }
+  :root[data-theme="light"]{--bg:#f6f7f9;--surface:#fff;--card:#fff;--ink:#161a22;--muted:#616b7a;--faint:#9099a8;
+    --line:#e7e9ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f4f5f8;
+    --shadow:0 1px 2px rgba(20,24,40,.04),0 10px 30px rgba(20,24,40,.07);
+    --frame-shadow:0 4px 12px rgba(20,24,40,.08),0 30px 70px rgba(20,24,40,.16);}
+  :root[data-theme="dark"]{--bg:#0f0f14;--surface:#191921;--card:#1b1b24;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;
+    --line:#2a2a35;--accent:#8b8cf8;--accent-soft:#20203a;--accent-line:#3a3a63;--code:#212129;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+    --frame-shadow:0 4px 12px rgba(0,0,0,.5),0 30px 70px rgba(0,0,0,.6);}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;
-    -webkit-font-smoothing:antialiased;}
-  .wrap{max-width:1120px;margin:0 auto;padding:44px 24px 80px;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1200px;margin:0 auto;padding:44px 20px 90px;}
 
-  /* ── hero ── */
-  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
-  h1{font-size:clamp(28px,4.2vw,40px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
-  .lede{font-size:16px;color:var(--muted);max-width:64ch;margin:0;}
-  .metarow{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
-  .tag{font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
-  .tag.done{background:var(--ok-soft);color:var(--ok);border-color:transparent;}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
+  h1.page{font-size:clamp(27px,4vw,38px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
+  .lede{font-size:15.5px;color:var(--muted);max-width:66ch;margin:0;}
+  .metarow{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .tag{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
+  .tag.on{background:#dcfce7;color:#047857;border-color:transparent;}
+  @media (prefers-color-scheme:dark){.tag.on{background:#12281f;color:#34d399;}}
 
-  /* ── section scaffolding ── */
-  section{margin-top:56px;}
-  .kicker{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
+  /* routing map */
+  .routing{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);}
+  .routing .rt{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
+  .rmap{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;}
+  .rhome{flex:0 0 auto;align-self:center;background:var(--accent);color:#fff;font-weight:800;font-size:13.5px;padding:12px 16px;border-radius:12px;box-shadow:0 4px 12px rgba(79,70,229,.28);}
+  .rhome small{display:block;font-weight:600;opacity:.85;font-size:11px;font-family:var(--mono);}
+  .rbranch{align-self:center;color:var(--faint);font-size:20px;font-weight:800;}
+  .rcols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;min-width:280px;}
+  .rcard{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--surface);}
+  .rcard.live{border-color:var(--accent-line);background:var(--accent-soft);}
+  .rcard .rn{font-size:10.5px;font-weight:800;color:var(--faint);font-family:var(--mono);}
+  .rcard .rname{font-size:14px;font-weight:800;margin-top:2px;}
+  .rcard .rst{font-size:10.5px;font-weight:800;margin-top:6px;display:inline-block;padding:2px 8px;border-radius:999px;}
+  .rst.done{background:#dcfce7;color:#047857;} .rst.todo{background:var(--code);color:var(--faint);}
+  @media (prefers-color-scheme:dark){.rst.done{background:#12281f;color:#34d399;}}
+  @media(max-width:720px){.rcols{grid-template-columns:1fr;}.rbranch{transform:rotate(90deg);align-self:center;}}
+
+  /* screen block */
+  section.scr{margin-top:58px;}
+  .kicker{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
   .kicker::after{content:"";flex:1;height:1px;background:var(--line);}
-  h2{font-size:23px;font-weight:820;letter-spacing:-.01em;margin:0 0 6px;}
-  .sub{color:var(--muted);font-size:14.5px;margin:0 0 22px;max-width:70ch;}
+  .scr-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;}
+  .scr-head .route{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:8px;}
+  .scr-head h2{font-size:21px;font-weight:840;letter-spacing:-.01em;margin:0;}
+  .scr-head .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;}
+  .st.done{background:#dcfce7;color:#047857;} .st.partial{background:#fef3c7;color:#b45309;} .st.newx{background:var(--code);color:var(--faint);}
+  @media (prefers-color-scheme:dark){.st.done{background:#12281f;color:#34d399;}.st.partial{background:#2a2412;color:#fcd34d;}}
 
-  /* ── storyboard flow ── */
-  .flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:14px;}
-  .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;
-    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;}
-  .step::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent);opacity:.9;}
-  .step .n{width:26px;height:26px;border-radius:8px;background:var(--accent-soft);color:var(--accent);
-    font-weight:850;font-size:13px;display:grid;place-items:center;}
-  .step .id{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:700;}
-  .step h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
-  .step p{margin:0;font-size:12.8px;color:var(--muted);line-height:1.45;}
-  .arrow{align-self:center;color:var(--accent);font-size:22px;font-weight:900;opacity:.65;}
-  @media(max-width:780px){
-    .flow{grid-template-columns:1fr;}
-    .arrow{transform:rotate(90deg);justify-self:center;}
-  }
+  /* browser frame */
+  .frameWrap{overflow-x:auto;border-radius:16px;-webkit-overflow-scrolling:touch;}
+  .browser{width:1160px;border-radius:14px;overflow:hidden;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
+  .bbar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#f1f2f5;border-bottom:1px solid #e3e5ea;}
+  .bbar i{width:11px;height:11px;border-radius:50%;background:#e4657a;} .bbar i:nth-child(2){background:#f2b73d;} .bbar i:nth-child(3){background:#54c07a;}
+  .bbar .addr{margin-left:10px;background:#fff;border:1px solid #e3e5ea;border-radius:7px;padding:4px 12px;font-family:var(--mono);font-size:11.5px;color:#8b909c;min-width:340px;}
 
-  /* ── screen block: mockup + annotation ── */
-  .screen{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:22px;align-items:start;}
-  @media(max-width:900px){.screen{grid-template-columns:1fr;}}
-  .schead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 14px;}
-  .schead .scid{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--accent);
-    background:var(--accent-soft);padding:3px 9px;border-radius:7px;}
-  .schead .scname{font-size:18px;font-weight:820;letter-spacing:-.01em;}
-  .schead .pill{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;}
-  .pill.impl{background:var(--dev-soft);color:var(--dev);}
-  .pill.partial{background:var(--amber-soft);color:var(--amber);}
-  .pill.newx{background:var(--wait-soft);color:var(--wait);}
-
-  /* annotation panel */
-  .anno{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px;box-shadow:var(--shadow);
-    display:flex;flex-direction:column;gap:16px;}
-  .anno .grp>.lab{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 7px;}
-  .anno .grp p{margin:0;font-size:13.2px;color:var(--ink);}
-  .anno ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;}
-  .anno li{font-size:13px;color:var(--ink);padding-left:16px;position:relative;line-height:1.4;}
-  .anno li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent);}
-  .apis{display:flex;flex-wrap:wrap;gap:6px;}
-  .api{font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;
-    background:var(--surface2);border:1px solid var(--line);color:var(--muted);}
-  .api b{color:var(--accent);font-weight:800;}
-
-  /* ── app mockup chrome ── */
-  .mock{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);
-    box-shadow:var(--shadow-lg);}
-  .mock .bar{display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--line);}
-  .mock .bar i{width:10px;height:10px;border-radius:50%;background:#e4657a;display:block;}
-  .mock .bar i:nth-child(2){background:#f2b73d;}
-  .mock .bar i:nth-child(3){background:#4fbf7b;}
-  .mock .bar .url{margin-left:8px;font-size:11px;color:var(--faint);font-family:var(--mono);}
-  .app{display:grid;grid-template-columns:172px 1fr;min-height:340px;}
+  /* ===== the actual app UI (fixed light — a screenshot of the real app) ===== */
+  .ui{--g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g800:#1f2937;--g900:#111827;
+    --ind50:#eef2ff;--ind100:#e0e7ff;--ind600:#4f46e5;--ind700:#4338ca;
+    --em50:#ecfdf5;--em100:#d1fae5;--em300:#6ee7b7;--em600:#059669;--em700:#047857;
+    --am50:#fffbeb;--am100:#fef3c7;--am300:#fcd34d;--am500:#f59e0b;--am700:#b45309;
+    --sky50:#f0f9ff;--sky300:#7dd3fc;--sky800:#075985;--rose100:#ffe4e6;--rose700:#be123c;
+    --teal100:#ccfbf1;--teal700:#0f766e;
+    display:grid;grid-template-columns:248px 1fr;height:720px;background:var(--g50);color:var(--g900);
+    font-size:14px;line-height:1.5;}
+  .ui *{box-sizing:border-box;}
   /* sidebar */
-  .side{background:var(--navy);padding:14px 12px;display:flex;flex-direction:column;gap:4px;}
-  .side .logo{display:flex;align-items:center;gap:8px;padding:4px 6px 12px;color:#fff;font-weight:800;font-size:12.5px;}
-  .side .logo .dot{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#6366f1,#8b5cf6);}
-  .side a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;color:var(--navy-ink);
-    font-size:12.5px;font-weight:600;text-decoration:none;opacity:.72;}
-  .side a .ic{width:15px;height:15px;opacity:.9;}
-  .side a.on{background:rgba(255,255,255,.12);color:#fff;opacity:1;font-weight:800;}
-  .side .grp-t{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#6f6bab;padding:12px 8px 4px;font-weight:800;}
-  .badge{margin-left:auto;font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:999px;}
-  .badge.g{background:rgba(52,211,153,.2);color:#6ee7b7;}
-  .badge.b{background:rgba(96,165,250,.22);color:#93c5fd;}
-  .badge.w{background:rgba(148,163,184,.2);color:#cbd5e1;}
+  .ui .side{background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;}
+  .ui .brand{display:flex;align-items:center;gap:10px;padding:20px;}
+  .ui .brand .sq{width:32px;height:32px;border-radius:9px;background:var(--ind600);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;}
+  .ui .brand .bn{font-size:14px;font-weight:800;color:var(--g900);line-height:1.2;}
+  .ui .brand .bs{font-size:11px;color:var(--g400);}
+  .ui nav{flex:1;padding:0 12px;}
+  .ui nav .nlab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g400);padding:8px;}
+  .ui nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;font-size:14px;color:var(--g500);text-decoration:none;margin-bottom:3px;font-weight:500;}
+  .ui nav a svg{width:19px;height:19px;color:var(--g400);}
+  .ui nav a.on{background:var(--ind50);color:var(--ind700);font-weight:700;}
+  .ui nav a.on svg{color:var(--ind600);}
+  .ui nav a .rd{margin-left:auto;font-size:10px;font-weight:600;color:var(--g400);background:var(--g100);padding:2px 7px;border-radius:6px;}
+  .ui .snote{margin:12px;background:var(--g50);border-radius:10px;padding:12px;font-size:11px;line-height:1.55;color:var(--g400);}
   /* main */
-  .main{background:var(--surface);display:flex;flex-direction:column;min-width:0;}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line2);}
-  .top .t{font-size:14px;font-weight:820;}
-  .toggle{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-size:10.5px;font-weight:700;}
-  .toggle span{padding:5px 10px;color:var(--muted);}
-  .toggle span.on{background:var(--accent);color:#fff;}
-  .body{padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;}
+  .ui .m{overflow:hidden;}
+  .ui .mpad{max-width:900px;margin:0 auto;padding:34px 40px;height:100%;overflow:auto;}
+  .ui h1{font-size:23px;font-weight:800;color:var(--g900);margin:0;}
+  .ui .desc{font-size:13.5px;color:var(--g500);margin:8px 0 0;max-width:70ch;line-height:1.6;}
+  .ui .fbadge{font-size:12px;font-weight:700;color:var(--ind600);background:var(--ind50);padding:3px 9px;border-radius:7px;}
+  .ui .modebadge{font-size:12px;font-weight:600;color:var(--ind700);background:var(--ind100);padding:3px 10px;border-radius:999px;}
+  .ui .card{background:#fff;border:1px solid var(--g200);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  /* home cards */
+  .ui .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;}
+  .ui .fcard{padding:20px;display:flex;flex-direction:column;}
+  .ui .fcard .frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .ui .fcard .fic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--ind50);color:var(--ind600);}
+  .ui .fcard .fic.off{background:var(--g100);color:var(--g400);}
+  .ui .fcard .fic svg{width:20px;height:20px;}
+  .ui .fcard .stat{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .ui .fcard .stat.y{background:var(--em100);color:var(--em700);} .ui .fcard .stat.n{background:var(--g100);color:var(--g400);}
+  .ui .fcard .fno{font-size:11.5px;font-weight:700;color:var(--g400);}
+  .ui .fcard .fname{font-size:16px;font-weight:800;color:var(--g900);margin:2px 0 6px;}
+  .ui .fcard .fdesc{font-size:12.5px;color:var(--g500);line-height:1.55;flex:1;}
+  .ui .fcard .fgo{font-size:13px;font-weight:700;margin-top:16px;}
+  .ui .fcard .fgo.y{color:var(--ind600);} .ui .fcard .fgo.n{color:var(--g400);}
+  .ui .archnote{font-size:11.5px;color:var(--g400);margin-top:26px;}
+  /* input section */
+  .ui .sec{padding:20px;margin-top:22px;}
+  .ui .sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .ui .sech .st1{font-size:14px;font-weight:700;color:var(--g700);}
+  .ui .sech .st1 span{font-weight:400;color:var(--g400);}
+  .ui .prep{font-size:11px;color:var(--g400);background:var(--g100);padding:3px 9px;border-radius:6px;}
+  .ui .reqrow{border:1px solid var(--g200);background:rgba(249,250,251,.7);border-radius:11px;padding:13px;margin-bottom:12px;}
+  .ui .reqtop{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+  .ui .reqtop .hash{font-size:11px;font-weight:700;color:var(--g400);}
+  .ui .inp{border:1px solid var(--g300);border-radius:6px;padding:6px 9px;font-size:12.5px;background:#fff;color:var(--g800);}
+  .ui .inp.mono{font-family:var(--mono);width:150px;}
+  .ui .inp.cat{width:150px;}
+  .ui .rm{margin-left:auto;font-size:11.5px;color:var(--g400);padding:5px 9px;border-radius:6px;}
+  .ui .twocol{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  .ui .flabel{font-size:11px;font-weight:700;color:var(--g400);margin-bottom:4px;display:block;}
+  .ui textarea.inp{width:100%;height:70px;resize:none;line-height:1.5;font-family:var(--font);}
+  .ui .addrow{border:1px dashed var(--g300);border-radius:8px;padding:7px 13px;font-size:13px;color:var(--g500);display:inline-block;margin-top:2px;}
+  .ui .engine{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--g100);margin-top:16px;padding-top:16px;}
+  .ui .engine .el{font-size:12px;font-weight:600;color:var(--g500);}
+  .ui .etoggle{display:inline-flex;background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:3px;}
+  .ui .etoggle span{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;color:var(--g500);}
+  .ui .etoggle span.on{background:#fff;color:var(--ind700);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:700;}
+  .ui .ehint{font-size:11.5px;color:var(--g400);}
+  .ui .btn{display:inline-flex;align-items:center;gap:6px;background:var(--ind600);color:#fff;font-size:13.5px;font-weight:700;padding:9px 18px;border-radius:10px;margin-top:16px;}
+  .ui .btn.dark{background:var(--g900);} .ui .btn.em{background:var(--em600);} .ui .btn.sm{padding:7px 13px;font-size:12.5px;margin-top:0;}
+  .ui .btn.ghost{background:#fff;color:var(--g500);border:1px solid var(--g300);font-weight:600;}
+  .ui .kpis{display:flex;gap:20px;border-top:1px solid var(--g100);margin-top:16px;padding-top:14px;font-size:13px;color:var(--g500);}
+  .ui .kpis b{font-size:16px;}
+  .ui .kpis .k1 b{color:var(--g800);} .ui .kpis .k2 b{color:var(--am700);} .ui .kpis .k3 b{color:var(--em600);} .ui .kpis .k4 b{color:var(--rose700);}
+  /* reqcard (검출/해결) */
+  .ui .sec2t{font-size:14px;font-weight:700;color:var(--g700);margin:24px 0 12px;}
+  .ui .rc{border-radius:12px;padding:16px;margin-bottom:14px;}
+  .ui .rc.amb{border:1px solid var(--am300);background:rgba(255,251,235,.55);}
+  .ui .rc.res{border:1px solid var(--em300);background:rgba(236,253,245,.5);}
+  .ui .rc.clr{border:1px solid var(--g200);background:#fff;}
+  .ui .rchead{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+  .ui .rchead .rid{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--g500);}
+  .ui .rchead .rcat{font-size:11px;color:var(--g500);background:var(--g100);padding:2px 8px;border-radius:5px;}
+  .ui .rbadge{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .ui .rbadge.amb{background:var(--am500);color:#fff;} .ui .rbadge.res{background:var(--em600);color:#fff;} .ui .rbadge.clr{background:var(--em100);color:var(--em700);}
+  .ui .rbody{font-size:13px;color:var(--g800);}
+  .ui .rbody .rlab{font-size:11px;font-weight:700;color:var(--g400);margin-right:6px;}
+  .ui .rbody u{text-decoration:none;background:var(--am100);border-bottom:2px solid var(--am300);color:var(--am700);padding:0 1px;font-weight:600;}
+  .ui .findings{border-top:1px solid var(--am300);margin-top:12px;padding-top:11px;display:flex;flex-direction:column;gap:7px;}
+  .ui .fd{font-size:12.5px;display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;}
+  .ui .ftype{font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;}
+  .ui .ftype.a{background:var(--rose100);color:var(--rose700);} .ui .ftype.b{background:var(--teal100);color:var(--teal700);}
+  .ui .fd .fspan{font-weight:700;color:var(--g700);} .ui .fd .frs{color:var(--g500);}
+  .ui .sugg{margin-top:12px;border:1px dashed var(--sky300);background:var(--sky50);border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--sky800);}
+  .ui .rcacts{display:flex;gap:8px;margin-top:13px;}
+  .ui .resolvebox{border:1px solid var(--g200);background:#fff;border-radius:9px;padding:13px;margin-top:13px;}
+  .ui .resolvebox label{font-size:11.5px;font-weight:700;color:var(--g500);display:block;margin-bottom:6px;}
+  .ui .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .ui .bacol{border-radius:9px;padding:12px;font-size:12.5px;line-height:1.6;}
+  .ui .bacol.b{border:1px solid var(--g200);background:#fff;} .ui .bacol.a{border:1px solid var(--em300);background:#fff;}
+  .ui .bacol .bt{font-size:11px;font-weight:700;margin-bottom:5px;} .ui .bacol.b .bt{color:var(--g400);} .ui .bacol.a .bt{color:var(--em600);}
+  .ui .bacol del{color:#be123c;text-decoration-color:#fb7185;} .ui .bacol ins{text-decoration:none;color:var(--ind700);font-weight:700;}
 
-  /* generic mock ui atoms */
-  .tabs{display:flex;gap:6px;}
-  .tab{font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:9px 9px 0 0;border:1px solid var(--line);
-    border-bottom:none;color:var(--muted);background:var(--surface2);}
-  .tab.on{background:var(--surface);color:var(--accent);border-color:var(--accent-line);}
-  .rtable{width:100%;border-collapse:collapse;font-size:11.5px;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
-  .rtable th{background:var(--surface2);color:var(--muted);font-weight:800;text-align:left;padding:7px 10px;font-size:10.5px;}
-  .rtable td{border-top:1px solid var(--line2);padding:8px 10px;color:var(--ink);vertical-align:top;}
-  .rtable .cid{font-family:var(--mono);font-weight:700;color:var(--ai);}
-  .rtable .cat{display:inline-block;font-size:9.5px;font-weight:800;color:#6d28d9;background:var(--accent-soft);
-    padding:1px 7px;border-radius:5px;}
-  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;
-    padding:9px 16px;border-radius:10px;align-self:flex-start;box-shadow:0 3px 8px rgba(79,70,229,.25);}
-  .btn.ghost{background:var(--surface2);color:var(--muted);border:1px dashed var(--line);box-shadow:none;font-weight:700;}
-  mark{background:var(--amber-soft);color:var(--amber);border-radius:3px;padding:0 2px;font-weight:700;}
+  /* spec cards under each frame */
+  .spec{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px;}
+  @media(max-width:900px){.spec{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.spec{grid-template-columns:1fr;}}
+  .sc{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow);}
+  .sc .sct{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+  .sc ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .sc li{font-size:12.5px;color:var(--ink);line-height:1.45;padding-left:14px;position:relative;}
+  .sc li::before{content:"";position:absolute;left:1px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--accent-line);}
+  .sc li b{font-weight:700;}
+  .sc li .k{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .sc .api{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted);display:inline-block;}
+  .sc .api b{color:var(--accent);}
 
-  /* SCR-12 detect layout */
-  .detect{display:grid;grid-template-columns:1fr 26px 1.15fr;gap:8px;align-items:stretch;}
-  @media(max-width:520px){.detect{grid-template-columns:1fr;}.detect .mid{transform:rotate(90deg);}}
-  .panel{border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--surface);min-width:0;}
-  .panel .ph{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
-  .reqline{font-size:11px;line-height:1.5;color:var(--ink);margin-bottom:5px;}
-  .mid{align-self:center;text-align:center;color:var(--accent);font-size:19px;font-weight:900;opacity:.6;}
-  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;}
-  .chip{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface2);color:var(--faint);border:1px solid var(--line2);}
-  .chip.on{background:#ede9fe;color:#6d28d9;border-color:#ddd6fe;}
-  :root[data-theme="dark"] .chip.on{background:#2a2547;color:#c4b5fd;border-color:#3f3a63;}
-  @media (prefers-color-scheme:dark){.chip.on{background:#2a2547;color:#c4b5fd;border-color:#3f3a63;}}
-  .lbl{font-size:10px;font-weight:800;margin:9px 0 5px;display:flex;align-items:center;gap:5px;}
-  .lbl.ai{color:var(--ai);} .lbl.me{color:var(--accent);}
-  .aibox{background:var(--ai-soft);border:1px dashed var(--accent-line);border-radius:8px;padding:8px 10px;font-size:10.5px;line-height:1.5;color:var(--ai);}
-  .editbox{background:var(--surface);border:1.6px solid var(--accent);border-radius:8px;padding:8px 10px;font-size:10.5px;line-height:1.5;
-    box-shadow:0 0 0 3px var(--accent-soft);}
-  .editbox ins{text-decoration:none;background:var(--accent-soft);color:var(--ai);font-weight:800;border-radius:3px;padding:0 3px;}
-  .caret{display:inline-block;width:2px;height:11px;background:var(--accent);vertical-align:-1px;}
-
-  /* SCR-13 history */
-  .timeline{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);margin-left:6px;padding-left:14px;}
-  .tl{position:relative;padding:0 0 12px;}
-  .tl::before{content:"";position:absolute;left:-21px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);}
-  .tl .tt{font-size:11.5px;font-weight:800;}
-  .tl .tm{font-size:10px;color:var(--faint);font-family:var(--mono);}
-  .ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
-  @media(max-width:520px){.ba{grid-template-columns:1fr;}}
-  .bacard{border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:10.5px;line-height:1.55;}
-  .bacard.before{background:var(--surface2);color:var(--muted);}
-  .bacard.after{background:var(--ai-soft);border-color:var(--accent-line);}
-  .bacard .bt{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
-  .bacard.before .bt{color:var(--faint);} .bacard.after .bt{color:var(--ai);}
-  .bacard del{color:#b91c1c;text-decoration-color:#f87171;}
-  .bacard ins{text-decoration:none;color:var(--ai);font-weight:800;background:var(--surface);border-radius:3px;padding:0 3px;}
-
-  /* legend footer */
-  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;padding:14px 16px;background:var(--surface);
-    border:1px solid var(--line);border-radius:12px;font-size:12.5px;color:var(--muted);}
-  .legend b{font-weight:800;}
-  .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:1px;margin-right:5px;}
-  .foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;}
+  .foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;}
   .foot b{color:var(--muted);}
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- HERO -->
   <header>
-    <p class="eyebrow">화면 정의 · Screen Spec</p>
-    <h1>기능 1 · 요구사항 검토 — 만들 화면</h1>
-    <p class="lede">AI 협업 기반 요구사항 엔지니어링 시스템의 첫 기능. 고객 요구사항을 받아 <b>불명확·상충을 검출</b>하고,
-      AI 제안 기반으로 <b>수정·확정</b>한 뒤 <b>이력</b>으로 남기는 3개 화면입니다.</p>
+    <p class="eyebrow">UI 설계 · Screen &amp; Flow</p>
+    <h1 class="page">요구사항 엔지니어링 시스템 — UI 설계</h1>
+    <p class="lede">메인(홈)에서 3개 기능으로 라우팅되고, 이번 개발 범위인 <b>기능 1 · 요구사항 검토</b>의 화면들을 실제 비율의 목업과
+      화면별 상세 스펙으로 정리했습니다. 기존 프론트(사이드바·REQ 표·검출 카드)의 디자인을 그대로 이어갑니다.</p>
     <div class="metarow">
-      <span class="tag">기능 1 / 3</span>
-      <span class="tag">화면 3개</span>
-      <span class="tag done">일부 구현됨</span>
-      <span class="tag">스택 · Next.js → Spring Boot → FastAPI</span>
+      <span class="tag">데스크톱 1160×720 기준</span>
+      <span class="tag on">기능 1 · 요구사항 검토</span>
+      <span class="tag">Next.js · Tailwind · indigo</span>
+    </div>
+
+    <!-- routing map -->
+    <div class="routing">
+      <p class="rt">사이트 구조 · 라우팅</p>
+      <div class="rmap">
+        <div class="rhome">메인 (홈)<small>/ </small></div>
+        <div class="rbranch">→</div>
+        <div class="rcols">
+          <div class="rcard live"><div class="rn">/review</div><div class="rname">① 요구사항 검토</div><span class="rst done">이번 개발</span></div>
+          <div class="rcard"><div class="rn">/derive</div><div class="rname">② 산출물 도출</div><span class="rst todo">준비중</span></div>
+          <div class="rcard"><div class="rn">/trace</div><div class="rname">③ 산출물 관리</div><span class="rst todo">준비중</span></div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- FLOW (storyboard, not a flowchart) -->
-  <section>
-    <p class="kicker">한눈에 · 작업 흐름</p>
-    <h2>사용자는 이 순서로 움직인다</h2>
-    <p class="sub">화면 3개가 “입력 → 검출·확정 → 이력”으로 이어집니다. 확정된 요구사항은 기능 2(산출물 도출)로 넘어갑니다.</p>
-    <div class="flow">
-      <div class="step">
-        <div class="n">1</div>
-        <span class="id">SCR-11</span>
-        <h3>요구사항 입력</h3>
-        <p>docx 업로드 또는 텍스트로 요구사항을 표에 등록한다.</p>
-      </div>
-      <div class="arrow">→</div>
-      <div class="step">
-        <div class="n">2</div>
-        <span class="id">SCR-12</span>
-        <h3>검출 · 제안 · 확정</h3>
-        <p>불명확·상충을 AI가 검출하고, 제안을 반영해 수정·확정한다.</p>
-      </div>
-      <div class="arrow">→</div>
-      <div class="step">
-        <div class="n">3</div>
-        <span class="id">SCR-13</span>
-        <h3>검토 이력</h3>
-        <p>확정 전후를 비교하고 누가·언제·왜 바꿨는지 남긴다.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- SCR-11 -->
-  <section>
-    <p class="kicker">화면 ①</p>
-    <div class="schead"><span class="scid">SCR-11</span><span class="scname">요구사항 입력 · 목록</span><span class="pill partial">일부 구현</span></div>
-    <div class="screen">
-      <div class="mock">
-        <div class="bar"><i></i><i></i><i></i><span class="url">req-eng.semes.local / review</span></div>
-        <div class="app">
-          <nav class="side">
-            <div class="logo"><span class="dot"></span>요구사항 엔지니어링</div>
-            <a class="on"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토<span class="badge g">완료</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="badge w">대기</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="badge w">대기</span></a>
+  <!-- ===================== S0 · 홈 ===================== -->
+  <section class="scr">
+    <p class="kicker">화면 0 · 진입점</p>
+    <div class="scr-head"><span class="route">/</span><h2>메인 · 홈 (3기능 라우팅)</h2><span class="st done">공통</span></div>
+    <div class="frameWrap"><div class="browser">
+      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local</span></div>
+      <div class="ui">
+        <aside class="side">
+          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
+          <nav>
+            <div class="nlab">핵심 기능</div>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
           </nav>
-          <div class="main">
-            <div class="top"><span class="t">요구사항 검토</span>
-              <div class="toggle"><span class="on">로컬 Qwen3</span><span>사내 GPT-OSS</span></div></div>
-            <div class="body">
-              <div class="tabs"><span class="tab">📄 docx 업로드</span><span class="tab on">✏️ 텍스트 입력</span></div>
-              <table class="rtable">
-                <thead><tr><th style="width:74px">ID</th><th style="width:70px">분류</th><th>내용</th><th style="width:78px">비고</th></tr></thead>
-                <tbody>
-                  <tr><td class="cid">req-ta-01</td><td><span class="cat">태스크</span></td><td>우선순위 순 할당, AMR 매칭 시 <mark>가용한 AMR 중 가장 가까운 것</mark> 선택…</td><td>—</td></tr>
-                  <tr><td class="cid">req-ta-02</td><td><span class="cat">태스크</span></td><td>알람 복구 후 중단 태스크를 <mark>해당 AMR에 할당</mark>한다.</td><td>재확인</td></tr>
-                  <tr><td class="cid">req-mp-01</td><td><span class="cat">맵</span></td><td>입출고지 값에 <mark>와일드카드</mark> 사용을 허용한다.</td><td>—</td></tr>
-                </tbody>
-              </table>
-              <span class="btn ghost">+ 행 추가</span>
-              <span class="btn">검토하기 →</span>
+          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
+        </aside>
+        <div class="m"><div class="mpad">
+          <h1>AI 협업 기반 요구사항 엔지니어링</h1>
+          <p class="desc">삼성전자가 보낸 요구사항을 AI로 검토한다. 불명확·상충을 찾아 확정하고, 산출물을 도출하며, 요구사항↔산출물 연결을 추적한다.
+            세 기능 중 <b style="color:var(--ind600)">요구사항 검토</b>가 먼저 구현되어 있다.</p>
+          <div class="fgrid">
+            <div class="card fcard">
+              <div class="frow"><span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="stat y">구현됨</span></div>
+              <div class="fno">핵심 기능 1</div><div class="fname">요구사항 검토</div>
+              <div class="fdesc">불명확·상충되는 요구를 검출·제안하고, 고객과 협의해 확정·관리한다.</div>
+              <div class="fgo y">열기 →</div>
+            </div>
+            <div class="card fcard">
+              <div class="frow"><span class="fic off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg></span><span class="stat n">미구현</span></div>
+              <div class="fno">핵심 기능 2</div><div class="fname">산출물 도출</div>
+              <div class="fdesc">확정 요구사항에서 산출물 5종(티켓·명세·설계 등) 초안을 자동 도출한다.</div>
+              <div class="fgo n">자세히 →</div>
+            </div>
+            <div class="card fcard">
+              <div class="frow"><span class="fic off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="stat n">미구현</span></div>
+              <div class="fno">핵심 기능 3</div><div class="fname">산출물 관리 (추적성)</div>
+              <div class="fdesc">요구사항↔산출물 연결을 조회하고, 변경 영향을 추적한다.</div>
+              <div class="fgo n">자세히 →</div>
             </div>
           </div>
-        </div>
+          <p class="archnote">아키텍처: React(Next.js) → Spring Boot → FastAPI(AI) · 로컬 Qwen3-8B / 사내 GPT-OSS · 반출 차단 환경</p>
+        </div></div>
       </div>
-      <aside class="anno">
-        <div class="grp"><p class="lab">목적</p><p>고객 요구사항을 시스템에 등록. 표 한 행 = 요구사항 하나(ID·분류·내용·비고).</p></div>
-        <div class="grp"><p class="lab">구성요소</p>
-          <ul><li>입력 방식 탭 — docx 업로드 / 텍스트 직접 입력</li><li>편집 가능한 REQ 표 (행 추가·삭제)</li><li>요구사항 목록 · 상태(미검토·검토중·확정)</li><li>[검토하기] 실행 버튼</li></ul></div>
-        <div class="grp"><p class="lab">주요 액션</p><p>표 편집 → 저장 → 검토 실행 → SCR-12 이동</p></div>
-        <div class="grp"><p class="lab">연동 API</p>
-          <div class="apis"><span class="api"><b>POST</b> /api/requirements</span><span class="api"><b>POST</b> /import-docx</span><span class="api"><b>GET</b> /api/requirements</span></div></div>
-      </aside>
+    </div></div>
+    <div class="spec">
+      <div class="sc"><p class="sct">레이아웃</p><ul>
+        <li>좌 <b>사이드바 248px</b> 고정 + 우 본문(가변)</li>
+        <li>본문 <b>max 900px 중앙</b>, 패딩 34/40</li>
+        <li>기능 카드 <b>3열 그리드</b>, gap 16</li></ul></div>
+      <div class="sc"><p class="sct">구성요소</p><ul>
+        <li><b>사이드바</b> — RA 로고 · 핵심기능 3 · 하단 안내</li>
+        <li><b>기능 카드</b> — 아이콘·상태뱃지·설명·이동링크</li>
+        <li>구현됨=<span class="k">emerald</span> / 미구현=<span class="k">gray</span></li></ul></div>
+      <div class="sc"><p class="sct">인터랙션</p><ul>
+        <li>카드 클릭 → 해당 기능 라우트 이동</li>
+        <li>hover: 테두리 indigo·그림자 상승</li>
+        <li>미구현 카드도 소개 페이지로 진입</li></ul></div>
+      <div class="sc"><p class="sct">연동</p><ul>
+        <li>정적 화면 (API 없음)</li>
+        <li>진행현황 표시 시 <span class="api"><b>GET</b> /dashboard</span></li></ul></div>
     </div>
   </section>
 
-  <!-- SCR-12 -->
-  <section>
-    <p class="kicker">화면 ②</p>
-    <div class="schead"><span class="scid">SCR-12</span><span class="scname">검토 — 검출 &amp; AI 제안</span><span class="pill partial">일부 구현</span></div>
-    <div class="screen">
-      <div class="mock">
-        <div class="bar"><i></i><i></i><i></i><span class="url">req-eng.semes.local / review/req-ta-01</span></div>
-        <div class="app">
-          <nav class="side">
-            <div class="logo"><span class="dot"></span>요구사항 엔지니어링</div>
-            <a class="on"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토<span class="badge g">완료</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="badge w">대기</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="badge w">대기</span></a>
+  <!-- ===================== S1 · 입력 ===================== -->
+  <section class="scr">
+    <p class="kicker">화면 1 · 상태 A (분석 전)</p>
+    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 입력</h2><span class="st partial">일부 구현</span></div>
+    <div class="frameWrap"><div class="browser">
+      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
+      <div class="ui">
+        <aside class="side">
+          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
+          <nav>
+            <div class="nlab">핵심 기능</div>
+            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
           </nav>
-          <div class="main">
-            <div class="top"><span class="t">검토 · 검출 &amp; 제안</span>
-              <div class="toggle"><span class="on">로컬 Qwen3</span><span>사내 GPT-OSS</span></div></div>
-            <div class="body">
-              <div class="detect">
-                <div class="panel">
-                  <div class="ph">요구사항 · req-ta-01</div>
-                  <div class="reqline">1. 우선순위 순 할당. AMR 매칭 시 <mark>가용 AMR 중 가장 가까운 것</mark> 선택.</div>
-                  <div class="reqline">2. 알람 복구 후 <mark>진행 태스크를 해당 AMR에 할당</mark>.</div>
-                  <div class="reqline">3. 입출고지 값에 <mark>와일드카드</mark> 허용.</div>
-                  <span class="btn" style="margin-top:6px">검출하기 ▶</span>
-                </div>
-                <div class="mid">→</div>
-                <div class="panel">
-                  <div class="ph">검출 4건 · 항목을 골라 제안 확인</div>
-                  <div class="chips"><span class="chip on">정량 기준 부재</span><span class="chip">예외 누락</span><span class="chip">조건 시점</span><span class="chip">범위 모호</span></div>
-                  <div class="lbl ai">🤖 AI 제안</div>
-                  <div class="aibox">‘가용 AMR’ = <b>IDLE·SoC≥최소값</b>, ‘가장 가까운’ = <b>맵 경로상 최단 이동거리</b>로 정의</div>
-                  <div class="lbl me">✎ 내 수정 <span style="color:var(--faint);font-weight:600">— 제안 반영해 편집</span></div>
-                  <div class="editbox">…매칭 시 <ins>가용(IDLE·SoC≥최소값) AMR 중 경로 최단거리인 것</ins>을 선택.<span class="caret"></span></div>
-                  <span class="btn" style="margin-top:9px">확정 ✓</span>
-                </div>
+          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
+        </aside>
+        <div class="m"><div class="mpad">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1></div>
+          <p class="desc">요구사항(표의 한 행 = ID·분류·내용·비고)을 넣고 분석 → 내용·비고의 불명확 지점 검출 → 해결(해석 확정) 또는 넘어가기 → 전/후 비교.</p>
+
+          <div class="card sec">
+            <div class="sech"><span class="st1">1. 요구사항 입력 <span>(행 하나 = 요구사항 하나)</span></span><span class="prep">docx 업로드는 준비중 — 지금은 직접 입력</span></div>
+            <div class="reqrow">
+              <div class="reqtop"><span class="hash">#1</span><input class="inp mono" value="req-tf-01"><input class="inp cat" value="태스크 전개"><span class="rm">삭제</span></div>
+              <div class="twocol">
+                <div><label class="flabel">내용</label><textarea class="inp">외부 시스템(newAMOS)으로부터 약속된 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</textarea></div>
+                <div><label class="flabel">비고</label><textarea class="inp">신규 태스크 생성 메시지 형식을 정의한다. 동일 자재 ID에 대한 복수 태스크 생성 허용 여부 등 상세 제약을 정의한다.</textarea></div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <aside class="anno">
-        <div class="grp"><p class="lab">목적</p><p>불명확한 표현·상충되는 요구를 검출하고, AI 제안을 반영해 본문을 수정·확정한다.</p></div>
-        <div class="grp"><p class="lab">구성요소</p>
-          <ul><li>좌: 요구사항 원문 + [검출하기]</li><li>우: 검출 칩(유형별) → 선택 항목</li><li>🤖 AI 제안 박스 (읽기)</li><li>✎ 내 수정 편집 필드 + [확정]</li></ul></div>
-        <div class="grp"><p class="lab">주요 액션</p><p>검출 → 항목 선택 → 제안 반영 편집 → 확정(본문 교체 + 이력 기록)</p></div>
-        <div class="grp"><p class="lab">연동 API</p>
-          <div class="apis"><span class="api"><b>POST</b> /api/analyze</span><span class="api"><b>POST</b> /requirements/{id}/confirm</span></div></div>
-      </aside>
-    </div>
-  </section>
-
-  <!-- SCR-13 -->
-  <section>
-    <p class="kicker">화면 ③</p>
-    <div class="schead"><span class="scid">SCR-13</span><span class="scname">검토 이력 — Before / After</span><span class="pill newx">신규</span></div>
-    <div class="screen">
-      <div class="mock">
-        <div class="bar"><i></i><i></i><i></i><span class="url">req-eng.semes.local / review/req-ta-01/history</span></div>
-        <div class="app">
-          <nav class="side">
-            <div class="logo"><span class="dot"></span>요구사항 엔지니어링</div>
-            <a class="on"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토<span class="badge g">완료</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="badge w">대기</span></a>
-            <a><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="badge w">대기</span></a>
-          </nav>
-          <div class="main">
-            <div class="top"><span class="t">검토 이력 · req-ta-01</span>
-              <div class="toggle"><span class="on">로컬 Qwen3</span><span>사내 GPT-OSS</span></div></div>
-            <div class="body">
-              <div class="timeline">
-                <div class="tl"><div class="tt">검출 · 4건</div><div class="tm">2026-08-02 10:14 · AI</div></div>
-                <div class="tl"><div class="tt">항목 확정 — “가장 가까운 것”</div><div class="tm">2026-08-02 14:30 · 한지훈 · 고객 협의 반영</div>
-                  <div class="ba">
-                    <div class="bacard before"><div class="bt">Before</div>가용 AMR 중 <del>가장 가까운 것</del> 선택</div>
-                    <div class="bacard after"><div class="bt">After · 확정</div>가용(IDLE·SoC≥최소값) AMR 중 <ins>경로 최단거리</ins>인 것 선택</div>
-                  </div>
-                </div>
-                <div class="tl" style="padding-bottom:0"><div class="tt">요구사항 확정 완료</div><div class="tm">2026-08-02 14:31 · 기능 2로 전달 가능</div></div>
+            <div class="reqrow">
+              <div class="reqtop"><span class="hash">#2</span><input class="inp mono" value="req-tf-02"><input class="inp cat" value="태스크 전개"><span class="rm">삭제</span></div>
+              <div class="twocol">
+                <div><label class="flabel">내용</label><textarea class="inp">진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.</textarea></div>
+                <div><label class="flabel">비고</label><textarea class="inp" style="color:#9ca3af">제약·정의 항목 (선택)</textarea></div>
               </div>
             </div>
+            <span class="addrow">+ 행 추가</span>
+            <div class="engine"><span class="el">판정 엔진</span>
+              <div class="etoggle"><span class="on">로컬 AI · Qwen3-8B</span><span>사내 LLM · Playground</span></div>
+              <span class="ehint">사내 워크스테이션 Ollama</span></div>
+            <div class="btn">분석</div>
           </div>
-        </div>
+        </div></div>
       </div>
-      <aside class="anno">
-        <div class="grp"><p class="lab">목적</p><p>확정 전후를 비교하고, 누가·언제·왜 바꿨는지 감사 추적으로 남긴다.</p></div>
-        <div class="grp"><p class="lab">구성요소</p>
-          <ul><li>요구사항별 검토 타임라인</li><li>항목별 / 전체 Before → After 비교</li><li>확정자 · 일시 · 사유</li></ul></div>
-        <div class="grp"><p class="lab">주요 액션</p><p>이력 열람 · 특정 시점 비교 (읽기 전용)</p></div>
-        <div class="grp"><p class="lab">연동 API</p>
-          <div class="apis"><span class="api"><b>GET</b> /api/requirements/{id}/history</span></div></div>
-      </aside>
+    </div></div>
+    <div class="spec">
+      <div class="sc"><p class="sct">레이아웃</p><ul>
+        <li>헤더(뱃지+제목+설명) → 입력 카드</li>
+        <li>REQ 행 = <b>ID·분류 (상단) + 내용·비고 2열</b></li>
+        <li>카드 라운드 14 · 내부 패딩 20</li></ul></div>
+      <div class="sc"><p class="sct">구성요소 · 상태</p><ul>
+        <li><b>REQ 행</b> — 입력/삭제, 텍스트영역 2개</li>
+        <li><b>+ 행 추가</b> — 점선 버튼</li>
+        <li><b>엔진 토글</b> — 로컬/사내 (택1, 흰 알약)</li>
+        <li><b>분석</b> — indigo, busy 시 "분석 중…"</li></ul></div>
+      <div class="sc"><p class="sct">인터랙션</p><ul>
+        <li>빈 값 방지 · placeholder 회색</li>
+        <li>docx 탭은 <b>준비중</b> 표기(비활성)</li>
+        <li>분석 실패 시 붉은 오류 메시지</li></ul></div>
+      <div class="sc"><p class="sct">연동 API</p><ul>
+        <li><span class="api"><b>POST</b> /api/analyze</span></li>
+        <li>요청: <span class="k">reqs[]{id,category,content,remark}, engine</span></li>
+        <li>응답: <span class="k">mode, reqs[]{findings,suggestion}</span></li></ul></div>
     </div>
   </section>
 
-  <div class="legend">
-    <span><span class="dotc" style="background:var(--ai)"></span><b>AI</b> 검출·제안이 만든 것</span>
-    <span><span class="dotc" style="background:var(--human)"></span><b>사람</b> 협의·확정·판단</span>
-    <span><span class="dotc" style="background:var(--ok)"></span>완료 &nbsp;<span class="dotc" style="background:var(--dev)"></span>개발중 &nbsp;<span class="dotc" style="background:var(--wait)"></span>대기</span>
-  </div>
+  <!-- ===================== S2 · 검출 ===================== -->
+  <section class="scr">
+    <p class="kicker">화면 1 · 상태 B (분석 후 · 검출)</p>
+    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 검출 &amp; 해결</h2><span class="st partial">일부 구현</span></div>
+    <div class="frameWrap"><div class="browser">
+      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
+      <div class="ui">
+        <aside class="side">
+          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
+          <nav>
+            <div class="nlab">핵심 기능</div>
+            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
+          </nav>
+          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
+        </aside>
+        <div class="m"><div class="mpad">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1><span class="modebadge">판정: 로컬 AI · Qwen3-8B</span></div>
+          <div class="card sec" style="margin-top:16px;padding:16px 20px">
+            <div class="kpis"><span class="k1">전체 <b>2</b></span><span class="k2">모호 <b>1</b></span><span class="k3">해결 <b>0</b></span><span class="k4">미해결 <b>1</b></span></div>
+          </div>
+          <div class="sec2t">2. 검출 &amp; 해결</div>
+          <div class="rc amb">
+            <div class="rchead"><span class="rid">req-tf-01</span><span class="rcat">태스크 전개</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
+            <div class="rbody"><span class="rlab">내용</span>외부 시스템(newAMOS)으로부터 <u>약속된 형식</u>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
+            <div class="rbody" style="margin-top:6px"><span class="rlab">비고</span>동일 자재 ID에 대한 <u>복수의 태스크 생성 허용 여부</u> 등 상세 제약을 정의한다.</div>
+            <div class="findings">
+              <div class="fd"><span class="ftype a">정량 기준 부재</span><span class="fspan">“복수의 태스크 생성 허용 여부”</span><span class="frs">— 허용 개수·조건이 정의되지 않음</span></div>
+              <div class="fd"><span class="ftype b">접속사 범위 모호</span><span class="fspan">“약속된 형식”</span><span class="frs">— 메시지 형식 명세가 어디에 정의되는지 불명확</span></div>
+            </div>
+            <div class="sugg">✎ 보완 방향: ‘허용 여부’ = 동일 자재 ID에 대해 최대 1건만 허용, ‘약속된 형식’ = 인터페이스 명세서 v1.2 기준으로 정의</div>
+            <div class="rcacts"><span class="btn dark sm">해결하기</span><span class="btn ghost sm">해결 불필요 · 넘어가기</span></div>
+          </div>
+          <div class="rc clr">
+            <div class="rchead"><span class="rid">req-tf-02</span><span class="rcat">태스크 전개</span><span class="rbadge clr">✓ 명확</span></div>
+            <div class="rbody"><span class="rlab">내용</span>진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.</div>
+          </div>
+        </div></div>
+      </div>
+    </div></div>
+    <div class="spec">
+      <div class="sc"><p class="sct">레이아웃</p><ul>
+        <li>헤더에 <b>판정 엔진 뱃지</b> 추가</li>
+        <li><b>KPI 바</b> — 전체·모호·해결·미해결</li>
+        <li>결과 = 요구사항별 <b>카드 스택</b></li></ul></div>
+      <div class="sc"><p class="sct">검출 카드(모호)</p><ul>
+        <li>테두리/배경 <span class="k">amber</span>, ⚠ 모호·N건</li>
+        <li>내용·비고에 <b>검출 span 밑줄 하이라이트</b></li>
+        <li><b>유형 뱃지</b> — 정량기준부재·범위모호 등 색상</li>
+        <li>✎ <b>보완 방향</b>(AI 제안) 점선 박스</li></ul></div>
+      <div class="sc"><p class="sct">상태 분기</p><ul>
+        <li><b>명확</b> — 초록 ✓ (조치 없음)</li>
+        <li><b>모호</b> — [해결하기] / [넘어가기]</li>
+        <li><b>넘어감</b> — 회색 처리</li></ul></div>
+      <div class="sc"><p class="sct">연동 · 데이터</p><ul>
+        <li>분석 결과 <span class="k">findings[]{span,type,reason}</span></li>
+        <li>하이라이트는 <span class="k">span</span> 위치로 매칭</li>
+        <li>유형 7종 색상 팔레트 고정</li></ul></div>
+    </div>
+  </section>
 
-  <p class="foot"><b>다음 단계.</b> 이 3개 화면을 기준으로 → <b>ERD(테이블 설계)</b> → <b>API 명세서</b>(위 연동 API를 요청/응답 스키마까지 확정) → 개발 착수.
-  &nbsp;※ API 경로·화면은 초안이며, 실제 값은 API 명세서 단계에서 확정합니다.</p>
+  <!-- ===================== S3 · 해결/확정 ===================== -->
+  <section class="scr">
+    <p class="kicker">화면 1 · 상태 C (해결 · 확정)</p>
+    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 해석 확정 &amp; 전후 비교</h2><span class="st partial">일부 구현</span></div>
+    <div class="frameWrap"><div class="browser">
+      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
+      <div class="ui">
+        <aside class="side">
+          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
+          <nav>
+            <div class="nlab">핵심 기능</div>
+            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
+            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
+          </nav>
+          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
+        </aside>
+        <div class="m"><div class="mpad">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1><span class="modebadge">판정: 로컬 AI · Qwen3-8B</span></div>
+          <div class="sec2t" style="margin-top:20px">2. 검출 &amp; 해결</div>
 
+          <!-- 해결 입력 중 -->
+          <div class="rc amb">
+            <div class="rchead"><span class="rid">req-tf-01</span><span class="rcat">태스크 전개</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
+            <div class="rbody"><span class="rlab">비고</span>동일 자재 ID에 대한 <u>복수의 태스크 생성 허용 여부</u> 등 상세 제약을 정의한다.</div>
+            <div class="resolvebox">
+              <label>확정 해석 입력 — 이 요구사항을 어떻게 해석·확정할지 적는다</label>
+              <div class="inp" style="display:block;min-height:52px;color:#1f2937">‘허용 여부’ = 동일 자재 ID에 대해 <b style="color:#4338ca">최대 1건만 허용</b>, 초과 요청은 거절한다.</div>
+              <div style="margin-top:10px"><span class="btn em sm">확정</span></div>
+            </div>
+          </div>
+
+          <!-- 확정 완료 → 전후 비교 -->
+          <div class="rc res">
+            <div class="rchead"><span class="rid">req-tf-03</span><span class="rcat">맵</span><span class="rbadge res">🔒 확정</span></div>
+            <div class="ba">
+              <div class="bacol b"><div class="bt">해결 전 (원본)</div>입출고지 값에 <del>와일드카드</del> 사용을 허용한다.</div>
+              <div class="bacol a"><div class="bt">해결 후 (확정 해석)</div>입출고지 값에 <ins>‘*’(0자 이상)·‘?’(1자) 허용, 대소문자 무시</ins> 매칭을 적용한다.</div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div></div>
+    <div class="spec">
+      <div class="sc"><p class="sct">해결 입력</p><ul>
+        <li>[해결하기] → <b>확정 해석 입력창</b> 인라인 오픈</li>
+        <li>텍스트영역 + [확정](emerald)</li>
+        <li>빈 값이면 확정 불가(경고)</li></ul></div>
+      <div class="sc"><p class="sct">확정 카드(전후)</p><ul>
+        <li>테두리 <span class="k">emerald</span>, 🔒 확정</li>
+        <li><b>해결 전/후 2열</b> 비교</li>
+        <li>전=취소선 / 후=indigo 강조</li></ul></div>
+      <div class="sc"><p class="sct">인터랙션</p><ul>
+        <li>확정 시 카드가 <b>amber→emerald</b>로 전환</li>
+        <li>KPI 해결/미해결 수 즉시 갱신</li>
+        <li>확정본은 기능 2로 전달 가능</li></ul></div>
+      <div class="sc"><p class="sct">연동 API</p><ul>
+        <li><span class="api"><b>POST</b> /requirements/{id}/confirm</span></li>
+        <li>이력: <span class="api"><b>GET</b> /{id}/history</span></li>
+        <li>본문: <span class="k">before, after, 확정자, 일시</span></li></ul></div>
+    </div>
+  </section>
+
+  <p class="foot"><b>범위.</b> 이번 문서는 <b>기능 1(요구사항 검토)</b>의 4개 화면/상태만 다룹니다 — 메인, 입력, 검출, 해결·확정.
+    기능 2·3은 준비중이며 라우팅 자리만 잡아 두었습니다. &nbsp;<b>다음.</b> 이 UI를 기준으로 → ERD → API 명세서(위 연동 API 확정) → 구현.</p>
 </div>
 </body>
 </html>
