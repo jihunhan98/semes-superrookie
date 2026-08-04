@@ -3,61 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>기능 1 · 요구사항 검토 — UI 설계</title>
+<title>요구사항 엔지니어링 — 기능 1 UI 설계</title>
 <style>
   :root{
-    --bg:#f6f7f9; --surface:#fff; --card:#fff; --ink:#161a22; --muted:#616b7a; --faint:#9099a8;
-    --line:#e7e9ef; --accent:#4f46e5; --accent-soft:#eef2ff; --accent-line:#c7d2fe;
-    --code:#f4f5f8; --shadow:0 1px 2px rgba(20,24,40,.04),0 10px 30px rgba(20,24,40,.07);
-    --frame-shadow:0 4px 12px rgba(20,24,40,.08),0 30px 70px rgba(20,24,40,.16);
+    --bg:#f5f6f9;--surface:#fff;--ink:#161a22;--muted:#5f6979;--faint:#8a93a3;
+    --line:#e6e8ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f2f3f7;
+    --shadow:0 1px 2px rgba(20,24,40,.05),0 10px 30px rgba(20,24,40,.07);
+    --frame-shadow:0 6px 16px rgba(20,24,40,.10),0 40px 90px rgba(20,24,40,.18);
     --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif;
     --mono:"Geist Mono",ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
   }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#0f0f14; --surface:#191921; --card:#1b1b24; --ink:#e9eaf0; --muted:#a2a8b6; --faint:#6f7686;
-      --line:#2a2a35; --accent:#8b8cf8; --accent-soft:#20203a; --accent-line:#3a3a63; --code:#212129;
-      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
-      --frame-shadow:0 4px 12px rgba(0,0,0,.5),0 30px 70px rgba(0,0,0,.6);}
-  }
-  :root[data-theme="light"]{--bg:#f6f7f9;--surface:#fff;--card:#fff;--ink:#161a22;--muted:#616b7a;--faint:#9099a8;
-    --line:#e7e9ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f4f5f8;
-    --shadow:0 1px 2px rgba(20,24,40,.04),0 10px 30px rgba(20,24,40,.07);
-    --frame-shadow:0 4px 12px rgba(20,24,40,.08),0 30px 70px rgba(20,24,40,.16);}
-  :root[data-theme="dark"]{--bg:#0f0f14;--surface:#191921;--card:#1b1b24;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;
+  @media (prefers-color-scheme:dark){:root{--bg:#0f0f14;--surface:#191921;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;
     --line:#2a2a35;--accent:#8b8cf8;--accent-soft:#20203a;--accent-line:#3a3a63;--code:#212129;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
-    --frame-shadow:0 4px 12px rgba(0,0,0,.5),0 30px 70px rgba(0,0,0,.6);}
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);--frame-shadow:0 6px 16px rgba(0,0,0,.5),0 40px 90px rgba(0,0,0,.6);}}
+  :root[data-theme="light"]{--bg:#f5f6f9;--surface:#fff;--ink:#161a22;--muted:#5f6979;--faint:#8a93a3;--line:#e6e8ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f2f3f7;--shadow:0 1px 2px rgba(20,24,40,.05),0 10px 30px rgba(20,24,40,.07);--frame-shadow:0 6px 16px rgba(20,24,40,.10),0 40px 90px rgba(20,24,40,.18);}
+  :root[data-theme="dark"]{--bg:#0f0f14;--surface:#191921;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;--line:#2a2a35;--accent:#8b8cf8;--accent-soft:#20203a;--accent-line:#3a3a63;--code:#212129;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);--frame-shadow:0 6px 16px rgba(0,0,0,.5),0 40px 90px rgba(0,0,0,.6);}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
   .wrap{max-width:1200px;margin:0 auto;padding:44px 20px 90px;}
-
   .eyebrow{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
   h1.page{font-size:clamp(27px,4vw,38px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
-  .lede{font-size:15.5px;color:var(--muted);max-width:66ch;margin:0;}
+  .lede{font-size:15.5px;color:var(--muted);max-width:70ch;margin:0;}
   .metarow{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
   .tag{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
-  .tag.on{background:#dcfce7;color:#047857;border-color:transparent;}
-  @media (prefers-color-scheme:dark){.tag.on{background:#12281f;color:#34d399;}}
+  .tag.on{background:#dcfce7;color:#047857;border-color:transparent;} @media(prefers-color-scheme:dark){.tag.on{background:#12281f;color:#34d399;}}
 
-  /* routing map */
-  .routing{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);}
-  .routing .rt{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
-  .rmap{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;}
-  .rhome{flex:0 0 auto;align-self:center;background:var(--accent);color:#fff;font-weight:800;font-size:13.5px;padding:12px 16px;border-radius:12px;box-shadow:0 4px 12px rgba(79,70,229,.28);}
-  .rhome small{display:block;font-weight:600;opacity:.85;font-size:11px;font-family:var(--mono);}
-  .rbranch{align-self:center;color:var(--faint);font-size:20px;font-weight:800;}
-  .rcols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;min-width:280px;}
-  .rcard{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--surface);}
-  .rcard.live{border-color:var(--accent-line);background:var(--accent-soft);}
-  .rcard .rn{font-size:10.5px;font-weight:800;color:var(--faint);font-family:var(--mono);}
-  .rcard .rname{font-size:14px;font-weight:800;margin-top:2px;}
-  .rcard .rst{font-size:10.5px;font-weight:800;margin-top:6px;display:inline-block;padding:2px 8px;border-radius:999px;}
-  .rst.done{background:#dcfce7;color:#047857;} .rst.todo{background:var(--code);color:var(--faint);}
-  @media (prefers-color-scheme:dark){.rst.done{background:#12281f;color:#34d399;}}
-  @media(max-width:720px){.rcols{grid-template-columns:1fr;}.rbranch{transform:rotate(90deg);align-self:center;}}
+  .ia{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);}
+  .ia .t{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;}
+  .ia .row{display:flex;gap:18px;flex-wrap:wrap;}
+  .ia .col{flex:1;min-width:230px;}
+  .ia .col h4{margin:0 0 6px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .ia .col h4 .b{width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:800;}
+  .ia .col p{margin:0;font-size:12.8px;color:var(--muted);line-height:1.5;}
+  .ia .col p b{color:var(--ink);}
 
-  /* screen block */
-  section.scr{margin-top:58px;}
+  section.scr{margin-top:56px;}
   .kicker{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
   .kicker::after{content:"";flex:1;height:1px;background:var(--line);}
   .scr-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;}
@@ -65,424 +45,383 @@
   .scr-head h2{font-size:21px;font-weight:840;letter-spacing:-.01em;margin:0;}
   .scr-head .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;}
   .st.done{background:#dcfce7;color:#047857;} .st.partial{background:#fef3c7;color:#b45309;} .st.newx{background:var(--code);color:var(--faint);}
-  @media (prefers-color-scheme:dark){.st.done{background:#12281f;color:#34d399;}.st.partial{background:#2a2412;color:#fcd34d;}}
+  @media(prefers-color-scheme:dark){.st.done{background:#12281f;color:#34d399;}.st.partial{background:#2a2412;color:#fcd34d;}}
 
-  /* browser frame */
-  .frameWrap{overflow-x:auto;border-radius:16px;-webkit-overflow-scrolling:touch;}
-  .browser{width:1160px;border-radius:14px;overflow:hidden;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
-  .bbar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#f1f2f5;border-bottom:1px solid #e3e5ea;}
-  .bbar i{width:11px;height:11px;border-radius:50%;background:#e4657a;} .bbar i:nth-child(2){background:#f2b73d;} .bbar i:nth-child(3){background:#54c07a;}
-  .bbar .addr{margin-left:10px;background:#fff;border:1px solid #e3e5ea;border-radius:7px;padding:4px 12px;font-family:var(--mono);font-size:11.5px;color:#8b909c;min-width:340px;}
+  .stage{width:100%;aspect-ratio:1920/1080;overflow:hidden;border-radius:14px;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
+  .canvas{width:1920px;height:1080px;transform-origin:top left;}
 
-  /* ===== the actual app UI (fixed light — a screenshot of the real app) ===== */
-  .ui{--g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g800:#1f2937;--g900:#111827;
-    --ind50:#eef2ff;--ind100:#e0e7ff;--ind600:#4f46e5;--ind700:#4338ca;
-    --em50:#ecfdf5;--em100:#d1fae5;--em300:#6ee7b7;--em600:#059669;--em700:#047857;
-    --am50:#fffbeb;--am100:#fef3c7;--am300:#fcd34d;--am500:#f59e0b;--am700:#b45309;
-    --sky50:#f0f9ff;--sky300:#7dd3fc;--sky800:#075985;--rose100:#ffe4e6;--rose700:#be123c;
-    --teal100:#ccfbf1;--teal700:#0f766e;
-    display:grid;grid-template-columns:248px 1fr;height:720px;background:var(--g50);color:var(--g900);
-    font-size:14px;line-height:1.5;}
-  .ui *{box-sizing:border-box;}
-  /* sidebar */
-  .ui .side{background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;}
-  .ui .brand{display:flex;align-items:center;gap:10px;padding:20px;}
-  .ui .brand .sq{width:32px;height:32px;border-radius:9px;background:var(--ind600);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;}
-  .ui .brand .bn{font-size:14px;font-weight:800;color:var(--g900);line-height:1.2;}
-  .ui .brand .bs{font-size:11px;color:var(--g400);}
-  .ui nav{flex:1;padding:0 12px;}
-  .ui nav .nlab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g400);padding:8px;}
-  .ui nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;font-size:14px;color:var(--g500);text-decoration:none;margin-bottom:3px;font-weight:500;}
-  .ui nav a svg{width:19px;height:19px;color:var(--g400);}
-  .ui nav a.on{background:var(--ind50);color:var(--ind700);font-weight:700;}
-  .ui nav a.on svg{color:var(--ind600);}
-  .ui nav a .rd{margin-left:auto;font-size:10px;font-weight:600;color:var(--g400);background:var(--g100);padding:2px 7px;border-radius:6px;}
-  .ui .snote{margin:12px;background:var(--g50);border-radius:10px;padding:12px;font-size:11px;line-height:1.55;color:var(--g400);}
-  /* main */
-  .ui .m{overflow:hidden;}
-  .ui .mpad{max-width:900px;margin:0 auto;padding:34px 40px;height:100%;overflow:auto;}
-  .ui h1{font-size:23px;font-weight:800;color:var(--g900);margin:0;}
-  .ui .desc{font-size:13.5px;color:var(--g500);margin:8px 0 0;max-width:70ch;line-height:1.6;}
-  .ui .fbadge{font-size:12px;font-weight:700;color:var(--ind600);background:var(--ind50);padding:3px 9px;border-radius:7px;}
-  .ui .modebadge{font-size:12px;font-weight:600;color:var(--ind700);background:var(--ind100);padding:3px 10px;border-radius:999px;}
-  .ui .card{background:#fff;border:1px solid var(--g200);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-  /* home cards */
-  .ui .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;}
-  .ui .fcard{padding:20px;display:flex;flex-direction:column;}
-  .ui .fcard .frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .ui .fcard .fic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--ind50);color:var(--ind600);}
-  .ui .fcard .fic.off{background:var(--g100);color:var(--g400);}
-  .ui .fcard .fic svg{width:20px;height:20px;}
-  .ui .fcard .stat{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
-  .ui .fcard .stat.y{background:var(--em100);color:var(--em700);} .ui .fcard .stat.n{background:var(--g100);color:var(--g400);}
-  .ui .fcard .fno{font-size:11.5px;font-weight:700;color:var(--g400);}
-  .ui .fcard .fname{font-size:16px;font-weight:800;color:var(--g900);margin:2px 0 6px;}
-  .ui .fcard .fdesc{font-size:12.5px;color:var(--g500);line-height:1.55;flex:1;}
-  .ui .fcard .fgo{font-size:13px;font-weight:700;margin-top:16px;}
-  .ui .fcard .fgo.y{color:var(--ind600);} .ui .fcard .fgo.n{color:var(--g400);}
-  .ui .archnote{font-size:11.5px;color:var(--g400);margin-top:26px;}
-  /* input section */
-  .ui .sec{padding:20px;margin-top:22px;}
-  .ui .sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .ui .sech .st1{font-size:14px;font-weight:700;color:var(--g700);}
-  .ui .sech .st1 span{font-weight:400;color:var(--g400);}
-  .ui .prep{font-size:11px;color:var(--g400);background:var(--g100);padding:3px 9px;border-radius:6px;}
-  .ui .reqrow{border:1px solid var(--g200);background:rgba(249,250,251,.7);border-radius:11px;padding:13px;margin-bottom:12px;}
-  .ui .reqtop{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
-  .ui .reqtop .hash{font-size:11px;font-weight:700;color:var(--g400);}
-  .ui .inp{border:1px solid var(--g300);border-radius:6px;padding:6px 9px;font-size:12.5px;background:#fff;color:var(--g800);}
-  .ui .inp.mono{font-family:var(--mono);width:150px;}
-  .ui .inp.cat{width:150px;}
-  .ui .rm{margin-left:auto;font-size:11.5px;color:var(--g400);padding:5px 9px;border-radius:6px;}
-  .ui .twocol{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-  .ui .flabel{font-size:11px;font-weight:700;color:var(--g400);margin-bottom:4px;display:block;}
-  .ui textarea.inp{width:100%;height:70px;resize:none;line-height:1.5;font-family:var(--font);}
-  .ui .addrow{border:1px dashed var(--g300);border-radius:8px;padding:7px 13px;font-size:13px;color:var(--g500);display:inline-block;margin-top:2px;}
-  .ui .engine{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--g100);margin-top:16px;padding-top:16px;}
-  .ui .engine .el{font-size:12px;font-weight:600;color:var(--g500);}
-  .ui .etoggle{display:inline-flex;background:var(--g50);border:1px solid var(--g200);border-radius:10px;padding:3px;}
-  .ui .etoggle span{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;color:var(--g500);}
-  .ui .etoggle span.on{background:#fff;color:var(--ind700);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:700;}
-  .ui .ehint{font-size:11.5px;color:var(--g400);}
-  .ui .btn{display:inline-flex;align-items:center;gap:6px;background:var(--ind600);color:#fff;font-size:13.5px;font-weight:700;padding:9px 18px;border-radius:10px;margin-top:16px;}
-  .ui .btn.dark{background:var(--g900);} .ui .btn.em{background:var(--em600);} .ui .btn.sm{padding:7px 13px;font-size:12.5px;margin-top:0;}
-  .ui .btn.ghost{background:#fff;color:var(--g500);border:1px solid var(--g300);font-weight:600;}
-  .ui .kpis{display:flex;gap:20px;border-top:1px solid var(--g100);margin-top:16px;padding-top:14px;font-size:13px;color:var(--g500);}
-  .ui .kpis b{font-size:16px;}
-  .ui .kpis .k1 b{color:var(--g800);} .ui .kpis .k2 b{color:var(--am700);} .ui .kpis .k3 b{color:var(--em600);} .ui .kpis .k4 b{color:var(--rose700);}
-  /* reqcard (검출/해결) */
-  .ui .sec2t{font-size:14px;font-weight:700;color:var(--g700);margin:24px 0 12px;}
-  .ui .rc{border-radius:12px;padding:16px;margin-bottom:14px;}
-  .ui .rc.amb{border:1px solid var(--am300);background:rgba(255,251,235,.55);}
-  .ui .rc.res{border:1px solid var(--em300);background:rgba(236,253,245,.5);}
-  .ui .rc.clr{border:1px solid var(--g200);background:#fff;}
-  .ui .rchead{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
-  .ui .rchead .rid{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--g500);}
-  .ui .rchead .rcat{font-size:11px;color:var(--g500);background:var(--g100);padding:2px 8px;border-radius:5px;}
-  .ui .rbadge{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
-  .ui .rbadge.amb{background:var(--am500);color:#fff;} .ui .rbadge.res{background:var(--em600);color:#fff;} .ui .rbadge.clr{background:var(--em100);color:var(--em700);}
-  .ui .rbody{font-size:13px;color:var(--g800);}
-  .ui .rbody .rlab{font-size:11px;font-weight:700;color:var(--g400);margin-right:6px;}
-  .ui .rbody u{text-decoration:none;background:var(--am100);border-bottom:2px solid var(--am300);color:var(--am700);padding:0 1px;font-weight:600;}
-  .ui .findings{border-top:1px solid var(--am300);margin-top:12px;padding-top:11px;display:flex;flex-direction:column;gap:7px;}
-  .ui .fd{font-size:12.5px;display:flex;flex-wrap:wrap;align-items:baseline;gap:7px;}
-  .ui .ftype{font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;}
-  .ui .ftype.a{background:var(--rose100);color:var(--rose700);} .ui .ftype.b{background:var(--teal100);color:var(--teal700);}
-  .ui .fd .fspan{font-weight:700;color:var(--g700);} .ui .fd .frs{color:var(--g500);}
-  .ui .sugg{margin-top:12px;border:1px dashed var(--sky300);background:var(--sky50);border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--sky800);}
-  .ui .rcacts{display:flex;gap:8px;margin-top:13px;}
-  .ui .resolvebox{border:1px solid var(--g200);background:#fff;border-radius:9px;padding:13px;margin-top:13px;}
-  .ui .resolvebox label{font-size:11.5px;font-weight:700;color:var(--g500);display:block;margin-bottom:6px;}
-  .ui .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .ui .bacol{border-radius:9px;padding:12px;font-size:12.5px;line-height:1.6;}
-  .ui .bacol.b{border:1px solid var(--g200);background:#fff;} .ui .bacol.a{border:1px solid var(--em300);background:#fff;}
-  .ui .bacol .bt{font-size:11px;font-weight:700;margin-bottom:5px;} .ui .bacol.b .bt{color:var(--g400);} .ui .bacol.a .bt{color:var(--em600);}
-  .ui .bacol del{color:#be123c;text-decoration-color:#fb7185;} .ui .bacol ins{text-decoration:none;color:var(--ind700);font-weight:700;}
-
-  /* spec cards under each frame */
-  .spec{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px;}
-  @media(max-width:900px){.spec{grid-template-columns:1fr 1fr;}}
-  @media(max-width:560px){.spec{grid-template-columns:1fr;}}
-  .sc{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow);}
-  .sc .sct{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;display:flex;align-items:center;gap:7px;}
-  .sc ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .sc li{font-size:12.5px;color:var(--ink);line-height:1.45;padding-left:14px;position:relative;}
-  .sc li::before{content:"";position:absolute;left:1px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--accent-line);}
-  .sc li b{font-weight:700;}
-  .sc li .k{font-family:var(--mono);font-size:11px;color:var(--muted);}
-  .sc .api{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:3px 7px;color:var(--muted);display:inline-block;}
-  .sc .api b{color:var(--accent);}
-
+  .specrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .chipspec{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 13px;}
+  .chipspec b{color:var(--ink);font-weight:700;} .chipspec .api{font-family:var(--mono);font-size:11px;color:var(--accent);}
   .foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;}
   .foot b{color:var(--muted);}
+
+  /* ============ APP UI (light screenshot, 1920 canvas) ============ */
+  .ui{--g50:#f8fafc;--g100:#f1f3f6;--g200:#e5e7eb;--g300:#d3d7de;--g400:#9aa1ad;--g500:#697083;--g600:#4b5364;--g700:#374151;--g800:#1f2937;--g900:#111827;
+    --ind50:#eef2ff;--ind100:#e0e7ff;--ind500:#6366f1;--ind600:#4f46e5;--ind700:#4338ca;
+    --em100:#d1fae5;--em300:#6ee7b7;--em500:#10b981;--em600:#059669;--em700:#047857;
+    --am100:#fef3c7;--am300:#fcd34d;--am500:#f59e0b;--am600:#d97706;--am700:#b45309;
+    --sky50:#f0f9ff;--sky300:#7dd3fc;--sky800:#075985;--rose100:#ffe4e6;--rose600:#e11d48;--rose700:#be123c;
+    --teal100:#ccfbf1;--teal700:#0f766e;--vio100:#ede9fe;--vio700:#6d28d9;
+    width:1920px;height:1080px;background:var(--g50);color:var(--g900);font-size:15px;display:flex;flex-direction:column;}
+  .ui *{box-sizing:border-box;}
+  /* top bar */
+  .ui .top{height:64px;flex:0 0 64px;background:#fff;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:20px;padding:0 24px;}
+  .ui .logo{display:flex;align-items:center;gap:11px;font-weight:800;font-size:16px;}
+  .ui .logo .mk{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:15px;}
+  .ui .proj{display:flex;align-items:center;gap:9px;background:var(--g100);border:1px solid var(--g200);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--g700);}
+  .ui .proj .car{color:var(--g400);}
+  .ui .top .sp{flex:1;}
+  .ui .search{display:flex;align-items:center;gap:8px;background:var(--g100);border:1px solid var(--g200);border-radius:10px;padding:9px 14px;width:300px;color:var(--g400);font-size:13.5px;}
+  .ui .top .new{background:var(--ind600);color:#fff;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px;display:flex;align-items:center;gap:7px;}
+  .ui .avatar{width:36px;height:36px;border-radius:50%;background:var(--ind100);color:var(--ind700);display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .ui .mainrow{flex:1;display:flex;min-height:0;}
+  /* left: requirement list */
+  .ui .rl{width:340px;flex:0 0 340px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;}
+  .ui .rlh{padding:18px 20px 12px;}
+  .ui .rlh .tt{display:flex;align-items:baseline;gap:8px;}
+  .ui .rlh .tt b{font-size:17px;font-weight:800;} .ui .rlh .tt .c{font-size:13px;color:var(--g400);font-weight:700;}
+  .ui .filters{display:flex;gap:6px;margin-top:12px;}
+  .ui .filters span{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--g100);color:var(--g500);}
+  .ui .filters span.on{background:var(--ind50);color:var(--ind700);}
+  .ui .rsearch{margin:0 20px 8px;background:var(--g100);border:1px solid var(--g200);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--g400);}
+  .ui .rlist{flex:1;overflow:auto;padding:4px 12px 12px;}
+  .ui .ri{padding:12px 13px;border-radius:11px;margin-bottom:4px;cursor:pointer;border:1px solid transparent;}
+  .ui .ri:hover{background:var(--g50);}
+  .ui .ri.on{background:var(--ind50);border-color:var(--accent-line);}
+  .ui .ri .rr1{display:flex;align-items:center;gap:8px;}
+  .ui .ri .rid{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--g500);}
+  .ui .ri .ver{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--g100);color:var(--g500);}
+  .ui .ri.on .ver{background:#fff;}
+  .ui .ri .rt{font-size:14px;font-weight:700;color:var(--g800);margin-top:5px;line-height:1.35;}
+  .ui .ri .rs{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--g400);}
+  .ui .dot{width:7px;height:7px;border-radius:50%;} .dot.g{background:var(--em500);} .dot.a{background:var(--am500);} .dot.b{background:var(--ind500);}
+  /* main */
+  .ui .mc{flex:1;min-width:0;overflow:auto;padding:26px 34px;}
+  .ui .mh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .ui .mh .mid{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--g500);}
+  .ui .mh h1{font-size:24px;font-weight:800;margin:0;}
+  .ui .stpill{font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px;}
+  .ui .stpill.amb{background:var(--am100);color:var(--am700);} .ui .stpill.cfm{background:var(--em100);color:var(--em700);}
+  .ui .verbig{font-family:var(--mono);font-size:13px;font-weight:800;padding:4px 11px;border-radius:8px;background:var(--ind600);color:#fff;}
+  .ui .verbig.muted{background:var(--g200);color:var(--g500);}
+  .ui .tabs{display:flex;gap:4px;border-bottom:1px solid var(--g200);margin:20px 0 22px;}
+  .ui .tabs a{font-size:14px;font-weight:700;color:var(--g500);padding:11px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .ui .tabs a.on{color:var(--ind700);border-color:var(--ind600);}
+  .ui .tabs a .mini{font-size:10.5px;color:var(--g400);background:var(--g100);border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:700;}
+  .ui .card{background:#fff;border:1px solid var(--g200);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .ui .btn{display:inline-flex;align-items:center;gap:7px;background:var(--ind600);color:#fff;font-size:14px;font-weight:700;padding:11px 20px;border-radius:11px;}
+  .ui .btn.dark{background:var(--g900);} .ui .btn.em{background:var(--em600);} .ui .btn.ghost{background:#fff;color:var(--g600);border:1px solid var(--g300);} .ui .btn.sm{padding:8px 14px;font-size:13px;}
+  .ui .flabel{font-size:12px;font-weight:800;color:var(--g500);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:.04em;}
+  .ui .ta{border:1px solid var(--g300);border-radius:10px;padding:13px 15px;font-size:14px;line-height:1.6;color:var(--g800);background:#fff;}
+
+  /* overview table */
+  .ui .ovhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
+  .ui .ovstat{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px;}
+  .ui .kv{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:13px 18px;min-width:120px;}
+  .ui .kv .n{font-size:26px;font-weight:800;} .ui .kv .l{font-size:12px;color:var(--g500);font-weight:600;margin-top:2px;}
+  .ui .kv.i .n{color:var(--ind600);} .ui .kv.g .n{color:var(--em600);} .ui .kv.a .n{color:var(--am600);}
+  .ui table.ov{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden;font-size:13.5px;}
+  .ui table.ov th{background:var(--g50);text-align:left;padding:13px 16px;font-size:12px;font-weight:800;color:var(--g500);border-bottom:1px solid var(--g200);}
+  .ui table.ov td{padding:13px 16px;border-bottom:1px solid var(--g100);color:var(--g700);vertical-align:middle;}
+  .ui table.ov tr:last-child td{border-bottom:none;}
+  .ui table.ov .cid{font-family:var(--mono);font-weight:700;color:var(--ind700);}
+  .ui table.ov .cver{font-family:var(--mono);font-weight:700;color:var(--g600);}
+  .ui .catt{font-size:11.5px;font-weight:700;color:var(--vio700);background:var(--vio100);padding:2px 9px;border-radius:6px;}
+  .ui .sp2{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
+  .ui .sp2.cfm{background:var(--em100);color:var(--em700);} .ui .sp2.rev{background:var(--am100);color:var(--am700);}
+  .ui .artc{font-family:var(--mono);font-weight:700;color:var(--g600);}
+
+  /* detect (input + analysis) */
+  .ui .split{display:grid;grid-template-columns:0.9fr 1.1fr;gap:22px;align-items:start;}
+  .ui .pcard{padding:20px;}
+  .ui .pcard h3{font-size:15px;font-weight:800;margin:0 0 14px;color:var(--g800);}
+  .ui .rc{border-radius:12px;padding:16px;margin-bottom:14px;}
+  .ui .rc.amb{border:1px solid var(--am300);background:rgba(255,251,235,.5);}
+  .ui .rc.res{border:1px solid var(--em300);background:rgba(236,253,245,.5);}
+  .ui .rchead{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+  .ui .rchead .rid{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--g500);}
+  .ui .rbadge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .ui .rbadge.amb{background:var(--am500);color:#fff;} .ui .rbadge.res{background:var(--em600);color:#fff;}
+  .ui .rbody{font-size:13.5px;color:var(--g800);line-height:1.6;}
+  .ui .rbody .rlab{font-size:11px;font-weight:800;color:var(--g400);margin-right:6px;}
+  .ui .rbody u{text-decoration:none;background:var(--am100);border-bottom:2px solid var(--am300);color:var(--am700);padding:0 1px;font-weight:600;}
+  .ui .findings{border-top:1px solid var(--am300);margin-top:12px;padding-top:11px;display:flex;flex-direction:column;gap:8px;}
+  .ui .fd{font-size:13px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;}
+  .ui .ftype{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:6px;}
+  .ui .ftype.a{background:var(--rose100);color:var(--rose700);} .ui .ftype.b{background:var(--teal100);color:var(--teal700);}
+  .ui .fd .fspan{font-weight:700;color:var(--g700);} .ui .fd .frs{color:var(--g500);}
+  .ui .sugg{margin-top:12px;border:1px dashed var(--sky300);background:var(--sky50);border-radius:9px;padding:11px 13px;font-size:13px;color:var(--sky800);}
+  .ui .rcacts{display:flex;gap:9px;margin-top:14px;align-items:center;}
+  .ui .confirm-note{font-size:12.5px;color:var(--g500);}
+  .ui .confirm-note b{color:var(--ind700);font-family:var(--mono);}
+
+  /* version history */
+  .ui .vsplit{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  .ui .vrail{position:relative;padding-left:26px;}
+  .ui .vrail::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--g200);}
+  .ui .vnode{position:relative;margin-bottom:12px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:13px 15px;cursor:pointer;}
+  .ui .vnode::before{content:"";position:absolute;left:-23px;top:16px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--g300);}
+  .ui .vnode.on{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft);}
+  .ui .vnode.on::before{border-color:var(--ind600);}
+  .ui .vnode.cur::before{border-color:var(--ind600);background:var(--ind600);}
+  .ui .vn1{display:flex;align-items:center;gap:8px;}
+  .ui .vtag{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--g900);}
+  .ui .cur .vtag{color:var(--ind700);}
+  .ui .vchip{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:auto;}
+  .ui .vchip.latest{background:var(--ind600);color:#fff;} .ui .vchip.minor{background:var(--am100);color:var(--am700);} .ui .vchip.patch{background:var(--g100);color:var(--g500);} .ui .vchip.major{background:var(--rose100);color:var(--rose700);}
+  .ui .vmeta{font-size:12px;color:var(--g500);margin-top:6px;} .ui .vmeta b{color:var(--g700);}
+  .ui .vsum{font-size:13px;color:var(--g700);margin-top:6px;line-height:1.45;}
+  .ui .vdetail{padding:22px;}
+  .ui .vdh{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+  .ui .vdh .big{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--ind700);}
+  .ui .vdmeta{font-size:13px;color:var(--g500);margin-bottom:18px;} .ui .vdmeta b{color:var(--g700);}
+  .ui .diff{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .ui .dcol{border-radius:11px;padding:15px;font-size:13.5px;line-height:1.65;}
+  .ui .dcol.b{border:1px solid var(--g200);background:var(--g50);} .ui .dcol.a{border:1px solid var(--em300);background:#fff;}
+  .ui .dcol .dt{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;} .ui .dcol.b .dt{color:var(--g400);} .ui .dcol.a .dt{color:var(--em600);}
+  .ui .dcol del{color:var(--rose600);text-decoration-color:#fb7185;} .ui .dcol ins{text-decoration:none;color:var(--ind700);font-weight:700;background:var(--ind50);border-radius:3px;padding:0 3px;}
+  .ui .semver{margin-top:18px;background:var(--g50);border:1px solid var(--g200);border-radius:12px;padding:14px 16px;display:flex;gap:22px;flex-wrap:wrap;}
+  .ui .semver div{font-size:12.5px;color:var(--g600);} .ui .semver b{font-family:var(--mono);font-weight:800;}
+  .ui .semver .mj b{color:var(--rose600);} .ui .semver .mn b{color:var(--am600);} .ui .semver .pt b{color:var(--g500);}
+  .ui .vacts{display:flex;gap:10px;margin-top:18px;}
+
+  @media(prefers-color-scheme:dark){ .ui{filter:none;} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow">UI 설계 · Screen &amp; Flow</p>
-    <h1 class="page">요구사항 엔지니어링 시스템 — UI 설계</h1>
-    <p class="lede">메인(홈)에서 3개 기능으로 라우팅되고, 이번 개발 범위인 <b>기능 1 · 요구사항 검토</b>의 화면들을 실제 비율의 목업과
-      화면별 상세 스펙으로 정리했습니다. 기존 프론트(사이드바·REQ 표·검출 카드)의 디자인을 그대로 이어갑니다.</p>
+    <p class="eyebrow">UI 설계 · v2</p>
+    <h1 class="page">요구사항 엔지니어링 — 기능 1 UI 설계</h1>
+    <p class="lede">정보구조를 <b>요구사항 중심</b>으로 다시 잡았습니다. 왼쪽엔 “3대 기능”이 아니라 <b>프로젝트의 요구사항 목록</b>이 놓이고,
+      검토·도출·추적은 선택한 요구사항의 <b>탭</b>이 됩니다. 확정하면 <b>시맨틱 버전</b>이 매겨지고 버전별로 비교할 수 있습니다.</p>
     <div class="metarow">
-      <span class="tag">데스크톱 1160×720 기준</span>
-      <span class="tag on">기능 1 · 요구사항 검토</span>
-      <span class="tag">Next.js · Tailwind · indigo</span>
+      <span class="tag">데스크톱 1920 × 1080</span>
+      <span class="tag on">요구사항 중심 IA</span>
+      <span class="tag">버전 관리 · 1.0.0 → 1.0.1</span>
     </div>
 
-    <!-- routing map -->
-    <div class="routing">
-      <p class="rt">사이트 구조 · 라우팅</p>
-      <div class="rmap">
-        <div class="rhome">메인 (홈)<small>/ </small></div>
-        <div class="rbranch">→</div>
-        <div class="rcols">
-          <div class="rcard live"><div class="rn">/review</div><div class="rname">① 요구사항 검토</div><span class="rst done">이번 개발</span></div>
-          <div class="rcard"><div class="rn">/derive</div><div class="rname">② 산출물 도출</div><span class="rst todo">준비중</span></div>
-          <div class="rcard"><div class="rn">/trace</div><div class="rname">③ 산출물 관리</div><span class="rst todo">준비중</span></div>
-        </div>
+    <div class="ia">
+      <p class="t">무엇이 바뀌었나</p>
+      <div class="row">
+        <div class="col"><h4><span class="b">1</span>좌측 = 요구사항 목록</h4><p>3대 기능 나열을 없앴다. 왼쪽은 <b>이 프로젝트의 모든 요구사항</b> — 상태·버전과 함께 한눈에.</p></div>
+        <div class="col"><h4><span class="b">2</span>기능은 “탭”으로</h4><p>검토 · 산출물 도출 · 추적성은 <b>선택한 요구사항의 탭</b>. 요구사항을 중심에 두고 작업이 딸려온다.</p></div>
+        <div class="col"><h4><span class="b">3</span>확정 = 버전 부여</h4><p>해석을 확정할 때마다 <b>1.0.0 → 1.0.1</b> 버전이 찍히고, <b>버전 이력</b> 탭에서 diff로 비교.</p></div>
       </div>
     </div>
   </header>
 
-  <!-- ===================== S0 · 홈 ===================== -->
+  <!-- S1 · 요구사항 개요 -->
   <section class="scr">
-    <p class="kicker">화면 0 · 진입점</p>
-    <div class="scr-head"><span class="route">/</span><h2>메인 · 홈 (3기능 라우팅)</h2><span class="st done">공통</span></div>
-    <div class="frameWrap"><div class="browser">
-      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local</span></div>
+    <p class="kicker">화면 1 · 프로젝트 전체</p>
+    <div class="scr-head"><span class="route">/project/req</span><h2>요구사항 개요 — 전체 확인</h2><span class="st done">공통</span></div>
+    <div class="stage"><div class="canvas">
       <div class="ui">
-        <aside class="side">
-          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
-          <nav>
-            <div class="nlab">핵심 기능</div>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
-          </nav>
-          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
-        </aside>
-        <div class="m"><div class="mpad">
-          <h1>AI 협업 기반 요구사항 엔지니어링</h1>
-          <p class="desc">삼성전자가 보낸 요구사항을 AI로 검토한다. 불명확·상충을 찾아 확정하고, 산출물을 도출하며, 요구사항↔산출물 연결을 추적한다.
-            세 기능 중 <b style="color:var(--ind600)">요구사항 검토</b>가 먼저 구현되어 있다.</p>
-          <div class="fgrid">
-            <div class="card fcard">
-              <div class="frow"><span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="stat y">구현됨</span></div>
-              <div class="fno">핵심 기능 1</div><div class="fname">요구사항 검토</div>
-              <div class="fdesc">불명확·상충되는 요구를 검출·제안하고, 고객과 협의해 확정·관리한다.</div>
-              <div class="fgo y">열기 →</div>
+        <!-- top bar -->
+        <div class="top">
+          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
+          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
+          <span class="sp"></span>
+          <div class="search">🔍 요구사항 검색…</div>
+          <div class="new">＋ 새 요구사항</div>
+          <div class="avatar">한</div>
+        </div>
+        <div class="mainrow">
+          <!-- left requirement list -->
+          <aside class="rl">
+            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
+              <div class="filters"><span class="on">전체</span><span>검토중 6</span><span>확정 18</span></div></div>
+            <div class="rsearch">🔍 이름·ID로 찾기</div>
+            <div class="rlist">
+              <div class="ri on"><div class="rr1"><span class="rid">req-ta-01</span><span class="ver">—</span></div><div class="rt">태스크 할당 기준</div><div class="rs"><span class="dot a"></span>검토중 · 검출 2건</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-tf-01</span><span class="ver">v1.0.1</span></div><div class="rt">신규 태스크 생성</div><div class="rs"><span class="dot g"></span>확정 · 산출물 4</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-tf-02</span><span class="ver">v1.0.0</span></div><div class="rt">진행상황 보고 항목</div><div class="rs"><span class="dot g"></span>확정 · 산출물 2</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-mp-01</span><span class="ver">v1.1.0</span></div><div class="rt">입출고지 와일드카드</div><div class="rs"><span class="dot g"></span>확정 · 산출물 3</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-ta-02</span><span class="ver">—</span></div><div class="rt">알람 복구 재할당</div><div class="rs"><span class="dot a"></span>검토중 · 검출 1건</div></div>
             </div>
-            <div class="card fcard">
-              <div class="frow"><span class="fic off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg></span><span class="stat n">미구현</span></div>
-              <div class="fno">핵심 기능 2</div><div class="fname">산출물 도출</div>
-              <div class="fdesc">확정 요구사항에서 산출물 5종(티켓·명세·설계 등) 초안을 자동 도출한다.</div>
-              <div class="fgo n">자세히 →</div>
+          </aside>
+          <!-- main: overview table -->
+          <div class="mc">
+            <div class="mh"><h1>요구사항 개요</h1><span class="stpill cfm">VCS · 태스크 할당 개선</span></div>
+            <div class="ovstat">
+              <div class="kv i"><div class="n">24</div><div class="l">전체 요구사항</div></div>
+              <div class="kv g"><div class="n">18</div><div class="l">확정</div></div>
+              <div class="kv a"><div class="n">6</div><div class="l">검토중</div></div>
+              <div class="kv"><div class="n">42</div><div class="l">도출 산출물</div></div>
             </div>
-            <div class="card fcard">
-              <div class="frow"><span class="fic off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="stat n">미구현</span></div>
-              <div class="fno">핵심 기능 3</div><div class="fname">산출물 관리 (추적성)</div>
-              <div class="fdesc">요구사항↔산출물 연결을 조회하고, 변경 영향을 추적한다.</div>
-              <div class="fgo n">자세히 →</div>
-            </div>
+            <table class="ov">
+              <thead><tr><th>ID</th><th>제목</th><th>분류</th><th>상태</th><th>버전</th><th>산출물</th><th>최근 변경</th></tr></thead>
+              <tbody>
+                <tr><td class="cid">req-ta-01</td><td>태스크 할당 기준</td><td><span class="catt">태스크</span></td><td><span class="sp2 rev"><span class="dot a"></span>검토중</span></td><td class="cver">—</td><td class="artc">0</td><td>2일 전</td></tr>
+                <tr><td class="cid">req-tf-01</td><td>신규 태스크 생성</td><td><span class="catt">태스크 전개</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.0.1</td><td class="artc">4</td><td>어제</td></tr>
+                <tr><td class="cid">req-tf-02</td><td>진행상황 보고 항목</td><td><span class="catt">태스크 전개</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.0.0</td><td class="artc">2</td><td>3일 전</td></tr>
+                <tr><td class="cid">req-mp-01</td><td>입출고지 와일드카드</td><td><span class="catt">맵</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.1.0</td><td class="artc">3</td><td>오늘</td></tr>
+                <tr><td class="cid">req-ta-02</td><td>알람 복구 재할당</td><td><span class="catt">태스크</span></td><td><span class="sp2 rev"><span class="dot a"></span>검토중</span></td><td class="cver">—</td><td class="artc">0</td><td>1일 전</td></tr>
+              </tbody>
+            </table>
           </div>
-          <p class="archnote">아키텍처: React(Next.js) → Spring Boot → FastAPI(AI) · 로컬 Qwen3-8B / 사내 GPT-OSS · 반출 차단 환경</p>
-        </div></div>
+        </div>
       </div>
     </div></div>
-    <div class="spec">
-      <div class="sc"><p class="sct">레이아웃</p><ul>
-        <li>좌 <b>사이드바 248px</b> 고정 + 우 본문(가변)</li>
-        <li>본문 <b>max 900px 중앙</b>, 패딩 34/40</li>
-        <li>기능 카드 <b>3열 그리드</b>, gap 16</li></ul></div>
-      <div class="sc"><p class="sct">구성요소</p><ul>
-        <li><b>사이드바</b> — RA 로고 · 핵심기능 3 · 하단 안내</li>
-        <li><b>기능 카드</b> — 아이콘·상태뱃지·설명·이동링크</li>
-        <li>구현됨=<span class="k">emerald</span> / 미구현=<span class="k">gray</span></li></ul></div>
-      <div class="sc"><p class="sct">인터랙션</p><ul>
-        <li>카드 클릭 → 해당 기능 라우트 이동</li>
-        <li>hover: 테두리 indigo·그림자 상승</li>
-        <li>미구현 카드도 소개 페이지로 진입</li></ul></div>
-      <div class="sc"><p class="sct">연동</p><ul>
-        <li>정적 화면 (API 없음)</li>
-        <li>진행현황 표시 시 <span class="api"><b>GET</b> /dashboard</span></li></ul></div>
+    <div class="specrow">
+      <span class="chipspec"><b>좌측</b> 프로젝트 요구사항 목록(전체·검토중·확정 필터)</span>
+      <span class="chipspec"><b>본문</b> 요약 지표 4 + 전체 요구사항 테이블(상태·버전·산출물 수)</span>
+      <span class="chipspec"><b>진입</b> 행 클릭 → 해당 요구사항 상세</span>
+      <span class="chipspec api">GET /project/{id}/requirements</span>
     </div>
   </section>
 
-  <!-- ===================== S1 · 입력 ===================== -->
+  <!-- S2 · 입력 & 분석 -->
   <section class="scr">
-    <p class="kicker">화면 1 · 상태 A (분석 전)</p>
-    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 입력</h2><span class="st partial">일부 구현</span></div>
-    <div class="frameWrap"><div class="browser">
-      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
+    <p class="kicker">화면 2 · 요구사항 검토(탭)</p>
+    <div class="scr-head"><span class="route">/req/req-ta-01 · 검토</span><h2>요구사항 입력 → 분석(검출)</h2><span class="st partial">일부 구현</span></div>
+    <div class="stage"><div class="canvas">
       <div class="ui">
-        <aside class="side">
-          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
-          <nav>
-            <div class="nlab">핵심 기능</div>
-            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
-          </nav>
-          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
-        </aside>
-        <div class="m"><div class="mpad">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1></div>
-          <p class="desc">요구사항(표의 한 행 = ID·분류·내용·비고)을 넣고 분석 → 내용·비고의 불명확 지점 검출 → 해결(해석 확정) 또는 넘어가기 → 전/후 비교.</p>
-
-          <div class="card sec">
-            <div class="sech"><span class="st1">1. 요구사항 입력 <span>(행 하나 = 요구사항 하나)</span></span><span class="prep">docx 업로드는 준비중 — 지금은 직접 입력</span></div>
-            <div class="reqrow">
-              <div class="reqtop"><span class="hash">#1</span><input class="inp mono" value="req-tf-01"><input class="inp cat" value="태스크 전개"><span class="rm">삭제</span></div>
-              <div class="twocol">
-                <div><label class="flabel">내용</label><textarea class="inp">외부 시스템(newAMOS)으로부터 약속된 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</textarea></div>
-                <div><label class="flabel">비고</label><textarea class="inp">신규 태스크 생성 메시지 형식을 정의한다. 동일 자재 ID에 대한 복수 태스크 생성 허용 여부 등 상세 제약을 정의한다.</textarea></div>
+        <div class="top">
+          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
+          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
+          <span class="sp"></span>
+          <div class="search">🔍 요구사항 검색…</div>
+          <div class="new">＋ 새 요구사항</div>
+          <div class="avatar">한</div>
+        </div>
+        <div class="mainrow">
+          <aside class="rl">
+            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
+              <div class="filters"><span>전체</span><span class="on">검토중 6</span><span>확정 18</span></div></div>
+            <div class="rsearch">🔍 이름·ID로 찾기</div>
+            <div class="rlist">
+              <div class="ri on"><div class="rr1"><span class="rid">req-ta-01</span><span class="ver">—</span></div><div class="rt">태스크 할당 기준</div><div class="rs"><span class="dot a"></span>검토중 · 검출 2건</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-ta-02</span><span class="ver">—</span></div><div class="rt">알람 복구 재할당</div><div class="rs"><span class="dot a"></span>검토중 · 검출 1건</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-js-03</span><span class="ver">—</span></div><div class="rt">할당 조건 사용자 설정</div><div class="rs"><span class="dot a"></span>검토중 · 미분석</div></div>
+            </div>
+          </aside>
+          <div class="mc">
+            <div class="mh"><span class="mid">req-ta-01</span><h1>태스크 할당 기준</h1><span class="stpill amb">검토중</span><span class="verbig muted">미확정</span></div>
+            <div class="tabs"><a class="on">검토</a><a>산출물 도출</a><a>추적성</a><a>버전 이력</a></div>
+            <div class="split">
+              <div class="card pcard">
+                <h3>요구사항 입력</h3>
+                <label class="flabel">내용</label>
+                <div class="ta">우선순위 순 할당, 동일 우선순위는 요청 순. AMR 매칭 시 가용한 AMR 중 가장 가까운 것을 선택한다.</div>
+                <label class="flabel" style="margin-top:14px">비고</label>
+                <div class="ta">할당 조건은 사용자 설정에서 상시 변경할 수 있게 한다.</div>
+                <div style="margin-top:16px"><span class="btn">분석 ▶</span></div>
+              </div>
+              <div>
+                <h3 style="font-size:15px;font-weight:800;margin:2px 0 12px;color:var(--g600)">검출 결과 <span style="color:var(--g400);font-weight:600">· 2건</span></h3>
+                <div class="rc amb">
+                  <div class="rchead"><span class="rid">내용</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
+                  <div class="rbody">AMR 매칭 시 가용한 AMR 중 <u>가장 가까운 것</u>을 선택한다. 할당 조건은 <u>상시 변경</u>할 수 있게 한다.</div>
+                  <div class="findings">
+                    <div class="fd"><span class="ftype a">정량 기준 부재</span><span class="fspan">“가장 가까운 것”</span><span class="frs">— ‘가용’·‘거리’ 기준(직선/경로) 미정의</span></div>
+                    <div class="fd"><span class="ftype b">조건 시점 불명확</span><span class="fspan">“상시 변경”</span><span class="frs">— 변경 가능 조건 항목이 열거되지 않음</span></div>
+                  </div>
+                  <div class="sugg">✎ 보완 방향: ‘가용 AMR’=IDLE·SoC≥최소값, ‘가장 가까운’=맵 경로상 최단 이동거리 / 변경 조건(SoC·자재ID·입출고지) 명시</div>
+                  <div class="rcacts"><span class="btn dark sm">해결하기</span><span class="btn ghost sm">넘어가기</span>
+                    <span class="confirm-note">확정 시 <b>v1.0.0</b> 부여</span></div>
+                </div>
               </div>
             </div>
-            <div class="reqrow">
-              <div class="reqtop"><span class="hash">#2</span><input class="inp mono" value="req-tf-02"><input class="inp cat" value="태스크 전개"><span class="rm">삭제</span></div>
-              <div class="twocol">
-                <div><label class="flabel">내용</label><textarea class="inp">진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.</textarea></div>
-                <div><label class="flabel">비고</label><textarea class="inp" style="color:#9ca3af">제약·정의 항목 (선택)</textarea></div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow">
+      <span class="chipspec"><b>흐름</b> 요구사항 입력(내용·비고) → [분석] → 검출 결과 우측 표시</span>
+      <span class="chipspec"><b>제거</b> ‘판정: 로컬 AI’ 뱃지 · 엔진 토글(설정으로 이동)</span>
+      <span class="chipspec"><b>확정</b> 해석 확정 시 v1.0.0 부여 안내</span>
+      <span class="chipspec api">POST /api/analyze · /req/{id}/confirm</span>
+    </div>
+  </section>
+
+  <!-- S3 · 버전 이력 -->
+  <section class="scr">
+    <p class="kicker">화면 3 · 버전 이력(탭)</p>
+    <div class="scr-head"><span class="route">/req/req-tf-01 · 버전 이력</span><h2>버전 이력 — 확정본 버전 관리</h2><span class="st newx">신규</span></div>
+    <div class="stage"><div class="canvas">
+      <div class="ui">
+        <div class="top">
+          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
+          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
+          <span class="sp"></span>
+          <div class="search">🔍 요구사항 검색…</div>
+          <div class="new">＋ 새 요구사항</div>
+          <div class="avatar">한</div>
+        </div>
+        <div class="mainrow">
+          <aside class="rl">
+            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
+              <div class="filters"><span>전체</span><span>검토중 6</span><span class="on">확정 18</span></div></div>
+            <div class="rsearch">🔍 이름·ID로 찾기</div>
+            <div class="rlist">
+              <div class="ri on"><div class="rr1"><span class="rid">req-tf-01</span><span class="ver">v1.0.1</span></div><div class="rt">신규 태스크 생성</div><div class="rs"><span class="dot g"></span>확정 · 산출물 4</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-mp-01</span><span class="ver">v1.1.0</span></div><div class="rt">입출고지 와일드카드</div><div class="rs"><span class="dot g"></span>확정 · 산출물 3</div></div>
+              <div class="ri"><div class="rr1"><span class="rid">req-tf-02</span><span class="ver">v1.0.0</span></div><div class="rt">진행상황 보고 항목</div><div class="rs"><span class="dot g"></span>확정 · 산출물 2</div></div>
+            </div>
+          </aside>
+          <div class="mc">
+            <div class="mh"><span class="mid">req-tf-01</span><h1>신규 태스크 생성</h1><span class="stpill cfm">확정</span><span class="verbig">v1.0.1</span></div>
+            <div class="tabs"><a>검토</a><a>산출물 도출 <span class="mini">4</span></a><a>추적성</a><a class="on">버전 이력 <span class="mini">3</span></a></div>
+            <div class="vsplit">
+              <!-- version rail -->
+              <div class="vrail">
+                <div class="vnode cur on">
+                  <div class="vn1"><span class="vtag">v1.0.1</span><span class="vchip latest">현재</span></div>
+                  <div class="vmeta"><b>한지훈</b> · 2026-08-04 14:30</div>
+                  <div class="vsum">‘약속된 형식’을 인터페이스 명세서 v1.2 기준으로 명확화 (문구 보완)</div>
+                </div>
+                <div class="vnode">
+                  <div class="vn1"><span class="vtag">v1.0.0</span><span class="vchip minor">최초 확정</span></div>
+                  <div class="vmeta"><b>한지훈</b> · 2026-08-02 10:15</div>
+                  <div class="vsum">‘복수 태스크 허용 여부’ = 동일 자재 ID 최대 1건으로 해석 확정</div>
+                </div>
+                <div class="vnode" style="opacity:.75">
+                  <div class="vn1"><span class="vtag" style="color:var(--g500)">draft</span><span class="vchip patch">검출 전</span></div>
+                  <div class="vmeta">고객 원문 접수 · 2026-08-01</div>
+                  <div class="vsum">삼성전자 요구사항 명세서 원문 (미검토)</div>
+                </div>
+              </div>
+              <!-- version detail -->
+              <div class="card vdetail">
+                <div class="vdh"><span class="big">v1.0.1</span><span class="vchip minor" style="margin-left:0">PATCH · 문구 보완</span></div>
+                <div class="vdmeta"><b>한지훈</b> 확정 · 2026-08-04 14:30 · 사유: <b>고객 협의(IF 명세서 버전 특정)</b></div>
+                <div class="diff">
+                  <div class="dcol b"><div class="dt">v1.0.0 (이전)</div>외부 시스템(newAMOS)으로부터 <del>약속된 형식</del>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
+                  <div class="dcol a"><div class="dt">v1.0.1 (현재)</div>외부 시스템(newAMOS)으로부터 <ins>인터페이스 명세서 v1.2 형식</ins>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
+                </div>
+                <div class="semver">
+                  <div class="mj"><b>MAJOR</b> 1.x → 2.0.0 · 요구 자체가 바뀜(상충 해소)</div>
+                  <div class="mn"><b>MINOR</b> 1.0 → 1.1.0 · 해석 확정·조건 추가(명확화)</div>
+                  <div class="pt"><b>PATCH</b> 1.0.0 → 1.0.1 · 문구·오타 다듬기(의미 불변)</div>
+                </div>
+                <div class="vacts"><span class="btn ghost sm">v1.0.0과 비교</span><span class="btn ghost sm">이 버전으로 되돌리기</span><span class="btn em sm">산출물에 반영</span></div>
               </div>
             </div>
-            <span class="addrow">+ 행 추가</span>
-            <div class="engine"><span class="el">판정 엔진</span>
-              <div class="etoggle"><span class="on">로컬 AI · Qwen3-8B</span><span>사내 LLM · Playground</span></div>
-              <span class="ehint">사내 워크스테이션 Ollama</span></div>
-            <div class="btn">분석</div>
           </div>
-        </div></div>
+        </div>
       </div>
     </div></div>
-    <div class="spec">
-      <div class="sc"><p class="sct">레이아웃</p><ul>
-        <li>헤더(뱃지+제목+설명) → 입력 카드</li>
-        <li>REQ 행 = <b>ID·분류 (상단) + 내용·비고 2열</b></li>
-        <li>카드 라운드 14 · 내부 패딩 20</li></ul></div>
-      <div class="sc"><p class="sct">구성요소 · 상태</p><ul>
-        <li><b>REQ 행</b> — 입력/삭제, 텍스트영역 2개</li>
-        <li><b>+ 행 추가</b> — 점선 버튼</li>
-        <li><b>엔진 토글</b> — 로컬/사내 (택1, 흰 알약)</li>
-        <li><b>분석</b> — indigo, busy 시 "분석 중…"</li></ul></div>
-      <div class="sc"><p class="sct">인터랙션</p><ul>
-        <li>빈 값 방지 · placeholder 회색</li>
-        <li>docx 탭은 <b>준비중</b> 표기(비활성)</li>
-        <li>분석 실패 시 붉은 오류 메시지</li></ul></div>
-      <div class="sc"><p class="sct">연동 API</p><ul>
-        <li><span class="api"><b>POST</b> /api/analyze</span></li>
-        <li>요청: <span class="k">reqs[]{id,category,content,remark}, engine</span></li>
-        <li>응답: <span class="k">mode, reqs[]{findings,suggestion}</span></li></ul></div>
+    <div class="specrow">
+      <span class="chipspec"><b>좌</b> 버전 타임라인(현재·확정본·원문) — 시맨틱 버전 태그</span>
+      <span class="chipspec"><b>우</b> 선택 버전 diff(전/후) + 확정자·일시·사유</span>
+      <span class="chipspec"><b>규칙</b> MAJOR 요구변경 · MINOR 해석확정 · PATCH 문구</span>
+      <span class="chipspec api">GET /req/{id}/versions · /versions/{v}/diff</span>
     </div>
   </section>
 
-  <!-- ===================== S2 · 검출 ===================== -->
-  <section class="scr">
-    <p class="kicker">화면 1 · 상태 B (분석 후 · 검출)</p>
-    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 검출 &amp; 해결</h2><span class="st partial">일부 구현</span></div>
-    <div class="frameWrap"><div class="browser">
-      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
-      <div class="ui">
-        <aside class="side">
-          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
-          <nav>
-            <div class="nlab">핵심 기능</div>
-            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
-          </nav>
-          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
-        </aside>
-        <div class="m"><div class="mpad">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1><span class="modebadge">판정: 로컬 AI · Qwen3-8B</span></div>
-          <div class="card sec" style="margin-top:16px;padding:16px 20px">
-            <div class="kpis"><span class="k1">전체 <b>2</b></span><span class="k2">모호 <b>1</b></span><span class="k3">해결 <b>0</b></span><span class="k4">미해결 <b>1</b></span></div>
-          </div>
-          <div class="sec2t">2. 검출 &amp; 해결</div>
-          <div class="rc amb">
-            <div class="rchead"><span class="rid">req-tf-01</span><span class="rcat">태스크 전개</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
-            <div class="rbody"><span class="rlab">내용</span>외부 시스템(newAMOS)으로부터 <u>약속된 형식</u>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
-            <div class="rbody" style="margin-top:6px"><span class="rlab">비고</span>동일 자재 ID에 대한 <u>복수의 태스크 생성 허용 여부</u> 등 상세 제약을 정의한다.</div>
-            <div class="findings">
-              <div class="fd"><span class="ftype a">정량 기준 부재</span><span class="fspan">“복수의 태스크 생성 허용 여부”</span><span class="frs">— 허용 개수·조건이 정의되지 않음</span></div>
-              <div class="fd"><span class="ftype b">접속사 범위 모호</span><span class="fspan">“약속된 형식”</span><span class="frs">— 메시지 형식 명세가 어디에 정의되는지 불명확</span></div>
-            </div>
-            <div class="sugg">✎ 보완 방향: ‘허용 여부’ = 동일 자재 ID에 대해 최대 1건만 허용, ‘약속된 형식’ = 인터페이스 명세서 v1.2 기준으로 정의</div>
-            <div class="rcacts"><span class="btn dark sm">해결하기</span><span class="btn ghost sm">해결 불필요 · 넘어가기</span></div>
-          </div>
-          <div class="rc clr">
-            <div class="rchead"><span class="rid">req-tf-02</span><span class="rcat">태스크 전개</span><span class="rbadge clr">✓ 명확</span></div>
-            <div class="rbody"><span class="rlab">내용</span>진행 상황 보고 항목에 AMR ID, 현재 스텝, 현재 위치를 포함한다.</div>
-          </div>
-        </div></div>
-      </div>
-    </div></div>
-    <div class="spec">
-      <div class="sc"><p class="sct">레이아웃</p><ul>
-        <li>헤더에 <b>판정 엔진 뱃지</b> 추가</li>
-        <li><b>KPI 바</b> — 전체·모호·해결·미해결</li>
-        <li>결과 = 요구사항별 <b>카드 스택</b></li></ul></div>
-      <div class="sc"><p class="sct">검출 카드(모호)</p><ul>
-        <li>테두리/배경 <span class="k">amber</span>, ⚠ 모호·N건</li>
-        <li>내용·비고에 <b>검출 span 밑줄 하이라이트</b></li>
-        <li><b>유형 뱃지</b> — 정량기준부재·범위모호 등 색상</li>
-        <li>✎ <b>보완 방향</b>(AI 제안) 점선 박스</li></ul></div>
-      <div class="sc"><p class="sct">상태 분기</p><ul>
-        <li><b>명확</b> — 초록 ✓ (조치 없음)</li>
-        <li><b>모호</b> — [해결하기] / [넘어가기]</li>
-        <li><b>넘어감</b> — 회색 처리</li></ul></div>
-      <div class="sc"><p class="sct">연동 · 데이터</p><ul>
-        <li>분석 결과 <span class="k">findings[]{span,type,reason}</span></li>
-        <li>하이라이트는 <span class="k">span</span> 위치로 매칭</li>
-        <li>유형 7종 색상 팔레트 고정</li></ul></div>
-    </div>
-  </section>
-
-  <!-- ===================== S3 · 해결/확정 ===================== -->
-  <section class="scr">
-    <p class="kicker">화면 1 · 상태 C (해결 · 확정)</p>
-    <div class="scr-head"><span class="route">/review</span><h2>요구사항 검토 — 해석 확정 &amp; 전후 비교</h2><span class="st partial">일부 구현</span></div>
-    <div class="frameWrap"><div class="browser">
-      <div class="bbar"><i></i><i></i><i></i><span class="addr">req-eng.semes.local/review</span></div>
-      <div class="ui">
-        <aside class="side">
-          <div class="brand"><span class="sq">RA</span><span><span class="bn">요구사항 엔지니어링</span><br><span class="bs">SEMES · VCS</span></span></div>
-          <nav>
-            <div class="nlab">핵심 기능</div>
-            <a class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>요구사항 검토</a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v3a3 3 0 0 0 3 3h6"/></svg>산출물 도출<span class="rd">준비중</span></a>
-            <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>산출물 관리<span class="rd">준비중</span></a>
-          </nav>
-          <div class="snote">사내 로컬 LLM으로 동작 (반출 차단 환경).<br>Ollama 미실행 시 규칙 mock으로 폴백.</div>
-        </aside>
-        <div class="m"><div class="mpad">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="fbadge">핵심 기능 1</span><h1>요구사항 검토</h1><span class="modebadge">판정: 로컬 AI · Qwen3-8B</span></div>
-          <div class="sec2t" style="margin-top:20px">2. 검출 &amp; 해결</div>
-
-          <!-- 해결 입력 중 -->
-          <div class="rc amb">
-            <div class="rchead"><span class="rid">req-tf-01</span><span class="rcat">태스크 전개</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
-            <div class="rbody"><span class="rlab">비고</span>동일 자재 ID에 대한 <u>복수의 태스크 생성 허용 여부</u> 등 상세 제약을 정의한다.</div>
-            <div class="resolvebox">
-              <label>확정 해석 입력 — 이 요구사항을 어떻게 해석·확정할지 적는다</label>
-              <div class="inp" style="display:block;min-height:52px;color:#1f2937">‘허용 여부’ = 동일 자재 ID에 대해 <b style="color:#4338ca">최대 1건만 허용</b>, 초과 요청은 거절한다.</div>
-              <div style="margin-top:10px"><span class="btn em sm">확정</span></div>
-            </div>
-          </div>
-
-          <!-- 확정 완료 → 전후 비교 -->
-          <div class="rc res">
-            <div class="rchead"><span class="rid">req-tf-03</span><span class="rcat">맵</span><span class="rbadge res">🔒 확정</span></div>
-            <div class="ba">
-              <div class="bacol b"><div class="bt">해결 전 (원본)</div>입출고지 값에 <del>와일드카드</del> 사용을 허용한다.</div>
-              <div class="bacol a"><div class="bt">해결 후 (확정 해석)</div>입출고지 값에 <ins>‘*’(0자 이상)·‘?’(1자) 허용, 대소문자 무시</ins> 매칭을 적용한다.</div>
-            </div>
-          </div>
-        </div></div>
-      </div>
-    </div></div>
-    <div class="spec">
-      <div class="sc"><p class="sct">해결 입력</p><ul>
-        <li>[해결하기] → <b>확정 해석 입력창</b> 인라인 오픈</li>
-        <li>텍스트영역 + [확정](emerald)</li>
-        <li>빈 값이면 확정 불가(경고)</li></ul></div>
-      <div class="sc"><p class="sct">확정 카드(전후)</p><ul>
-        <li>테두리 <span class="k">emerald</span>, 🔒 확정</li>
-        <li><b>해결 전/후 2열</b> 비교</li>
-        <li>전=취소선 / 후=indigo 강조</li></ul></div>
-      <div class="sc"><p class="sct">인터랙션</p><ul>
-        <li>확정 시 카드가 <b>amber→emerald</b>로 전환</li>
-        <li>KPI 해결/미해결 수 즉시 갱신</li>
-        <li>확정본은 기능 2로 전달 가능</li></ul></div>
-      <div class="sc"><p class="sct">연동 API</p><ul>
-        <li><span class="api"><b>POST</b> /requirements/{id}/confirm</span></li>
-        <li>이력: <span class="api"><b>GET</b> /{id}/history</span></li>
-        <li>본문: <span class="k">before, after, 확정자, 일시</span></li></ul></div>
-    </div>
-  </section>
-
-  <p class="foot"><b>범위.</b> 이번 문서는 <b>기능 1(요구사항 검토)</b>의 4개 화면/상태만 다룹니다 — 메인, 입력, 검출, 해결·확정.
-    기능 2·3은 준비중이며 라우팅 자리만 잡아 두었습니다. &nbsp;<b>다음.</b> 이 UI를 기준으로 → ERD → API 명세서(위 연동 API 확정) → 구현.</p>
+  <p class="foot"><b>범위.</b> 기능 1(요구사항 검토) — 개요 · 입력→분석 · 버전 이력 3화면. 산출물 도출·추적성은 요구사항 탭 자리만 잡아 두었습니다.
+    &nbsp;<b>다음.</b> 이 IA·화면을 기준으로 → ERD(요구사항·버전·검출·산출물 테이블) → API 명세서 → 구현.</p>
 </div>
+
+<script>
+  function fit(){document.querySelectorAll('.stage').forEach(function(st){
+    var c=st.querySelector('.canvas'); if(!c)return;
+    c.style.transform='scale('+(st.clientWidth/1920)+')';
+  });}
+  window.addEventListener('resize',fit); window.addEventListener('load',fit);
+  document.addEventListener('DOMContentLoaded',fit); fit();
+</script>
 </body>
 </html>
