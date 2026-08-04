@@ -3,324 +3,286 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>요구사항 엔지니어링 — 기능 1 UI 설계</title>
+<title>요구사항 엔지니어링 — 기능 1 UI 설계 (GitHub 스타일)</title>
 <style>
   :root{
-    --bg:#f5f6f9;--surface:#fff;--ink:#161a22;--muted:#5f6979;--faint:#8a93a3;
-    --line:#e6e8ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f2f3f7;
-    --shadow:0 1px 2px rgba(20,24,40,.05),0 10px 30px rgba(20,24,40,.07);
-    --frame-shadow:0 6px 16px rgba(20,24,40,.10),0 40px 90px rgba(20,24,40,.18);
-    --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif;
+    --bg:#f6f8fa;--surface:#fff;--ink:#1f2328;--muted:#59636e;--faint:#818b98;
+    --line:#d1d9e0;--accent:#0969da;--accent-soft:#ddf4ff;--code:#f6f8fa;
+    --shadow:0 1px 0 rgba(31,35,40,.04),0 8px 24px rgba(31,35,40,.10);
+    --frame-shadow:0 8px 24px rgba(31,35,40,.12),0 40px 80px rgba(31,35,40,.16);
+    --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
     --mono:"Geist Mono",ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
   }
-  @media (prefers-color-scheme:dark){:root{--bg:#0f0f14;--surface:#191921;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;
-    --line:#2a2a35;--accent:#8b8cf8;--accent-soft:#20203a;--accent-line:#3a3a63;--code:#212129;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);--frame-shadow:0 6px 16px rgba(0,0,0,.5),0 40px 90px rgba(0,0,0,.6);}}
-  :root[data-theme="light"]{--bg:#f5f6f9;--surface:#fff;--ink:#161a22;--muted:#5f6979;--faint:#8a93a3;--line:#e6e8ef;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-line:#c7d2fe;--code:#f2f3f7;--shadow:0 1px 2px rgba(20,24,40,.05),0 10px 30px rgba(20,24,40,.07);--frame-shadow:0 6px 16px rgba(20,24,40,.10),0 40px 90px rgba(20,24,40,.18);}
-  :root[data-theme="dark"]{--bg:#0f0f14;--surface:#191921;--ink:#e9eaf0;--muted:#a2a8b6;--faint:#6f7686;--line:#2a2a35;--accent:#8b8cf8;--accent-soft:#20203a;--accent-line:#3a3a63;--code:#212129;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);--frame-shadow:0 6px 16px rgba(0,0,0,.5),0 40px 90px rgba(0,0,0,.6);}
+  @media (prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;
+    --line:#30363d;--accent:#4493f8;--accent-soft:#388bfd26;--code:#161b22;
+    --shadow:0 0 0 1px rgba(0,0,0,.3),0 8px 24px rgba(1,4,9,.6);--frame-shadow:0 8px 24px rgba(1,4,9,.7),0 40px 80px rgba(1,4,9,.8);}}
+  :root[data-theme="light"]{--bg:#f6f8fa;--surface:#fff;--ink:#1f2328;--muted:#59636e;--faint:#818b98;--line:#d1d9e0;--accent:#0969da;--accent-soft:#ddf4ff;--code:#f6f8fa;--shadow:0 1px 0 rgba(31,35,40,.04),0 8px 24px rgba(31,35,40,.10);--frame-shadow:0 8px 24px rgba(31,35,40,.12),0 40px 80px rgba(31,35,40,.16);}
+  :root[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;--line:#30363d;--accent:#4493f8;--accent-soft:#388bfd26;--code:#161b22;--shadow:0 0 0 1px rgba(0,0,0,.3),0 8px 24px rgba(1,4,9,.6);--frame-shadow:0 8px 24px rgba(1,4,9,.7),0 40px 80px rgba(1,4,9,.8);}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
   .wrap{max-width:1200px;margin:0 auto;padding:44px 20px 90px;}
-  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
-  h1.page{font-size:clamp(27px,4vw,38px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
+  h1.page{font-size:clamp(26px,4vw,37px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
   .lede{font-size:15.5px;color:var(--muted);max-width:70ch;margin:0;}
   .metarow{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
   .tag{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
-  .tag.on{background:#dcfce7;color:#047857;border-color:transparent;} @media(prefers-color-scheme:dark){.tag.on{background:#12281f;color:#34d399;}}
-
-  .ia{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);}
-  .ia .t{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;}
-  .ia .row{display:flex;gap:18px;flex-wrap:wrap;}
-  .ia .col{flex:1;min-width:230px;}
-  .ia .col h4{margin:0 0 6px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;}
-  .ia .col h4 .b{width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:800;}
-  .ia .col p{margin:0;font-size:12.8px;color:var(--muted);line-height:1.5;}
-  .ia .col p b{color:var(--ink);}
-
-  section.scr{margin-top:56px;}
+  .tag.on{background:#dafbe1;color:#1a7f37;border-color:transparent;} @media(prefers-color-scheme:dark){.tag.on{background:#12261e;color:#3fb950;}}
+  .ia{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);}
+  .ia .t{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;}
+  .ia .row{display:flex;gap:16px;flex-wrap:wrap;}
+  .ia .col{flex:1;min-width:220px;}
+  .ia .col h4{margin:0 0 5px;font-size:13.5px;font-weight:800;display:flex;gap:8px;align-items:center;}
+  .ia .col h4 .b{width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:800;}
+  .ia .col p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;} .ia .col p b{color:var(--ink);}
+  section.scr{margin-top:54px;}
   .kicker{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
   .kicker::after{content:"";flex:1;height:1px;background:var(--line);}
   .scr-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;}
   .scr-head .route{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:8px;}
-  .scr-head h2{font-size:21px;font-weight:840;letter-spacing:-.01em;margin:0;}
+  .scr-head h2{font-size:21px;font-weight:840;margin:0;}
   .scr-head .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;}
-  .st.done{background:#dcfce7;color:#047857;} .st.partial{background:#fef3c7;color:#b45309;} .st.newx{background:var(--code);color:var(--faint);}
-  @media(prefers-color-scheme:dark){.st.done{background:#12281f;color:#34d399;}.st.partial{background:#2a2412;color:#fcd34d;}}
-
-  .stage{width:100%;aspect-ratio:1920/1080;overflow:hidden;border-radius:14px;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
+  .st.done{background:#dafbe1;color:#1a7f37;} .st.newx{background:var(--code);color:var(--faint);border:1px solid var(--line);}
+  @media(prefers-color-scheme:dark){.st.done{background:#12261e;color:#3fb950;}}
+  .stage{width:100%;aspect-ratio:1920/1080;overflow:hidden;border-radius:12px;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
   .canvas{width:1920px;height:1080px;transform-origin:top left;}
-
   .specrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
-  .chipspec{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 13px;}
+  .chipspec{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 13px;}
   .chipspec b{color:var(--ink);font-weight:700;} .chipspec .api{font-family:var(--mono);font-size:11px;color:var(--accent);}
-  .foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;}
-  .foot b{color:var(--muted);}
+  .foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;} .foot b{color:var(--muted);}
 
-  /* ============ APP UI (light screenshot, 1920 canvas) ============ */
-  .ui{--g50:#f8fafc;--g100:#f1f3f6;--g200:#e5e7eb;--g300:#d3d7de;--g400:#9aa1ad;--g500:#697083;--g600:#4b5364;--g700:#374151;--g800:#1f2937;--g900:#111827;
-    --ind50:#eef2ff;--ind100:#e0e7ff;--ind500:#6366f1;--ind600:#4f46e5;--ind700:#4338ca;
-    --em100:#d1fae5;--em300:#6ee7b7;--em500:#10b981;--em600:#059669;--em700:#047857;
-    --am100:#fef3c7;--am300:#fcd34d;--am500:#f59e0b;--am600:#d97706;--am700:#b45309;
-    --sky50:#f0f9ff;--sky300:#7dd3fc;--sky800:#075985;--rose100:#ffe4e6;--rose600:#e11d48;--rose700:#be123c;
-    --teal100:#ccfbf1;--teal700:#0f766e;--vio100:#ede9fe;--vio700:#6d28d9;
-    width:1920px;height:1080px;background:var(--g50);color:var(--g900);font-size:15px;display:flex;flex-direction:column;}
-  .ui *{box-sizing:border-box;}
-  /* top bar */
-  .ui .top{height:64px;flex:0 0 64px;background:#fff;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:20px;padding:0 24px;}
-  .ui .logo{display:flex;align-items:center;gap:11px;font-weight:800;font-size:16px;}
-  .ui .logo .mk{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:15px;}
-  .ui .proj{display:flex;align-items:center;gap:9px;background:var(--g100);border:1px solid var(--g200);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--g700);}
-  .ui .proj .car{color:var(--g400);}
-  .ui .top .sp{flex:1;}
-  .ui .search{display:flex;align-items:center;gap:8px;background:var(--g100);border:1px solid var(--g200);border-radius:10px;padding:9px 14px;width:300px;color:var(--g400);font-size:13.5px;}
-  .ui .top .new{background:var(--ind600);color:#fff;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px;display:flex;align-items:center;gap:7px;}
-  .ui .avatar{width:36px;height:36px;border-radius:50%;background:var(--ind100);color:var(--ind700);display:grid;place-items:center;font-weight:800;font-size:13px;}
-  .ui .mainrow{flex:1;display:flex;min-height:0;}
-  /* left: requirement list */
-  .ui .rl{width:340px;flex:0 0 340px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;}
-  .ui .rlh{padding:18px 20px 12px;}
-  .ui .rlh .tt{display:flex;align-items:baseline;gap:8px;}
-  .ui .rlh .tt b{font-size:17px;font-weight:800;} .ui .rlh .tt .c{font-size:13px;color:var(--g400);font-weight:700;}
-  .ui .filters{display:flex;gap:6px;margin-top:12px;}
-  .ui .filters span{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--g100);color:var(--g500);}
-  .ui .filters span.on{background:var(--ind50);color:var(--ind700);}
-  .ui .rsearch{margin:0 20px 8px;background:var(--g100);border:1px solid var(--g200);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--g400);}
-  .ui .rlist{flex:1;overflow:auto;padding:4px 12px 12px;}
-  .ui .ri{padding:12px 13px;border-radius:11px;margin-bottom:4px;cursor:pointer;border:1px solid transparent;}
-  .ui .ri:hover{background:var(--g50);}
-  .ui .ri.on{background:var(--ind50);border-color:var(--accent-line);}
-  .ui .ri .rr1{display:flex;align-items:center;gap:8px;}
-  .ui .ri .rid{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--g500);}
-  .ui .ri .ver{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--g100);color:var(--g500);}
-  .ui .ri.on .ver{background:#fff;}
-  .ui .ri .rt{font-size:14px;font-weight:700;color:var(--g800);margin-top:5px;line-height:1.35;}
-  .ui .ri .rs{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--g400);}
-  .ui .dot{width:7px;height:7px;border-radius:50%;} .dot.g{background:var(--em500);} .dot.a{background:var(--am500);} .dot.b{background:var(--ind500);}
+  /* ================= GitHub / Primer app ================= */
+  .gh{--cv:#fff;--cvs:#f6f8fa;--cvi:#eef1f4;--bd:#d1d9e0;--bdm:#d8dee4;--fg:#1f2328;--fgm:#59636e;--fgf:#818b98;
+    --blue:#0969da;--blue-s:#ddf4ff;--green:#1a7f37;--green-e:#1f883d;--green-s:#dafbe1;--purple:#8250df;--purple-s:#fbefff;
+    --amber:#9a6700;--amber-s:#fff8c5;--red:#cf222e;--red-s:#ffebe9;--hdr:#24292f;
+    width:1920px;height:1080px;background:var(--cvs);color:var(--fg);font-size:15px;display:flex;flex-direction:column;}
+  .gh *{box-sizing:border-box;}
+  .gh a{color:inherit;text-decoration:none;}
+  /* header (dark) */
+  .gh .hdr{height:62px;flex:0 0 62px;background:var(--hdr);display:flex;align-items:center;gap:16px;padding:0 22px;color:#fff;}
+  .gh .hdr .burger{color:#c9d1d9;font-size:18px;}
+  .gh .hdr .mk{width:32px;height:32px;border-radius:8px;background:#fff;color:#24292f;display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .gh .hdr .brand{font-weight:700;font-size:15px;color:#fff;}
+  .gh .hdr .brand .slash{color:#8b949e;margin:0 7px;font-weight:400;} .gh .hdr .brand .proj{color:#c9d1d9;font-weight:600;}
+  .gh .hdr .sp{flex:1;}
+  .gh .hdr .search{width:360px;background:#161b22;border:1px solid #444c56;border-radius:8px;padding:7px 12px;color:#8b949e;font-size:13px;display:flex;align-items:center;gap:8px;}
+  .gh .hdr .search .sl{margin-left:auto;border:1px solid #444c56;border-radius:5px;padding:0 6px;font-size:11px;}
+  .gh .hdr .ico{width:32px;height:32px;border:1px solid #444c56;border-radius:8px;display:grid;place-items:center;color:#c9d1d9;}
+  .gh .hdr .av{width:32px;height:32px;border-radius:50%;background:#388bfd;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;}
+  .gh .body{flex:1;display:flex;min-height:0;}
+  /* left nav */
+  .gh .side{width:300px;flex:0 0 300px;background:var(--cv);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
+  .gh .side .pj{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;margin-bottom:10px;}
+  .gh .side .pj .pi{width:26px;height:26px;border-radius:6px;background:var(--blue-s);color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:12px;}
+  .gh .side .pj .pn{font-size:13.5px;font-weight:700;} .gh .side .pj .pn small{display:block;color:var(--fgf);font-weight:500;font-size:11px;}
+  .gh .side .pj .car{margin-left:auto;color:var(--fgf);}
+  .gh .side a.nav{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--fg);}
+  .gh .side a.nav svg{width:17px;height:17px;color:var(--fgm);}
+  .gh .side a.nav .ct{margin-left:auto;font-size:12px;color:var(--fgm);background:var(--cvi);border-radius:999px;padding:1px 9px;font-weight:600;}
+  .gh .side a.nav:hover{background:var(--cvs);}
+  .gh .side a.nav.on{background:var(--cvi);font-weight:700;position:relative;}
+  .gh .side a.nav.on::before{content:"";position:absolute;left:-12px;top:7px;bottom:7px;width:4px;border-radius:3px;background:var(--blue);}
+  .gh .side a.nav.on svg{color:var(--fg);}
+  .gh .side .nl{font-size:11px;font-weight:700;color:var(--fgf);text-transform:uppercase;letter-spacing:.05em;padding:12px 10px 4px;}
   /* main */
-  .ui .mc{flex:1;min-width:0;overflow:auto;padding:26px 34px;}
-  .ui .mh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-  .ui .mh .mid{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--g500);}
-  .ui .mh h1{font-size:24px;font-weight:800;margin:0;}
-  .ui .stpill{font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px;}
-  .ui .stpill.amb{background:var(--am100);color:var(--am700);} .ui .stpill.cfm{background:var(--em100);color:var(--em700);}
-  .ui .verbig{font-family:var(--mono);font-size:13px;font-weight:800;padding:4px 11px;border-radius:8px;background:var(--ind600);color:#fff;}
-  .ui .verbig.muted{background:var(--g200);color:var(--g500);}
-  .ui .tabs{display:flex;gap:4px;border-bottom:1px solid var(--g200);margin:20px 0 22px;}
-  .ui .tabs a{font-size:14px;font-weight:700;color:var(--g500);padding:11px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;}
-  .ui .tabs a.on{color:var(--ind700);border-color:var(--ind600);}
-  .ui .tabs a .mini{font-size:10.5px;color:var(--g400);background:var(--g100);border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:700;}
-  .ui .card{background:#fff;border:1px solid var(--g200);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-  .ui .btn{display:inline-flex;align-items:center;gap:7px;background:var(--ind600);color:#fff;font-size:14px;font-weight:700;padding:11px 20px;border-radius:11px;}
-  .ui .btn.dark{background:var(--g900);} .ui .btn.em{background:var(--em600);} .ui .btn.ghost{background:#fff;color:var(--g600);border:1px solid var(--g300);} .ui .btn.sm{padding:8px 14px;font-size:13px;}
-  .ui .flabel{font-size:12px;font-weight:800;color:var(--g500);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:.04em;}
-  .ui .ta{border:1px solid var(--g300);border-radius:10px;padding:13px 15px;font-size:14px;line-height:1.6;color:var(--g800);background:#fff;}
+  .gh .main{flex:1;min-width:0;overflow:auto;padding:26px 32px;}
+  .gh .btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;font-size:14px;font-weight:600;padding:8px 16px;border:1px solid var(--bd);background:var(--cv);color:var(--fg);}
+  .gh .btn.prim{background:var(--green-e);border-color:rgba(31,35,40,.15);color:#fff;}
+  .gh .btn.sm{padding:6px 12px;font-size:13px;}
+  .gh .lbl{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;border:1px solid transparent;}
+  .gh .lbl.blue{background:var(--blue-s);color:var(--blue);} .gh .lbl.green{background:var(--green-s);color:var(--green);}
+  .gh .lbl.purple{background:var(--purple-s);color:var(--purple);} .gh .lbl.amber{background:var(--amber-s);color:var(--amber);}
+  .gh .tagv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;display:inline-flex;align-items:center;gap:5px;}
+  .gh .card{background:var(--cv);border:1px solid var(--bd);border-radius:12px;}
+  .gh .av2{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;flex:0 0 26px;}
+  .gh .a-h{background:#6e40c9;} .gh .a-l{background:#1f883d;} .gh .a-k{background:#bf3989;}
+  /* dashboard */
+  .gh h1.pt{font-size:22px;font-weight:800;margin:0 0 4px;} .gh .psub{color:var(--fgm);font-size:14px;margin:0 0 20px;}
+  .gh .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .gh .stat{border:1px solid var(--bd);border-radius:12px;background:var(--cv);padding:15px 18px;}
+  .gh .stat .n{font-size:27px;font-weight:800;} .gh .stat .l{font-size:12.5px;color:var(--fgm);margin-top:2px;font-weight:500;}
+  .gh .stat .d{font-size:11.5px;font-weight:700;margin-top:6px;} .gh .stat .d.up{color:var(--green);}
+  .gh .dgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;align-items:start;}
+  .gh .sec-t{font-size:14px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .gh .sec-t .mono{margin-left:auto;font-size:12px;color:var(--fgm);font-weight:500;}
+  .gh .feed{padding:6px 4px;} .gh .fi{display:flex;gap:12px;padding:11px 14px;position:relative;}
+  .gh .fi:not(:last-child)::after{content:"";position:absolute;left:26px;top:40px;bottom:-6px;width:2px;background:var(--bd);}
+  .gh .fi .ftxt{font-size:13.5px;line-height:1.5;color:var(--fg);} .gh .fi .ftxt b{font-weight:700;}
+  .gh .fi .ftime{font-size:12px;color:var(--fgf);margin-top:2px;}
+  .gh .fi .fv{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--blue);}
+  .gh .list{padding:4px;} .gh .li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;}
+  .gh .li:hover{background:var(--cvs);} .gh .li .lt{font-size:13.5px;font-weight:600;} .gh .li .lm{font-size:12px;color:var(--fgm);}
+  .gh .li .lid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);}
+  .gh .li .rt{margin-left:auto;}
+  .gh .heat{display:flex;gap:3px;margin-top:6px;} .gh .heat .wk{display:flex;flex-direction:column;gap:3px;}
+  .gh .heat i{width:12px;height:12px;border-radius:3px;background:#ebedf0;display:block;}
+  .gh .heat i.l1{background:#9be9a8;} .gh .heat i.l2{background:#40c463;} .gh .heat i.l3{background:#30a14e;} .gh .heat i.l4{background:#216e39;}
+  /* requirement list (issues style) */
+  .gh .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .gh .filterbar{display:flex;align-items:center;gap:0;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--cv);margin-bottom:0;}
+  .gh .filterbar .fb{padding:9px 16px;font-size:13.5px;font-weight:600;color:var(--fgm);border-right:1px solid var(--bd);}
+  .gh .filterbar .fb.on{color:var(--fg);font-weight:700;background:var(--cvs);}
+  .gh .filterbar .fsearch{flex:1;padding:9px 14px;color:var(--fgf);font-size:13.5px;}
+  .gh .isslist{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--cv);}
+  .gh .isshead{background:var(--cvs);border-bottom:1px solid var(--bd);padding:10px 16px;font-size:13px;font-weight:600;color:var(--fgm);display:flex;gap:18px;}
+  .gh .iss{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bdm);}
+  .gh .iss:last-child{border-bottom:none;}
+  .gh .iss .ico{margin-top:2px;} .gh .iss .ico svg{width:16px;height:16px;} .gh .iss .ico.open svg{color:var(--green);} .gh .iss .ico.rev svg{color:var(--amber);}
+  .gh .iss .it{font-size:15px;font-weight:600;} .gh .iss .it:hover{color:var(--blue);}
+  .gh .iss .im{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .gh .iss .im .mid{font-family:var(--mono);}
+  .gh .iss .rcol{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  /* version history (commits style) */
+  .gh .crumb{font-size:14px;color:var(--fgm);margin-bottom:6px;} .gh .crumb b{color:var(--blue);font-weight:600;}
+  .gh .rtabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin:16px 0 0;}
+  .gh .rtabs a{font-size:14px;font-weight:600;color:var(--fgm);padding:9px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:7px;}
+  .gh .rtabs a svg{width:16px;height:16px;color:var(--fgf);}
+  .gh .rtabs a.on{color:var(--fg);border-color:#fd8c73;} .gh .rtabs a.on svg{color:var(--fg);}
+  .gh .rtabs a .ct{font-size:11px;background:var(--cvi);border-radius:999px;padding:1px 8px;font-weight:700;}
+  .gh .vwrap{margin-top:22px;}
+  .gh .vday{font-size:13px;font-weight:700;color:var(--fgm);margin:0 0 12px 8px;position:relative;}
+  .gh .commits{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
+  .gh .cm{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--bdm);}
+  .gh .cm:last-child{border-bottom:none;}
+  .gh .cm .cmain{min-width:0;flex:1;}
+  .gh .cm .ctitle{font-size:15px;font-weight:600;} .gh .cm .ctitle:hover{color:var(--blue);}
+  .gh .cm .cmeta{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:7px;}
+  .gh .cm .cmeta b{color:var(--fg);font-weight:600;}
+  .gh .cm .cright{display:flex;align-items:center;gap:12px;}
+  .gh .cm .verpill{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:999px;}
+  .gh .cm .verpill.cur{background:var(--blue);color:#fff;} .gh .cm .verpill.old{background:var(--cvi);color:var(--fgm);}
+  .gh .cm .kind{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;}
+  .gh .kind.minor{background:var(--amber-s);color:var(--amber);} .gh .kind.patch{background:var(--cvi);color:var(--fgm);} .gh .kind.major{background:var(--red-s);color:var(--red);}
+  /* diff panel */
+  .gh .diffbox{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-top:18px;}
+  .gh .diffh{background:var(--cvs);border-bottom:1px solid var(--bd);padding:11px 16px;font-size:13px;color:var(--fgm);display:flex;align-items:center;gap:8px;}
+  .gh .diffh b{color:var(--fg);font-family:var(--mono);}
+  .gh .diffl{padding:10px 16px;font-family:var(--mono);font-size:13px;line-height:1.7;display:flex;gap:10px;}
+  .gh .diffl.del{background:#ffebe9;} .gh .diffl.add{background:#e6ffec;}
+  .gh .diffl .sign{color:var(--fgf);width:14px;flex:0 0 14px;} .gh .diffl.del .sign{color:var(--red);} .gh .diffl.add .sign{color:var(--green);}
+  .gh .diffl.del .tx{color:#82071e;} .gh .diffl.add .tx{color:#0a3622;}
+  .gh .semver{margin-top:16px;display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--fgm);}
+  .gh .semver b{font-family:var(--mono);} .gh .semver .mj b{color:var(--red);} .gh .semver .mn b{color:var(--amber);} .gh .semver .pt b{color:var(--fgm);}
 
-  /* overview table */
-  .ui .ovhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
-  .ui .ovstat{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px;}
-  .ui .kv{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:13px 18px;min-width:120px;}
-  .ui .kv .n{font-size:26px;font-weight:800;} .ui .kv .l{font-size:12px;color:var(--g500);font-weight:600;margin-top:2px;}
-  .ui .kv.i .n{color:var(--ind600);} .ui .kv.g .n{color:var(--em600);} .ui .kv.a .n{color:var(--am600);}
-  .ui table.ov{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden;font-size:13.5px;}
-  .ui table.ov th{background:var(--g50);text-align:left;padding:13px 16px;font-size:12px;font-weight:800;color:var(--g500);border-bottom:1px solid var(--g200);}
-  .ui table.ov td{padding:13px 16px;border-bottom:1px solid var(--g100);color:var(--g700);vertical-align:middle;}
-  .ui table.ov tr:last-child td{border-bottom:none;}
-  .ui table.ov .cid{font-family:var(--mono);font-weight:700;color:var(--ind700);}
-  .ui table.ov .cver{font-family:var(--mono);font-weight:700;color:var(--g600);}
-  .ui .catt{font-size:11.5px;font-weight:700;color:var(--vio700);background:var(--vio100);padding:2px 9px;border-radius:6px;}
-  .ui .sp2{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
-  .ui .sp2.cfm{background:var(--em100);color:var(--em700);} .ui .sp2.rev{background:var(--am100);color:var(--am700);}
-  .ui .artc{font-family:var(--mono);font-weight:700;color:var(--g600);}
-
-  /* detect (input + analysis) */
-  .ui .split{display:grid;grid-template-columns:0.9fr 1.1fr;gap:22px;align-items:start;}
-  .ui .pcard{padding:20px;}
-  .ui .pcard h3{font-size:15px;font-weight:800;margin:0 0 14px;color:var(--g800);}
-  .ui .rc{border-radius:12px;padding:16px;margin-bottom:14px;}
-  .ui .rc.amb{border:1px solid var(--am300);background:rgba(255,251,235,.5);}
-  .ui .rc.res{border:1px solid var(--em300);background:rgba(236,253,245,.5);}
-  .ui .rchead{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
-  .ui .rchead .rid{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--g500);}
-  .ui .rbadge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;}
-  .ui .rbadge.amb{background:var(--am500);color:#fff;} .ui .rbadge.res{background:var(--em600);color:#fff;}
-  .ui .rbody{font-size:13.5px;color:var(--g800);line-height:1.6;}
-  .ui .rbody .rlab{font-size:11px;font-weight:800;color:var(--g400);margin-right:6px;}
-  .ui .rbody u{text-decoration:none;background:var(--am100);border-bottom:2px solid var(--am300);color:var(--am700);padding:0 1px;font-weight:600;}
-  .ui .findings{border-top:1px solid var(--am300);margin-top:12px;padding-top:11px;display:flex;flex-direction:column;gap:8px;}
-  .ui .fd{font-size:13px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;}
-  .ui .ftype{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:6px;}
-  .ui .ftype.a{background:var(--rose100);color:var(--rose700);} .ui .ftype.b{background:var(--teal100);color:var(--teal700);}
-  .ui .fd .fspan{font-weight:700;color:var(--g700);} .ui .fd .frs{color:var(--g500);}
-  .ui .sugg{margin-top:12px;border:1px dashed var(--sky300);background:var(--sky50);border-radius:9px;padding:11px 13px;font-size:13px;color:var(--sky800);}
-  .ui .rcacts{display:flex;gap:9px;margin-top:14px;align-items:center;}
-  .ui .confirm-note{font-size:12.5px;color:var(--g500);}
-  .ui .confirm-note b{color:var(--ind700);font-family:var(--mono);}
-
-  /* version history */
-  .ui .vsplit{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
-  .ui .vrail{position:relative;padding-left:26px;}
-  .ui .vrail::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--g200);}
-  .ui .vnode{position:relative;margin-bottom:12px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:13px 15px;cursor:pointer;}
-  .ui .vnode::before{content:"";position:absolute;left:-23px;top:16px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--g300);}
-  .ui .vnode.on{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft);}
-  .ui .vnode.on::before{border-color:var(--ind600);}
-  .ui .vnode.cur::before{border-color:var(--ind600);background:var(--ind600);}
-  .ui .vn1{display:flex;align-items:center;gap:8px;}
-  .ui .vtag{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--g900);}
-  .ui .cur .vtag{color:var(--ind700);}
-  .ui .vchip{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:auto;}
-  .ui .vchip.latest{background:var(--ind600);color:#fff;} .ui .vchip.minor{background:var(--am100);color:var(--am700);} .ui .vchip.patch{background:var(--g100);color:var(--g500);} .ui .vchip.major{background:var(--rose100);color:var(--rose700);}
-  .ui .vmeta{font-size:12px;color:var(--g500);margin-top:6px;} .ui .vmeta b{color:var(--g700);}
-  .ui .vsum{font-size:13px;color:var(--g700);margin-top:6px;line-height:1.45;}
-  .ui .vdetail{padding:22px;}
-  .ui .vdh{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
-  .ui .vdh .big{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--ind700);}
-  .ui .vdmeta{font-size:13px;color:var(--g500);margin-bottom:18px;} .ui .vdmeta b{color:var(--g700);}
-  .ui .diff{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  .ui .dcol{border-radius:11px;padding:15px;font-size:13.5px;line-height:1.65;}
-  .ui .dcol.b{border:1px solid var(--g200);background:var(--g50);} .ui .dcol.a{border:1px solid var(--em300);background:#fff;}
-  .ui .dcol .dt{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;} .ui .dcol.b .dt{color:var(--g400);} .ui .dcol.a .dt{color:var(--em600);}
-  .ui .dcol del{color:var(--rose600);text-decoration-color:#fb7185;} .ui .dcol ins{text-decoration:none;color:var(--ind700);font-weight:700;background:var(--ind50);border-radius:3px;padding:0 3px;}
-  .ui .semver{margin-top:18px;background:var(--g50);border:1px solid var(--g200);border-radius:12px;padding:14px 16px;display:flex;gap:22px;flex-wrap:wrap;}
-  .ui .semver div{font-size:12.5px;color:var(--g600);} .ui .semver b{font-family:var(--mono);font-weight:800;}
-  .ui .semver .mj b{color:var(--rose600);} .ui .semver .mn b{color:var(--am600);} .ui .semver .pt b{color:var(--g500);}
-  .ui .vacts{display:flex;gap:10px;margin-top:18px;}
-
-  @media(prefers-color-scheme:dark){ .ui{filter:none;} }
+  /* login */
+  .gh.login{background:var(--cvs);align-items:center;justify-content:center;}
+  .gh .loginbox{width:340px;}
+  .gh .loginbox .lmk{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6e40c9,#0969da);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;margin:0 auto 18px;}
+  .gh .loginbox h2{text-align:center;font-size:22px;font-weight:600;margin:0 0 22px;}
+  .gh .lcard{border:1px solid var(--bd);border-radius:14px;background:var(--cv);padding:22px;}
+  .gh .lf{margin-bottom:14px;} .gh .lf label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;}
+  .gh .lf .in{border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:10px 12px;font-size:14px;color:var(--fgf);}
+  .gh .lbtn{width:100%;background:var(--green-e);color:#fff;border:1px solid rgba(31,35,40,.15);border-radius:8px;padding:11px;font-size:14px;font-weight:700;text-align:center;}
+  .gh .lor{text-align:center;color:var(--fgf);font-size:12px;margin:14px 0;position:relative;}
+  .gh .lsso{width:100%;border:1px solid var(--bd);border-radius:8px;padding:11px;font-size:14px;font-weight:600;text-align:center;background:var(--cv);}
+  .gh .lfoot{text-align:center;font-size:12.5px;color:var(--fgf);margin-top:18px;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow">UI 설계 · v2</p>
+    <p class="eyebrow">UI 설계 · v3 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 1 UI 설계</h1>
-    <p class="lede">정보구조를 <b>요구사항 중심</b>으로 다시 잡았습니다. 왼쪽엔 “3대 기능”이 아니라 <b>프로젝트의 요구사항 목록</b>이 놓이고,
-      검토·도출·추적은 선택한 요구사항의 <b>탭</b>이 됩니다. 확정하면 <b>시맨틱 버전</b>이 매겨지고 버전별로 비교할 수 있습니다.</p>
+    <p class="lede">GitHub(Primer) 디자인 언어로 다시 잡았습니다. 왼쪽은 <b>앱 섹션 네비게이션</b>(요구사항 리스트 중복 제거),
+      메인은 <b>대시보드</b>, 로그인으로 <b>작성자 이력</b>을 남기고, 확정·수정마다 <b>버전이 커밋처럼 쌓입니다</b>.</p>
     <div class="metarow">
-      <span class="tag">데스크톱 1920 × 1080</span>
-      <span class="tag on">요구사항 중심 IA</span>
-      <span class="tag">버전 관리 · 1.0.0 → 1.0.1</span>
+      <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
+      <span class="tag">로그인 · 작성자 이력</span><span class="tag">버전 = 커밋 이력</span>
     </div>
-
     <div class="ia">
-      <p class="t">무엇이 바뀌었나</p>
+      <p class="t">v2 → v3 변경점</p>
       <div class="row">
-        <div class="col"><h4><span class="b">1</span>좌측 = 요구사항 목록</h4><p>3대 기능 나열을 없앴다. 왼쪽은 <b>이 프로젝트의 모든 요구사항</b> — 상태·버전과 함께 한눈에.</p></div>
-        <div class="col"><h4><span class="b">2</span>기능은 “탭”으로</h4><p>검토 · 산출물 도출 · 추적성은 <b>선택한 요구사항의 탭</b>. 요구사항을 중심에 두고 작업이 딸려온다.</p></div>
-        <div class="col"><h4><span class="b">3</span>확정 = 버전 부여</h4><p>해석을 확정할 때마다 <b>1.0.0 → 1.0.1</b> 버전이 찍히고, <b>버전 이력</b> 탭에서 diff로 비교.</p></div>
+        <div class="col"><h4><span class="b">1</span>좌측 = 섹션 네비</h4><p>요구사항 리스트 중복 제거. 좌측은 <b>대시보드·요구사항·산출물·추적성·활동·설정</b>. 리스트는 ‘요구사항’ 안으로.</p></div>
+        <div class="col"><h4><span class="b">2</span>메인 = 대시보드</h4><p>통계 + <b>활동 피드</b>(누가 뭘 확정) + 내 작업 + 최근 버전. 실제 서비스 홈처럼.</p></div>
+        <div class="col"><h4><span class="b">3</span>로그인 + 작성자</h4><p>사번/SSO 로그인. 모든 확정·수정에 <b>작성자·시각</b> 기록.</p></div>
+        <div class="col"><h4><span class="b">4</span>버전 = 커밋</h4><p>확정 시 버전 생성, 수정 시 새 버전. <b>Git 커밋 이력</b>처럼 쌓고 diff.</p></div>
       </div>
     </div>
   </header>
 
-  <!-- S1 · 요구사항 개요 -->
+  <!-- S0 로그인 -->
   <section class="scr">
-    <p class="kicker">화면 1 · 프로젝트 전체</p>
-    <div class="scr-head"><span class="route">/project/req</span><h2>요구사항 개요 — 전체 확인</h2><span class="st done">공통</span></div>
+    <p class="kicker">화면 0 · 인증</p>
+    <div class="scr-head"><span class="route">/login</span><h2>로그인</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
-      <div class="ui">
-        <!-- top bar -->
-        <div class="top">
-          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
-          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
-          <span class="sp"></span>
-          <div class="search">🔍 요구사항 검색…</div>
-          <div class="new">＋ 새 요구사항</div>
-          <div class="avatar">한</div>
-        </div>
-        <div class="mainrow">
-          <!-- left requirement list -->
-          <aside class="rl">
-            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
-              <div class="filters"><span class="on">전체</span><span>검토중 6</span><span>확정 18</span></div></div>
-            <div class="rsearch">🔍 이름·ID로 찾기</div>
-            <div class="rlist">
-              <div class="ri on"><div class="rr1"><span class="rid">req-ta-01</span><span class="ver">—</span></div><div class="rt">태스크 할당 기준</div><div class="rs"><span class="dot a"></span>검토중 · 검출 2건</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-tf-01</span><span class="ver">v1.0.1</span></div><div class="rt">신규 태스크 생성</div><div class="rs"><span class="dot g"></span>확정 · 산출물 4</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-tf-02</span><span class="ver">v1.0.0</span></div><div class="rt">진행상황 보고 항목</div><div class="rs"><span class="dot g"></span>확정 · 산출물 2</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-mp-01</span><span class="ver">v1.1.0</span></div><div class="rt">입출고지 와일드카드</div><div class="rs"><span class="dot g"></span>확정 · 산출물 3</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-ta-02</span><span class="ver">—</span></div><div class="rt">알람 복구 재할당</div><div class="rs"><span class="dot a"></span>검토중 · 검출 1건</div></div>
-            </div>
-          </aside>
-          <!-- main: overview table -->
-          <div class="mc">
-            <div class="mh"><h1>요구사항 개요</h1><span class="stpill cfm">VCS · 태스크 할당 개선</span></div>
-            <div class="ovstat">
-              <div class="kv i"><div class="n">24</div><div class="l">전체 요구사항</div></div>
-              <div class="kv g"><div class="n">18</div><div class="l">확정</div></div>
-              <div class="kv a"><div class="n">6</div><div class="l">검토중</div></div>
-              <div class="kv"><div class="n">42</div><div class="l">도출 산출물</div></div>
-            </div>
-            <table class="ov">
-              <thead><tr><th>ID</th><th>제목</th><th>분류</th><th>상태</th><th>버전</th><th>산출물</th><th>최근 변경</th></tr></thead>
-              <tbody>
-                <tr><td class="cid">req-ta-01</td><td>태스크 할당 기준</td><td><span class="catt">태스크</span></td><td><span class="sp2 rev"><span class="dot a"></span>검토중</span></td><td class="cver">—</td><td class="artc">0</td><td>2일 전</td></tr>
-                <tr><td class="cid">req-tf-01</td><td>신규 태스크 생성</td><td><span class="catt">태스크 전개</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.0.1</td><td class="artc">4</td><td>어제</td></tr>
-                <tr><td class="cid">req-tf-02</td><td>진행상황 보고 항목</td><td><span class="catt">태스크 전개</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.0.0</td><td class="artc">2</td><td>3일 전</td></tr>
-                <tr><td class="cid">req-mp-01</td><td>입출고지 와일드카드</td><td><span class="catt">맵</span></td><td><span class="sp2 cfm"><span class="dot g"></span>확정</span></td><td class="cver">v1.1.0</td><td class="artc">3</td><td>오늘</td></tr>
-                <tr><td class="cid">req-ta-02</td><td>알람 복구 재할당</td><td><span class="catt">태스크</span></td><td><span class="sp2 rev"><span class="dot a"></span>검토중</span></td><td class="cver">—</td><td class="artc">0</td><td>1일 전</td></tr>
-              </tbody>
-            </table>
+      <div class="gh login">
+        <div class="loginbox">
+          <div class="lmk">RE</div>
+          <h2>요구사항 엔지니어링에 로그인</h2>
+          <div class="lcard">
+            <div class="lf"><label>사번</label><div class="in">20213xxx</div></div>
+            <div class="lf"><label>비밀번호</label><div class="in">••••••••••</div></div>
+            <div class="lbtn">로그인</div>
+            <div class="lor">또는</div>
+            <div class="lsso">사내 SSO로 로그인</div>
           </div>
+          <div class="lfoot">로그인하면 확정·수정 이력에 사번이 작성자로 기록됩니다.</div>
         </div>
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>좌측</b> 프로젝트 요구사항 목록(전체·검토중·확정 필터)</span>
-      <span class="chipspec"><b>본문</b> 요약 지표 4 + 전체 요구사항 테이블(상태·버전·산출물 수)</span>
-      <span class="chipspec"><b>진입</b> 행 클릭 → 해당 요구사항 상세</span>
-      <span class="chipspec api">GET /project/{id}/requirements</span>
+      <span class="chipspec"><b>목적</b> 작성자 식별 — 누가 확정/수정했는지 이력에 남기기 위함</span>
+      <span class="chipspec"><b>방식</b> 사번+비밀번호 또는 사내 SSO</span>
+      <span class="chipspec api">POST /api/auth/login · 세션/JWT</span>
     </div>
   </section>
 
-  <!-- S2 · 입력 & 분석 -->
+  <!-- S1 대시보드 -->
   <section class="scr">
-    <p class="kicker">화면 2 · 요구사항 검토(탭)</p>
-    <div class="scr-head"><span class="route">/req/req-ta-01 · 검토</span><h2>요구사항 입력 → 분석(검출)</h2><span class="st partial">일부 구현</span></div>
+    <p class="kicker">화면 1 · 메인</p>
+    <div class="scr-head"><span class="route">/</span><h2>대시보드 (메인)</h2><span class="st done">신규</span></div>
     <div class="stage"><div class="canvas">
-      <div class="ui">
-        <div class="top">
-          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
-          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
+      <div class="gh">
+        <div class="hdr">
+          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span>
-          <div class="search">🔍 요구사항 검색…</div>
-          <div class="new">＋ 새 요구사항</div>
-          <div class="avatar">한</div>
+          <div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
+          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
         </div>
-        <div class="mainrow">
-          <aside class="rl">
-            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
-              <div class="filters"><span>전체</span><span class="on">검토중 6</span><span>확정 18</span></div></div>
-            <div class="rsearch">🔍 이름·ID로 찾기</div>
-            <div class="rlist">
-              <div class="ri on"><div class="rr1"><span class="rid">req-ta-01</span><span class="ver">—</span></div><div class="rt">태스크 할당 기준</div><div class="rs"><span class="dot a"></span>검토중 · 검출 2건</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-ta-02</span><span class="ver">—</span></div><div class="rt">알람 복구 재할당</div><div class="rs"><span class="dot a"></span>검토중 · 검출 1건</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-js-03</span><span class="ver">—</span></div><div class="rt">할당 조건 사용자 설정</div><div class="rs"><span class="dot a"></span>검토중 · 미분석</div></div>
-            </div>
+        <div class="body">
+          <aside class="side">
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Zm5.457-.618 1.42 1.42a.75.75 0 0 1 0 1.06l-1.42 1.42a.75.75 0 1 1-1.06-1.06l.72-.72H9.5a.75.75 0 0 1 0-1.5h.117l-.72-.72a.75.75 0 1 1 1.06-1.06Z"/></svg>추적성</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8.2 8.2 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224.231.114.454.243.668.386.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63.27.385.506.792.704 1.218.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294.016.257.016.515 0 .772-.01.147.038.246.087.294l.815.806c.475.469.679 1.216.364 1.891a7.977 7.977 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a5.909 5.909 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8.006 8.006 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a5.738 5.738 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8.12 8.12 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6.214 6.214 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a7.92 7.92 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071.214-.143.437-.272.668-.386.133-.066.194-.158.211-.224l.29-1.106C7.009.645 7.556.095 8.299.03 8.53.01 8.764 0 9 0Z"/></svg>설정</a>
           </aside>
-          <div class="mc">
-            <div class="mh"><span class="mid">req-ta-01</span><h1>태스크 할당 기준</h1><span class="stpill amb">검토중</span><span class="verbig muted">미확정</span></div>
-            <div class="tabs"><a class="on">검토</a><a>산출물 도출</a><a>추적성</a><a>버전 이력</a></div>
-            <div class="split">
-              <div class="card pcard">
-                <h3>요구사항 입력</h3>
-                <label class="flabel">내용</label>
-                <div class="ta">우선순위 순 할당, 동일 우선순위는 요청 순. AMR 매칭 시 가용한 AMR 중 가장 가까운 것을 선택한다.</div>
-                <label class="flabel" style="margin-top:14px">비고</label>
-                <div class="ta">할당 조건은 사용자 설정에서 상시 변경할 수 있게 한다.</div>
-                <div style="margin-top:16px"><span class="btn">분석 ▶</span></div>
+          <div class="main">
+            <h1 class="pt">안녕하세요, 한지훈님 👋</h1>
+            <p class="psub">VCS · 태스크 할당 프로젝트 — 오늘도 요구사항을 명확하게.</p>
+            <div class="stats">
+              <div class="stat"><div class="n">24</div><div class="l">전체 요구사항</div><div class="d up">＋3 이번 주</div></div>
+              <div class="stat"><div class="n" style="color:var(--green)">18</div><div class="l">확정</div><div class="d up">＋5 이번 주</div></div>
+              <div class="stat"><div class="n" style="color:var(--amber)">6</div><div class="l">검토 대기</div><div class="d">내 담당 2건</div></div>
+              <div class="stat"><div class="n">42</div><div class="l">도출 산출물</div><div class="d">최근 v1.1.0</div></div>
+            </div>
+            <div class="dgrid">
+              <div class="card">
+                <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">최근 활동<span class="mono">모든 활동 보기 →</span></div></div>
+                <div class="feed">
+                  <div class="fi"><span class="av2 a-h">한</span><div><div class="ftxt"><b>한지훈</b>님이 <b>신규 태스크 생성</b>을 <span class="fv">v1.0.1</span>로 확정했습니다</div><div class="ftime">30분 전 · req-tf-01</div></div></div>
+                  <div class="fi"><span class="av2 a-l">이</span><div><div class="ftxt"><b>이수민</b>님이 <b>태스크 할당 기준</b> 검토를 시작했습니다 · 검출 2건</div><div class="ftime">2시간 전 · req-ta-01</div></div></div>
+                  <div class="fi"><span class="av2 a-h">한</span><div><div class="ftxt"><b>한지훈</b>님이 <b>입출고지 와일드카드</b>를 <span class="fv">v1.1.0</span>으로 수정했습니다</div><div class="ftime">어제 · req-mp-01</div></div></div>
+                  <div class="fi"><span class="av2 a-k">김</span><div><div class="ftxt"><b>김도현</b>님이 <b>진행상황 보고 항목</b>에서 산출물 2종을 도출했습니다</div><div class="ftime">3일 전 · req-tf-02</div></div></div>
+                </div>
               </div>
-              <div>
-                <h3 style="font-size:15px;font-weight:800;margin:2px 0 12px;color:var(--g600)">검출 결과 <span style="color:var(--g400);font-weight:600">· 2건</span></h3>
-                <div class="rc amb">
-                  <div class="rchead"><span class="rid">내용</span><span class="rbadge amb">⚠ 모호 · 2건</span></div>
-                  <div class="rbody">AMR 매칭 시 가용한 AMR 중 <u>가장 가까운 것</u>을 선택한다. 할당 조건은 <u>상시 변경</u>할 수 있게 한다.</div>
-                  <div class="findings">
-                    <div class="fd"><span class="ftype a">정량 기준 부재</span><span class="fspan">“가장 가까운 것”</span><span class="frs">— ‘가용’·‘거리’ 기준(직선/경로) 미정의</span></div>
-                    <div class="fd"><span class="ftype b">조건 시점 불명확</span><span class="fspan">“상시 변경”</span><span class="frs">— 변경 가능 조건 항목이 열거되지 않음</span></div>
+              <div style="display:flex;flex-direction:column;gap:20px">
+                <div class="card">
+                  <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">내 작업 · 검토 대기</div></div>
+                  <div class="list">
+                    <div class="li"><span class="av2 a-h" style="background:var(--amber)">!</span><div><div class="lt">태스크 할당 기준</div><div class="lm"><span class="lid">req-ta-01</span> · 검출 2건</div></div><span class="rt"><span class="lbl amber">검토중</span></span></div>
+                    <div class="li"><span class="av2 a-h" style="background:var(--amber)">!</span><div><div class="lt">알람 복구 재할당</div><div class="lm"><span class="lid">req-ta-02</span> · 검출 1건</div></div><span class="rt"><span class="lbl amber">검토중</span></span></div>
                   </div>
-                  <div class="sugg">✎ 보완 방향: ‘가용 AMR’=IDLE·SoC≥최소값, ‘가장 가까운’=맵 경로상 최단 이동거리 / 변경 조건(SoC·자재ID·입출고지) 명시</div>
-                  <div class="rcacts"><span class="btn dark sm">해결하기</span><span class="btn ghost sm">넘어가기</span>
-                    <span class="confirm-note">확정 시 <b>v1.0.0</b> 부여</span></div>
+                </div>
+                <div class="card">
+                  <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">최근 확정 버전</div></div>
+                  <div class="list">
+                    <div class="li"><div><div class="lt">입출고지 와일드카드</div><div class="lm">한지훈 · 오늘</div></div><span class="rt tagv">🏷 v1.1.0</span></div>
+                    <div class="li"><div><div class="lt">신규 태스크 생성</div><div class="lm">한지훈 · 어제</div></div><span class="rt tagv">🏷 v1.0.1</span></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -329,74 +291,141 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>흐름</b> 요구사항 입력(내용·비고) → [분석] → 검출 결과 우측 표시</span>
-      <span class="chipspec"><b>제거</b> ‘판정: 로컬 AI’ 뱃지 · 엔진 토글(설정으로 이동)</span>
-      <span class="chipspec"><b>확정</b> 해석 확정 시 v1.0.0 부여 안내</span>
-      <span class="chipspec api">POST /api/analyze · /req/{id}/confirm</span>
+      <span class="chipspec"><b>구성</b> 인사 + 통계 4 + 활동 피드 + 내 작업 + 최근 버전</span>
+      <span class="chipspec"><b>벤치마킹</b> GitHub 홈 대시보드(활동 타임라인·작성자 아바타)</span>
+      <span class="chipspec"><b>이력</b> 모든 활동에 작성자·시각·버전 표기</span>
+      <span class="chipspec api">GET /dashboard · /activity</span>
     </div>
   </section>
 
-  <!-- S3 · 버전 이력 -->
+  <!-- S2 요구사항 목록 -->
+  <section class="scr">
+    <p class="kicker">화면 2 · 요구사항 섹션</p>
+    <div class="scr-head"><span class="route">/requirements</span><h2>요구사항 목록 (리스트는 여기로)</h2><span class="st done">공통</span></div>
+    <div class="stage"><div class="canvas">
+      <div class="gh">
+        <div class="hdr">
+          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
+          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
+          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+        </div>
+        <div class="body">
+          <aside class="side">
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
+          </aside>
+          <div class="main">
+            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항</h1><span class="btn prim">＋ 새 요구사항</span></div>
+            <div class="filterbar">
+              <span class="fb"><svg width="15" height="15" viewBox="0 0 16 16" fill="var(--amber)" style="vertical-align:-2px"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/></svg> 검토중 6</span>
+              <span class="fb on">✓ 확정 18</span>
+              <span class="fsearch">🔍 is:confirmed author:한지훈 …</span>
+              <span class="fb" style="border-right:none">정렬 ▾</span>
+            </div>
+            <div style="height:14px"></div>
+            <div class="isslist">
+              <div class="iss">
+                <span class="ico rev"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm9-3v4H7V5Zm0 5v1H7v-1Z"/></svg></span>
+                <div><div class="it">태스크 할당 기준</div><div class="im"><span class="mid">req-ta-01</span> · <span class="lbl purple" style="padding:1px 8px">태스크</span> · <span style="color:var(--amber)">검토중 · 검출 2건</span> · 2일 전 열림</div></div>
+                <div class="rcol"><span class="tagv" style="color:var(--fgf)">미확정</span></div>
+              </div>
+              <div class="iss">
+                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
+                <div><div class="it">신규 태스크 생성</div><div class="im"><span class="mid">req-tf-01</span> · <span class="lbl purple" style="padding:1px 8px">태스크 전개</span> · 확정: <b style="color:var(--fg)">한지훈</b> · 어제 · 산출물 4</div></div>
+                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.0.1</span></div>
+              </div>
+              <div class="iss">
+                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
+                <div><div class="it">입출고지 와일드카드</div><div class="im"><span class="mid">req-mp-01</span> · <span class="lbl purple" style="padding:1px 8px">맵</span> · 확정: <b style="color:var(--fg)">한지훈</b> · 오늘 · 산출물 3</div></div>
+                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.1.0</span></div>
+              </div>
+              <div class="iss">
+                <span class="ico open"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg></span>
+                <div><div class="it">진행상황 보고 항목</div><div class="im"><span class="mid">req-tf-02</span> · <span class="lbl purple" style="padding:1px 8px">태스크 전개</span> · 확정: <b style="color:var(--fg)">김도현</b> · 3일 전 · 산출물 2</div></div>
+                <div class="rcol"><span class="lbl green" style="padding:1px 9px">확정</span><span class="tagv">🏷 v1.0.0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow">
+      <span class="chipspec"><b>중복 해소</b> 요구사항 리스트는 이 섹션에만 (좌측 nav는 섹션)</span>
+      <span class="chipspec"><b>벤치마킹</b> GitHub Issues 리스트(상태 아이콘·라벨·작성자·필터)</span>
+      <span class="chipspec"><b>작성자</b> 각 행에 “확정: 한지훈” 표기</span>
+      <span class="chipspec api">GET /requirements?state=&author=</span>
+    </div>
+  </section>
+
+  <!-- S3 버전 이력 -->
   <section class="scr">
     <p class="kicker">화면 3 · 버전 이력(탭)</p>
-    <div class="scr-head"><span class="route">/req/req-tf-01 · 버전 이력</span><h2>버전 이력 — 확정본 버전 관리</h2><span class="st newx">신규</span></div>
+    <div class="scr-head"><span class="route">/requirements/req-tf-01/versions</span><h2>버전 이력 — 커밋처럼 쌓인다</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
-      <div class="ui">
-        <div class="top">
-          <div class="logo"><span class="mk">RE</span>요구사항 엔지니어링</div>
-          <div class="proj">VCS · 태스크 할당 개선 <span class="car">▾</span></div>
-          <span class="sp"></span>
-          <div class="search">🔍 요구사항 검색…</div>
-          <div class="new">＋ 새 요구사항</div>
-          <div class="avatar">한</div>
+      <div class="gh">
+        <div class="hdr">
+          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
+          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
+          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
         </div>
-        <div class="mainrow">
-          <aside class="rl">
-            <div class="rlh"><div class="tt"><b>요구사항</b><span class="c">24</span></div>
-              <div class="filters"><span>전체</span><span>검토중 6</span><span class="on">확정 18</span></div></div>
-            <div class="rsearch">🔍 이름·ID로 찾기</div>
-            <div class="rlist">
-              <div class="ri on"><div class="rr1"><span class="rid">req-tf-01</span><span class="ver">v1.0.1</span></div><div class="rt">신규 태스크 생성</div><div class="rs"><span class="dot g"></span>확정 · 산출물 4</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-mp-01</span><span class="ver">v1.1.0</span></div><div class="rt">입출고지 와일드카드</div><div class="rs"><span class="dot g"></span>확정 · 산출물 3</div></div>
-              <div class="ri"><div class="rr1"><span class="rid">req-tf-02</span><span class="ver">v1.0.0</span></div><div class="rt">진행상황 보고 항목</div><div class="rs"><span class="dot g"></span>확정 · 산출물 2</div></div>
-            </div>
+        <div class="body">
+          <aside class="side">
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Z"/></svg>요구사항<span class="ct">24</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
           </aside>
-          <div class="mc">
-            <div class="mh"><span class="mid">req-tf-01</span><h1>신규 태스크 생성</h1><span class="stpill cfm">확정</span><span class="verbig">v1.0.1</span></div>
-            <div class="tabs"><a>검토</a><a>산출물 도출 <span class="mini">4</span></a><a>추적성</a><a class="on">버전 이력 <span class="mini">3</span></a></div>
-            <div class="vsplit">
-              <!-- version rail -->
-              <div class="vrail">
-                <div class="vnode cur on">
-                  <div class="vn1"><span class="vtag">v1.0.1</span><span class="vchip latest">현재</span></div>
-                  <div class="vmeta"><b>한지훈</b> · 2026-08-04 14:30</div>
-                  <div class="vsum">‘약속된 형식’을 인터페이스 명세서 v1.2 기준으로 명확화 (문구 보완)</div>
+          <div class="main">
+            <div class="crumb"><b>요구사항</b> / req-tf-01</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">신규 태스크 생성</h1><span class="lbl green" style="padding:2px 11px">확정</span><span class="tagv">🏷 v1.0.1</span></div>
+            <div class="rtabs">
+              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>검토</a>
+              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">4</span></a>
+              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
+              <a class="on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 4.5a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Zm.75-4a3.25 3.25 0 0 1 .5 6.462V10.5a2.75 2.75 0 0 1-2.75 2.75H8.185a3.251 3.251 0 1 1 0-1.5h2.065c.69 0 1.25-.56 1.25-1.25V6.962A3.25 3.25 0 0 1 12.5.5Z"/></svg>버전 이력<span class="ct">3</span></a>
+            </div>
+            <div class="vwrap">
+              <div class="vday">📌 3개 버전 · 확정할 때마다 새 버전이 커밋처럼 기록됩니다</div>
+              <div class="commits">
+                <div class="cm">
+                  <span class="av2 a-h">한</span>
+                  <div class="cmain"><div class="ctitle">‘약속된 형식’을 인터페이스 명세서 v1.2 기준으로 명확화</div>
+                    <div class="cmeta"><b>한지훈</b>님이 확정 · 2026-08-04 14:30 · 사유: 고객 협의</div></div>
+                  <div class="cright"><span class="kind patch">PATCH</span><span class="verpill cur">v1.0.1</span></div>
                 </div>
-                <div class="vnode">
-                  <div class="vn1"><span class="vtag">v1.0.0</span><span class="vchip minor">최초 확정</span></div>
-                  <div class="vmeta"><b>한지훈</b> · 2026-08-02 10:15</div>
-                  <div class="vsum">‘복수 태스크 허용 여부’ = 동일 자재 ID 최대 1건으로 해석 확정</div>
+                <div class="cm">
+                  <span class="av2 a-h">한</span>
+                  <div class="cmain"><div class="ctitle">‘복수 태스크 허용 여부’ = 동일 자재 ID 최대 1건으로 해석 확정</div>
+                    <div class="cmeta"><b>한지훈</b>님이 확정 · 2026-08-02 10:15 · 최초 확정</div></div>
+                  <div class="cright"><span class="kind minor">MINOR</span><span class="verpill old">v1.0.0</span></div>
                 </div>
-                <div class="vnode" style="opacity:.75">
-                  <div class="vn1"><span class="vtag" style="color:var(--g500)">draft</span><span class="vchip patch">검출 전</span></div>
-                  <div class="vmeta">고객 원문 접수 · 2026-08-01</div>
-                  <div class="vsum">삼성전자 요구사항 명세서 원문 (미검토)</div>
+                <div class="cm" style="opacity:.72">
+                  <span class="av2" style="background:var(--fgf)">·</span>
+                  <div class="cmain"><div class="ctitle">삼성전자 요구사항 명세서 원문 접수</div>
+                    <div class="cmeta">시스템 · 2026-08-01 · 검토 전 원문</div></div>
+                  <div class="cright"><span class="verpill old">draft</span></div>
                 </div>
               </div>
-              <!-- version detail -->
-              <div class="card vdetail">
-                <div class="vdh"><span class="big">v1.0.1</span><span class="vchip minor" style="margin-left:0">PATCH · 문구 보완</span></div>
-                <div class="vdmeta"><b>한지훈</b> 확정 · 2026-08-04 14:30 · 사유: <b>고객 협의(IF 명세서 버전 특정)</b></div>
-                <div class="diff">
-                  <div class="dcol b"><div class="dt">v1.0.0 (이전)</div>외부 시스템(newAMOS)으로부터 <del>약속된 형식</del>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
-                  <div class="dcol a"><div class="dt">v1.0.1 (현재)</div>외부 시스템(newAMOS)으로부터 <ins>인터페이스 명세서 v1.2 형식</ins>의 이벤트 메시지를 수신받아 신규 태스크를 생성한다.</div>
-                </div>
-                <div class="semver">
-                  <div class="mj"><b>MAJOR</b> 1.x → 2.0.0 · 요구 자체가 바뀜(상충 해소)</div>
-                  <div class="mn"><b>MINOR</b> 1.0 → 1.1.0 · 해석 확정·조건 추가(명확화)</div>
-                  <div class="pt"><b>PATCH</b> 1.0.0 → 1.0.1 · 문구·오타 다듬기(의미 불변)</div>
-                </div>
-                <div class="vacts"><span class="btn ghost sm">v1.0.0과 비교</span><span class="btn ghost sm">이 버전으로 되돌리기</span><span class="btn em sm">산출물에 반영</span></div>
+
+              <div class="diffbox">
+                <div class="diffh">🏷 <b>v1.0.0</b> → <b>v1.0.1</b> 변경 내용 · <span style="color:var(--fgm)">한지훈 · PATCH(문구 보완)</span></div>
+                <div class="diffl del"><span class="sign">−</span><span class="tx">외부 시스템(newAMOS)으로부터 <b style="background:#ffd7d5;padding:0 2px">약속된 형식</b>의 이벤트 메시지를 수신…</span></div>
+                <div class="diffl add"><span class="sign">＋</span><span class="tx">외부 시스템(newAMOS)으로부터 <b style="background:#abf2bc;padding:0 2px">인터페이스 명세서 v1.2 형식</b>의 이벤트 메시지를 수신…</span></div>
+              </div>
+              <div class="semver">
+                <div class="mj"><b>MAJOR</b> 1.x→2.0.0 · 요구 자체 변경(상충 해소)</div>
+                <div class="mn"><b>MINOR</b> 1.0→1.1.0 · 해석 확정·조건 추가</div>
+                <div class="pt"><b>PATCH</b> 1.0.0→1.0.1 · 문구·오타 다듬기</div>
               </div>
             </div>
           </div>
@@ -404,24 +433,22 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>좌</b> 버전 타임라인(현재·확정본·원문) — 시맨틱 버전 태그</span>
-      <span class="chipspec"><b>우</b> 선택 버전 diff(전/후) + 확정자·일시·사유</span>
-      <span class="chipspec"><b>규칙</b> MAJOR 요구변경 · MINOR 해석확정 · PATCH 문구</span>
-      <span class="chipspec api">GET /req/{id}/versions · /versions/{v}/diff</span>
+      <span class="chipspec"><b>모델</b> 확정=새 버전 생성 / 수정=다음 버전 (Git 커밋처럼)</span>
+      <span class="chipspec"><b>작성자</b> 버전마다 확정자·시각·사유 기록(로그인 기반)</span>
+      <span class="chipspec"><b>벤치마킹</b> GitHub 커밋 목록 + diff(±)</span>
+      <span class="chipspec api">GET /requirements/{id}/versions · /diff</span>
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 1(요구사항 검토) — 개요 · 입력→분석 · 버전 이력 3화면. 산출물 도출·추적성은 요구사항 탭 자리만 잡아 두었습니다.
-    &nbsp;<b>다음.</b> 이 IA·화면을 기준으로 → ERD(요구사항·버전·검출·산출물 테이블) → API 명세서 → 구현.</p>
+  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 대시보드 · 요구사항 목록 · 버전 이력 4화면. 산출물·추적성은 요구사항 탭 자리만 잡아 두었습니다.
+    &nbsp;<b>다음.</b> 이 IA로 → ERD(사용자·요구사항·버전·검출·산출물) → API 명세서 → 구현.</p>
 </div>
 
 <script>
   function fit(){document.querySelectorAll('.stage').forEach(function(st){
-    var c=st.querySelector('.canvas'); if(!c)return;
-    c.style.transform='scale('+(st.clientWidth/1920)+')';
-  });}
-  window.addEventListener('resize',fit); window.addEventListener('load',fit);
-  document.addEventListener('DOMContentLoaded',fit); fit();
+    var c=st.querySelector('.canvas'); if(c)c.style.transform='scale('+(st.clientWidth/1920)+')';});}
+  window.addEventListener('resize',fit);window.addEventListener('load',fit);
+  document.addEventListener('DOMContentLoaded',fit);fit();
 </script>
 </body>
 </html>
