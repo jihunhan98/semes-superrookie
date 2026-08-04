@@ -2,543 +2,449 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>요구사항 엔지니어링 — 기능 2 UI 설계 (산출물 도출)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>요구사항 엔지니어링 — 기능 2 UI 설계 (Jira 스타일)</title>
 <style>
   :root{
-    --bg:#f6f8fa;--surface:#fff;--ink:#1f2328;--muted:#59636e;--faint:#818b98;
-    --line:#d1d9e0;--accent:#0969da;--accent-soft:#ddf4ff;--code:#f6f8fa;
-    --shadow:0 1px 0 rgba(31,35,40,.04),0 8px 24px rgba(31,35,40,.10);
-    --frame-shadow:0 8px 24px rgba(31,35,40,.12),0 40px 80px rgba(31,35,40,.16);
+    --bg:#f7f8f9;--surface:#fff;--ink:#172b4d;--sub:#44546f;--faint:#626f86;
+    --line:#dfe1e6;--line2:#ebecf0;--accent:#0c66e4;--accent-soft:#e9f2ff;
+    --purple:#6e5dc6;--purple-soft:#eae6ff;--green:#22a06b;--sub-blue:#4688ec;
+    --lz-todo-bg:#dcdfe4;--lz-todo-fg:#44546f;--lz-prog-bg:#e9f2ff;--lz-prog-fg:#0c66e4;--lz-done-bg:#dcfff1;--lz-done-fg:#216e4e;
+    --shadow:0 1px 1px rgba(9,30,66,.13),0 0 1px rgba(9,30,66,.13);
+    --frame:0 8px 24px rgba(9,30,66,.16),0 40px 80px rgba(9,30,66,.14);
     --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
-    --mono:"Geist Mono",ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
   }
-  @media (prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;
-    --line:#30363d;--accent:#4493f8;--accent-soft:#388bfd26;--code:#161b22;
-    --shadow:0 0 0 1px rgba(0,0,0,.3),0 8px 24px rgba(1,4,9,.6);--frame-shadow:0 8px 24px rgba(1,4,9,.7),0 40px 80px rgba(1,4,9,.8);}}
-  :root[data-theme="light"]{--bg:#f6f8fa;--surface:#fff;--ink:#1f2328;--muted:#59636e;--faint:#818b98;--line:#d1d9e0;--accent:#0969da;--accent-soft:#ddf4ff;--code:#f6f8fa;--shadow:0 1px 0 rgba(31,35,40,.04),0 8px 24px rgba(31,35,40,.10);--frame-shadow:0 8px 24px rgba(31,35,40,.12),0 40px 80px rgba(31,35,40,.16);}
-  :root[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--ink:#e6edf3;--muted:#9198a1;--faint:#6e7681;--line:#30363d;--accent:#4493f8;--accent-soft:#388bfd26;--code:#161b22;--shadow:0 0 0 1px rgba(0,0,0,.3),0 8px 24px rgba(1,4,9,.6);--frame-shadow:0 8px 24px rgba(1,4,9,.7),0 40px 80px rgba(1,4,9,.8);}
+  @media (prefers-color-scheme:dark){:root{--bg:#1d2125;--surface:#22272b;--ink:#c7d1db;--sub:#9fadbc;--faint:#8c9bab;
+    --line:#2c333a;--line2:#282e33;--accent:#579dff;--accent-soft:#1c2b41;--purple:#9f8fef;--purple-soft:#242640;--green:#7ee2b8;
+    --lz-todo-bg:#2c333a;--lz-todo-fg:#9fadbc;--lz-prog-bg:#1c2b41;--lz-prog-fg:#8fb8f6;--lz-done-bg:#1c3329;--lz-done-fg:#7ee2b8;
+    --shadow:0 1px 1px rgba(0,0,0,.4);--frame:0 8px 24px rgba(0,0,0,.5),0 40px 80px rgba(0,0,0,.55);}}
+  :root[data-theme="light"]{--bg:#f7f8f9;--surface:#fff;--ink:#172b4d;--sub:#44546f;--faint:#626f86;--line:#dfe1e6;--line2:#ebecf0;--accent:#0c66e4;--accent-soft:#e9f2ff;--purple:#6e5dc6;--purple-soft:#eae6ff;--green:#22a06b;--lz-todo-bg:#dcdfe4;--lz-todo-fg:#44546f;--lz-prog-bg:#e9f2ff;--lz-prog-fg:#0c66e4;--lz-done-bg:#dcfff1;--lz-done-fg:#216e4e;--shadow:0 1px 1px rgba(9,30,66,.13),0 0 1px rgba(9,30,66,.13);}
+  :root[data-theme="dark"]{--bg:#1d2125;--surface:#22272b;--ink:#c7d1db;--sub:#9fadbc;--faint:#8c9bab;--line:#2c333a;--line2:#282e33;--accent:#579dff;--accent-soft:#1c2b41;--purple:#9f8fef;--purple-soft:#242640;--green:#7ee2b8;--lz-todo-bg:#2c333a;--lz-todo-fg:#9fadbc;--lz-prog-bg:#1c2b41;--lz-prog-fg:#8fb8f6;--lz-done-bg:#1c3329;--lz-done-fg:#7ee2b8;--shadow:0 1px 1px rgba(0,0,0,.4);}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:1200px;margin:0 auto;padding:44px 20px 90px;}
+  .wrap{max-width:1240px;margin:0 auto;padding:44px 20px 90px;}
   .eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;color:var(--accent);text-transform:uppercase;margin:0 0 10px;}
-  h1.page{font-size:clamp(26px,4vw,37px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;}
-  .lede{font-size:15.5px;color:var(--muted);max-width:70ch;margin:0;}
+  h1.page{font-size:clamp(26px,4vw,37px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;}
+  .lede{font-size:15.5px;color:var(--sub);max-width:74ch;margin:0;}
+  .lede b{color:var(--ink);}
   .metarow{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
-  .tag{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);}
-  .tag.on{background:#dafbe1;color:#1a7f37;border-color:transparent;} @media(prefers-color-scheme:dark){.tag.on{background:#12261e;color:#3fb950;}}
+  .tag{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--sub);}
+  .tag.on{background:var(--purple-soft);color:var(--purple);border-color:transparent;}
   .ia{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);}
   .ia .t{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;}
   .ia .row{display:flex;gap:16px;flex-wrap:wrap;}
-  .ia .col{flex:1;min-width:220px;}
+  .ia .col{flex:1;min-width:240px;}
   .ia .col h4{margin:0 0 5px;font-size:13.5px;font-weight:800;display:flex;gap:8px;align-items:center;}
   .ia .col h4 .b{width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:800;}
-  .ia .col p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;} .ia .col p b{color:var(--ink);}
+  .ia .col p{margin:0;font-size:12.5px;color:var(--sub);} .ia .col p b{color:var(--ink);}
   section.scr{margin-top:54px;}
   .kicker{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;}
   .kicker::after{content:"";flex:1;height:1px;background:var(--line);}
   .scr-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;}
   .scr-head .route{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:8px;}
   .scr-head h2{font-size:21px;font-weight:840;margin:0;}
-  .scr-head .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;}
-  .st.done{background:#dafbe1;color:#1a7f37;} .st.newx{background:var(--code);color:var(--faint);border:1px solid var(--line);}
-  @media(prefers-color-scheme:dark){.st.done{background:#12261e;color:#3fb950;}}
-  .stage{width:100%;aspect-ratio:1920/1080;overflow:hidden;border-radius:12px;box-shadow:var(--frame-shadow);border:1px solid var(--line);background:#fff;}
-  .canvas{width:1920px;height:1080px;transform-origin:top left;}
-  .specrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
-  .chipspec{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 13px;}
-  .chipspec b{color:var(--ink);font-weight:700;} .chipspec .api{font-family:var(--mono);font-size:11px;color:var(--accent);}
-  .foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;} .foot b{color:var(--muted);}
+  .scr-head .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple);}
+  .stage{position:relative;width:100%;aspect-ratio:1920/1080;border-radius:14px;overflow:hidden;box-shadow:var(--frame);border:1px solid var(--line);background:#fff;}
+  @media(prefers-color-scheme:dark){.stage{background:#1d2125;}}
+  .canvas{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left;}
+  .specrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .chipspec{font-size:12px;font-weight:600;color:var(--sub);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 11px;}
+  .chipspec b{color:var(--ink);font-weight:800;}
+  .chipspec.api{font-family:var(--mono);color:var(--accent);background:var(--accent-soft);border-color:transparent;}
+  .foot{margin-top:56px;font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding-top:20px;} .foot b{color:var(--ink);}
 
-  /* ================= GitHub / Primer app ================= */
-  .gh{--cv:#fff;--cvs:#f6f8fa;--cvi:#eef1f4;--bd:#d1d9e0;--bdm:#d8dee4;--fg:#1f2328;--fgm:#59636e;--fgf:#818b98;
-    --blue:#0969da;--blue-s:#ddf4ff;--green:#1a7f37;--green-e:#1f883d;--green-s:#dafbe1;--purple:#8250df;--purple-s:#fbefff;
-    --amber:#9a6700;--amber-s:#fff8c5;--red:#cf222e;--red-s:#ffebe9;--hdr:#24292f;
-    width:1920px;height:1080px;background:var(--cvs);color:var(--fg);font-size:15px;display:flex;flex-direction:column;}
-  .gh *{box-sizing:border-box;}
-  .gh a{color:inherit;text-decoration:none;}
-  /* header (dark) */
-  .gh .hdr{height:62px;flex:0 0 62px;background:var(--hdr);display:flex;align-items:center;gap:16px;padding:0 22px;color:#fff;}
-  .gh .hdr .burger{color:#c9d1d9;font-size:18px;}
-  .gh .hdr .mk{width:32px;height:32px;border-radius:8px;background:#fff;color:#24292f;display:grid;place-items:center;font-weight:800;font-size:13px;}
-  .gh .hdr .brand{font-weight:700;font-size:15px;color:#fff;}
-  .gh .hdr .brand .slash{color:#8b949e;margin:0 7px;font-weight:400;} .gh .hdr .brand .proj{color:#c9d1d9;font-weight:600;}
-  .gh .hdr .sp{flex:1;}
-  .gh .hdr .search{width:360px;background:#161b22;border:1px solid #444c56;border-radius:8px;padding:7px 12px;color:#8b949e;font-size:13px;display:flex;align-items:center;gap:8px;}
-  .gh .hdr .search .sl{margin-left:auto;border:1px solid #444c56;border-radius:5px;padding:0 6px;font-size:11px;}
-  .gh .hdr .ico{width:32px;height:32px;border:1px solid #444c56;border-radius:8px;display:grid;place-items:center;color:#c9d1d9;}
-  .gh .hdr .av{width:32px;height:32px;border-radius:50%;background:#388bfd;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;}
-  .gh .body{flex:1;display:flex;min-height:0;}
-  /* left nav */
-  .gh .side{width:300px;flex:0 0 300px;background:var(--cv);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
-  .gh .side .pj{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;margin-bottom:10px;}
-  .gh .side .pj .pi{width:26px;height:26px;border-radius:6px;background:var(--blue-s);color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:12px;}
-  .gh .side .pj .pn{font-size:13.5px;font-weight:700;} .gh .side .pj .pn small{display:block;color:var(--fgf);font-weight:500;font-size:11px;}
-  .gh .side .pj .car{margin-left:auto;color:var(--fgf);}
-  .gh .side a.nav{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:8px;font-size:14px;font-weight:500;color:var(--fg);}
-  .gh .side a.nav svg{width:17px;height:17px;color:var(--fgm);}
-  .gh .side a.nav .ct{margin-left:auto;font-size:12px;color:var(--fgm);background:var(--cvi);border-radius:999px;padding:1px 9px;font-weight:600;}
-  .gh .side a.nav:hover{background:var(--cvs);}
-  .gh .side a.nav.on{background:var(--cvi);font-weight:700;position:relative;}
-  .gh .side a.nav.on::before{content:"";position:absolute;left:-12px;top:7px;bottom:7px;width:4px;border-radius:3px;background:var(--blue);}
-  .gh .side a.nav.on svg{color:var(--fg);}
-  .gh .side .nl{font-size:11px;font-weight:700;color:var(--fgf);text-transform:uppercase;letter-spacing:.05em;padding:12px 10px 4px;}
-  /* main */
-  .gh .main{flex:1;min-width:0;overflow:auto;padding:26px 32px;}
-  .gh .btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;font-size:14px;font-weight:600;padding:8px 16px;border:1px solid var(--bd);background:var(--cv);color:var(--fg);}
-  .gh .btn.prim{background:var(--green-e);border-color:rgba(31,35,40,.15);color:#fff;}
-  .gh .btn.sm{padding:6px 12px;font-size:13px;}
-  .gh .lbl{font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;border:1px solid transparent;}
-  .gh .lbl.blue{background:var(--blue-s);color:var(--blue);} .gh .lbl.green{background:var(--green-s);color:var(--green);}
-  .gh .lbl.purple{background:var(--purple-s);color:var(--purple);} .gh .lbl.amber{background:var(--amber-s);color:var(--amber);}
-  .gh .tagv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;display:inline-flex;align-items:center;gap:5px;}
-  .gh .card{background:var(--cv);border:1px solid var(--bd);border-radius:12px;}
-  .gh .av2{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;flex:0 0 26px;}
-  .gh .a-h{background:#6e40c9;} .gh .a-l{background:#1f883d;} .gh .a-k{background:#bf3989;}
-  /* dashboard */
-  .gh h1.pt{font-size:22px;font-weight:800;margin:0 0 4px;} .gh .psub{color:var(--fgm);font-size:14px;margin:0 0 20px;}
-  .gh .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
-  .gh .stat{border:1px solid var(--bd);border-radius:12px;background:var(--cv);padding:15px 18px;}
-  .gh .stat .n{font-size:27px;font-weight:800;} .gh .stat .l{font-size:12.5px;color:var(--fgm);margin-top:2px;font-weight:500;}
-  .gh .stat .d{font-size:11.5px;font-weight:700;margin-top:6px;} .gh .stat .d.up{color:var(--green);}
-  .gh .dgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;align-items:start;}
-  .gh .sec-t{font-size:14px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
-  .gh .sec-t .mono{margin-left:auto;font-size:12px;color:var(--fgm);font-weight:500;}
-  .gh .feed{padding:6px 4px;} .gh .fi{display:flex;gap:12px;padding:11px 14px;position:relative;}
-  .gh .fi:not(:last-child)::after{content:"";position:absolute;left:26px;top:40px;bottom:-6px;width:2px;background:var(--bd);}
-  .gh .fi .ftxt{font-size:13.5px;line-height:1.5;color:var(--fg);} .gh .fi .ftxt b{font-weight:700;}
-  .gh .fi .ftime{font-size:12px;color:var(--fgf);margin-top:2px;}
-  .gh .fi .fv{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--blue);}
-  .gh .list{padding:4px;} .gh .li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;}
-  .gh .li:hover{background:var(--cvs);} .gh .li .lt{font-size:13.5px;font-weight:600;} .gh .li .lm{font-size:12px;color:var(--fgm);}
-  .gh .li .lid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);}
-  .gh .li .rt{margin-left:auto;}
-  .gh .heat{display:flex;gap:3px;margin-top:6px;} .gh .heat .wk{display:flex;flex-direction:column;gap:3px;}
-  .gh .heat i{width:12px;height:12px;border-radius:3px;background:#ebedf0;display:block;}
-  .gh .heat i.l1{background:#9be9a8;} .gh .heat i.l2{background:#40c463;} .gh .heat i.l3{background:#30a14e;} .gh .heat i.l4{background:#216e39;}
-  /* requirement list (issues style) */
-  .gh .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .gh .filterbar{display:flex;align-items:center;gap:0;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--cv);margin-bottom:0;}
-  .gh .filterbar .fb{padding:9px 16px;font-size:13.5px;font-weight:600;color:var(--fgm);border-right:1px solid var(--bd);}
-  .gh .filterbar .fb.on{color:var(--fg);font-weight:700;background:var(--cvs);}
-  .gh .filterbar .fsearch{flex:1;padding:9px 14px;color:var(--fgf);font-size:13.5px;}
-  .gh .isslist{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--cv);}
-  .gh .isshead{background:var(--cvs);border-bottom:1px solid var(--bd);padding:10px 16px;font-size:13px;font-weight:600;color:var(--fgm);display:flex;gap:18px;}
-  .gh .iss{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bdm);}
-  .gh .iss:last-child{border-bottom:none;}
-  .gh .iss .ico{margin-top:2px;} .gh .iss .ico svg{width:16px;height:16px;} .gh .iss .ico.open svg{color:var(--green);} .gh .iss .ico.rev svg{color:var(--amber);}
-  .gh .iss .it{font-size:15px;font-weight:600;} .gh .iss .it:hover{color:var(--blue);}
-  .gh .iss .im{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-  .gh .iss .im .mid{font-family:var(--mono);}
-  .gh .iss .rcol{margin-left:auto;display:flex;align-items:center;gap:14px;}
-  /* requirements list (grouped, clean) */
-  .gh .rqbar{display:flex;align-items:center;gap:10px;margin:16px 0 8px;flex-wrap:wrap;}
-  .gh .seg{display:inline-flex;background:var(--cvi);border-radius:9px;padding:3px;}
-  .gh .seg span{padding:6px 14px;font-size:13px;font-weight:600;color:var(--fgm);border-radius:7px;}
-  .gh .seg span.on{background:var(--cv);color:var(--fg);box-shadow:0 1px 2px rgba(31,35,40,.12);}
-  .gh .rqbar .srch{flex:1;min-width:180px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:8px 12px;color:var(--fgf);font-size:13.5px;}
-  .gh .rqbar .t{border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--fgm);font-weight:600;background:var(--cv);}
-  .gh .rqlist{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
-  .gh .grp+.grp{border-top:1px solid var(--bd);}
-  .gh .grph{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--cvs);font-size:13px;font-weight:700;color:var(--fgm);}
-  .gh .grph .chev{color:var(--fgf);font-size:11px;} .gh .grph .gname{color:var(--fg);}
-  .gh .grph .cnt{font-size:12px;color:var(--fgf);background:var(--cv);border:1px solid var(--bd);border-radius:999px;padding:0 9px;}
-  .gh .grph .prog{margin-left:auto;font-size:12px;color:var(--fgf);}
-  .gh .rqrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--bdm);}
-  .gh .grph+.rqrow{border-top:none;}
-  .gh .rqrow:hover{background:var(--cvs);}
-  .gh .rqrow .sdot{width:11px;height:11px;border-radius:50%;flex:0 0 11px;}
-  .gh .rqrow .rtit{font-size:14.5px;font-weight:600;color:var(--fg);}
-  .gh .rqrow .rmid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);margin-left:9px;}
-  .gh .rqrow .rt{margin-left:auto;display:flex;align-items:center;gap:16px;}
-  .gh .rqrow .rup{font-size:12px;color:var(--fgf);width:64px;text-align:right;}
-  .gh .avstack{display:flex;align-items:center;} .gh .avstack .av2{margin-left:-7px;border:2px solid var(--cv);width:28px;height:28px;flex:0 0 28px;}
-  .gh .avstack .more{margin-left:-7px;width:28px;height:28px;border-radius:50%;background:var(--cvi);color:var(--fgm);border:2px solid var(--cv);display:grid;place-items:center;font-size:11px;font-weight:700;}
-  /* version compare (git-like) */
-  .gh .cmpbar{display:flex;align-items:center;gap:12px;background:var(--cvs);border:1px solid var(--bd);border-radius:10px;padding:11px 14px;margin-bottom:8px;flex-wrap:wrap;}
-  .gh .cmpbar .lbl0{font-size:13px;font-weight:700;color:var(--fgm);}
-  .gh .cmpsel{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:6px 12px;font-size:13px;font-weight:600;}
-  .gh .cmpsel .car{color:var(--fgf);} .gh .cmpsel .tagv{padding:1px 8px;}
-  .gh .cmparr{color:var(--fgm);font-size:16px;}
-  .gh .cmpstat{margin-left:auto;font-size:13px;color:var(--fgm);} .gh .cmpstat .add{color:var(--green);font-weight:700;} .gh .cmpstat .del{color:var(--red);font-weight:700;}
-  .gh .difftoggle{display:inline-flex;border:1px solid var(--bd);border-radius:7px;overflow:hidden;} .gh .difftoggle span{padding:5px 11px;font-size:12px;font-weight:600;color:var(--fgm);} .gh .difftoggle span.on{background:var(--cvi);color:var(--fg);}
-  .gh .diff2{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:18px;}
-  .gh .diff2 .dfh{background:var(--cvs);border-bottom:1px solid var(--bd);padding:10px 14px;font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:8px;}
-  .gh .split2{display:grid;grid-template-columns:1fr 1fr;}
-  .gh .split2 .sh{font-size:11.5px;font-weight:700;color:var(--fgm);padding:6px 14px;background:var(--cvs);border-bottom:1px solid var(--bdm);}
-  .gh .split2 .sc1{border-right:1px solid var(--bd);}
-  .gh .dln{display:flex;font-family:var(--mono);font-size:13px;line-height:1.75;}
-  .gh .dln .no{width:36px;flex:0 0 36px;text-align:right;padding:1px 8px;color:var(--fgf);background:var(--cvs);border-right:1px solid var(--bdm);user-select:none;}
-  .gh .dln .lc{padding:1px 12px;flex:1;white-space:pre-wrap;word-break:break-all;}
-  .gh .dln.ctx .lc{color:var(--fg);}
-  .gh .dln.del{background:#ffebe9;} .gh .dln.del .lc{color:#82071e;} .gh .dln.del .no{background:#ffd8d3;}
-  .gh .dln.add{background:#e6ffec;} .gh .dln.add .lc{color:#0a3622;} .gh .dln.add .no{background:#ccffd8;}
-  .gh .dln.emp{background:#f6f8fa;}
-  /* version history (commits style) */
-  .gh .crumb{font-size:14px;color:var(--fgm);margin-bottom:6px;} .gh .crumb b{color:var(--blue);font-weight:600;}
-  .gh .rtabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin:16px 0 0;}
-  .gh .rtabs a{font-size:14px;font-weight:600;color:var(--fgm);padding:9px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:7px;}
-  .gh .rtabs a svg{width:16px;height:16px;color:var(--fgf);}
-  .gh .rtabs a.on{color:var(--fg);border-color:#fd8c73;} .gh .rtabs a.on svg{color:var(--fg);}
-  .gh .rtabs a .ct{font-size:11px;background:var(--cvi);border-radius:999px;padding:1px 8px;font-weight:700;}
-  .gh .vwrap{margin-top:22px;}
-  .gh .vday{font-size:13px;font-weight:700;color:var(--fgm);margin:0 0 12px 8px;position:relative;}
-  .gh .commits{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
-  .gh .cm{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--bdm);}
-  .gh .cm:last-child{border-bottom:none;}
-  .gh .cm .cmain{min-width:0;flex:1;}
-  .gh .cm .ctitle{font-size:15px;font-weight:600;} .gh .cm .ctitle:hover{color:var(--blue);}
-  .gh .cm .cmeta{font-size:12.5px;color:var(--fgm);margin-top:3px;display:flex;align-items:center;gap:7px;}
-  .gh .cm .cmeta b{color:var(--fg);font-weight:600;}
-  .gh .cm .cright{display:flex;align-items:center;gap:12px;}
-  .gh .cm .verpill{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:999px;}
-  .gh .cm .verpill.cur{background:var(--blue);color:#fff;} .gh .cm .verpill.old{background:var(--cvi);color:var(--fgm);}
-  .gh .cm .kind{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;}
-  .gh .kind.minor{background:var(--amber-s);color:var(--amber);} .gh .kind.patch{background:var(--cvi);color:var(--fgm);} .gh .kind.major{background:var(--red-s);color:var(--red);}
-  /* diff panel */
-  .gh .diffbox{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-top:18px;}
-  .gh .diffh{background:var(--cvs);border-bottom:1px solid var(--bd);padding:11px 16px;font-size:13px;color:var(--fgm);display:flex;align-items:center;gap:8px;}
-  .gh .diffh b{color:var(--fg);font-family:var(--mono);}
-  .gh .diffl{padding:10px 16px;font-family:var(--mono);font-size:13px;line-height:1.7;display:flex;gap:10px;}
-  .gh .diffl.del{background:#ffebe9;} .gh .diffl.add{background:#e6ffec;}
-  .gh .diffl .sign{color:var(--fgf);width:14px;flex:0 0 14px;} .gh .diffl.del .sign{color:var(--red);} .gh .diffl.add .sign{color:var(--green);}
-  .gh .diffl.del .tx{color:#82071e;} .gh .diffl.add .tx{color:#0a3622;}
-  .gh .semver{margin-top:16px;display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--fgm);}
-  .gh .semver b{font-family:var(--mono);} .gh .semver .mj b{color:var(--red);} .gh .semver .mn b{color:var(--amber);} .gh .semver .pt b{color:var(--fgm);}
-
-  /* login */
-  .gh.login{background:var(--cvs);align-items:center;justify-content:center;}
-  .gh .loginbox{width:340px;}
-  .gh .loginbox .lmk{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6e40c9,#0969da);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;margin:0 auto 18px;}
-  .gh .loginbox h2{text-align:center;font-size:22px;font-weight:600;margin:0 0 22px;}
-  .gh .lcard{border:1px solid var(--bd);border-radius:14px;background:var(--cv);padding:22px;}
-  .gh .lf{margin-bottom:14px;} .gh .lf label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;}
-  .gh .lf .in{border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:10px 12px;font-size:14px;color:var(--fgf);}
-  .gh .lbtn{width:100%;background:var(--green-e);color:#fff;border:1px solid rgba(31,35,40,.15);border-radius:8px;padding:11px;font-size:14px;font-weight:700;text-align:center;}
-  .gh .lsignup{border:1px solid var(--bd);border-radius:14px;background:var(--cv);padding:15px;text-align:center;font-size:13.5px;color:var(--fgm);margin-top:16px;}
-  .gh .lsignup b{color:var(--blue);font-weight:700;}
-  .gh .lfoot{text-align:center;font-size:12.5px;color:var(--fgf);margin-top:18px;}
-  /* review (AI 검토 & 수정 → 새 버전) */
-  .gh .rvbanner{display:flex;align-items:center;gap:10px;background:var(--amber-s);border:1px solid #eacb6e;border-radius:10px;padding:11px 15px;font-size:13.5px;color:var(--amber);margin-bottom:18px;}
-  .gh .rvbanner b{color:var(--fg);font-weight:700;}
-  .gh .rvbanner .verprev{margin-left:auto;font-family:var(--mono);font-weight:800;color:var(--fg);background:var(--cv);border:1px solid var(--bd);border-radius:8px;padding:3px 10px;}
-  .gh .rvsplit{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
-  .gh .rvcard{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
-  .gh .rvhead{padding:12px 16px;border-bottom:1px solid var(--bd);font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;background:var(--cvs);}
-  .gh .rvhead .rt{margin-left:auto;}
-  .gh .rvbody{padding:16px;}
-  .gh .fieldlab{font-size:11px;font-weight:800;color:var(--fgm);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
-  .gh .editbox2{border:1px solid var(--bd);border-radius:9px;padding:12px 14px;font-size:14px;line-height:1.75;color:var(--fg);}
-  .gh .editbox2.editing{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-s);}
-  .gh .editbox2 u{text-decoration:none;background:var(--amber-s);border-bottom:2px solid var(--amber);color:var(--amber);padding:0 1px;font-weight:600;}
-  .gh .editbox2 ins{text-decoration:none;background:#dafbe1;color:var(--green);font-weight:700;border-radius:3px;padding:0 3px;}
-  .gh .caret2{display:inline-block;width:2px;height:15px;background:var(--blue);vertical-align:-2px;}
-  .gh .find{border:1px solid var(--bd);border-radius:10px;padding:12px 13px;margin-bottom:10px;}
-  .gh .find .ft{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;}
-  .gh .ftype2{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;}
-  .gh .ftype2.cf{background:var(--red-s);color:var(--red);} .gh .ftype2.amb{background:var(--amber-s);color:var(--amber);}
-  .gh .find .fspan2{font-weight:700;font-size:13.5px;} .gh .find .frs2{font-size:12.5px;color:var(--fgm);}
-  .gh .find .fsug{margin-top:9px;background:var(--blue-s);border:1px dashed #79c0ff;border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--blue);display:flex;align-items:center;gap:8px;}
-  .gh .find .fsug .apply{margin-left:auto;font-weight:700;white-space:nowrap;}
-  .gh .rvcommit{margin-top:18px;border:1px solid var(--bd);border-radius:10px;background:var(--cvs);padding:13px 15px;}
-  .gh .rvcommit .commitin{margin-top:7px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:11px 13px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:8px;}
-  .gh .rvcommit .aihint{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-s);border-radius:999px;padding:2px 10px;white-space:nowrap;}
-  .gh .rvfoot{display:flex;align-items:center;gap:12px;margin-top:16px;}
-  .gh .rvfoot .note{font-size:13px;color:var(--fgm);}
-
-  /* feature 2 — 산출물 도출 */
-  .gh .derivebar{display:flex;align-items:center;gap:14px;background:var(--cvs);border:1px solid var(--bd);border-radius:12px;padding:15px 18px;margin-bottom:16px;}
-  .gh .derivebar .dt{font-size:14px;color:var(--fg);} .gh .derivebar .dt b{font-weight:700;} .gh .derivebar .dt small{color:var(--fgm);}
-  .gh .authlegend{display:flex;gap:18px;font-size:12.5px;color:var(--fgm);margin-bottom:14px;align-items:center;}
-  .gh .authlegend .d{width:9px;height:9px;border-radius:50%;display:inline-block;vertical-align:1px;margin-right:5px;}
-  .gh .artlist{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--cv);}
-  .gh .artrow{display:flex;align-items:center;gap:14px;padding:15px 18px;border-top:1px solid var(--bdm);}
-  .gh .artrow:first-child{border-top:none;}
-  .gh .artrow .aic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:16px;flex:0 0 36px;background:var(--cvi);}
-  .gh .artrow .an{font-size:15px;font-weight:700;} .gh .artrow .aid{font-family:var(--mono);font-size:11.5px;color:var(--fgf);margin-left:8px;}
-  .gh .artrow .adesc{font-size:12.5px;color:var(--fgm);margin-top:3px;}
-  .gh .artrow .rt{margin-left:auto;display:flex;align-items:center;gap:12px;}
-  .gh .authchip{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
-  .gh .authchip.ai{background:var(--blue-s);color:var(--blue);} .gh .authchip.hu{background:#fff1e5;color:#9a6700;} .gh .authchip.both{background:#dafbe1;color:var(--green);}
-  .gh .ststep{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--cvi);color:var(--fgm);}
-  .gh .ststep.draft{background:var(--blue-s);color:var(--blue);} .gh .ststep.todo{background:#fff1e5;color:#9a6700;} .gh .ststep.done{background:#dafbe1;color:var(--green);}
-  .gh .aedit{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
-  .gh .aehead{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;background:var(--cvs);font-size:14px;font-weight:700;}
-  .gh .aehead .rt{margin-left:auto;display:flex;gap:8px;align-items:center;}
-  .gh .aebody{padding:20px;}
-  .gh .sect{font-size:12px;font-weight:800;color:var(--fgm);text-transform:uppercase;letter-spacing:.04em;margin:0 0 9px;display:flex;align-items:center;gap:8px;}
-  .gh .sect .num{width:20px;height:20px;border-radius:6px;background:var(--blue-s);color:var(--blue);display:grid;place-items:center;font-size:11px;font-weight:800;}
-  .gh .sect .sm{margin-left:6px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf);}
-  .gh .frow2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-  .gh .ffield{border:1px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13.5px;line-height:1.6;color:var(--fg);}
-  .gh .ffield .fl{font-size:11px;font-weight:700;color:var(--fgm);margin-bottom:5px;}
-  .gh table.beh{width:100%;border-collapse:collapse;border:1px solid var(--bd);border-radius:10px;overflow:hidden;font-size:13px;margin-bottom:20px;}
-  .gh table.beh th{background:var(--cvs);text-align:left;padding:9px 12px;font-size:12px;font-weight:800;color:var(--fgm);border-bottom:1px solid var(--bd);}
-  .gh table.beh td{padding:9px 12px;border-bottom:1px solid var(--bdm);border-left:1px solid var(--bdm);color:var(--fg);vertical-align:top;}
-  .gh table.beh td:first-child{border-left:none;} .gh table.beh tr:last-child td{border-bottom:none;}
-  .gh table.beh .tp{font-weight:800;color:#fff;text-align:center;width:78px;}
-  .gh .tp.basic{background:var(--blue);} .gh .tp.varr{background:var(--purple);} .gh .tp.exc{background:var(--amber);}
-  .gh .tkgrp{border:1px solid var(--bd);border-radius:10px;margin-bottom:12px;overflow:hidden;}
-  .gh .tkgh{background:var(--cvs);padding:9px 14px;font-size:12.5px;font-weight:800;color:var(--purple);border-bottom:1px solid var(--bd);}
-  .gh .tkitem{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bdm);}
-  .gh .tkitem:last-child{border-bottom:none;}
-  .gh .tkitem .tkn{font-weight:700;font-size:13.5px;flex:0 0 120px;display:flex;align-items:center;gap:7px;}
-  .gh .tkitem .tkdot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
-  .gh .tkitem .tkv{flex:1;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--fg);background:var(--cv);}
-  .gh .tkitem .tkv.human{background:#fff9f0;border-color:#f0d9a8;color:var(--fgm);font-style:italic;}
-  .gh .agroup{margin-bottom:18px;} .gh .agh{font-size:13px;font-weight:700;color:var(--fgm);padding:8px 4px;display:flex;align-items:center;gap:8px;}
-  .gh .agh .rid{font-family:var(--mono);color:var(--blue);} .gh .agh .cnt{font-size:11px;background:var(--cvi);border-radius:999px;padding:1px 8px;color:var(--fgm);}
-  .gh .arow2{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--bd);border-top:none;background:var(--cv);}
-  .gh .agroup .arow2:first-of-type{border-top:1px solid var(--bd);border-radius:10px 10px 0 0;} .gh .agroup .arow2:last-of-type{border-radius:0 0 10px 10px;}
-  .gh .arow2 .atype{font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;background:var(--cvi);color:var(--fgm);}
-  .gh .arow2 .anm{font-size:14px;font-weight:600;} .gh .arow2 .aid2{font-family:var(--mono);font-size:11.5px;color:var(--fgf);}
-  .gh .arow2 .rt{margin-left:auto;display:flex;align-items:center;gap:12px;}
-  .gh .modx{font-size:11.5px;color:var(--fgm);font-family:var(--mono);}
-  /* 개발 이슈 그룹(부모) → 4종(자식) */
-  .gh .issgrp{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px;background:var(--cv);}
-  .gh .issh{display:flex;align-items:center;gap:11px;padding:13px 16px;background:#f5f3ff;border-bottom:1px solid #e9e5f7;}
-  .gh .issh .ic2{width:30px;height:30px;border-radius:8px;background:#8b5cf6;color:#fff;display:grid;place-items:center;font-size:15px;flex:0 0 30px;}
-  .gh .issh .tkl{font-size:11px;font-weight:800;color:#6d28d9;background:#fff;border:1px solid #ddd6fe;border-radius:6px;padding:2px 8px;}
-  .gh .issh .iid{font-family:var(--mono);font-size:12.5px;font-weight:800;color:#3730a3;}
-  .gh .issh .inm{font-size:14.5px;font-weight:800;color:#111827;}
-  .gh .issh .rt{margin-left:auto;display:flex;align-items:center;gap:10px;}
-  .gh .issh .ist{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;}
-  .gh .issh .ist.dev{background:#dbeafe;color:#1d4ed8;} .gh .issh .ist.wait{background:var(--cvi);color:var(--fgm);}
-  .gh .subart{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 22px;border-top:1px solid var(--bdm);}
-  .gh .subart:first-of-type{border-top:none;}
-  .gh .subart .saic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex:0 0 30px;background:var(--cvi);}
-  .gh .subart .san{font-size:14px;font-weight:700;} .gh .subart .sadesc{font-size:12px;color:var(--fgm);margin-top:2px;}
-  .gh .subart .rt{margin-left:auto;display:flex;align-items:center;gap:10px;}
-  .gh .morex{text-align:center;color:var(--fgf);font-size:13px;font-weight:700;padding:12px;border:1px dashed var(--bd);border-radius:12px;}
-
+  /* ============ Jira app shell (inside .canvas) ============ */
+  .jira{width:1920px;height:1080px;background:var(--bg);color:var(--ink);font-family:var(--font);display:flex;flex-direction:column;}
+  .jira *{box-sizing:border-box;}
+  /* top nav */
+  .jtop{height:56px;flex:0 0 56px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 20px;}
+  .jtop .apps{width:24px;height:24px;color:var(--faint);font-size:20px;line-height:1;}
+  .jtop .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;}
+  .jtop .logo .mk{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0c66e4,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:15px;}
+  .jtop .tnav{display:flex;gap:4px;margin-left:8px;}
+  .jtop .tnav a{font-size:14px;font-weight:600;color:var(--sub);padding:8px 10px;border-radius:6px;}
+  .jtop .tnav a.on{color:var(--accent);}
+  .jtop .create{margin-left:6px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;border:0;border-radius:6px;padding:8px 14px;}
+  .jtop .search{margin-left:auto;width:280px;height:36px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--faint);font-size:13px;background:var(--surface);}
+  .jtop .ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22a06b,#0c66e4);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .jbody{flex:1;display:flex;min-height:0;}
+  /* project left nav */
+  .jnav{width:256px;flex:0 0 256px;background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;overflow:auto;}
+  .jnav .prj{display:flex;align-items:center;gap:11px;padding:6px 8px 14px;border-bottom:1px solid var(--line2);margin-bottom:10px;}
+  .jnav .prj .pi{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,#8b5cf6,#0c66e4);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .jnav .prj .pn{font-weight:800;font-size:14px;line-height:1.15;} .jnav .prj .ps{font-size:11.5px;color:var(--faint);}
+  .jnav .ni{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:6px;font-size:14px;font-weight:600;color:var(--sub);}
+  .jnav .ni .ic{width:18px;text-align:center;color:var(--faint);}
+  .jnav .ni.on{background:var(--accent-soft);color:var(--accent);} .jnav .ni.on .ic{color:var(--accent);}
+  .jnav .sec{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px;}
+  /* main scroll */
+  .jmain{flex:1;overflow:auto;background:var(--bg);}
+  .jmpad{max-width:1400px;padding:22px 34px 40px;}
+  .jcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);margin-bottom:14px;}
+  .jcrumb .it{display:inline-flex;align-items:center;gap:6px;}
+  .jcrumb .sep{color:var(--faint);}
+  .jkey{font-family:var(--mono);font-weight:700;}
+  /* issue-type icons */
+  .it-epic,.it-story,.it-sub,.it-bug{width:18px;height:18px;border-radius:4px;display:inline-grid;place-items:center;font-size:12px;color:#fff;flex:0 0 auto;}
+  .it-epic{background:#8777d9;} .it-story{background:#4bade8;} .it-sub{background:#4688ec;} .it-bug{background:#e5493a;}
+  /* issue header */
+  .ihd{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+  .ihd h1{font-size:26px;font-weight:800;margin:0;line-height:1.25;}
+  .ihd .ek{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--sub);margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+  .iacts{display:flex;gap:8px;margin:6px 0 20px;flex-wrap:wrap;}
+  .jbtn{font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;}
+  .jbtn.prim{background:var(--accent);color:#fff;border-color:transparent;}
+  .jbtn.ai{background:var(--purple);color:#fff;border-color:transparent;}
+  /* lozenges */
+  .lz{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:5px;}
+  .lz.todo{background:var(--lz-todo-bg);color:var(--lz-todo-fg);}
+  .lz.prog{background:var(--lz-prog-bg);color:var(--lz-prog-fg);}
+  .lz.done{background:var(--lz-done-bg);color:var(--lz-done-fg);}
+  /* 2-col grid: content + details sidebar */
+  .jgrid{display:grid;grid-template-columns:1fr 360px;gap:26px;align-items:start;}
+  .jcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;}
+  .fldlbl{font-size:13px;font-weight:800;color:var(--ink);margin:22px 0 8px;display:flex;align-items:center;gap:8px;}
+  .fldlbl:first-child{margin-top:0;}
+  .aitag{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:#fff;background:var(--purple);border-radius:4px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;}
+  .humtag{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--sub);background:var(--lz-todo-bg);border-radius:4px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;}
+  .descbox{border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.5px;color:var(--ink);line-height:1.6;background:var(--surface);}
+  .descbox.ai{border-left:3px solid var(--purple);}
+  .descbox .muted{color:var(--sub);}
+  .human{border:1.5px dashed var(--line);border-radius:8px;padding:15px;background:repeating-linear-gradient(-45deg,transparent,transparent 9px,rgba(101,111,133,.05) 9px,rgba(101,111,133,.05) 18px);color:var(--faint);font-size:13px;display:flex;align-items:center;gap:10px;}
+  .human .pen{font-size:18px;}
+  .catlbl{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:18px 0 8px;padding-top:16px;border-top:1px dashed var(--line);}
+  .catlbl:first-child{border-top:0;padding-top:0;margin-top:0;}
+  /* child issues */
+  .childwrap{margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .childhd{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--line);font-size:13px;font-weight:800;}
+  .prog{margin-left:auto;display:flex;align-items:center;gap:9px;font-weight:700;font-size:12px;color:var(--sub);}
+  .prbar{width:130px;height:7px;border-radius:99px;background:var(--line);overflow:hidden;} .prbar i{display:block;height:100%;background:var(--green);border-radius:99px;}
+  .crow{display:flex;align-items:center;gap:11px;padding:11px 14px;border-top:1px solid var(--line2);font-size:13.5px;}
+  .crow:first-child{border-top:0;}
+  .crow .cnm{font-weight:600;color:var(--ink);} .crow .cnm:hover{color:var(--accent);}
+  .crow .ckey{font-family:var(--mono);font-size:12px;color:var(--faint);}
+  .crow .rt{margin-left:auto;display:flex;align-items:center;gap:9px;}
+  .crow .mod{font-size:11.5px;color:var(--sub);background:var(--line2);border-radius:5px;padding:2px 8px;font-weight:600;}
+  /* details sidebar */
+  .jside{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;}
+  .jside .sh{padding:11px 15px;border-bottom:1px solid var(--line);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .jside .sh .chev{margin-left:auto;color:var(--faint);}
+  .jsrow{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:9px 15px;font-size:13px;align-items:center;}
+  .jsrow .k{color:var(--faint);font-weight:600;}
+  .jsrow .v{color:var(--ink);font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .miniava{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#e5493a,#f59e0b);color:#fff;display:inline-grid;place-items:center;font-size:10px;font-weight:800;}
+  .miniava.b{background:linear-gradient(135deg,#22a06b,#0c66e4);}
+  .vpill{font-size:12px;font-weight:700;color:var(--sub);background:var(--line2);border-radius:99px;padding:2px 9px;}
+  /* 9-row table */
+  table.j9{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  table.j9 th{background:var(--bg);color:var(--faint);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);}
+  table.j9 td{padding:10px 12px;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--ink);line-height:1.5;}
+  table.j9 tr:last-child td{border-bottom:0;}
+  table.j9 td.typ{font-weight:800;background:var(--bg);white-space:nowrap;color:var(--sub);}
+  table.j9 .base{color:#0c66e4;} table.j9 .var{color:#946f00;} table.j9 .exc{color:#ae2e24;}
+  @media(prefers-color-scheme:dark){table.j9 .base{color:#8fb8f6;} table.j9 .var{color:#e2b203;} table.j9 .exc{color:#f87168;}}
+  .aiban{margin-top:16px;background:var(--purple-soft);border:1px solid transparent;border-radius:8px;padding:11px 15px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:10px;}
+  .aiban b{color:var(--purple);}
+  .ovbox{border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.5px;line-height:1.65;}
+  .ovbox .r{display:grid;grid-template-columns:70px 1fr;gap:10px;} .ovbox .r+.r{margin-top:7px;} .ovbox .k{color:var(--faint);font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow">UI 설계 · 기능 2 · GitHub 스타일</p>
+    <p class="eyebrow">UI 설계 · 기능 2 · Jira 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 2 (산출물 도출)</h1>
-    <p class="lede">확정된 요구사항에서 <b>개발 이슈(티켓) N개</b>를 도출하고, <b>개발 이슈마다</b> SWVOC·기능/비기능 요구사항·Detail Design을 1:1로 생성한다.
-      항목별 <b>작성 주체</b>(AI 초안/사람)를 표시해 편집·확정한다. 기능 1과 같은 디자인 시스템·앱 셸을 공유한다.</p>
-    <div class="metarow"><span class="tag">1920 × 1080</span><span class="tag on">산출물 도출</span><span class="tag">요구사항 → 개발이슈 N → 4종</span></div>
+    <p class="lede">확정된 <b>요구사항(에픽)</b>에서 <b>개발 티켓(스토리) N개</b>를 도출하고, 티켓마다 <b>SWVOC · 기능/비기능 요구사항 · Detail Design</b>을 하위 작업(Sub-task)으로 1:1 생성한다.
+      <b>AI가 도출 가능한 항목은 채워진 상태</b>로, <b>사람이 판단해야 하는 항목만 빈 칸(작성 필요)</b>으로 표시된다. 실제 Jira의 이슈 계층·이슈 화면·하위 작업 구조를 그대로 따른다.</p>
+    <div class="metarow"><span class="tag on">Jira 계층 매핑</span><span class="tag">에픽 = 요구사항</span><span class="tag">스토리 = 개발 티켓</span><span class="tag">하위 작업 = 4종 산출물</span></div>
     <div class="ia">
-      <p class="t">화면 구성</p>
+      <p class="t">Jira 이슈 계층 매핑</p>
       <div class="row">
-        <div class="col"><h4><span class="b">1</span>산출물 도출(탭)</h4><p>요구사항 → <b>개발 이슈 N개</b>, 각 개발 이슈 아래 <b>4종</b>을 작성 주체·상태와 함께.</p></div>
-        <div class="col"><h4><span class="b">2</span>기능 요구사항 편집</h4><p>개요 + <b>동작 정의 9행</b>(기본·변형·예외 × 선행·후행·시나리오) + 제약.</p></div>
-        <div class="col"><h4><span class="b">3</span>개발 이슈 편집</h4><p>3카테고리 · 항목별 <b>AI 초안/사람</b> 구분.</p></div>
-        <div class="col"><h4><span class="b">4</span>산출물 목록</h4><p>프로젝트 전체 산출물 — 근거 요구사항·모듈·상태.</p></div>
+        <div class="col"><h4><span class="b" style="background:var(--purple-soft);color:var(--purple)">E</span>에픽 = 요구사항</h4><p>확정된 요구사항 1건. 자식으로 <b>개발 티켓 N개</b>를 가진다. (예: <b>req-ta-01</b>)</p></div>
+        <div class="col"><h4><span class="b" style="background:#e3f2fd;color:#4bade8">S</span>스토리 = 개발 티켓</h4><p>요구사항을 구현 단위로 쪼갠 것. <b>1개 ~ N개</b>. 본문은 3카테고리(요청·개발·설계).</p></div>
+        <div class="col"><h4><span class="b" style="background:var(--accent-soft);color:var(--accent)">T</span>하위 작업 = 4종 산출물</h4><p>티켓마다 <b>SWVOC · 기능 · 비기능 · Detail Design</b> 각 1개. AI 도출 대상.</p></div>
       </div>
     </div>
   </header>
 
+  <!-- ============ SCREEN 1 : Epic -> Stories ============ -->
   <section class="scr">
-    <p class="kicker">화면 1 · 산출물 도출(탭)</p>
-    <div class="scr-head"><span class="route">/requirements/req-ta-01/artifacts</span><h2>산출물 도출 — 요구사항 → 개발 이슈 N개 → 각 4종</h2><span class="st newx">기능 2</span></div>
+    <p class="kicker">화면 1 · 요구사항(에픽) → 개발 티켓(스토리) 연결</p>
+    <div class="scr-head"><span class="route">/browse/AMVCS-EPIC-12</span><h2>에픽 상세 — 자식 개발 티켓 N개</h2><span class="st">기능 2</span></div>
     <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span>
+          <span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button>
+          <span class="search">🔍 이슈 검색</span>
+          <span class="ava">한</span>
         </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
-          </aside>
-          <div class="main">
-            <div class="crumb"><b>요구사항</b> / req-ta-01</div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">태스크 할당 기준</h1><span class="lbl green" style="padding:2px 11px">확정</span><span class="tagv">🏷 v1.0.0</span></div>
-            <div class="rtabs">
-              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>검토</a>
-              <a class="on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물 도출<span class="ct">3</span></a>
-              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-              <a><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 4.5a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Zm.75-4a3.25 3.25 0 0 1 .5 6.462V10.5a2.75 2.75 0 0 1-2.75 2.75H8.185a3.251 3.251 0 1 1 0-1.5h2.065c.69 0 1.25-.56 1.25-1.25V6.962A3.25 3.25 0 0 1 12.5.5Z"/></svg>버전 이력<span class="ct">1</span></a>
-            </div>
-            <div style="margin-top:22px">
-              <div class="derivebar"><span class="dt"><b>요구사항 1개 → 개발 이슈 N개, 개발 이슈마다 산출물 4종을 자동 도출합니다.</b> <small>· 마지막 도출: 방금 전 · 한지훈</small></span><span class="btn prim">↻ 재도출</span></div>
-              <div class="authlegend"><span><span class="d" style="background:var(--blue)"></span>AI 초안</span><span><span class="d" style="background:#e3873c"></span>사람</span><span><span class="d" style="background:var(--green)"></span>AI+사람</span><span style="margin-left:auto;color:var(--fgf)">개발 이슈 1개 = SWVOC · 기능 · 비기능 · Detail Design</span></div>
-              <div class="issgrp">
-                <div class="issh"><span class="ic2">🎫</span><span class="tkl">개발 이슈 · 티켓</span><span class="iid">AMVCS30-77</span><span class="inm">AMR 매칭</span><span class="rt"><span class="ist dev">개발중</span><span class="btn sm">본문 편집</span></span></div>
-                <div class="subart"><span class="saic">🗣️</span><div><div class="san">SWVOC</div><div class="sadesc">요청자 · 요청사항 · 특이사항</div></div><div class="rt"><span class="authchip hu">👤 사람 중심</span><span class="ststep todo">작성 필요</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">⚙️</span><div><div class="san">기능 요구사항</div><div class="sadesc">개요 · 동작 정의(9행) · 제약사항</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">🛡️</span><div><div class="san">비기능 요구사항</div><div class="sadesc">성능·신뢰성·가용성 등 품질 속성</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">📐</span><div><div class="san">Detail Design</div><div class="sadesc">설명 · Class · Sequence(as-is·to-be)</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-              </div>
-              <div class="issgrp">
-                <div class="issh"><span class="ic2">🎫</span><span class="tkl">개발 이슈 · 티켓</span><span class="iid">AMVCS30-78</span><span class="inm">알람 복구 재할당</span><span class="rt"><span class="ist wait">대기</span><span class="btn sm">본문 편집</span></span></div>
-                <div class="subart"><span class="saic">🗣️</span><div><div class="san">SWVOC</div><div class="sadesc">요청자 · 요청사항 · 특이사항</div></div><div class="rt"><span class="authchip hu">👤 사람 중심</span><span class="ststep todo">작성 필요</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">⚙️</span><div><div class="san">기능 요구사항</div><div class="sadesc">개요 · 동작 정의(9행) · 제약사항</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">🛡️</span><div><div class="san">비기능 요구사항</div><div class="sadesc">성능·신뢰성·가용성 등 품질 속성</div></div><div class="rt"><span class="authchip ai">🔵 AI 초안</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-                <div class="subart"><span class="saic">📐</span><div><div class="san">Detail Design</div><div class="sadesc">설명 · Class · Sequence(as-is·to-be)</div></div><div class="rt"><span class="authchip both">🤝 AI+사람</span><span class="ststep draft">AI 초안</span><span class="btn sm">편집</span></div></div>
-              </div>
-              <div class="morex">＋ 개발 이슈 #3 … (요구사항에 따라 1개 ~ N개)</div>
-            </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div>
+            <div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div>
+            <div class="ni"><span class="ic">▤</span>보드</div>
+            <div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div>
+            <div class="ni"><span class="ic">✅</span>요구사항 검토</div>
+            <div class="ni"><span class="ic">🕘</span>버전 이력</div>
           </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb">
+              <span class="it"><span class="it-epic">⚡</span>에픽</span><span class="sep">/</span>
+              <span class="jkey">AMVCS-EPIC-12</span>
+            </div>
+            <div class="ihd">
+              <span class="it-epic" style="width:26px;height:26px;font-size:16px;margin-top:4px">⚡</span>
+              <div>
+                <div class="ek">요구사항 <span class="jkey" style="color:var(--purple)">req-ta-01</span> · v1.0.0 확정</div>
+                <h1>태스크 할당 기준 — 가용 AMR 매칭 및 알람 복구 재할당</h1>
+              </div>
+            </div>
+            <div class="iacts">
+              <button class="jbtn ai">🤖 개발 티켓 재도출</button>
+              <button class="jbtn">＋ 하위 이슈 추가</button>
+              <button class="jbtn">연결</button>
+            </div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">설명 <span class="aitag">🤖 AI 요약</span></div>
+                <div class="descbox ai muted">확정된 요구사항 원문을 근거로 구현 단위를 분할했습니다. Host로부터 태스크 할당 요청을 받으면 가용한 AMR을 선별해 매칭하고, 매칭 후 알람이 발생하면 다른 AMR로 재할당한다. 아래 <b style="color:var(--ink)">3개의 개발 티켓</b>으로 도출되었습니다.</div>
 
+                <div class="childwrap" style="margin-top:22px">
+                  <div class="childhd">🎫 개발 티켓 (하위 스토리) · 3
+                    <span class="prog">1 / 3 완료 <span class="prbar"><i style="width:33%"></i></span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-story">🔖</span><span class="cnm">가용 AMR 매칭</span><span class="ckey">AMVCS30-77</span>
+                    <span class="rt"><span class="mod">jobassign</span><span class="lz prog">진행 중</span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-story">🔖</span><span class="cnm">알람 발생 시 재할당</span><span class="ckey">AMVCS30-78</span>
+                    <span class="rt"><span class="mod">jobassign</span><span class="lz todo">해야 할 일</span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-story">🔖</span><span class="cnm">우선순위 기반 정렬</span><span class="ckey">AMVCS30-79</span>
+                    <span class="rt"><span class="mod">pathsearch</span><span class="lz done">완료</span></span>
+                  </div>
+                </div>
+                <p style="font-size:12.5px;color:var(--faint);margin:10px 2px 0">＋ 요구사항 1건 → 개발 티켓 N건(여기선 3건). 각 티켓은 아래 화면 2에서 4종 산출물을 하위 작업으로 가진다.</p>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-epic">⚡</span>에픽</span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">진행 중</span></span></div>
+                <div class="jsrow"><span class="k">근거 문서</span><span class="v"><span class="jkey" style="color:var(--accent)">고객 요구서 §3.2</span></span></div>
+                <div class="jsrow"><span class="k">요구사항 버전</span><span class="v"><span class="vpill">🏷 v1.0.0</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava">한</span>한지훈</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span><span class="mod">pathsearch</span></span></div>
+                <div class="jsrow"><span class="k">하위 티켓</span><span class="v">3개 (1 완료)</span></div>
+              </div>
+            </div>
+          </div></div>
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>흐름</b> 요구사항 → 개발 이슈 N개 → 개발 이슈마다 4종</span><span class="chipspec"><b>작성 주체</b> AI 초안 / 사람 / AI+사람 칩</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
+    <div class="specrow"><span class="chipspec"><b>계층</b> 에픽(요구사항) → 스토리(개발 티켓) N개</span><span class="chipspec"><b>진행률</b> 자식 티켓 완료 기준 1/3</span><span class="chipspec api">GET /requirements/{id}/issues</span></div>
   </section>
 
+  <!-- ============ SCREEN 2 : Story detail + 4 sub-tasks ============ -->
   <section class="scr">
-    <p class="kicker">화면 2 · 산출물 편집</p>
-    <div class="scr-head"><span class="route">/artifacts/AMVCS30-80</span><h2>기능 요구사항 — 동작 정의 9행</h2><span class="st newx">기능 2</span></div>
+    <p class="kicker">화면 2 · 개발 티켓(스토리) — AI 도출 본문 + 하위 작업 4종</p>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-77</span><h2>개발 티켓 상세 — AI가 채운 곳 · 사람이 채울 곳</h2><span class="st">기능 2</span></div>
     <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span>
+          <span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button>
+          <span class="search">🔍 이슈 검색</span>
+          <span class="ava">한</span>
         </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
-          </aside>
-          <div class="main">
-            <div class="crumb"><b>요구사항</b> / req-ta-01 / <b>산출물</b></div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">기능 요구사항</h1><span class="tagv">AMVCS30-80</span><span class="lbl blue" style="padding:2px 11px">🔵 AI 초안</span></div>
-            <div style="font-size:13px;color:var(--fgm);margin-top:6px">근거 요구사항 <b style="color:var(--blue);font-family:var(--mono)">req-ta-01</b> · v1.0.0</div>
-            <div style="margin-top:20px" class="aedit">
-              <div class="aehead">🤖 AI 초안 · 직접 편집 가능<span class="rt"><span class="btn sm">↻ 재생성</span><span class="btn prim sm">확정 저장</span></span></div>
-              <div class="aebody">
-                <div class="sect"><span class="num">1</span>개요</div>
-                <div class="frow2"><div class="ffield"><div class="fl">역할</div>가용 AMR을 태스크에 매칭해 배정하는 책임</div><div class="ffield"><div class="fl">목적</div>우선순위·거리 기준으로 최적 AMR을 선택</div></div>
-                <div class="sect"><span class="num">2</span>동작 정의<span class="sm">— 동작유형(기본·변형·예외) × 선행·후행·시나리오 = 9행</span></div>
-                <table class="beh">
-                  <thead><tr><th style="width:78px">동작유형</th><th>선행조건</th><th>후행조건</th><th>시나리오</th></tr></thead>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div>
+            <div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div>
+            <div class="ni"><span class="ic">▤</span>보드</div>
+            <div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div>
+            <div class="ni"><span class="ic">✅</span>요구사항 검토</div>
+            <div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb">
+              <span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span>
+              <span class="it"><span class="it-story">🔖</span>스토리</span><span class="sep">/</span>
+              <span class="jkey">AMVCS30-77</span>
+            </div>
+            <div class="ihd">
+              <span class="it-story" style="width:26px;height:26px;font-size:15px;margin-top:4px">🔖</span>
+              <div><div class="ek">개발 티켓 · 스토리</div><h1>가용 AMR 매칭</h1></div>
+            </div>
+            <div class="iacts">
+              <button class="jbtn prim">진행 중 ▾</button>
+              <button class="jbtn ai">🤖 본문 재생성</button>
+              <button class="jbtn">＋ 하위 작업 추가</button>
+            </div>
+            <div class="jgrid">
+              <div>
+                <div class="catlbl">① 요구사항 접수</div>
+                <div class="fldlbl">현상 기록 <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>현재 시스템의 동작·문제 상황은 담당자가 관찰해 기록해야 합니다. AI가 알 수 없는 영역 — 빈 칸으로 둡니다.</div>
+                <div class="fldlbl">개선 요청 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">고객 요구서 원문에서 추출 — “Host의 태스크 할당 요청 시, 가용 상태(IDLE·배터리 충분·에러 없음)인 AMR을 선별하여 매칭하라.”</div>
+
+                <div class="catlbl">② 요구사항 개발</div>
+                <div class="fldlbl">변경 범위 <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>어떤 모듈·클래스까지 손대는지는 현재 코드 구조를 아는 담당자가 지정합니다.</div>
+                <div class="fldlbl">제약 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">요구서 정의 기반 — 매칭 응답 <b>200ms</b> 이내 / 동시 요청 시 <b>우선순위 큐</b> 순서 보장 / 가용 AMR 0대이면 <b>대기(PENDING)</b> 반환.</div>
+
+                <div class="catlbl">③ 변경점 설계</div>
+                <div class="fldlbl">변경 전 (As-Is) <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>기존 매칭 로직의 현재 구현은 담당자가 코드를 확인해 기술합니다.</div>
+                <div class="fldlbl">변경 후 (To-Be) <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">요청 수신 → 가용 AMR 필터 → 우선순위 정렬 → 최상위 매칭 → 결과 회신. (요구사항·제약을 근거로 AI가 초안 설계)</div>
+
+                <div class="fldlbl" style="margin-top:26px">하위 작업 (산출물 4종)</div>
+                <div class="childwrap">
+                  <div class="childhd">🧩 하위 작업 · 4
+                    <span class="prog">2 / 4 완료 <span class="prbar"><i style="width:50%"></i></span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-sub">🗣</span><span class="cnm">SWVOC — 할당 기준 요청 원문</span><span class="ckey">AMSWV-2163</span>
+                    <span class="rt"><span class="humtag">🖊 사람</span><span class="lz todo">해야 할 일</span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-sub">⚙</span><span class="cnm">기능 요구사항 — 가용 AMR 매칭</span><span class="ckey">AMVCS30-80</span>
+                    <span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-sub">🛡</span><span class="cnm">비기능 요구사항 — 매칭 성능·가용성</span><span class="ckey">AMVCS30-82</span>
+                    <span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span>
+                  </div>
+                  <div class="crow">
+                    <span class="it-sub">📐</span><span class="cnm">Detail Design — 매칭 시퀀스</span><span class="ckey">AMVCS30-81</span>
+                    <span class="rt"><span class="aitag">🤖 AI</span><span class="lz done">확정</span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-story">🔖</span>스토리</span></div>
+                <div class="jsrow"><span class="k">상위 항목</span><span class="v"><span class="it-epic">⚡</span><span class="jkey" style="color:var(--purple)">req-ta-01</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">진행 중</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
+                <div class="jsrow"><span class="k">스토리 포인트</span><span class="v">5</span></div>
+                <div class="jsrow"><span class="k">하위 작업</span><span class="v">4개 (2 완료)</span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">AI 3</span><span class="humtag">사람 3</span></span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>본문 3카테고리</b> 요청 접수 · 개발 · 변경점 설계</span><span class="chipspec"><b>AI 도출</b> 개선요청·제약·변경후(To-Be)</span><span class="chipspec"><b>사람 작성</b> 현상기록·변경범위·변경전(As-Is)</span><span class="chipspec"><b>하위 작업</b> SWVOC·기능·비기능·Detail Design</span></div>
+  </section>
+
+  <!-- ============ SCREEN 3 : Sub-task = 기능 요구사항 (9-row) ============ -->
+  <section class="scr">
+    <p class="kicker">화면 3 · 하위 작업 — 기능 요구사항 (동작 정의 9행, AI 도출)</p>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-80</span><h2>하위 작업 상세 — AI가 채운 기능 요구사항</h2><span class="st">기능 2</span></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span>
+          <span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button>
+          <span class="search">🔍 이슈 검색</span>
+          <span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div>
+            <div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div>
+            <div class="ni"><span class="ic">▤</span>보드</div>
+            <div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div>
+            <div class="ni"><span class="ic">✅</span>요구사항 검토</div>
+            <div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb">
+              <span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span>
+              <span class="it"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span><span class="sep">/</span>
+              <span class="it"><span class="it-sub">⚙</span>하위 작업</span><span class="sep">/</span><span class="jkey">AMVCS30-80</span>
+            </div>
+            <div class="ihd">
+              <span class="it-sub" style="width:26px;height:26px;font-size:15px;margin-top:4px">⚙</span>
+              <div><div class="ek">하위 작업 · 기능 요구사항</div><h1>가용 AMR 매칭</h1></div>
+            </div>
+            <div class="iacts">
+              <button class="jbtn prim">검토 대기 ▾</button>
+              <button class="jbtn ai">🤖 재생성</button>
+              <button class="jbtn">✔ 확정</button>
+            </div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">개요 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="ovbox">
+                  <div class="r"><span class="k">역할</span><span>Host의 태스크 할당 요청에 대해 조건을 만족하는 가용 AMR을 선별·매칭한다.</span></div>
+                  <div class="r"><span class="k">목적</span><span>할당 지연·오배정을 방지하고 우선순위에 따라 최적의 AMR을 배정한다.</span></div>
+                </div>
+                <div class="fldlbl">동작 정의 <span class="aitag">🤖 AI 도출</span> <span style="font-weight:600;color:var(--faint);font-size:12px">· 3 유형 × 3 항목 = 9행</span></div>
+                <table class="j9">
+                  <thead><tr><th style="width:88px">동작 유형</th><th>선행 조건</th><th>후행 조건</th><th>시나리오</th></tr></thead>
                   <tbody>
-                    <tr><td class="tp basic">기본</td><td>IDLE·SoC≥최소값 AMR 존재</td><td>최단거리 AMR 배정</td><td>가용 필터 → 경로 최단거리 선택 → 배정</td></tr>
-                    <tr><td class="tp varr">변형</td><td>거리 동률 AMR 2대↑</td><td>우선순위·요청순 배정</td><td>동률 → 우선순위 → 요청 순 tie-break</td></tr>
-                    <tr><td class="tp exc">예외</td><td>가용 AMR 없음</td><td>대기 큐 등록</td><td>가용 0 → 대기 → 가용 발생 시 재시도</td></tr>
+                    <tr><td class="typ base">기본</td><td>가용 AMR ≥ 1대, 요청 유효</td><td>1대 매칭·상태 BUSY 전환</td><td>요청 수신 → 가용 필터 → 우선순위 정렬 → 최상위 매칭 → 회신</td></tr>
+                    <tr><td class="typ base">기본</td><td>동일 우선순위 다수 존재</td><td>대기시간 최장 AMR 선택</td><td>정렬 → 동점 시 FIFO 규칙 적용 → 매칭</td></tr>
+                    <tr><td class="typ base">기본</td><td>요청에 목적지 좌표 포함</td><td>경로 산출 가능 AMR 매칭</td><td>가용 필터 후 pathsearch로 도달성 확인 → 매칭</td></tr>
+                    <tr><td class="typ var">변형</td><td>특정 Probe Card 전용 AMR 지정</td><td>지정 유형 AMR만 매칭</td><td>요청의 카드 타입 파싱 → 호환 AMR 하위집합 필터 → 매칭</td></tr>
+                    <tr><td class="typ var">변형</td><td>긴급(HIGH) 플래그 요청</td><td>정렬보다 우선 즉시 배정</td><td>큐 선점 → 가용 중 최근접 AMR 즉시 매칭</td></tr>
+                    <tr><td class="typ var">변형</td><td>배터리 임계 근접 AMR 포함</td><td>임계 이상만 후보 유지</td><td>가용 필터 시 배터리 ≥ 30% 조건 추가 → 매칭</td></tr>
+                    <tr><td class="typ exc">예외</td><td>가용 AMR 0대</td><td>PENDING 반환·재시도 예약</td><td>필터 결과 공집합 → 대기 등록 → 가용 변화 이벤트 구독</td></tr>
+                    <tr><td class="typ exc">예외</td><td>매칭 직후 대상 AMR 알람</td><td>매칭 취소·재할당 트리거</td><td>알람 수신 → 해당 매칭 롤백 → AMVCS30-78 재할당 호출</td></tr>
+                    <tr><td class="typ exc">예외</td><td>요청 필수 필드 누락</td><td>400 거절·오류 코드 회신</td><td>스키마 검증 실패 → 매칭 미수행 → 요청자에 오류 반환</td></tr>
                   </tbody>
                 </table>
-                <div class="sect"><span class="num">3</span>제약사항</div>
-                <div class="ffield">태스크 발생 ~ 배정 결정 지연 ≤ N초 · 대상 모듈: jobassign · pathsearch</div>
+                <div class="fldlbl">제약 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">매칭 응답 <b>200ms</b> 이내 · 동시 요청 시 <b>우선순위 큐</b> 순서 보장 · 상태 전환은 <b>원자적(atomic)</b> 처리로 이중 배정 방지.</div>
+                <div class="aiban">🤖 <b>AI 도출 — 전 항목 자동 작성.</b> 기능 요구사항은 「확정된 요구사항 + 제약」만으로 채울 수 있어 사람 입력 없이 초안이 완성됩니다. 사람은 <b>검토 후 확정</b>만 하면 됩니다.</div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-sub">⚙</span>기능 요구사항</span></div>
+                <div class="jsrow"><span class="k">상위 작업</span><span class="v"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">검토 대기</span></span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">🤖 AI 도출</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
+                <div class="jsrow"><span class="k">추적성</span><span class="v"><span class="jkey" style="color:var(--accent)">req-ta-01 ↔ FR-JA-01</span></span></div>
               </div>
             </div>
-          </div>
-
+          </div></div>
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>구성</b> 개요(역할·목적) · 동작 정의 표 · 제약사항</span><span class="chipspec"><b>동작 정의</b> 기본·변형·예외 × 선행·후행·시나리오 = 9행</span><span class="chipspec"><b>AI 초안</b> 직접 편집·재생성·확정</span></div>
+    <div class="specrow"><span class="chipspec"><b>구성</b> 개요(역할·목적) · 동작 정의 9행 · 제약</span><span class="chipspec"><b>동작 정의</b> 기본·변형·예외 × 선행·후행·시나리오</span><span class="chipspec"><b>작성 주체</b> 전 항목 AI 도출 → 사람은 확정만</span><span class="chipspec api">GET /artifacts/{id}</span></div>
   </section>
 
-  <section class="scr">
-    <p class="kicker">화면 3 · 산출물 편집</p>
-    <div class="scr-head"><span class="route">/artifacts/AMVCS30-77</span><h2>개발 이슈(티켓) — 항목별 작성 주체</h2><span class="st newx">기능 2</span></div>
-    <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
-        </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
-          </aside>
-          <div class="main">
-            <div class="crumb"><b>요구사항</b> / req-ta-01 / <b>산출물</b></div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">개발 이슈 <span style="color:var(--fgf);font-weight:600;font-size:16px">티켓</span></h1><span class="tagv">AMVCS30-77</span><span class="lbl green" style="padding:2px 11px">🤝 AI+사람</span></div>
-            <div class="authlegend" style="margin-top:12px"><span><span class="d" style="background:var(--blue)"></span>AI 초안 항목</span><span><span class="d" style="background:#e3873c"></span>사람 작성 항목(현재 시스템·판단 필요)</span></div>
-            <div style="margin-top:6px" class="aedit">
-              <div class="aehead">개발 이슈 편집<span class="rt"><span class="btn prim sm">확정 저장</span></span></div>
-              <div class="aebody">
-                <div class="tkgrp">
-                  <div class="tkgh">요구사항 접수</div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:#e3873c"></span>현상기록</span><span class="tkv human">(사람) 현재 AMR 매칭이 어떻게 동작하는지 기술 — 기존 시스템 파악 필요</span></div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:var(--blue)"></span>개선요청사항</span><span class="tkv">가용 AMR 중 경로 최단거리인 것을 선택하도록 매칭 로직 개선</span></div>
-                </div>
-                <div class="tkgrp">
-                  <div class="tkgh">요구사항 개발</div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:#e3873c"></span>변경범위</span><span class="tkv human">(사람) 영향 모듈: jobassign · pathsearch — 코드 지식 필요</span></div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:var(--blue)"></span>제약사항</span><span class="tkv">배정 결정 지연 ≤ N초, IDLE·SoC≥최소값 조건 적용</span></div>
-                </div>
-                <div class="tkgrp">
-                  <div class="tkgh">변경점 설계</div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:#e3873c"></span>변경 전</span><span class="tkv human">(사람) as-is: 가용 AMR 중 직선거리 가까운 것 선택</span></div>
-                  <div class="tkitem"><span class="tkn"><span class="tkdot" style="background:var(--blue)"></span>변경 후</span><span class="tkv">to-be: 맵 경로상 이동거리 최소인 AMR 선택</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div></div>
-    <div class="specrow"><span class="chipspec"><b>3카테고리</b> 요구사항 접수 · 개발 · 변경점 설계</span><span class="chipspec"><b>작성 주체</b> 현상기록·변경범위·변경전=사람 / 개선요청·제약·변경후=AI</span></div>
-  </section>
-
-  <section class="scr">
-    <p class="kicker">화면 4 · 산출물 섹션</p>
-    <div class="scr-head"><span class="route">/artifacts</span><h2>산출물 목록 (프로젝트 전체)</h2><span class="st newx">기능 2</span></div>
-    <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
-        </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
-          </aside>
-          <div class="main">
-            <div class="toolbar"><h1 class="pt" style="margin:0">산출물 <span style="color:var(--fgf);font-weight:600;font-size:16px">42</span></h1><span class="btn">내보내기 ▾</span></div>
-            <div class="rqbar"><div class="seg"><span class="on">전체</span><span>초안 12</span><span>확정 30</span></div><span class="srch">🔍 개발 이슈·산출물·모듈로 검색</span><span class="t">개발 이슈별 묶기 ▾</span></div>
-            <div class="agroup">
-              <div class="agh">🎫 개발 이슈 <span class="rid">AMVCS30-77</span> · AMR 매칭 · 근거 <span class="rid">req-ta-01</span> <span class="cnt">4종</span></div>
-              <div class="arow2"><span class="atype">SWVOC</span><span class="anm">할당 기준 요청 원문</span><span class="aid2">AMSWV-2163</span><span class="rt"><span class="modx">—</span><span class="ststep todo">작성 필요</span></span></div>
-              <div class="arow2"><span class="atype">기능 요구사항</span><span class="anm">가용 AMR 매칭</span><span class="aid2">AMVCS30-80</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
-              <div class="arow2"><span class="atype">비기능 요구사항</span><span class="anm">매칭 성능·가용성</span><span class="aid2">AMVCS30-82</span><span class="rt"><span class="modx">jobassign</span><span class="ststep draft">AI 초안</span></span></div>
-              <div class="arow2"><span class="atype">Detail Design</span><span class="anm">매칭 시퀀스</span><span class="aid2">AMVCS30-81</span><span class="rt"><span class="modx">pathsearch</span><span class="ststep todo">작성 필요</span></span></div>
-            </div>
-            <div class="agroup">
-              <div class="agh">🎫 개발 이슈 <span class="rid">AMVCS30-83</span> · 신규 태스크 생성 · 근거 <span class="rid">req-tf-01</span> <span class="cnt">4종</span></div>
-              <div class="arow2"><span class="atype">SWVOC</span><span class="anm">태스크 생성 요청 원문</span><span class="aid2">AMSWV-2170</span><span class="rt"><span class="modx">—</span><span class="ststep done">확정</span></span></div>
-              <div class="arow2"><span class="atype">기능 요구사항</span><span class="anm">이벤트 수신 태스크 생성</span><span class="aid2">AMVCS30-84</span><span class="rt"><span class="modx">hostinterface</span><span class="ststep done">확정</span></span></div>
-              <div class="arow2"><span class="atype">비기능 요구사항</span><span class="anm">수신 신뢰성</span><span class="aid2">AMVCS30-86</span><span class="rt"><span class="modx">hostinterface</span><span class="ststep done">확정</span></span></div>
-              <div class="arow2"><span class="atype">Detail Design</span><span class="anm">태스크 생성 시퀀스</span><span class="aid2">AMVCS30-85</span><span class="rt"><span class="modx">operation</span><span class="ststep done">확정</span></span></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div></div>
-    <div class="specrow"><span class="chipspec"><b>그룹</b> 개발 이슈별 묶기(근거 요구사항 표기) · 각 4종</span><span class="chipspec"><b>행</b> 유형·이름·ID·모듈·상태</span><span class="chipspec api">GET /projects/{id}/artifacts</span></div>
-  </section>
-
-  <p class="foot"><b>범위.</b> 기능 2(산출물 도출) — 도출 · 기능요구사항 편집 · 개발이슈 편집 · 산출물 목록 4화면. 기능 1과 앱 셸·디자인 공유.
+  <p class="foot"><b>범위.</b> 기능 2(산출물 도출) — 에픽→스토리 연결 · 개발 티켓 본문(AI/사람 구분) · 기능 요구사항 하위 작업(9행) 3화면. 실제 Jira 이슈 계층·화면·하위 작업 구조를 따름.
+    &nbsp;<b>작성 주체 원칙.</b> 「고객 요구서 + 정해진 양식」만으로 채울 수 있으면 <b>AI 도출</b>, 현재 시스템 상태·도메인 판단이 필요하면 <b>사람 작성</b>.
     &nbsp;<b>다음.</b> 기능 3(추적성) 화면 + ERD.</p>
 </div>
-
 <script>
   function fit(){document.querySelectorAll('.stage').forEach(function(st){
     var c=st.querySelector('.canvas'); if(c)c.style.transform='scale('+(st.clientWidth/1920)+')';});}
