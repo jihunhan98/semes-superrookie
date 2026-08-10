@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>요구사항 엔지니어링 — 기능 3 UI 설계 (Jira 스타일)</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f7f8f9;--surface:#fff;--ink:#172b4d;--sub:#44546f;--faint:#626f86;
+    --line:#dfe1e6;--line2:#ebecf0;--accent:#0c66e4;--accent-soft:#e9f2ff;
+    --purple:#6e5dc6;--purple-soft:#eae6ff;--green:#22a06b;--story:#4bade8;
+    --lz-todo-bg:#dcdfe4;--lz-todo-fg:#44546f;--lz-prog-bg:#e9f2ff;--lz-prog-fg:#0c66e4;--lz-done-bg:#dcfff1;--lz-done-fg:#216e4e;
+    --shadow:0 1px 1px rgba(9,30,66,.13),0 0 1px rgba(9,30,66,.13);
+    --frame:0 12px 32px rgba(9,30,66,.14),0 40px 80px rgba(9,30,66,.10);
+    --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+  /* ===== 문서(바깥) 레이아웃 ===== */
+  .top{background:var(--surface);border-bottom:1px solid var(--line);}
+  .topin{max-width:1180px;margin:0 auto;padding:26px 24px 30px;}
+  .brand{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:13px;color:var(--purple);letter-spacing:.02em;margin-bottom:16px;}
+  .brand .mk{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#6e5dc6,#0c66e4);color:#fff;display:grid;place-items:center;font-size:13px;}
+  h1.page{font-size:clamp(25px,3.4vw,34px);font-weight:850;letter-spacing:-.02em;margin:0 0 12px;}
+  .lede{font-size:15px;color:var(--sub);max-width:82ch;margin:0;}
+  .lede b{color:var(--ink);}
+  .hier{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+  .hstep{flex:1;min-width:210px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:13px 15px;position:relative;}
+  .hstep .hb{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;color:#fff;font-weight:800;margin-bottom:8px;}
+  .hstep h4{margin:0 0 3px;font-size:13.5px;font-weight:800;}
+  .hstep p{margin:0;font-size:12px;color:var(--sub);line-height:1.5;} .hstep p b{color:var(--ink);}
+  .hstep .arr{position:absolute;right:-16px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:18px;z-index:2;}
+  @media(max-width:720px){.hstep .arr{display:none;}}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:8px 24px 90px;}
+  section.scr{margin-top:52px;}
+  .kicker{display:flex;align-items:center;gap:12px;margin:0 0 15px;}
+  .kicker .n{width:26px;height:26px;border-radius:8px;background:var(--purple);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto;}
+  .kicker .kt{font-size:15px;font-weight:850;letter-spacing:-.01em;}
+  .kicker::after{content:"";flex:1;height:1px;background:var(--line);}
+  .scr-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;}
+  .scr-head .route{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:8px;}
+  .scr-head h2{font-size:19px;font-weight:820;margin:0;color:var(--sub);}
+  .stage{position:relative;width:100%;aspect-ratio:1920/1080;border-radius:14px;overflow:hidden;box-shadow:var(--frame);border:1px solid var(--line);background:#fff;}
+  .canvas{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left;}
+  .specrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .chipspec{font-size:12px;font-weight:600;color:var(--sub);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 11px;}
+  .chipspec b{color:var(--ink);font-weight:800;}
+  .chipspec.api{font-family:var(--mono);color:var(--accent);background:var(--accent-soft);border-color:transparent;}
+  .foot{margin-top:56px;font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding-top:20px;line-height:1.7;} .foot b{color:var(--ink);}
+
+  /* ============ Jira 앱 셸 ============ */
+  .jira{width:1920px;height:1080px;background:var(--bg);color:var(--ink);font-family:var(--font);display:flex;flex-direction:column;}
+  .jira *{box-sizing:border-box;}
+  .jtop{height:56px;flex:0 0 56px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 20px;}
+  .jtop .apps{width:24px;height:24px;color:var(--faint);font-size:20px;line-height:1;}
+  .jtop .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;}
+  .jtop .logo .mk{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0c66e4,#8b5cf6);color:#fff;display:grid;place-items:center;font-size:15px;}
+  .jtop .tnav{display:flex;gap:4px;margin-left:8px;}
+  .jtop .tnav a{font-size:14px;font-weight:600;color:var(--sub);padding:8px 10px;border-radius:6px;}
+  .jtop .tnav a.on{color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0;}
+  .jtop .create{margin-left:6px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;border:0;border-radius:6px;padding:8px 14px;}
+  .jtop .search{margin-left:auto;width:280px;height:36px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--faint);font-size:13px;background:var(--surface);}
+  .jtop .ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22a06b,#0c66e4);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .jbody{flex:1;display:flex;min-height:0;}
+  .jnav{width:256px;flex:0 0 256px;background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;overflow:auto;}
+  .jnav .prj{display:flex;align-items:center;gap:11px;padding:6px 8px 14px;border-bottom:1px solid var(--line2);margin-bottom:10px;}
+  .jnav .prj .pi{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,#8b5cf6,#0c66e4);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;}
+  .jnav .prj .pn{font-weight:800;font-size:14px;line-height:1.15;} .jnav .prj .ps{font-size:11.5px;color:var(--faint);}
+  .jnav .ni{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:6px;font-size:14px;font-weight:600;color:var(--sub);}
+  .jnav .ni .ic{width:18px;text-align:center;color:var(--faint);}
+  .jnav .ni.on{background:var(--accent-soft);color:var(--accent);} .jnav .ni.on .ic{color:var(--accent);}
+  .jnav .sec{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px;}
+  .jmain{flex:1;overflow:auto;background:var(--bg);}
+  .jmpad{max-width:1420px;padding:22px 34px 40px;}
+  .jcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);margin-bottom:14px;}
+  .jcrumb .it{display:inline-flex;align-items:center;gap:6px;}
+  .jcrumb .sep{color:var(--faint);}
+  .jkey{font-family:var(--mono);font-weight:700;}
+  .it-epic,.it-story,.it-sub{width:18px;height:18px;border-radius:4px;display:inline-grid;place-items:center;font-size:12px;color:#fff;flex:0 0 auto;}
+  .it-epic{background:#8777d9;} .it-story{background:#4bade8;} .it-sub{background:#4688ec;}
+  .ihd{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+  .ihd h1{font-size:25px;font-weight:800;margin:0;line-height:1.25;}
+  .ihd .ek{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--sub);margin-bottom:3px;display:flex;align-items:center;gap:7px;}
+  .iacts{display:flex;gap:8px;margin:6px 0 20px;flex-wrap:wrap;}
+  .jbtn{font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 13px;display:inline-flex;align-items:center;gap:6px;}
+  .jbtn.prim{background:var(--accent);color:#fff;border-color:transparent;}
+  .jbtn.ai{background:var(--purple);color:#fff;border-color:transparent;}
+  .lz{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:5px;}
+  .lz.todo{background:var(--lz-todo-bg);color:var(--lz-todo-fg);}
+  .lz.prog{background:var(--lz-prog-bg);color:var(--lz-prog-fg);}
+  .lz.done{background:var(--lz-done-bg);color:var(--lz-done-fg);}
+  .jgrid{display:grid;grid-template-columns:1fr 350px;gap:26px;align-items:start;}
+  .fldlbl{font-size:13px;font-weight:800;color:var(--ink);margin:22px 0 8px;display:flex;align-items:center;gap:8px;}
+  .fldlbl:first-child{margin-top:0;}
+  .aitag{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:#fff;background:var(--purple);border-radius:4px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;}
+  .humtag{font-size:10.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--sub);background:var(--lz-todo-bg);border-radius:4px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;}
+  .descbox{border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.5px;color:var(--ink);line-height:1.6;background:var(--surface);}
+  .descbox.ai{border-left:3px solid var(--purple);}
+  .human{border:1.5px dashed var(--line);border-radius:8px;padding:15px;background:repeating-linear-gradient(-45deg,transparent,transparent 9px,rgba(101,111,133,.05) 9px,rgba(101,111,133,.05) 18px);color:var(--faint);font-size:13px;display:flex;align-items:center;gap:10px;}
+  .human .pen{font-size:18px;}
+  .catlbl{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:18px 0 8px;padding-top:16px;border-top:1px dashed var(--line);}
+  .catlbl:first-child{border-top:0;padding-top:0;margin-top:0;}
+  .childwrap{margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .childhd{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--line);font-size:13px;font-weight:800;}
+  .prog{margin-left:auto;display:flex;align-items:center;gap:9px;font-weight:700;font-size:12px;color:var(--sub);}
+  .prbar{width:130px;height:7px;border-radius:99px;background:var(--line);overflow:hidden;} .prbar i{display:block;height:100%;background:var(--green);border-radius:99px;}
+  .crow{display:flex;align-items:center;gap:11px;padding:11px 14px;border-top:1px solid var(--line2);font-size:13.5px;}
+  .crow:first-child{border-top:0;}
+  .crow .cnm{font-weight:600;color:var(--ink);}
+  .crow .ckey{font-family:var(--mono);font-size:12px;color:var(--faint);}
+  .crow .rt{margin-left:auto;display:flex;align-items:center;gap:9px;}
+  .crow .mod{font-size:11.5px;color:var(--sub);background:var(--line2);border-radius:5px;padding:2px 8px;font-weight:600;}
+  .jside{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;}
+  .jside .sh{padding:11px 15px;border-bottom:1px solid var(--line);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .jside .sh .chev{margin-left:auto;color:var(--faint);}
+  .jsrow{display:grid;grid-template-columns:104px 1fr;gap:8px;padding:9px 15px;font-size:13px;align-items:center;}
+  .jsrow .k{color:var(--faint);font-weight:600;}
+  .jsrow .v{color:var(--ink);font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .miniava{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#e5493a,#f59e0b);color:#fff;display:inline-grid;place-items:center;font-size:10px;font-weight:800;}
+  .miniava.b{background:linear-gradient(135deg,#22a06b,#0c66e4);}
+  .vpill{font-size:12px;font-weight:700;color:var(--sub);background:var(--line2);border-radius:99px;padding:2px 9px;}
+
+  /* 도출 트리 (화면 1) */
+  .derivebanner{display:flex;align-items:center;gap:14px;background:var(--purple-soft);border:1px solid #d6ccf5;border-radius:10px;padding:15px 18px;margin-bottom:8px;}
+  .derivebanner .ico{width:38px;height:38px;border-radius:9px;background:var(--purple);color:#fff;display:grid;place-items:center;font-size:19px;flex:0 0 auto;}
+  .derivebanner .tt{font-size:14.5px;font-weight:800;} .derivebanner .tt b{color:var(--purple);}
+  .derivebanner .ds{font-size:12.5px;color:var(--sub);margin-top:2px;}
+  .derivebanner .cta{margin-left:auto;display:flex;gap:8px;}
+  .countrow{display:flex;gap:10px;margin:16px 0 20px;}
+  .cstat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 16px;}
+  .cstat .num{font-size:24px;font-weight:850;letter-spacing:-.02em;} .cstat .lb{font-size:12px;color:var(--faint);font-weight:700;margin-top:2px;}
+  .cstat.p .num{color:var(--purple);}
+  .tree .tnode{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;padding:9px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-bottom:9px;position:relative;}
+  .tree .tnode .jkey{color:var(--faint);}
+  .tree .tnode.ep{border-left:3px solid var(--purple);font-weight:800;font-size:15px;}
+  .tree .tnode.tk{border-left:3px solid var(--story);}
+  .tree .tnode.sb{padding:8px 13px;color:var(--sub);margin-bottom:8px;}
+  .tree .tnode .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .tree .branch{margin-left:30px;border-left:2px solid var(--line);padding-left:26px;margin-bottom:2px;}
+  .tree .branch2{margin-left:24px;border-left:2px dashed var(--line);padding-left:24px;padding-top:2px;}
+  .tree .branch .tnode>.conn,.tree .branch2 .tnode>.conn{content:"";position:absolute;top:50%;height:2px;background:var(--line);}
+  .tree .branch>.tnode>.conn{left:-27px;width:24px;}
+  .tree .branch2>.tnode>.conn{left:-25px;width:22px;background:transparent;border-top:2px dashed var(--line);}
+
+  /* 9행 → 동작유형 rowspan 그룹 표 (화면 4) */
+  table.j9{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  table.j9 th{background:var(--bg);color:var(--faint);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);}
+  table.j9 td{padding:10px 12px;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--ink);line-height:1.5;}
+  table.j9 tr:last-child td{border-bottom:0;}
+  table.j9 td.grp{width:110px;font-weight:850;font-size:15px;text-align:center;vertical-align:middle;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  table.j9 td.grp .sub{display:block;font-size:10.5px;font-weight:700;color:var(--faint);margin-top:3px;text-transform:none;letter-spacing:0;}
+  table.j9 td.grp.base{background:#e9f2ff;color:#0c66e4;} table.j9 td.grp.var{background:#fff7d6;color:#946f00;} table.j9 td.grp.exc{background:#ffecea;color:#ae2e24;}
+  .aiban{margin-top:16px;background:var(--purple-soft);border:1px solid #d6ccf5;border-radius:8px;padding:11px 15px;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:10px;}
+  .aiban b{color:var(--purple);}
+  .ovbox{border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.5px;line-height:1.65;}
+  .ovbox .r{display:grid;grid-template-columns:64px 1fr;gap:10px;} .ovbox .r+.r{margin-top:7px;} .ovbox .k{color:var(--faint);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top"><div class="topin">
+  <span class="brand"><span class="mk">◆</span>UI 설계 · 기능 3 · Jira 스타일</span>
+  <h1 class="page">요구사항 엔지니어링 — 기능 3 (산출물 도출)</h1>
+  <p class="lede">확정된 <b>요구사항(에픽)</b>을 선택하면, AI가 <b>개발 티켓(스토리) N개</b>와 티켓마다 딸린 <b>산출물 4종</b>(SWVOC·기능·비기능·Detail Design)을 <b>한 번에 초안으로 생성</b>한다.
+    이후 각 항목은 <b>AI가 채운 곳</b>과 <b>사람이 채워야 하는 곳</b>이 구분되어, 사람은 검토·보완·확정만 하면 된다.</p>
+  <div class="hier">
+    <div class="hstep"><div class="hb" style="background:#8777d9">⚡</div><h4>에픽 = 요구사항</h4><p>확정된 요구사항 1건. (예: <b>req-ta-01</b>)</p><span class="arr">→</span></div>
+    <div class="hstep"><div class="hb" style="background:#4bade8">🔖</div><h4>스토리 = 개발 티켓</h4><p>구현 단위로 분할한 <b>N개</b> 티켓.</p><span class="arr">→</span></div>
+    <div class="hstep"><div class="hb" style="background:#4688ec">🧩</div><h4>하위 작업 = 산출물 4종</h4><p>티켓마다 <b>SWVOC·기능·비기능·Detail Design</b>.</p></div>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+  <!-- ============ 화면 1 : AI 일괄 도출 ============ -->
+  <section class="scr">
+    <div class="kicker"><span class="n">1</span><span class="kt">AI 일괄 도출 — 요구사항 하나로 티켓과 산출물 전부 초안 생성</span></div>
+    <div class="scr-head"><span class="route">/requirements/req-ta-01/derive</span><h2>「도출」 한 번에 개발 티켓 3 + 산출물 12를 AI 초안으로</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span>요구사항</span><span class="sep">/</span><span class="jkey">req-ta-01</span><span class="sep">/</span>도출</div>
+            <div class="ihd"><span class="it-epic" style="width:26px;height:26px;font-size:16px;margin-top:2px">⚡</span>
+              <div><div class="ek">요구사항 <span class="jkey" style="color:var(--purple)">req-ta-01</span> · v1.0.0 확정</div><h1 style="font-size:22px">태스크 할당 기준 — 산출물 도출</h1></div></div>
+
+            <div class="derivebanner">
+              <span class="ico">🤖</span>
+              <div><div class="tt"><b>AI 도출 완료.</b> 요구사항 1건에서 개발 티켓과 산출물 전체를 초안으로 생성했습니다.</div>
+                <div class="ds">모두 <b>「검토 대기」</b> 상태입니다. 사람은 내용을 확인·보완한 뒤 확정합니다. · 방금 전 · 한지훈</div></div>
+              <span class="cta"><button class="jbtn ai">↻ 재도출</button><button class="jbtn">전체 열기</button></span>
+            </div>
+            <div class="countrow">
+              <div class="cstat"><div class="num">1</div><div class="lb">요구사항(에픽)</div></div>
+              <div class="cstat p"><div class="num">3</div><div class="lb">개발 티켓(스토리) · AI 초안</div></div>
+              <div class="cstat p"><div class="num">12</div><div class="lb">산출물(하위 작업) · AI 초안</div></div>
+              <div class="cstat"><div class="num">6</div><div class="lb">사람 보완 필요 항목</div></div>
+            </div>
+
+            <div class="tree">
+              <div class="tnode ep"><span class="it-epic">⚡</span>요구사항 <span class="jkey">req-ta-01</span> 태스크 할당 기준<span class="rt"><span class="lz done">확정 v1.0.0</span></span></div>
+              <div class="branch">
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-77</span> 가용 AMR 매칭<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="branch2">
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC — 할당 기준 요청 원문<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">⚙</span>기능 요구사항 — 가용 AMR 매칭<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">🛡</span>비기능 요구사항 — 매칭 성능·가용성<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">📐</span>Detail Design — 매칭 시퀀스<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
+                </div>
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-78</span> 알람 발생 시 재할당<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="branch2">
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">⚙</span>기능 요구사항 · <span class="it-sub">🛡</span>비기능 · <span class="it-sub">📐</span>Detail Design<span class="rt"><span class="aitag">🤖 AI 초안 ×3</span></span></div>
+                </div>
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-79</span> 우선순위 기반 정렬<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="branch2">
+                  <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC · <span class="it-sub">⚙</span>기능 · <span class="it-sub">🛡</span>비기능 · <span class="it-sub">📐</span>Detail Design<span class="rt"><span class="aitag">🤖 AI 초안 ×4</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>동작</b> 「도출」 클릭 → 요구사항 1건 → 티켓 N + 산출물 4N 전부 AI 초안 생성</span><span class="chipspec"><b>연결성</b> 에픽 → 스토리 → 하위 작업 트리로 연결 유지</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
+  </section>
+
+  <!-- ============ 화면 2 : 요구사항 ↔ 개발 티켓 연결성 ============ -->
+  <section class="scr">
+    <div class="kicker"><span class="n">2</span><span class="kt">요구사항 ↔ 개발 티켓 연결성 — 에픽 상세에서 자식 티켓 추적</span></div>
+    <div class="scr-head"><span class="route">/browse/req-ta-01</span><h2>어느 요구사항이 어떤 개발 티켓으로 이어졌는지</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span>에픽</span><span class="sep">/</span><span class="jkey">req-ta-01</span></div>
+            <div class="ihd"><span class="it-epic" style="width:26px;height:26px;font-size:16px;margin-top:4px">⚡</span>
+              <div><div class="ek">요구사항 <span class="jkey" style="color:var(--purple)">req-ta-01</span> · v1.0.0 확정</div><h1>태스크 할당 기준 — 가용 AMR 매칭 및 알람 복구 재할당</h1></div></div>
+            <div class="iacts"><button class="jbtn ai">🤖 개발 티켓 재도출</button><button class="jbtn">＋ 하위 이슈</button><button class="jbtn">연결</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">설명 <span class="aitag">🤖 AI 요약</span></div>
+                <div class="descbox ai">Host로부터 태스크 할당 요청을 받으면 가용한 AMR을 선별해 매칭하고, 매칭 후 알람이 발생하면 다른 AMR로 재할당한다. 아래 <b>3개의 개발 티켓</b>으로 분할되었다.</div>
+                <div class="childwrap" style="margin-top:22px">
+                  <div class="childhd">🎫 이 요구사항에서 도출된 개발 티켓 · 3<span class="prog">1 / 3 완료 <span class="prbar"><i style="width:33%"></i></span></span></div>
+                  <div class="crow"><span class="it-story">🔖</span><span class="cnm">가용 AMR 매칭</span><span class="ckey">AMVCS30-77</span><span class="rt"><span class="mod">jobassign</span><span class="lz prog">진행 중</span></span></div>
+                  <div class="crow"><span class="it-story">🔖</span><span class="cnm">알람 발생 시 재할당</span><span class="ckey">AMVCS30-78</span><span class="rt"><span class="mod">jobassign</span><span class="lz todo">해야 할 일</span></span></div>
+                  <div class="crow"><span class="it-story">🔖</span><span class="cnm">우선순위 기반 정렬</span><span class="ckey">AMVCS30-79</span><span class="rt"><span class="mod">pathsearch</span><span class="lz done">완료</span></span></div>
+                </div>
+                <p style="font-size:12.5px;color:var(--faint);margin:10px 2px 0">← 각 티켓을 열면 (화면 3) 본문과 산출물 4종이 이 요구사항에 연결된 채로 보인다.</p>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-epic">⚡</span>에픽</span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">진행 중</span></span></div>
+                <div class="jsrow"><span class="k">근거 문서</span><span class="v"><span class="jkey" style="color:var(--accent)">고객 요구서 §3.2</span></span></div>
+                <div class="jsrow"><span class="k">버전</span><span class="v"><span class="vpill">🏷 v1.0.0</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava">한</span>한지훈</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span><span class="mod">pathsearch</span></span></div>
+                <div class="jsrow"><span class="k">하위 티켓</span><span class="v">3개 (1 완료)</span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>연결성</b> 에픽(요구사항) 화면에서 자식 개발 티켓 목록·진행률 추적</span><span class="chipspec"><b>역추적</b> 티켓 → 상위 요구사항으로 브레드크럼</span><span class="chipspec api">GET /requirements/{id}/issues</span></div>
+  </section>
+
+  <!-- ============ 화면 3 : 개발 티켓 상세 (AI/사람) ============ -->
+  <section class="scr">
+    <div class="kicker"><span class="n">3</span><span class="kt">개발 티켓 상세 — AI가 채운 곳 · 사람이 채울 곳</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-77</span><h2>본문 3카테고리 + 하위 작업 4종</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span>스토리</span><span class="sep">/</span><span class="jkey">AMVCS30-77</span></div>
+            <div class="ihd"><span class="it-story" style="width:26px;height:26px;font-size:15px;margin-top:4px">🔖</span>
+              <div><div class="ek">개발 티켓 · 스토리 · 상위 <span class="jkey" style="color:var(--purple)">req-ta-01</span></div><h1>가용 AMR 매칭</h1></div></div>
+            <div class="iacts"><button class="jbtn prim">진행 중 ▾</button><button class="jbtn ai">🤖 본문 재생성</button><button class="jbtn">＋ 하위 작업</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="catlbl">① 요구사항 접수</div>
+                <div class="fldlbl">현상 기록 <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>현재 시스템의 동작·문제 상황은 담당자가 관찰해 기록. AI가 알 수 없는 영역 — 빈 칸.</div>
+                <div class="fldlbl">개선 요청 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">고객 요구서 원문에서 추출 — “Host의 태스크 할당 요청 시, 가용 상태(IDLE·배터리 충분·에러 없음)인 AMR을 선별하여 매칭하라.”</div>
+                <div class="catlbl">② 요구사항 개발</div>
+                <div class="fldlbl">변경 범위 <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>어떤 모듈·클래스까지 손대는지는 현재 코드 구조를 아는 담당자가 지정.</div>
+                <div class="fldlbl">제약 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">요구서 정의 기반 — 매칭 응답 <b>200ms</b> 이내 / 동시 요청 시 <b>우선순위 큐</b> 순서 보장 / 가용 0대면 <b>대기(PENDING)</b> 반환.</div>
+                <div class="catlbl">③ 변경점 설계</div>
+                <div class="fldlbl">변경 전 (As-Is) <span class="humtag">🖊 사람 작성 필요</span></div>
+                <div class="human"><span class="pen">🖊</span>기존 매칭 로직의 현재 구현은 담당자가 코드를 확인해 기술.</div>
+                <div class="fldlbl">변경 후 (To-Be) <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">요청 수신 → 가용 AMR 필터 → 우선순위 정렬 → 최상위 매칭 → 결과 회신. (요구사항·제약 근거로 AI 초안 설계)</div>
+                <div class="fldlbl" style="margin-top:26px">하위 작업 (산출물 4종)</div>
+                <div class="childwrap">
+                  <div class="childhd">🧩 하위 작업 · 4<span class="prog">2 / 4 완료 <span class="prbar"><i style="width:50%"></i></span></span></div>
+                  <div class="crow"><span class="it-sub">🗣</span><span class="cnm">SWVOC — 할당 기준 요청 원문</span><span class="ckey">AMSWV-2163</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz todo">검토 대기</span></span></div>
+                  <div class="crow"><span class="it-sub">⚙</span><span class="cnm">기능 요구사항 — 가용 AMR 매칭</span><span class="ckey">AMVCS30-80</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></div>
+                  <div class="crow"><span class="it-sub">🛡</span><span class="cnm">비기능 요구사항 — 매칭 성능·가용성</span><span class="ckey">AMVCS30-82</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></div>
+                  <div class="crow"><span class="it-sub">📐</span><span class="cnm">Detail Design — 매칭 시퀀스</span><span class="ckey">AMVCS30-81</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz done">확정</span></span></div>
+                </div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-story">🔖</span>스토리</span></div>
+                <div class="jsrow"><span class="k">상위 항목</span><span class="v"><span class="it-epic">⚡</span><span class="jkey" style="color:var(--purple)">req-ta-01</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">진행 중</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
+                <div class="jsrow"><span class="k">하위 작업</span><span class="v">4개 (2 완료)</span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">AI 3</span><span class="humtag">사람 3</span></span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>본문 3카테고리</b> 요청 접수 · 개발 · 변경점 설계</span><span class="chipspec"><b>AI 도출</b> 개선요청·제약·변경후(To-Be)</span><span class="chipspec"><b>사람 작성</b> 현상기록·변경범위·변경전(As-Is)</span></div>
+  </section>
+
+  <!-- ============ 화면 4 : 기능 요구사항 9행 (동작유형 그룹) ============ -->
+  <section class="scr">
+    <div class="kicker"><span class="n">4</span><span class="kt">하위 작업 — 기능 요구사항 · 동작 정의(동작 유형 3그룹)</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-80</span><h2>기본·변형·예외 × 선행·후행·시나리오</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span><span class="sep">/</span><span class="it"><span class="it-sub">⚙</span>하위</span><span class="sep">/</span><span class="jkey">AMVCS30-80</span></div>
+            <div class="ihd"><span class="it-sub" style="width:26px;height:26px;font-size:15px;margin-top:4px">⚙</span>
+              <div><div class="ek">하위 작업 · 기능 요구사항</div><h1>가용 AMR 매칭</h1></div></div>
+            <div class="iacts"><button class="jbtn prim">검토 대기 ▾</button><button class="jbtn ai">🤖 재생성</button><button class="jbtn">✔ 확정</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">개요 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="ovbox">
+                  <div class="r"><span class="k">역할</span><span>Host의 태스크 할당 요청에 대해 조건을 만족하는 가용 AMR을 선별·매칭한다.</span></div>
+                  <div class="r"><span class="k">목적</span><span>할당 지연·오배정을 방지하고 우선순위에 따라 최적의 AMR을 배정한다.</span></div>
+                </div>
+                <div class="fldlbl">동작 정의 <span class="aitag">🤖 AI 도출</span> <span style="font-weight:600;color:var(--faint);font-size:12px">· 동작 유형 3그룹 × (선행·후행·시나리오)</span></div>
+                <table class="j9">
+                  <thead><tr><th style="width:110px">동작 유형</th><th>선행 조건</th><th>후행 조건</th><th>시나리오</th></tr></thead>
+                  <tbody>
+                    <tr><td rowspan="3" class="grp base">기본<span class="sub">정상 흐름</span></td>
+                      <td>가용 AMR ≥ 1대, 요청 유효</td><td>1대 매칭·상태 BUSY 전환</td><td>요청 수신 → 가용 필터 → 우선순위 정렬 → 최상위 매칭 → 회신</td></tr>
+                    <tr><td>동일 우선순위 다수 존재</td><td>대기시간 최장 AMR 선택</td><td>정렬 → 동점 시 FIFO 규칙 적용 → 매칭</td></tr>
+                    <tr><td>요청에 목적지 좌표 포함</td><td>경로 산출 가능 AMR 매칭</td><td>가용 필터 후 pathsearch로 도달성 확인 → 매칭</td></tr>
+                    <tr><td rowspan="3" class="grp var">변형<span class="sub">조건 분기</span></td>
+                      <td>특정 Probe Card 전용 AMR 지정</td><td>지정 유형 AMR만 매칭</td><td>카드 타입 파싱 → 호환 AMR 하위집합 필터 → 매칭</td></tr>
+                    <tr><td>긴급(HIGH) 플래그 요청</td><td>정렬보다 우선 즉시 배정</td><td>큐 선점 → 가용 중 최근접 AMR 즉시 매칭</td></tr>
+                    <tr><td>배터리 임계 근접 AMR 포함</td><td>임계 이상만 후보 유지</td><td>가용 필터 시 배터리 ≥ 30% 조건 추가 → 매칭</td></tr>
+                    <tr><td rowspan="3" class="grp exc">예외<span class="sub">오류·실패</span></td>
+                      <td>가용 AMR 0대</td><td>PENDING 반환·재시도 예약</td><td>필터 결과 공집합 → 대기 등록 → 가용 변화 이벤트 구독</td></tr>
+                    <tr><td>매칭 직후 대상 AMR 알람</td><td>매칭 취소·재할당 트리거</td><td>알람 수신 → 매칭 롤백 → AMVCS30-78 재할당 호출</td></tr>
+                    <tr><td>요청 필수 필드 누락</td><td>400 거절·오류 코드 회신</td><td>스키마 검증 실패 → 매칭 미수행 → 오류 반환</td></tr>
+                  </tbody>
+                </table>
+                <div class="fldlbl">제약 사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">매칭 응답 <b>200ms</b> 이내 · 동시 요청 시 <b>우선순위 큐</b> 순서 보장 · 상태 전환은 <b>원자적(atomic)</b> 처리로 이중 배정 방지.</div>
+                <div class="aiban">🤖 <b>AI 도출 — 전 항목 자동 작성.</b> 기능 요구사항은 「확정된 요구사항 + 제약」만으로 채울 수 있어, 사람은 <b>검토 후 확정</b>만 하면 됩니다.</div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-sub">⚙</span>기능 요구사항</span></div>
+                <div class="jsrow"><span class="k">상위 작업</span><span class="v"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">검토 대기</span></span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">🤖 AI 도출</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
+                <div class="jsrow"><span class="k">추적성</span><span class="v"><span class="jkey" style="color:var(--accent)">req-ta-01 ↔ FR-JA-01</span></span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>표 구조</b> 동작 유형(기본·변형·예외) 그룹 셀 + 선행·후행·시나리오 3열</span><span class="chipspec"><b>작성 주체</b> 전 항목 AI 도출 → 사람은 확정만</span><span class="chipspec api">GET /artifacts/{id}</span></div>
+  </section>
+
+  <p class="foot"><b>범위.</b> 기능 3(산출물 도출) — ① AI 일괄 도출 · ② 요구사항↔티켓 연결성 · ③ 개발 티켓 본문(AI/사람) · ④ 기능 요구사항 동작 정의(3그룹) 4화면. 실제 Jira 이슈 계층·화면 구조를 따름.
+    <br><b>작성 주체 원칙.</b> 「고객 요구서 + 정해진 양식」만으로 채울 수 있으면 <b>AI 도출</b>, 현재 시스템 상태·도메인 판단이 필요하면 <b>사람 작성</b>.
+    <br><b>다음.</b> 기능 4(추적성) 화면 + ERD.</p>
+</div>
+<script>
+  function fit(){document.querySelectorAll('.stage').forEach(function(st){
+    var c=st.querySelector('.canvas'); if(c)c.style.transform='scale('+(st.clientWidth/1920)+')';});}
+  window.addEventListener('resize',fit);window.addEventListener('load',fit);
+  document.addEventListener('DOMContentLoaded',fit);fit();
+</script>
+</body>
+</html>
