@@ -58,3 +58,13 @@ mlruns/
 # ===== Misc =====
 *.tmp
 *.bak
+
+# ===== Java / Gradle (backend) =====
+.gradle/
+*.class
+bin/
+!gradle-wrapper.jar
+
+# ===== Next.js (frontend) =====
+next-env.d.ts
+.next/

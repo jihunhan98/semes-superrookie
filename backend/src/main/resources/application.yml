@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # Oracle XE 기준. 서비스명(XEPDB1)·포트·계정은 환경에 맞게 수정.
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    username: reqops
+    password: ReqOps#2026
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: none          # 스키마/테이블은 db/init.sql로 직접 관리
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+server:
+  port: 8080
+
+# 프론트(Next.js) 개발 서버 오리진
+app:
+  cors-origin: http://localhost:3000
