@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>요구사항 엔지니어링 — API 명세서</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f6f8fa;--surface:#fff;--ink:#1f2328;--muted:#59636e;--faint:#818b98;
+    --line:#d1d9e0;--line2:#eaeef2;--accent:#0969da;--code:#f6f8fa;
+    --get:#0969da;--getbg:#ddf4ff;--post:#1a7f37;--postbg:#dafbe1;
+    --patch:#9a6700;--patchbg:#fff8c5;--del:#cf222e;--delbg:#ffebe9;
+    --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.55;}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 22px 90px;}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;color:var(--accent);text-transform:uppercase;margin:0 0 8px;}
+  h1{font-size:30px;font-weight:850;margin:0 0 10px;}
+  .lede{font-size:14px;color:var(--muted);margin:0 0 6px;}
+  .legend{font-size:12.5px;color:var(--faint);margin:0 0 26px;}
+  .legend code{font-family:var(--mono);background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px;}
+  h2{font-size:16px;font-weight:800;margin:34px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  thead th{background:#f6f8fa;text-align:left;font-size:12px;font-weight:700;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);}
+  .row{cursor:pointer;border-top:1px solid var(--line2);}
+  .row:first-child{border-top:0;}
+  .row:hover{background:#f6f8fa;}
+  .row td{padding:11px 14px;vertical-align:middle;font-size:14px;}
+  .row .chev{color:var(--faint);transition:transform .15s;display:inline-block;}
+  .row.open .chev{transform:rotate(90deg);}
+  .m{font-family:var(--mono);font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;display:inline-block;min-width:52px;text-align:center;}
+  .m.get{background:var(--getbg);color:var(--get);} .m.post{background:var(--postbg);color:var(--post);}
+  .m.patch{background:var(--patchbg);color:var(--patch);} .m.del{background:var(--delbg);color:var(--del);}
+  .path{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .desc{color:var(--muted);font-size:13px;}
+  .detail{display:none;} .detail.open{display:table-row;}
+  .detail td{padding:0;border-top:1px solid var(--line2);background:#fbfcfd;}
+  .dwrap{padding:16px 18px 20px;}
+  .dh{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin:14px 0 7px;}
+  .dh:first-child{margin-top:0;}
+  table.fields{border:1px solid var(--line);border-radius:8px;margin:0;}
+  table.fields th{background:#fff;font-size:11px;padding:7px 11px;}
+  table.fields td{padding:7px 11px;font-size:12.5px;border-top:1px solid var(--line2);vertical-align:top;}
+  table.fields .fn{font-family:var(--mono);font-weight:700;}
+  table.fields .ty{font-family:var(--mono);color:var(--muted);}
+  .req{color:var(--del);font-weight:800;} .opt{color:var(--faint);}
+  pre{background:#0d1117;color:#e6edf3;border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12.5px;overflow-x:auto;margin:0;}
+  .res{list-style:none;padding:0;margin:0;}
+  .res li{font-size:13px;padding:5px 0;display:flex;gap:10px;align-items:baseline;}
+  .sc{font-family:var(--mono);font-weight:800;font-size:12px;padding:2px 8px;border-radius:5px;flex:0 0 auto;}
+  .sc.ok{background:var(--postbg);color:var(--post);} .sc.err{background:var(--delbg);color:var(--del);}
+  .none{color:var(--faint);font-size:13px;}
+  .hint{font-size:12.5px;color:var(--faint);margin:0 0 22px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">API 명세서</p>
+  <h1>요구사항 엔지니어링 — API</h1>
+  <p class="lede">Base <code>/api</code> · <code>application/json</code> · 세션/토큰 없음(로그인은 일치 확인만, 이후 요청에 userId 동봉).</p>
+  <p class="legend"><b>표에서 간략히 보고, 행을 클릭하면 요청·응답 상세가 펼쳐집니다.</b> &nbsp; 표기: <span class="req">*</span> 필수 · 타입 str/num/arr.</p>
+
+  <h2>1. 기능 1 — 로그인 · 프로젝트 관리</h2>
+  <table>
+    <thead><tr><th style="width:78px">메서드</th><th style="width:240px">경로</th><th>설명</th><th style="width:24px"></th></tr></thead>
+    <tbody>
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/signup</td><td class="desc">회원가입</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">empNo</td><td class="ty">str</td><td class="req">✓</td><td>사번(로그인 아이디)</td></tr>
+          <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>이름</td></tr>
+          <tr><td class="fn">dept</td><td class="ty">str</td><td class="opt">—</td><td>부서</td></tr>
+          <tr><td class="fn">password</td><td class="ty">str</td><td class="req">✓</td><td>비밀번호(서버에서 해시)</td></tr>
+        </tbody></table>
+        <pre>{ "empNo": "20213456", "name": "한지훈", "dept": "VCS 개발파트", "password": "secret123" }</pre>
+        <div class="dh">응답</div>
+        <ul class="res">
+          <li><span class="sc ok">201</span> <code>{ id, empNo, name, dept }</code></li>
+          <li><span class="sc err">409</span> 사번 중복</li>
+        </ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/login</td><td class="desc">로그인 (일치 확인만)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">empNo</td><td class="ty">str</td><td class="req">✓</td><td>사번</td></tr>
+          <tr><td class="fn">password</td><td class="ty">str</td><td class="req">✓</td><td>비밀번호</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div>
+        <ul class="res">
+          <li><span class="sc ok">200</span> <code>{ id, empNo, name, dept }</code></li>
+          <li><span class="sc err">401</span> 사번/비밀번호 불일치</li>
+        </ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects</td><td class="desc">내 프로젝트 목록</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Query</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>사용자 id</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> <code>[{ id, name, customer, role, reqCount, confirmedCount, lastOpenedAt }]</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects</td><td class="desc">프로젝트 생성 (생성자=Owner, 토큰 발급)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트명</td></tr>
+          <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
+          <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
+          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 VCS 모듈</td></tr>
+          <tr><td class="fn">ownerId</td><td class="ty">num</td><td class="req">✓</td><td>생성자 사용자 id</td></tr>
+        </tbody></table>
+        <pre>{ "name": "VCS · 태스크 할당", "customer": "삼성전자 EDS", "modules": ["jobassign"], "ownerId": 12 }</pre>
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">201</span> <code>{ project, token }</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/join</td><td class="desc">토큰으로 참여 (Member)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">token</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트 접근 토큰</td></tr>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>참여자 사용자 id</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ project }</code></li><li><span class="sc err">404</span> 잘못/폐기된 토큰</li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects/{id}</td><td class="desc">프로젝트 상세</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ project, members[], modules[] }</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m patch">PATCH</span></td><td class="path">/api/projects/{id}</td><td class="desc">기본정보·모듈 수정 (Owner)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body (수정할 필드만)</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">name</td><td class="ty">str</td><td class="opt">—</td><td>프로젝트명</td></tr>
+          <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
+          <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
+          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 모듈</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> 수정됨</li><li><span class="sc err">403</span> 권한 없음(Owner 아님)</li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/{id}/token</td><td class="desc">토큰 재발급 (Owner, 이전 폐기)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ token }</code></li><li><span class="sc err">403</span> 권한 없음</li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects/{id}/members</td><td class="desc">멤버 목록</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div>
+        <ul class="res"><li><span class="sc ok">200</span> <code>[{ userId, name, empNo, role }]</code></li></ul>
+      </div></td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. 기능 2 — 요구사항 검토</h2>
+  <table>
+    <thead><tr><th style="width:78px">메서드</th><th style="width:300px">경로</th><th>설명</th><th style="width:24px"></th></tr></thead>
+    <tbody>
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/requirements/import</td><td class="desc">고객 요구서(docx) 표 파싱</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청</div><p class="none"><code>file</code> (multipart/form-data) — .docx</p>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>[{ 분류, 내용, 비고 }]</code> (저장 전 후보)</li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/requirements</td><td class="desc">요구사항 등록 (상태=접수)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">projectId</td><td class="ty">num</td><td class="req">✓</td><td>프로젝트 id</td></tr>
+          <tr><td class="fn">분류</td><td class="ty">str</td><td class="opt">—</td><td>카테고리</td></tr>
+          <tr><td class="fn">내용</td><td class="ty">str</td><td class="req">✓</td><td>요구사항 본문</td></tr>
+          <tr><td class="fn">비고</td><td class="ty">str</td><td class="opt">—</td><td>비고</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">201</span> <code>{ id, state: "received" }</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/requirements</td><td class="desc">목록 (담당자·상태 필터)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Query</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">projectId</td><td class="ty">num</td><td class="req">✓</td><td>프로젝트 id</td></tr>
+          <tr><td class="fn">assignee</td><td class="ty">str</td><td class="opt">—</td><td>담당자 필터</td></tr>
+          <tr><td class="fn">state</td><td class="ty">str</td><td class="opt">—</td><td>상태 필터</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>[{ id, title, state, version, assignee }]</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/analyze</td><td class="desc">AI 검토 (불명확·상충 검출)</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">내용</td><td class="ty">str</td><td class="req">✓</td><td>요구사항 본문</td></tr>
+          <tr><td class="fn">비고</td><td class="ty">str</td><td class="opt">—</td><td>비고</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>{ findings[], conflicts[] }</code></li></ul>
+        <pre>{ "findings": [ { "span": "...", "type": "정량 기준 부재", "reason": "...", "suggestion": "..." } ], "conflicts": [] }</pre>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/requirements/{id}/confirm</td><td class="desc">수정 확정 → 새 버전</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">본문</td><td class="ty">str</td><td class="req">✓</td><td>확정 본문</td></tr>
+          <tr><td class="fn">변경사유</td><td class="ty">str</td><td class="req">✓</td><td>커밋 메시지</td></tr>
+          <tr><td class="fn">변경유형</td><td class="ty">str</td><td class="opt">—</td><td>major / minor / patch</td></tr>
+        </tbody></table>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>{ version, state: "confirmed" }</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/requirements/{id}/versions · /compare</td><td class="desc">버전 이력 · diff</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div>
+        <ul class="res">
+          <li><span class="sc ok">200</span> <code>/versions</code> → <code>[{ version, author, reason, type, at }]</code></li>
+          <li><span class="sc ok">200</span> <code>/compare?base=&head=</code> → <code>{ diff }</code></li>
+        </ul>
+      </div></td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. 기능 3 — 산출물 도출</h2>
+  <table>
+    <thead><tr><th style="width:78px">메서드</th><th style="width:300px">경로</th><th>설명</th><th style="width:24px"></th></tr></thead>
+    <tbody>
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/requirements/{id}/derive</td><td class="desc">개발 이슈 N + 4종 도출</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">201</span> <code>{ issues[] }</code></li></ul>
+        <pre>{ "issues": [ { "id": "AMVCS30-77", "title": "가용 AMR 매칭",
+    "artifacts": { "swvoc": "AMSWV-2201", "functional": "AMVCS30-92", "nonfunctional": "AMVCS30-93", "detailDesign": "AMVCS30-94" } } ] }</pre>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/issues/{id}</td><td class="desc">개발 이슈 + 하위 산출물</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>{ issue, artifacts[] }</code></li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m patch">PATCH</span></td><td class="path">/api/artifacts/{id}</td><td class="desc">산출물 편집·확정</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Body</div><p class="none"><code>body</code> str — 산출물 본문</p>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> 저장됨</li></ul>
+      </div></td></tr>
+
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/trace</td><td class="desc">요구사항 ↔ 산출물 추적</td><td><span class="chev">›</span></td></tr>
+      <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Query</div><p class="none"><code>reqId</code> str ✓ — 요구사항 id</p>
+        <div class="dh">응답</div><ul class="res"><li><span class="sc ok">200</span> <code>{ requirement, issues[], artifacts[] }</code></li></ul>
+      </div></td></tr>
+    </tbody>
+  </table>
+</div>
+<script>
+  document.querySelectorAll('tr.row').forEach(function(row){
+    row.addEventListener('click', function(){
+      var det = row.nextElementSibling;
+      var open = det.classList.toggle('open');
+      row.classList.toggle('open', open);
+    });
+  });
+</script>
+</body>
+</html>
