@@ -11,12 +11,14 @@
 
 > 접속 URL(`XEPDB1`)·비밀번호는 환경에 맞게 `db/init.sql`과 `backend/src/main/resources/application.yml`에서 함께 수정.
 
-## 2. 백엔드 (Spring Boot)
+## 2. 백엔드 (Spring Boot · Maven)
 
 ```bash
 cd backend
-./gradlew bootRun        # 최초엔 Gradle Wrapper 생성 필요: gradle wrapper
+mvn spring-boot:run
 ```
+
+> 사내 폐쇄망이라 라이브러리 자동 다운로드가 막히면, `~/.m2/settings.xml`에 사내 저장소(미러)를 잡거나 미리 받아둔 `.m2`를 사용한다.
 
 - 포트 `8080`
 - 엔드포인트: `POST /api/signup`, `POST /api/login`
