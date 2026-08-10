@@ -287,7 +287,7 @@
         <div class="col"><h4><span class="b">1</span>로그인 · 회원가입</h4><p>사번+비밀번호. 계정이 확정·수정 이력의 <b>작성자</b>가 된다.</p></div>
         <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>VS Code처럼 최근 프로젝트 나열 + <b>New / Open Project</b>.</p></div>
         <div class="col"><h4><span class="b">3</span>Open = 토큰</h4><p>기존 프로젝트는 <b>접근 토큰</b>으로 참여.</p></div>
-        <div class="col"><h4><span class="b">4</span>설정 = DB</h4><p>프로젝트 정보·토큰·엔진·멤버를 <b>DB에 저장</b>·관리.</p></div>
+        <div class="col"><h4><span class="b">4</span>설정 = DB</h4><p>프로젝트 정보·토큰·멤버·모듈을 <b>DB에 저장</b>·관리.</p></div>
       </div>
     </div>
   </header>
@@ -452,13 +452,6 @@
                   <div class="tok">req_prj_9f3a2c7b1e4d··········<span style="margin-left:auto;color:var(--blue);font-weight:700;font-family:var(--font)">복사</span><span style="color:var(--red);font-weight:700;font-family:var(--font)">재발급</span></div>
                 </div>
               </div>
-              <div class="setcard">
-                <div class="seth">🤖 AI 엔진 <span class="db">DB 저장</span></div>
-                <div class="setb"><div class="radios">
-                  <span class="radio on"><span class="dot"></span>로컬 · qwen3:8b (워크스테이션)</span>
-                  <span class="radio"><span class="dot"></span>사내 LLM API (OpenAI 호환)</span>
-                </div><div style="font-size:12px;color:var(--fgf);margin-top:9px">폐쇄망 — 외부 API 미사용. 미연결 시 규칙 기반 mock 폴백.</div></div>
-              </div>
               </div>
               <div>
               <div class="setcard">
@@ -481,15 +474,15 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>DB 저장</b> 기본정보·토큰·엔진·멤버·모듈을 프로젝트별로 DB에 저장</span>
+      <span class="chipspec"><b>DB 저장</b> 기본정보·토큰·멤버·모듈을 프로젝트별로 DB에 저장</span>
       <span class="chipspec"><b>토큰</b> Open Project·멤버 초대에 사용 · 재발급 가능</span>
-      <span class="chipspec"><b>엔진</b> 로컬 qwen3 / 사내 LLM 선택 (폐쇄망)</span>
+      <span class="chipspec"><b>모듈</b> 프로젝트 대상 VCS 모듈 선택</span>
       <span class="chipspec api">GET·PATCH /api/projects/{id}/settings</span>
     </div>
   </section>
 
   <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New/Open) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
-    &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰 · 프로젝트 설정(엔진·모듈)을 저장.
+    &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰 · 프로젝트 설정(모듈)을 저장.
     &nbsp;<b>다음.</b> 프로젝트를 열면 → <b>기능 2(요구사항 검토)</b>.</p>
 </div>
 <script>
