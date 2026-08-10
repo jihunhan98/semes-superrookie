@@ -68,3 +68,7 @@ bin/
 # ===== Next.js (frontend) =====
 next-env.d.ts
 .next/
+
+# offline maven repo / build (커밋 금지)
+backend/m2-offline/
+backend/target/
