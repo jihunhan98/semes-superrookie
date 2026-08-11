@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { login } from "../lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [empNo, setEmpNo] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<{ type: "err" | "ok"; text: string } | null>(null);
@@ -16,7 +18,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(empNo, password);
-      setMsg({ type: "ok", text: `${user.name}님 환영합니다.` });
+      sessionStorage.setItem("reqops:user", JSON.stringify(user));
+      router.push("/dashboard");
     } catch (err) {
       setMsg({ type: "err", text: err instanceof Error ? err.message : "로그인 실패" });
     } finally {
