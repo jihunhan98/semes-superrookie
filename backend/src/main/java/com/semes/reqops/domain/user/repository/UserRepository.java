@@ -1,5 +1,6 @@
-package com.semes.reqops.domain.user;
+package com.semes.reqops.domain.user.repository;
 
+import com.semes.reqops.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 

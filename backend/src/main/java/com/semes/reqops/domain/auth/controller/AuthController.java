@@ -1,8 +1,9 @@
-package com.semes.reqops.domain.auth;
+package com.semes.reqops.domain.auth.controller;
 
-import com.semes.reqops.domain.auth.AuthDto.LoginRequest;
-import com.semes.reqops.domain.auth.AuthDto.SignupRequest;
-import com.semes.reqops.domain.auth.AuthDto.UserResponse;
+import com.semes.reqops.domain.auth.dto.AuthDto.LoginRequest;
+import com.semes.reqops.domain.auth.dto.AuthDto.SignupRequest;
+import com.semes.reqops.domain.auth.dto.AuthDto.UserResponse;
+import com.semes.reqops.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
