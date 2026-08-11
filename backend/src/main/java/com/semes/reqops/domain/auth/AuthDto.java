@@ -1,4 +1,4 @@
-package com.semes.reqops.auth;
+package com.semes.reqops.domain.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

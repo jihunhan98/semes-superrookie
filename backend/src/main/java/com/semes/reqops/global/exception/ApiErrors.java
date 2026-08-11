@@ -1,4 +1,4 @@
-package com.semes.reqops.common;
+package com.semes.reqops.global.exception;
 
 /** 도메인 예외 모음. 핸들러(GlobalExceptionHandler)가 HTTP 상태로 변환한다. */
 public final class ApiErrors {

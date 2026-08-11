@@ -1,4 +1,4 @@
-package com.semes.reqops.config;
+package com.semes.reqops.global.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;

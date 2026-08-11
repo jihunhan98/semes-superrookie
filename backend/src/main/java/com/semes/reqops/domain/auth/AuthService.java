@@ -1,11 +1,11 @@
-package com.semes.reqops.auth;
+package com.semes.reqops.domain.auth;
 
-import com.semes.reqops.auth.AuthDto.LoginRequest;
-import com.semes.reqops.auth.AuthDto.SignupRequest;
-import com.semes.reqops.auth.AuthDto.UserResponse;
-import com.semes.reqops.common.ApiErrors;
-import com.semes.reqops.user.User;
-import com.semes.reqops.user.UserRepository;
+import com.semes.reqops.domain.auth.AuthDto.LoginRequest;
+import com.semes.reqops.domain.auth.AuthDto.SignupRequest;
+import com.semes.reqops.domain.auth.AuthDto.UserResponse;
+import com.semes.reqops.global.exception.ApiErrors;
+import com.semes.reqops.domain.user.User;
+import com.semes.reqops.domain.user.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

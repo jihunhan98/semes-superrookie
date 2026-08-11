@@ -1,4 +1,4 @@
-package com.semes.reqops.user;
+package com.semes.reqops.domain.user;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.semes.reqops.common;
+package com.semes.reqops.global.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
