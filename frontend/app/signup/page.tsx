@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signup } from "../lib/api";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [empNo, setEmpNo] = useState("");
   const [name, setName] = useState("");
   const [dept, setDept] = useState("");
@@ -23,10 +25,9 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const user = await signup({ empNo, name, dept, password });
-      setMsg({ type: "ok", text: `가입 완료: ${user.name}(${user.empNo}). 로그인해 주세요.` });
+      router.push(`/login?signup=success&name=${encodeURIComponent(user.name)}`);
     } catch (err) {
       setMsg({ type: "err", text: err instanceof Error ? err.message : "가입 실패" });
-    } finally {
       setLoading(false);
     }
   }
