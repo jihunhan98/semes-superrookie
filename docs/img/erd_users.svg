@@ -27,7 +27,7 @@
     <text x="20" y="177">dept</text>
     <text x="150" y="177" fill="#59636e">VARCHAR2(100)</text>
 
-    <text x="20" y="213">password_hash</text>
+    <text x="20" y="213">password</text>
     <text x="200" y="213" fill="#59636e">VARCHAR2(200) · NOT NULL</text>
 
     <text x="20" y="249">created_at</text>

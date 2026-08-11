@@ -5,18 +5,16 @@ import com.semes.reqops.domain.auth.dto.AuthDto.SignupRequest;
 import com.semes.reqops.domain.auth.dto.AuthDto.UserResponse;
 import com.semes.reqops.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)

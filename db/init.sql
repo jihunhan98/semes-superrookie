@@ -16,12 +16,12 @@ CREATE TABLE users (
   emp_no        VARCHAR2(20)   NOT NULL,   -- 사번 (로그인 아이디)
   name          VARCHAR2(50)   NOT NULL,   -- 이름
   dept          VARCHAR2(100),             -- 부서
-  password_hash VARCHAR2(200)  NOT NULL,   -- 비밀번호 해시(BCrypt 등)
+  password      VARCHAR2(200)  NOT NULL,   -- 비밀번호(평문 문자열)
   created_at    TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
   CONSTRAINT pk_users PRIMARY KEY (id),
   CONSTRAINT uq_users_emp_no UNIQUE (emp_no)
 );
 
-COMMENT ON TABLE  users               IS '사용자(로그인 계정)';
-COMMENT ON COLUMN users.emp_no        IS '사번 — 로그인 아이디, 고유';
-COMMENT ON COLUMN users.password_hash IS '비밀번호 해시';
+COMMENT ON TABLE  users          IS '사용자(로그인 계정)';
+COMMENT ON COLUMN users.emp_no   IS '사번 — 로그인 아이디, 고유';
+COMMENT ON COLUMN users.password IS '비밀번호(평문 문자열)';
