@@ -25,30 +25,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="center">
-      <form className="card" onSubmit={onSubmit}>
-        <div className="mk">RE</div>
-        <h1 className="title">로그인</h1>
+    <div className="gh-login">
+      <div className="loginbox">
+        <div className="lmk">RE</div>
+        <h2>요구사항 엔지니어링에 로그인</h2>
 
-        {msg && <p className={`msg ${msg.type}`}>{msg.text}</p>}
+        <form className="lcard" onSubmit={onSubmit}>
+          {msg && <p className={`lmsg ${msg.type}`}>{msg.text}</p>}
 
-        <div className="field">
-          <label>사번</label>
-          <input value={empNo} onChange={(e) => setEmpNo(e.target.value)} placeholder="20213456" required />
-        </div>
-        <div className="field">
-          <label>비밀번호</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
+          <div className="lf">
+            <label>사번</label>
+            <input
+              value={empNo}
+              onChange={(e) => setEmpNo(e.target.value)}
+              placeholder="20213xxx"
+              required
+            />
+          </div>
+          <div className="lf">
+            <label>비밀번호</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        <button className="primary" type="submit" disabled={loading}>
-          {loading ? "확인 중…" : "로그인"}
-        </button>
+          <button className="lbtn" type="submit" disabled={loading}>
+            {loading ? "확인 중…" : "로그인"}
+          </button>
+        </form>
 
-        <p className="foot">
+        <div className="lsignup">
           계정이 없으신가요? <Link href="/signup">회원가입 →</Link>
-        </p>
-      </form>
+        </div>
+        <div className="lfoot">로그인하면 확정·수정 이력에 작성자로 기록됩니다.</div>
+      </div>
     </div>
   );
 }
