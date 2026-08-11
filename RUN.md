@@ -28,6 +28,7 @@ mvn spring-boot:run
     -H "Content-Type: application/json" \
     -d '{"empNo":"20213456","name":"한지훈","dept":"VCS 개발파트","password":"secret123"}'
   ```
+- Postman: `postman/ReqOps.postman_collection.json`을 Postman에 임포트(File → Import)하면 회원가입/로그인 성공·실패 케이스가 바로 실행 가능한 상태로 들어있다. `baseUrl` 변수(기본 `http://localhost:8080`)만 필요하면 바꾼다.
 
 ## 3. 프론트 (Next.js)
 

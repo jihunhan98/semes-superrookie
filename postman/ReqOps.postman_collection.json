@@ -1,0 +1,133 @@
+{
+  "info": {
+    "name": "ReqOps API",
+    "description": "기능 1 — 회원가입/로그인 API 테스트 컬렉션. 세션/토큰 없음(요청마다 empNo+password로 대조).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "회원가입 성공",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "signup"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"20213456\",\n  \"name\": \"한지훈\",\n  \"dept\": \"VCS 개발파트\",\n  \"password\": \"secret123\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "회원가입 실패 - 사번 중복",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "signup"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"20213456\",\n  \"name\": \"한지훈\",\n  \"dept\": \"VCS 개발파트\",\n  \"password\": \"secret123\"\n}"
+        },
+        "description": "'회원가입 성공' 요청을 먼저 실행한 뒤 같은 empNo로 다시 보내면 409 등 중복 오류가 나야 한다."
+      },
+      "response": []
+    },
+    {
+      "name": "회원가입 실패 - 필수값 누락",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "signup"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"\",\n  \"name\": \"\",\n  \"dept\": \"VCS 개발파트\",\n  \"password\": \"\"\n}"
+        },
+        "description": "@NotBlank 검증 확인용 — 400과 함께 유효성 오류가 나야 한다."
+      },
+      "response": []
+    },
+    {
+      "name": "로그인 성공",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"20213456\",\n  \"password\": \"secret123\"\n}"
+        },
+        "description": "'회원가입 성공' 요청을 먼저 실행해서 계정을 만든 뒤 테스트한다."
+      },
+      "response": []
+    },
+    {
+      "name": "로그인 실패 - 비밀번호 불일치",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"20213456\",\n  \"password\": \"wrong-password\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "로그인 실패 - 존재하지 않는 사번",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empNo\": \"99999999\",\n  \"password\": \"secret123\"\n}"
+        }
+      },
+      "response": []
+    }
+  ]
+}
