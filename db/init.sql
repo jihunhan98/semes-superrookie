@@ -6,6 +6,9 @@
 -- ============================================================
 
 -- ── (1) 스키마(사용자) 생성 ──  ※ SYSTEM 등 DBA 계정에서 실행
+-- CDB 루트 컨테이너 접속 시 ORA-65096(공통 사용자 이름 부적합) 방지용.
+-- 멀티테넌트(12c+) 환경이 아니면 이 줄은 없어도 무방.
+ALTER SESSION SET "_ORACLE_SCRIPT" = true;
 CREATE USER REQOPS IDENTIFIED BY semes;
 GRANT CONNECT, RESOURCE TO REQOPS;
 ALTER USER REQOPS QUOTA UNLIMITED ON USERS;
