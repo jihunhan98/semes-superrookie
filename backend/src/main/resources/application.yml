@@ -1,9 +1,9 @@
 spring:
   datasource:
-    # Oracle XE 기준. 서비스명(XEPDB1)·포트·계정은 환경에 맞게 수정.
-    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
-    username: reqops
-    password: ReqOps#2026
+    # 사내 Oracle 서버(SID 방식). 주소·계정은 환경에 맞게 수정.
+    url: jdbc:oracle:thin:@21.1.1.250:1521:orcl
+    username: REQOPS
+    password: semes
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:

@@ -6,10 +6,10 @@
 
 `db/init.sql`을 실행한다.
 
-1. DBA(SYSTEM) 계정으로 접속 → 파일 상단 **스키마 생성** 부분 실행 (`reqops` 사용자 생성)
-2. `reqops` 계정으로 접속 → **테이블 생성** 부분 실행 (`USERS`)
+1. DBA(SYSTEM) 계정으로 접속 → 파일 상단 **스키마 생성** 부분 실행 (`REQOPS` 사용자 생성)
+2. `REQOPS` 계정으로 접속 → **테이블 생성** 부분 실행 (`USERS`)
 
-> 접속 URL(`XEPDB1`)·비밀번호는 환경에 맞게 `db/init.sql`과 `backend/src/main/resources/application.yml`에서 함께 수정.
+> 접속 주소(호스트·포트·SID)·비밀번호는 환경에 맞게 `db/init.sql`과 `backend/src/main/resources/application.yml`에서 함께 수정.
 
 ## 2. 백엔드 (Spring Boot · Maven)
 
