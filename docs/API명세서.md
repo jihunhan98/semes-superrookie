@@ -11,13 +11,14 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 |---|---|---|---|---|
 | POST | `/api/signup` | 회원가입 | `empNo`*str · `name`*str · `dept`str · `password`*str | `201` {id, empNo, name, dept}<br>`409` 사번 중복 |
 | POST | `/api/login` | 로그인 | `empNo`*str · `password`*str | `200` {id, empNo, name, dept}<br>`401` 불일치 |
-| GET | `/api/projects` | 내 프로젝트 목록 | `userId`*num (query) | `200` [{id, name, customer, role, reqCount, confirmedCount, lastOpenedAt}] |
-| POST | `/api/projects` | 프로젝트 생성(생성자=Owner, 토큰 발급) | `name`*str · `customer`str · `description`str · `modules`arr · `ownerId`*num | `201` {project, token} |
-| POST | `/api/projects/join` | 토큰으로 참여(Member) | `token`*str · `userId`*num | `200` {project}<br>`404` 잘못/폐기된 토큰 |
-| GET | `/api/projects/{id}` | 프로젝트 상세 | — | `200` {project, members[], modules[]} |
-| PATCH | `/api/projects/{id}` | 기본정보·모듈 수정(Owner) | `name`str · `customer`str · `description`str · `modules`arr | `200`<br>`403` 권한 없음 |
-| POST | `/api/projects/{id}/token` | 토큰 재발급(Owner, 이전 폐기) | — | `200` {token}<br>`403` |
-| GET | `/api/projects/{id}/members` | 멤버 목록 | — | `200` [{userId, name, empNo, role}] |
+| GET | `/api/projects` | 내 프로젝트 목록 | `userId`*num (query) | `200` [{id, name, customer, description, role, memberCount}] |
+| POST | `/api/projects` | 프로젝트 생성(생성자=Owner, 토큰 발급) | `userId`*num · `name`*str · `customer`str · `description`str · `modules`arr | `201` {id, name, customer, description, role, token, modules[], members[]} |
+| POST | `/api/projects/join` | 토큰으로 참여(이미 멤버면 그대로) | `userId`*num · `token`*str | `200` {id, name, customer, description, role, memberCount}<br>`400` 잘못/폐기된 토큰 |
+| GET | `/api/projects/{id}` | 프로젝트 상세(설정 화면) | `userId`*num (query) | `200` {id, name, customer, description, role, token, modules[], members[]}<br>(`token`은 Owner에게만 채워짐)<br>`404` 프로젝트 없음 · `403` 멤버 아님 |
+| PATCH | `/api/projects/{id}` | 기본정보·모듈 전체 수정(Owner) | `userId`*num · `name`*str · `customer`str · `description`str · `modules`arr | `200` (상세와 동일 형태)<br>`403` 권한 없음 |
+| POST | `/api/projects/{id}/token/reissue` | 토큰 재발급(Owner, 이전 폐기) | `userId`*num (query) | `200` {token}<br>`403` 권한 없음 |
+
+> 멤버 목록은 별도 엔드포인트 없이 `GET /api/projects/{id}` 응답의 `members[]`에 포함된다.
 
 ---
 

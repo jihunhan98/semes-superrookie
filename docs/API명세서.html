@@ -106,67 +106,76 @@
           <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>사용자 id</td></tr>
         </tbody></table>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> <code>[{ id, name, customer, role, reqCount, confirmedCount, lastOpenedAt }]</code></li></ul>
+        <ul class="res"><li><span class="sc ok">200</span> <code>[{ id, name, customer, description, role, memberCount }]</code></li></ul>
       </div></td></tr>
 
       <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects</td><td class="desc">프로젝트 생성 (생성자=Owner, 토큰 발급)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
         <div class="dh">요청 Body</div>
         <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>생성자(=Owner) 사용자 id</td></tr>
           <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트명</td></tr>
           <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
           <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
           <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 VCS 모듈</td></tr>
-          <tr><td class="fn">ownerId</td><td class="ty">num</td><td class="req">✓</td><td>생성자 사용자 id</td></tr>
         </tbody></table>
-        <pre>{ "name": "VCS · 태스크 할당", "customer": "삼성전자 EDS", "modules": ["jobassign"], "ownerId": 12 }</pre>
+        <pre>{ "userId": 12, "name": "VCS · 태스크 할당", "customer": "삼성전자 EDS", "modules": ["jobassign"] }</pre>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">201</span> <code>{ project, token }</code></li></ul>
+        <ul class="res"><li><span class="sc ok">201</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li></ul>
       </div></td></tr>
 
-      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/join</td><td class="desc">토큰으로 참여 (Member)</td><td><span class="chev">›</span></td></tr>
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/join</td><td class="desc">토큰으로 참여 (이미 멤버면 그대로)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
         <div class="dh">요청 Body</div>
         <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
-          <tr><td class="fn">token</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트 접근 토큰</td></tr>
           <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>참여자 사용자 id</td></tr>
+          <tr><td class="fn">token</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트 접근 토큰</td></tr>
         </tbody></table>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> <code>{ project }</code></li><li><span class="sc err">404</span> 잘못/폐기된 토큰</li></ul>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, memberCount }</code></li><li><span class="sc err">400</span> 잘못/폐기된 토큰</li></ul>
       </div></td></tr>
 
-      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects/{id}</td><td class="desc">프로젝트 상세</td><td><span class="chev">›</span></td></tr>
+      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects/{id}</td><td class="desc">프로젝트 상세 (설정 화면)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Query</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>조회자 사용자 id (멤버 확인용)</td></tr>
+        </tbody></table>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> <code>{ project, members[], modules[] }</code></li></ul>
+        <ul class="res">
+          <li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li>
+          <li><span class="sc err">404</span> 프로젝트 없음</li>
+          <li><span class="sc err">403</span> 멤버 아님</li>
+        </ul>
+        <p class="hint" style="margin-top:10px"><code>token</code>은 조회자가 Owner일 때만 값이 채워지고, Member면 <code>null</code>.</p>
       </div></td></tr>
 
       <tr class="row"><td><span class="m patch">PATCH</span></td><td class="path">/api/projects/{id}</td><td class="desc">기본정보·모듈 수정 (Owner)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
-        <div class="dh">요청 Body (수정할 필드만)</div>
+        <div class="dh">요청 Body (전체 교체)</div>
         <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
-          <tr><td class="fn">name</td><td class="ty">str</td><td class="opt">—</td><td>프로젝트명</td></tr>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>요청자 사용자 id (Owner 확인용)</td></tr>
+          <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트명</td></tr>
           <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
           <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
-          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 모듈</td></tr>
+          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 모듈(기존 목록을 이걸로 전체 교체)</td></tr>
         </tbody></table>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> 수정됨</li><li><span class="sc err">403</span> 권한 없음(Owner 아님)</li></ul>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li><li><span class="sc err">403</span> 권한 없음(Owner 아님)</li></ul>
       </div></td></tr>
 
-      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/{id}/token</td><td class="desc">토큰 재발급 (Owner, 이전 폐기)</td><td><span class="chev">›</span></td></tr>
+      <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/{id}/token/reissue</td><td class="desc">토큰 재발급 (Owner, 이전 폐기)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
+        <div class="dh">요청 Query</div>
+        <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
+          <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>요청자 사용자 id (Owner 확인용)</td></tr>
+        </tbody></table>
         <div class="dh">응답</div>
         <ul class="res"><li><span class="sc ok">200</span> <code>{ token }</code></li><li><span class="sc err">403</span> 권한 없음</li></ul>
       </div></td></tr>
-
-      <tr class="row"><td><span class="m get">GET</span></td><td class="path">/api/projects/{id}/members</td><td class="desc">멤버 목록</td><td><span class="chev">›</span></td></tr>
-      <tr class="detail"><td colspan="4"><div class="dwrap">
-        <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> <code>[{ userId, name, empNo, role }]</code></li></ul>
-      </div></td></tr>
     </tbody>
   </table>
+  <p class="hint">멤버 목록은 별도 엔드포인트 없이 <code>GET /api/projects/{id}</code> 응답의 <code>members[]</code>에 포함된다.</p>
 
   <h2>2. 기능 2 — 요구사항 검토</h2>
   <table>
