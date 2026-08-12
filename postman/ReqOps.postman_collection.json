@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "ReqOps API",
-    "description": "기능 1 — 회원가입/로그인 API 테스트 컬렉션. 세션/토큰 없음(요청마다 empNo+password로 대조).",
+    "description": "기능 1 — 회원가입/로그인/프로젝트 관리 API 테스트 컬렉션. 세션/토큰 없음 — 프로젝트 API는 요청 바디/쿼리에 userId를 직접 넘긴다.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -9,6 +9,24 @@
       "key": "baseUrl",
       "value": "http://localhost:8080",
       "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string",
+      "description": "회원가입/로그인 응답의 id 값을 넣는다."
+    },
+    {
+      "key": "projectId",
+      "value": "1",
+      "type": "string",
+      "description": "프로젝트 생성 응답의 id 값을 넣는다."
+    },
+    {
+      "key": "projectToken",
+      "value": "",
+      "type": "string",
+      "description": "프로젝트 생성/토큰 재발급 응답의 token 값을 넣는다."
     }
   ],
   "item": [
@@ -128,6 +146,132 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "프로젝트",
+      "item": [
+        {
+          "name": "프로젝트 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"newAMOS로부터 Task를 받아 AMR에 할당하는 영역\",\n  \"modules\": [\"pathsearch\", \"operation\", \"jobassign\"]\n}"
+            },
+            "description": "응답의 id → projectId 변수에, token → projectToken 변수에 넣어두면 아래 요청들에 바로 쓸 수 있다."
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 참여 (Open Project · 토큰)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "join"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"token\": \"{{projectToken}}\"\n}"
+            },
+            "description": "다른 사번으로 회원가입한 userId로 시도하면 Member로 합류하는 걸 확인할 수 있다."
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 참여 실패 - 잘못된 토큰",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "join"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"token\": \"req_prj_invalid0000000000000000\"\n}"
+            },
+            "description": "400과 함께 유효하지 않은 토큰 오류가 나야 한다."
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 상세 (설정 화면)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "Owner로 조회하면 token이 채워지고, Member로 조회하면 token은 null."
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 기본정보 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당 (수정)\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"설명 수정\",\n  \"modules\": [\"pathsearch\", \"watchdog\"]\n}"
+            },
+            "description": "Owner가 아니면 403이 나야 한다."
+          },
+          "response": []
+        },
+        {
+          "name": "프로젝트 토큰 재발급",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/token/reissue?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "token", "reissue"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "이전 토큰은 폐기되어 더 이상 참여에 쓸 수 없다. Owner가 아니면 403."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
