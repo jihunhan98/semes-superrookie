@@ -9,11 +9,9 @@ import com.semes.reqops.domain.project.dto.ProjectDto.TokenResponse;
 import com.semes.reqops.domain.project.dto.ProjectDto.UpdateRequest;
 import com.semes.reqops.domain.project.entity.Membership;
 import com.semes.reqops.domain.project.entity.Project;
-import com.semes.reqops.domain.project.entity.ProjectModule;
 import com.semes.reqops.domain.project.entity.ProjectToken;
 import com.semes.reqops.domain.project.entity.Role;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
-import com.semes.reqops.domain.project.repository.ProjectModuleRepository;
 import com.semes.reqops.domain.project.repository.ProjectRepository;
 import com.semes.reqops.domain.project.repository.ProjectTokenRepository;
 import com.semes.reqops.domain.user.entity.User;
@@ -33,7 +31,6 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final MembershipRepository membershipRepository;
     private final ProjectTokenRepository projectTokenRepository;
-    private final ProjectModuleRepository projectModuleRepository;
     private final UserRepository userRepository;
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -46,7 +43,6 @@ public class ProjectService {
 
         membershipRepository.save(new Membership(req.userId(), project.getId(), Role.OWNER));
         projectTokenRepository.save(new ProjectToken(project.getId(), generateToken()));
-        saveModules(project.getId(), req.modules());
 
         return detail(project.getId(), req.userId());
     }
@@ -92,10 +88,6 @@ public class ProjectService {
         Membership membership = membershipRepository.findByUserIdAndProjectId(userId, projectId)
                 .orElseThrow(ApiErrors.NotProjectMember::new);
 
-        List<String> modules = projectModuleRepository.findByProjectId(projectId).stream()
-                .map(ProjectModule::getModuleName)
-                .toList();
-
         List<MemberResponse> members = membershipRepository.findByProjectId(projectId).stream()
                 .map(m -> {
                     User user = userRepository.findById(m.getUserId()).orElse(null);
@@ -117,10 +109,10 @@ public class ProjectService {
         }
 
         return new DetailResponse(project.getId(), project.getName(), project.getCustomer(),
-                project.getDescription(), membership.getRole().name(), token, modules, members);
+                project.getDescription(), membership.getRole().name(), token, members);
     }
 
-    /** 기본 정보·대상 모듈 수정 (Owner 전용). */
+    /** 기본 정보 수정 (Owner 전용). */
     @Transactional
     public DetailResponse update(Long projectId, UpdateRequest req) {
         Project project = projectRepository.findById(projectId)
@@ -128,8 +120,6 @@ public class ProjectService {
         requireOwner(projectId, req.userId());
 
         project.update(req.name(), req.customer(), req.description());
-        projectModuleRepository.deleteByProjectId(projectId);
-        saveModules(projectId, req.modules());
 
         return detail(projectId, req.userId());
     }
@@ -156,13 +146,6 @@ public class ProjectService {
         if (membership.getRole() != Role.OWNER) {
             throw new ApiErrors.NotProjectOwner();
         }
-    }
-
-    private void saveModules(Long projectId, List<String> modules) {
-        if (modules == null) return;
-        modules.stream()
-                .filter(name -> name != null && !name.isBlank())
-                .forEach(name -> projectModuleRepository.save(new ProjectModule(projectId, name)));
     }
 
     private String generateToken() {

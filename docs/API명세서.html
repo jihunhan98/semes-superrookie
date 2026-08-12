@@ -117,11 +117,10 @@
           <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트명</td></tr>
           <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
           <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
-          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 VCS 모듈</td></tr>
         </tbody></table>
-        <pre>{ "userId": 12, "name": "VCS · 태스크 할당", "customer": "삼성전자 EDS", "modules": ["jobassign"] }</pre>
+        <pre>{ "userId": 12, "name": "VCS · 태스크 할당", "customer": "삼성전자 EDS" }</pre>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">201</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li></ul>
+        <ul class="res"><li><span class="sc ok">201</span> <code>{ id, name, customer, description, role, token, members[] }</code></li></ul>
       </div></td></tr>
 
       <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/join</td><td class="desc">토큰으로 참여 (이미 멤버면 그대로)</td><td><span class="chev">›</span></td></tr>
@@ -143,25 +142,25 @@
         </tbody></table>
         <div class="dh">응답</div>
         <ul class="res">
-          <li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li>
+          <li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, members[] }</code></li>
           <li><span class="sc err">404</span> 프로젝트 없음</li>
           <li><span class="sc err">403</span> 멤버 아님</li>
         </ul>
-        <p class="hint" style="margin-top:10px"><code>token</code>은 조회자가 Owner일 때만 값이 채워지고, Member면 <code>null</code>.</p>
+        <p class="hint" style="margin-top:10px"><code>token</code>은 조회자가 Owner일 때만 값이 채워지고, Member면 <code>null</code>. UI에서는 "멤버 초대" 버튼을 눌러야 이 값을 화면에 노출한다(추가 API 호출 없음).</p>
       </div></td></tr>
 
-      <tr class="row"><td><span class="m patch">PATCH</span></td><td class="path">/api/projects/{id}</td><td class="desc">기본정보·모듈 수정 (Owner)</td><td><span class="chev">›</span></td></tr>
+      <tr class="row"><td><span class="m patch">PATCH</span></td><td class="path">/api/projects/{id}</td><td class="desc">기본정보 수정 (Owner)</td><td><span class="chev">›</span></td></tr>
       <tr class="detail"><td colspan="4"><div class="dwrap">
-        <div class="dh">요청 Body (전체 교체)</div>
+        <div class="dh">요청 Body</div>
         <table class="fields"><thead><tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr></thead><tbody>
           <tr><td class="fn">userId</td><td class="ty">num</td><td class="req">✓</td><td>요청자 사용자 id (Owner 확인용)</td></tr>
           <tr><td class="fn">name</td><td class="ty">str</td><td class="req">✓</td><td>프로젝트명</td></tr>
           <tr><td class="fn">customer</td><td class="ty">str</td><td class="opt">—</td><td>고객사</td></tr>
           <tr><td class="fn">description</td><td class="ty">str</td><td class="opt">—</td><td>설명</td></tr>
-          <tr><td class="fn">modules</td><td class="ty">arr</td><td class="opt">—</td><td>대상 모듈(기존 목록을 이걸로 전체 교체)</td></tr>
         </tbody></table>
         <div class="dh">응답</div>
-        <ul class="res"><li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, modules[], members[] }</code></li><li><span class="sc err">403</span> 권한 없음(Owner 아님)</li></ul>
+        <ul class="res"><li><span class="sc ok">200</span> <code>{ id, name, customer, description, role, token, members[] }</code></li><li><span class="sc err">403</span> 권한 없음(Owner 아님)</li></ul>
+        <p class="hint" style="margin-top:10px">UI에서는 "수정" 버튼으로 편집 모드로 전환한 뒤 "저장"을 눌러야 이 요청이 호출된다.</p>
       </div></td></tr>
 
       <tr class="row"><td><span class="m post">POST</span></td><td class="path">/api/projects/{id}/token/reissue</td><td class="desc">토큰 재발급 (Owner, 이전 폐기)</td><td><span class="chev">›</span></td></tr>

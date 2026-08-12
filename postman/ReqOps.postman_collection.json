@@ -164,7 +164,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"newAMOS로부터 Task를 받아 AMR에 할당하는 영역\",\n  \"modules\": [\"pathsearch\", \"operation\", \"jobassign\"]\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"newAMOS로부터 Task를 받아 AMR에 할당하는 영역\"\n}"
             },
             "description": "응답의 id → projectId 변수에, token → projectToken 변수에 넣어두면 아래 요청들에 바로 쓸 수 있다."
           },
@@ -251,7 +251,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당 (수정)\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"설명 수정\",\n  \"modules\": [\"pathsearch\", \"watchdog\"]\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"VCS 태스크 할당 (수정)\",\n  \"customer\": \"삼성전자 EDS 설비공정그룹\",\n  \"description\": \"설명 수정\"\n}"
             },
             "description": "Owner가 아니면 403이 나야 한다."
           },

@@ -41,7 +41,6 @@ export type ProjectDetail = {
   description: string | null;
   role: Role;
   token: string | null;
-  modules: string[];
   members: ProjectMember[];
 };
 
@@ -50,7 +49,6 @@ export type ProjectInput = {
   name: string;
   customer: string;
   description: string;
-  modules: string[];
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {

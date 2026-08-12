@@ -15,16 +15,14 @@ public final class ProjectDto {
             @NotNull Long userId,
             @NotBlank String name,
             String customer,
-            String description,
-            List<String> modules
+            String description
     ) {}
 
     public record UpdateRequest(
             @NotNull Long userId,
             @NotBlank String name,
             String customer,
-            String description,
-            List<String> modules
+            String description
     ) {}
 
     public record JoinRequest(
@@ -56,7 +54,6 @@ public final class ProjectDto {
             String description,
             String role,
             String token,
-            List<String> modules,
             List<MemberResponse> members
     ) {}
 
