@@ -275,19 +275,20 @@
   <header>
     <p class="eyebrow">UI 설계 · 기능 1 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 1 (로그인 · 프로젝트 관리)</h1>
-    <p class="lede">서비스에 처음 들어오는 관문. <b>로그인/회원가입</b> 후 <b>VS Code처럼 프로젝트를 나열</b>하고, <b>New Project</b>로 새로 만들거나
-      <b>Open Project</b>로 토큰을 넣어 기존 프로젝트에 참여한다. 프로젝트 설정은 <b>DB에 저장</b>되어 팀 전체가 공유·관리한다. 이 화면들을 지나면 기능 2(요구사항)로 들어간다.</p>
+    <p class="lede">서비스에 처음 들어오는 관문. <b>로그인/회원가입</b> 후 <b>프로젝트를 나열</b>하고, <b>New Project</b>로 새로 만들거나
+      <b>프로젝트 카드를 클릭</b>해 이미 속한 프로젝트를 연다. 기존 프로젝트에 새로 참여할 땐 New Project 화면에서 <b>Open Project(토큰)</b>로 넘어간다.
+      프로젝트를 열면 나오는 화면(헤더+사이드바)이 실질적인 메인 화면이며, 프로젝트 설정은 <b>DB에 저장</b>되어 팀 전체가 공유·관리한다. 이 화면들을 지나면 기능 2(요구사항)로 들어간다.</p>
     <div class="metarow">
       <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
-      <span class="tag">프로젝트 = DB 저장</span><span class="tag">Open = 토큰</span>
+      <span class="tag">프로젝트 = DB 저장</span><span class="tag">카드 클릭 = 열기</span>
     </div>
     <div class="ia">
       <p class="t">기능 1 화면 흐름</p>
       <div class="row">
         <div class="col"><h4><span class="b">1</span>로그인 · 회원가입</h4><p>사번+비밀번호. 계정이 확정·수정 이력의 <b>작성자</b>가 된다.</p></div>
-        <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>VS Code처럼 최근 프로젝트 나열 + <b>New / Open Project</b>.</p></div>
-        <div class="col"><h4><span class="b">3</span>Open = 토큰</h4><p>기존 프로젝트는 <b>접근 토큰</b>으로 참여.</p></div>
-        <div class="col"><h4><span class="b">4</span>설정 = DB</h4><p>프로젝트 정보·토큰·멤버·모듈을 <b>DB에 저장</b>·관리.</p></div>
+        <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>내가 속한 프로젝트 카드 나열 + <b>New Project</b>. 카드 클릭이 곧 열기.</p></div>
+        <div class="col"><h4><span class="b">3</span>새 참여 = 토큰</h4><p>아직 안 속한 프로젝트는 New Project 화면에서 <b>접근 토큰</b>으로 참여.</p></div>
+        <div class="col"><h4><span class="b">4</span>메인 화면 = DB</h4><p>프로젝트를 열면 나오는 헤더+사이드바 화면(설정 등)이 <b>DB에 저장</b>되어 관리되는 진짜 메인 화면.</p></div>
       </div>
     </div>
   </header>
@@ -349,7 +350,7 @@
   <!-- 화면 3 프로젝트 목록 -->
   <section class="scr">
     <p class="kicker">화면 3 · 프로젝트</p>
-    <div class="scr-head"><span class="route">/projects</span><h2>프로젝트 목록 — VS Code처럼 (New / Open)</h2><span class="st newx">신규</span></div>
+    <div class="scr-head"><span class="route">/dashboard</span><h2>프로젝트 목록 — New Project + 카드 클릭으로 열기</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -362,31 +363,28 @@
             <h1 class="pt" style="font-size:26px;margin:0">프로젝트</h1>
             <span style="margin-left:auto;display:flex;gap:10px">
               <span class="btn prim">＋ New Project</span>
-              <span class="btn">📂 Open Project</span>
             </span>
           </div>
-          <p class="psub" style="margin-top:6px">최근 연 프로젝트에서 이어서 작업하거나, 새로 만들거나, 토큰으로 기존 프로젝트를 엽니다. 모든 프로젝트는 DB에서 관리됩니다.</p>
-          <div class="rqbar" style="margin-top:6px"><span class="srch" style="flex:1">🔍 프로젝트 이름·고객사로 검색</span><span class="t">최근 열람순 ▾</span></div>
-          <div class="pjgrid">
-            <div class="pjc"><span class="pic" style="background:#6e40c9">VC</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 태스크 할당</span><span class="role own">Owner</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>요구사항 <b>24</b></span><span>확정 <b>18</b></span><span>마지막 열람 <b>오늘</b></span></div></div><span class="btn sm">열기</span></div>
-            <div class="pjc"><span class="pic" style="background:#1f883d">MP</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 맵/경로</span><span class="role mem">Member</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>요구사항 <b>11</b></span><span>확정 <b>7</b></span><span>마지막 열람 <b>어제</b></span></div></div><span class="btn sm">열기</span></div>
-            <div class="pjc"><span class="pic" style="background:#bf3989">HI</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 호스트 인터페이스</span><span class="role mem">Member</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>요구사항 <b>9</b></span><span>확정 <b>9</b></span><span>마지막 열람 <b>3일 전</b></span></div></div><span class="btn sm">열기</span></div>
-            <div class="pjc" style="border-style:dashed;align-items:center;justify-content:center;color:var(--fgm)"><span style="font-size:14px;font-weight:600">＋ New Project · 📂 Open Project (토큰)</span></div>
+          <p class="psub" style="margin-top:6px">최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만듭니다. 모든 프로젝트는 DB에서 관리됩니다.</p>
+          <div class="pjgrid" style="margin-top:16px">
+            <div class="pjc"><span class="pic" style="background:#6e40c9">VC</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 태스크 할당</span><span class="role own">Owner</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>멤버 <b>3</b></span></div></div></div>
+            <div class="pjc"><span class="pic" style="background:#1f883d">MP</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 맵/경로</span><span class="role mem">Member</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>멤버 <b>5</b></span></div></div></div>
+            <div class="pjc" style="border-style:dashed;align-items:center;justify-content:center;color:var(--fgm)"><span style="font-size:14px;font-weight:600">＋ New Project</span></div>
           </div>
         </div>
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>VS Code식</b> 최근 프로젝트 카드 + New / Open</span>
-      <span class="chipspec"><b>카드</b> 이름·고객사·요구사항/확정 수·역할·마지막 열람</span>
-      <span class="chipspec"><b>DB 관리</b> 프로젝트·멤버·역할을 DB에 저장</span>
-      <span class="chipspec api">GET /api/projects?member=me</span>
+      <span class="chipspec"><b>카드 클릭 = 열기</b> Open 버튼 없음, 카드 자체가 진입점</span>
+      <span class="chipspec"><b>카드</b> 이름·고객사·역할·멤버 수</span>
+      <span class="chipspec"><b>새 참여</b> 아직 속하지 않은 프로젝트는 New Project 화면에서 토큰으로</span>
+      <span class="chipspec api">GET /api/projects?userId=</span>
     </div>
   </section>
 
   <!-- 화면 4 Open Project (토큰) -->
   <section class="scr">
-    <p class="kicker">화면 4 · 프로젝트</p>
+    <p class="kicker">화면 4 · 프로젝트 · New Project 화면에서 링크로 진입</p>
     <div class="scr-head"><span class="route">/projects/open</span><h2>Open Project — 토큰으로 참여</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh login">
@@ -413,7 +411,7 @@
   <!-- 화면 5 프로젝트 설정 -->
   <section class="scr">
     <p class="kicker">화면 5 · 프로젝트 설정</p>
-    <div class="scr-head"><span class="route">/projects/vcs-ta/settings</span><h2>프로젝트 설정 — DB로 저장·관리</h2><span class="st newx">신규</span></div>
+    <div class="scr-head"><span class="route">/projects/{id}/settings</span><h2>프로젝트 설정 — DB로 저장·관리</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -443,13 +441,7 @@
                   <div class="frow"><span class="k">프로젝트명</span><span class="in">VCS · 태스크 할당</span></div>
                   <div class="frow"><span class="k">고객사</span><span class="in">삼성전자 EDS · 설비공정그룹</span></div>
                   <div class="frow"><span class="k">설명</span><span class="in">newAMOS로부터 Task를 받아 AMR에 할당·경로탐색하는 VCS의 태스크 할당 영역</span></div>
-                </div>
-              </div>
-              <div class="setcard">
-                <div class="seth">🔑 접근 토큰 <span class="db">DB 저장</span></div>
-                <div class="setb">
-                  <div style="font-size:13px;color:var(--fgm);margin-bottom:9px">이 토큰을 팀원에게 주면 <b style="color:var(--fg)">Open Project</b>로 참여할 수 있습니다.</div>
-                  <div class="tok">req_prj_9f3a2c7b1e4d··········<span style="margin-left:auto;color:var(--blue);font-weight:700;font-family:var(--font)">복사</span><span style="color:var(--red);font-weight:700;font-family:var(--font)">재발급</span></div>
+                  <div style="margin-top:12px"><span class="btn sm">수정</span></div>
                 </div>
               </div>
               </div>
@@ -460,12 +452,11 @@
                   <div class="memrow"><span class="av2 a-h">한</span><span style="font-weight:600;font-size:14px">한지훈</span><span style="color:var(--fgm);font-size:12.5px">20213xxx · VCS 개발파트</span><span class="role own" style="margin-left:auto">Owner</span></div>
                   <div class="memrow"><span class="av2 a-l">이</span><span style="font-weight:600;font-size:14px">이수민</span><span style="color:var(--fgm);font-size:12.5px">20219xxx · VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
                   <div class="memrow"><span class="av2 a-k">김</span><span style="font-weight:600;font-size:14px">김도현</span><span style="color:var(--fgm);font-size:12.5px">20220xxx · VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
-                  <div style="margin-top:11px"><span class="btn sm">＋ 멤버 초대 (토큰 발급)</span></div>
+                  <div style="margin-top:11px">
+                    <div style="font-size:12.5px;color:var(--fgm);margin-bottom:8px">"＋ 멤버 초대" 클릭 시 아래 토큰이 펼쳐짐 —</div>
+                    <div class="tok">req_prj_9f3a2c7b1e4d··········<span style="margin-left:auto;color:var(--blue);font-weight:700;font-family:var(--font)">복사</span><span style="color:var(--red);font-weight:700;font-family:var(--font)">재발급</span></div>
+                  </div>
                 </div>
-              </div>
-              <div class="setcard">
-                <div class="seth">🧩 대상 모듈 <span class="db">DB 저장</span></div>
-                <div class="setb"><div class="chips"><span class="chip">pathsearch</span><span class="chip">operation</span><span class="chip">jobassign</span><span class="chip">parametermanagement</span><span class="chip">hostinterface</span><span class="chip">mapupdater</span><span class="chip">watchdog</span><span class="chip">nats</span></div></div>
               </div>
               </div>
             </div>
@@ -474,16 +465,17 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>DB 저장</b> 기본정보·토큰·멤버·모듈을 프로젝트별로 DB에 저장</span>
-      <span class="chipspec"><b>토큰</b> Open Project·멤버 초대에 사용 · 재발급 가능</span>
-      <span class="chipspec"><b>모듈</b> 프로젝트 대상 VCS 모듈 선택</span>
-      <span class="chipspec api">GET·PATCH /api/projects/{id}/settings</span>
+      <span class="chipspec"><b>DB 저장</b> 기본정보·토큰·멤버를 프로젝트별로 DB에 저장</span>
+      <span class="chipspec"><b>수정/저장</b> 기본 정보는 "수정" 눌러야 편집 가능, "저장"으로 커밋</span>
+      <span class="chipspec"><b>멤버 초대</b> 버튼 클릭 시 추가 조회 없이 이미 받아온 토큰을 노출·복사, "재발급"만 API 호출</span>
+      <span class="chipspec"><b>☰ 토글</b> 헤더의 햄버거로 사이드바 열기/닫기 (기본은 열림)</span>
+      <span class="chipspec api">GET/PATCH /api/projects/{id} · POST /api/projects/{id}/token/reissue</span>
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New/Open) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
-    &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰 · 프로젝트 설정(모듈)을 저장.
-    &nbsp;<b>다음.</b> 프로젝트를 열면 → <b>기능 2(요구사항 검토)</b>.</p>
+  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New Project) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
+    &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰을 저장.
+    &nbsp;<b>다음.</b> 프로젝트를 열면(카드 클릭) → <b>기능 2(요구사항 검토)</b>.</p>
 </div>
 <script>
   function fit(){document.querySelectorAll('.stage').forEach(function(st){

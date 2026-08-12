@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import type { User } from "../lib/api";
 import { getCurrentUser } from "../lib/session";
 
-export default function Header({ projectName }: { projectName?: string }) {
+export default function Header({
+  projectName,
+  onToggleSidebar,
+}: {
+  projectName?: string;
+  onToggleSidebar?: () => void;
+}) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -15,6 +21,11 @@ export default function Header({ projectName }: { projectName?: string }) {
 
   return (
     <header className="hdr">
+      {onToggleSidebar && (
+        <button className="burger" onClick={onToggleSidebar} aria-label="사이드바 열기/닫기">
+          ☰
+        </button>
+      )}
       <span className="mk">RE</span>
       <span className="brand">
         요구사항 엔지니어링

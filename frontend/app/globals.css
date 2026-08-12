@@ -216,6 +216,20 @@ a {
   padding: 0 22px;
 }
 
+.appshell .hdr .burger {
+  background: none;
+  border: none;
+  color: #c9d1d9;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.appshell .hdr .burger:hover {
+  color: #fff;
+}
+
 .appshell .hdr .mk {
   width: 32px;
   height: 32px;

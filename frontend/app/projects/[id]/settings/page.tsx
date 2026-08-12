@@ -15,6 +15,7 @@ export default function ProjectSettingsPage() {
 
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
@@ -110,9 +111,9 @@ export default function ProjectSettingsPage() {
 
   return (
     <div className="appshell">
-      <Header projectName={detail.name} />
+      <Header projectName={detail.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
       <div className="body">
-        <ProjectSidebar projectName={detail.name} active="settings" />
+        {sidebarOpen && <ProjectSidebar projectName={detail.name} active="settings" />}
         <main className="main">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>프로젝트 설정</h1>
