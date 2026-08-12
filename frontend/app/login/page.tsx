@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login } from "../lib/api";
+import { setCurrentUser } from "../lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(empNo, password);
-      sessionStorage.setItem("reqops:user", JSON.stringify(user));
+      setCurrentUser(user);
       router.push("/dashboard");
     } catch (err) {
       setMsg({ type: "err", text: err instanceof Error ? err.message : "로그인 실패" });
