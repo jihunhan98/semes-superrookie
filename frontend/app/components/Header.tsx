@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { User } from "../lib/api";
-import { getCurrentUser } from "../lib/session";
+import { clearCurrentUser, getCurrentUser } from "../lib/session";
 
 export default function Header({
   projectName,
@@ -12,6 +13,7 @@ export default function Header({
   projectName?: string;
   onToggleSidebar?: () => void;
 }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -20,6 +22,11 @@ export default function Header({
 
   const initial = user?.name?.[0] ?? "?";
   const homeHref = user ? "/dashboard" : "/login";
+
+  function onLogout() {
+    clearCurrentUser();
+    router.push("/login");
+  }
 
   return (
     <header className="hdr">
@@ -46,6 +53,11 @@ export default function Header({
       <div className="av" title={user?.name ?? "로그인 필요"}>
         {initial}
       </div>
+      {user && (
+        <button className="logout" onClick={onLogout}>
+          로그아웃
+        </button>
+      )}
     </header>
   );
 }

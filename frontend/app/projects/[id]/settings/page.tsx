@@ -113,20 +113,13 @@ export default function ProjectSettingsPage() {
     <div className="appshell">
       <Header projectName={detail.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
       <div className="body">
-        {sidebarOpen && <ProjectSidebar projectName={detail.name} active="settings" />}
+        {sidebarOpen && <ProjectSidebar projectId={detail.id} projectName={detail.name} active="settings" />}
         <main className="main">
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>프로젝트 설정</h1>
-            {!isOwner && (
-              <span style={{ fontSize: 12.5, color: "var(--muted)" }}>Member는 조회만 가능합니다</span>
-            )}
-          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>프로젝트 설정</h1>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 1000, marginTop: 18 }}>
             <div className="setcard">
-              <div className="seth">
-                🗂️ 기본 정보 <span className="db">DB 저장</span>
-              </div>
+              <div className="seth">🗂️ 기본 정보</div>
               <div className="setb">
                 <div className="frow">
                   <span className="k">프로젝트명</span>
@@ -158,9 +151,7 @@ export default function ProjectSettingsPage() {
             </div>
 
             <div className="setcard">
-              <div className="seth">
-                👥 멤버 · 권한 <span className="db">DB 저장</span>
-              </div>
+              <div className="seth">👥 멤버 · 권한</div>
               <div className="setb">
                 {detail.members.map((m) => (
                   <div key={m.userId} className="memrow">
@@ -168,9 +159,7 @@ export default function ProjectSettingsPage() {
                       {m.name[0]}
                     </span>
                     <span style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</span>
-                    <span style={{ color: "var(--muted)", fontSize: 12.5 }}>
-                      {m.empNo} · {m.dept}
-                    </span>
+                    <span style={{ color: "var(--muted)", fontSize: 12.5 }}>{m.dept}</span>
                     <span className={`role ${m.role === "OWNER" ? "own" : "mem"}`} style={{ marginLeft: "auto" }}>
                       {m.role === "OWNER" ? "Owner" : "Member"}
                     </span>

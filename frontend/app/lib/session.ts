@@ -11,3 +11,7 @@ export function getCurrentUser(): User | null {
 export function setCurrentUser(user: User) {
   sessionStorage.setItem(KEY, JSON.stringify(user));
 }
+
+export function clearCurrentUser() {
+  sessionStorage.removeItem(KEY);
+}

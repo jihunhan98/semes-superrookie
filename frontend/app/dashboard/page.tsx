@@ -54,7 +54,7 @@ export default function DashboardPage() {
         {projects !== null && projects.length > 0 && (
           <div className="pjgrid">
             {projects.map((p) => (
-              <Link key={p.id} className="pjc" href={`/projects/${p.id}/settings`}>
+              <Link key={p.id} className="pjc" href={`/projects/${p.id}`}>
                 <span className="pic" style={{ background: colorFor(p.name) }}>
                   {p.name.slice(0, 2)}
                 </span>

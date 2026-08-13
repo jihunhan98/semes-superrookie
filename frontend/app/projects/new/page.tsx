@@ -29,7 +29,7 @@ export default function NewProjectPage() {
     setLoading(true);
     try {
       const project = await createProject({ userId: user.id, name, customer, description });
-      router.push(`/projects/${project.id}/settings`);
+      router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "프로젝트 생성에 실패했습니다.");
       setLoading(false);

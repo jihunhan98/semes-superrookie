@@ -68,6 +68,7 @@
   .gh .hdr .search .sl{margin-left:auto;border:1px solid #444c56;border-radius:5px;padding:0 6px;font-size:11px;}
   .gh .hdr .ico{width:32px;height:32px;border:1px solid #444c56;border-radius:8px;display:grid;place-items:center;color:#c9d1d9;}
   .gh .hdr .av{width:32px;height:32px;border-radius:50%;background:#388bfd;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;}
+  .gh .hdr .logout{border:1px solid #444c56;border-radius:8px;color:#c9d1d9;font-size:13px;font-weight:600;padding:7px 12px;white-space:nowrap;}
   .gh .body{flex:1;display:flex;min-height:0;}
   /* left nav */
   .gh .side{width:300px;flex:0 0 300px;background:var(--cv);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
@@ -255,6 +256,8 @@
   .gh .pjc .pnm{font-size:16px;font-weight:700;} .gh .pjc .pcust{font-size:12.5px;color:var(--fgm);margin-top:2px;}
   .gh .pjc .pmeta{font-size:12.5px;color:var(--fgm);margin-top:9px;display:flex;gap:14px;flex-wrap:wrap;}
   .gh .pjc .pmeta b{color:var(--fg);font-weight:700;}
+  .gh .main .pmeta b{color:var(--fg);font-weight:700;}
+  .gh .placeholder{border:1px dashed var(--bd);border-radius:12px;padding:60px 24px;text-align:center;color:var(--fgm);font-size:14px;}
   .gh .pjgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
   .gh .role{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
   .gh .role.own{background:var(--purple-s);color:var(--purple);} .gh .role.mem{background:var(--cvi);color:var(--fgm);}
@@ -277,11 +280,11 @@
     <h1 class="page">요구사항 엔지니어링 — 기능 1 (로그인 · 프로젝트 관리)</h1>
     <p class="lede">서비스에 처음 들어오는 관문. <b>로그인/회원가입</b> 후 <b>프로젝트를 나열</b>하고, <b>New Project</b>로 새로 만들거나
       <b>프로젝트 카드를 클릭</b>해 이미 속한 프로젝트를 열거나, <b>Open Project</b>로 토큰을 넣어 아직 안 속한 프로젝트에 참여한다.
-      헤더 왼쪽 로고를 누르면 홈(로그인 상태면 프로젝트 목록, 아니면 로그인 화면)으로 돌아간다.
-      프로젝트를 열면 나오는 화면(헤더+사이드바)이 실질적인 메인 화면이며, 프로젝트 설정은 <b>DB에 저장</b>되어 팀 전체가 공유·관리한다. 이 화면들을 지나면 기능 2(요구사항)로 들어간다.</p>
+      헤더 왼쪽 로고를 누르면 홈(로그인 상태면 프로젝트 목록, 아니면 로그인 화면)으로 돌아가고, 우측 <b>로그아웃</b> 버튼으로 세션을 정리한다.
+      프로젝트를 열면 <b>프로젝트 홈</b>(조회 전용, 사이드바+헤더)으로 들어가고, <b>설정</b>은 사이드바에서 별도로 들어가는 구분된 화면이다. 여기서 관리되는 값은 <b>DB에 저장</b>되어 팀 전체가 공유한다. 이 화면들을 지나면 기능 2(요구사항)로 들어간다.</p>
     <div class="metarow">
       <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
-      <span class="tag">프로젝트 = DB 저장</span><span class="tag">로고 = 홈</span>
+      <span class="tag">프로젝트 = DB 저장</span><span class="tag">로고 = 홈</span><span class="tag">홈 ≠ 설정</span>
     </div>
     <div class="ia">
       <p class="t">기능 1 화면 흐름</p>
@@ -289,7 +292,7 @@
         <div class="col"><h4><span class="b">1</span>로그인 · 회원가입</h4><p>사번+비밀번호. 계정이 확정·수정 이력의 <b>작성자</b>가 된다.</p></div>
         <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>내가 속한 프로젝트 카드 나열 + <b>New Project / Open Project</b>. 카드 클릭이 곧 열기.</p></div>
         <div class="col"><h4><span class="b">3</span>새 참여 = 토큰</h4><p>아직 안 속한 프로젝트는 <b>Open Project</b>에서 접근 토큰으로 참여.</p></div>
-        <div class="col"><h4><span class="b">4</span>메인 화면 = DB</h4><p>프로젝트를 열면 나오는 헤더+사이드바 화면(설정 등)이 <b>DB에 저장</b>되어 관리되는 진짜 메인 화면.</p></div>
+        <div class="col"><h4><span class="b">4</span>홈 vs 설정</h4><p>프로젝트를 열면 항상 <b>홈</b>(조회)으로 가고, 편집은 사이드바의 <b>설정</b>에서 따로 한다.</p></div>
       </div>
     </div>
   </header>
@@ -355,9 +358,9 @@
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="mk">RE</span><span class="brand">요구사항 엔지니어링</span>
+          <a class="mk">RE</a><span class="brand">요구사항 엔지니어링</span>
           <span class="sp"></span><div class="search">🔍 프로젝트 검색<span class="sl">/</span></div>
-          <div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
         </div>
         <div class="body" style="display:block;overflow:auto;padding:34px 44px">
           <div style="display:flex;align-items:center;gap:14px">
@@ -377,8 +380,10 @@
     </div></div>
     <div class="specrow">
       <span class="chipspec"><b>New / Open 버튼</b> 상단에 나란히, 프로젝트가 하나도 없어도 항상 보임</span>
-      <span class="chipspec"><b>카드 클릭 = 열기</b> 이미 속한 프로젝트는 카드 클릭이 진입점</span>
+      <span class="chipspec"><b>카드 클릭 = 열기</b> 이미 속한 프로젝트는 카드 클릭 시 <b>프로젝트 홈(화면 5)</b>으로 진입</span>
       <span class="chipspec"><b>카드</b> 이름·고객사·역할·멤버 수</span>
+      <span class="chipspec"><b>로고 = 홈</b> 헤더 좌측 로고 클릭 시 로그인 여부에 따라 대시보드/로그인으로</span>
+      <span class="chipspec"><b>로그아웃</b> 헤더 우측 버튼, 클릭 시 세션 정리 후 /login</span>
       <span class="chipspec api">GET /api/projects?userId=</span>
     </div>
   </section>
@@ -409,35 +414,75 @@
     </div>
   </section>
 
-  <!-- 화면 5 프로젝트 설정 -->
+  <!-- 화면 5 프로젝트 홈 -->
   <section class="scr">
-    <p class="kicker">화면 5 · 프로젝트 설정</p>
+    <p class="kicker">화면 5 · 프로젝트 · 대시보드 카드 클릭 / New·Open 완료 시 진입</p>
+    <div class="scr-head"><span class="route">/projects/{id}</span><h2>프로젝트 홈 — 진짜 메인 화면</h2><span class="st newx">신규</span></div>
+    <div class="stage"><div class="canvas">
+      <div class="gh">
+        <div class="hdr">
+          <span class="burger">☰</span><a class="mk">RE</a>
+          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
+          <span class="sp"></span><div class="search">🔍 검색<span class="sl">/</span></div>
+          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
+        </div>
+        <div class="body">
+          <aside class="side">
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
+          </aside>
+          <div class="main">
+            <h1 class="pt" style="margin:0">VCS · 태스크 할당</h1>
+            <p class="psub" style="margin:6px 0 4px">삼성전자 EDS · 설비공정그룹</p>
+            <p style="color:var(--fgm);font-size:14px;max-width:640px">newAMOS로부터 Task를 받아 AMR에 할당·경로탐색하는 VCS의 태스크 할당 영역</p>
+            <div class="pmeta" style="font-size:13px;margin:18px 0 24px">
+              <span>내 역할 <b>Owner</b></span><span style="margin-left:18px">멤버 <b>3</b></span>
+            </div>
+            <div class="placeholder">요구사항·산출물·추적성 기능은 준비 중입니다.</div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow">
+      <span class="chipspec"><b>진짜 메인 화면</b> 프로젝트를 열면(New/Open/카드 클릭) 항상 여기로 옴, 설정 화면과 분리</span>
+      <span class="chipspec"><b>사이드바 프로젝트 카드</b> 클릭하면 홈으로 돌아옴 (헤더 ☰로 사이드바 자체 열기/닫기)</span>
+      <span class="chipspec"><b>조회 전용</b> 편집 기능 없음 — 수정은 사이드바 "설정"에서</span>
+      <span class="chipspec api">GET /api/projects/{id}?userId=</span>
+    </div>
+  </section>
+
+  <!-- 화면 6 프로젝트 설정 -->
+  <section class="scr">
+    <p class="kicker">화면 6 · 프로젝트 · 사이드바 "설정" 클릭 시 진입</p>
     <div class="scr-head"><span class="route">/projects/{id}/settings</span><h2>프로젝트 설정 — DB로 저장·관리</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
         </div>
         <div class="body">
           <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
             <div class="nl">프로젝트</div>
             <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
-            <div class="crumb"><b>VCS · 태스크 할당</b> / 설정</div>
-            <div style="display:flex;align-items:center;gap:12px"><h1 class="pt" style="margin:0">프로젝트 설정</h1><span style="font-size:12.5px;color:var(--fgm)">변경은 <b style="color:var(--green)">DB에 저장</b>되어 팀 전체에 반영</span></div>
+            <h1 class="pt" style="margin:0">프로젝트 설정</h1>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1180px;margin-top:18px;align-items:start">
-              <div>
               <div class="setcard">
-                <div class="seth">🗂️ 기본 정보 <span class="db">DB 저장</span></div>
+                <div class="seth">🗂️ 기본 정보</div>
                 <div class="setb">
                   <div class="frow"><span class="k">프로젝트명</span><span class="in">VCS · 태스크 할당</span></div>
                   <div class="frow"><span class="k">고객사</span><span class="in">삼성전자 EDS · 설비공정그룹</span></div>
@@ -445,20 +490,17 @@
                   <div style="margin-top:12px"><span class="btn sm">수정</span></div>
                 </div>
               </div>
-              </div>
-              <div>
               <div class="setcard">
-                <div class="seth">👥 멤버 · 권한 <span class="db">DB 저장</span></div>
+                <div class="seth">👥 멤버 · 권한</div>
                 <div class="setb">
-                  <div class="memrow"><span class="av2 a-h">한</span><span style="font-weight:600;font-size:14px">한지훈</span><span style="color:var(--fgm);font-size:12.5px">20213xxx · VCS 개발파트</span><span class="role own" style="margin-left:auto">Owner</span></div>
-                  <div class="memrow"><span class="av2 a-l">이</span><span style="font-weight:600;font-size:14px">이수민</span><span style="color:var(--fgm);font-size:12.5px">20219xxx · VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
-                  <div class="memrow"><span class="av2 a-k">김</span><span style="font-weight:600;font-size:14px">김도현</span><span style="color:var(--fgm);font-size:12.5px">20220xxx · VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
+                  <div class="memrow"><span class="av2 a-h">한</span><span style="font-weight:600;font-size:14px">한지훈</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role own" style="margin-left:auto">Owner</span></div>
+                  <div class="memrow"><span class="av2 a-l">이</span><span style="font-weight:600;font-size:14px">이수민</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
+                  <div class="memrow"><span class="av2 a-k">김</span><span style="font-weight:600;font-size:14px">김도현</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
                   <div style="margin-top:11px">
                     <div style="font-size:12.5px;color:var(--fgm);margin-bottom:8px">"＋ 멤버 초대" 클릭 시 아래 토큰이 펼쳐짐 —</div>
                     <div class="tok">req_prj_9f3a2c7b1e4d··········<span style="margin-left:auto;color:var(--blue);font-weight:700;font-family:var(--font)">복사</span><span style="color:var(--red);font-weight:700;font-family:var(--font)">재발급</span></div>
                   </div>
                 </div>
-              </div>
               </div>
             </div>
           </div>
@@ -466,17 +508,17 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>DB 저장</b> 기본정보·토큰·멤버를 프로젝트별로 DB에 저장</span>
       <span class="chipspec"><b>수정/저장</b> 기본 정보는 "수정" 눌러야 편집 가능, "저장"으로 커밋</span>
+      <span class="chipspec"><b>멤버 · 권한</b> 이름·부서·역할만 표시(사번 등 불필요한 정보 제외)</span>
       <span class="chipspec"><b>멤버 초대</b> 버튼 클릭 시 추가 조회 없이 이미 받아온 토큰을 노출·복사, "재발급"만 API 호출</span>
-      <span class="chipspec"><b>☰ 토글</b> 헤더의 햄버거로 사이드바 열기/닫기 (기본은 열림)</span>
+      <span class="chipspec"><b>DB 저장 배지 없음</b> 화면마다 "DB 저장" 같은 개발 티 나는 라벨은 안 붙임</span>
       <span class="chipspec api">GET/PATCH /api/projects/{id} · POST /api/projects/{id}/token/reissue</span>
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New/Open Project) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
+  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New/Open Project) · Open Project(토큰) · 프로젝트 홈 · 프로젝트 설정, 총 6화면.
     &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰을 저장.
-    &nbsp;<b>다음.</b> 프로젝트를 열면(카드 클릭) → <b>기능 2(요구사항 검토)</b>.</p>
+    &nbsp;<b>다음.</b> 프로젝트 홈에서 사이드바 요구사항을 누르면 → <b>기능 2(요구사항 검토)</b>.</p>
 </div>
 <script>
   function fit(){document.querySelectorAll('.stage').forEach(function(st){

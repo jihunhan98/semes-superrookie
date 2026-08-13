@@ -27,7 +27,7 @@ export default function OpenProjectPage() {
     setLoading(true);
     try {
       const project = await joinProject(user.id, token.trim());
-      router.push(`/projects/${project.id}/settings`);
+      router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "참여에 실패했습니다.");
       setLoading(false);
