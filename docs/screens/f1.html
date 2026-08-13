@@ -68,7 +68,9 @@
   .gh .hdr .search .sl{margin-left:auto;border:1px solid #444c56;border-radius:5px;padding:0 6px;font-size:11px;}
   .gh .hdr .ico{width:32px;height:32px;border:1px solid #444c56;border-radius:8px;display:grid;place-items:center;color:#c9d1d9;}
   .gh .hdr .av{width:32px;height:32px;border-radius:50%;background:#388bfd;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;}
-  .gh .hdr .logout{border:1px solid #444c56;border-radius:8px;color:#c9d1d9;font-size:13px;font-weight:600;padding:7px 12px;white-space:nowrap;}
+  .gh .hdr .avmenu{position:relative;}
+  .gh .hdr .avdrop{position:absolute;top:42px;right:0;min-width:150px;background:var(--cv);border:1px solid var(--bd);border-radius:8px;box-shadow:var(--shadow);padding:6px;}
+  .gh .hdr .avdrop span{display:block;padding:8px 10px;border-radius:6px;font-size:13.5px;color:var(--fg);}
   .gh .body{flex:1;display:flex;min-height:0;}
   /* left nav */
   .gh .side{width:300px;flex:0 0 300px;background:var(--cv);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
@@ -360,7 +362,8 @@
         <div class="hdr">
           <a class="mk">RE</a><span class="brand">요구사항 엔지니어링</span>
           <span class="sp"></span><div class="search">🔍 프로젝트 검색<span class="sl">/</span></div>
-          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
+          <div class="ico">🔔</div>
+          <div class="avmenu"><div class="av">한</div><div class="avdrop"><span>로그아웃</span></div></div>
         </div>
         <div class="body" style="display:block;overflow:auto;padding:34px 44px">
           <div style="display:flex;align-items:center;gap:14px">
@@ -424,7 +427,7 @@
           <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 검색<span class="sl">/</span></div>
-          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">
@@ -437,21 +440,41 @@
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
-            <h1 class="pt" style="margin:0">VCS · 태스크 할당</h1>
-            <p class="psub" style="margin:6px 0 4px">삼성전자 EDS · 설비공정그룹</p>
-            <p style="color:var(--fgm);font-size:14px;max-width:640px">newAMOS로부터 Task를 받아 AMR에 할당·경로탐색하는 VCS의 태스크 할당 영역</p>
-            <div class="pmeta" style="font-size:13px;margin:18px 0 24px">
-              <span>내 역할 <b>Owner</b></span><span style="margin-left:18px">멤버 <b>3</b></span>
+            <div style="display:flex;align-items:center;gap:12px">
+              <h1 class="pt" style="margin:0">VCS · 태스크 할당</h1>
+              <span class="role own">Owner</span>
             </div>
-            <div class="placeholder">요구사항·산출물·추적성 기능은 준비 중입니다.</div>
+            <p class="psub" style="margin:6px 0 4px">삼성전자 EDS · 설비공정그룹</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1000px;margin-top:18px">
+              <div class="setcard">
+                <div class="seth">🗂️ 기본 정보</div>
+                <div class="setb">
+                  <div class="frow"><span class="k">프로젝트명</span><span>VCS · 태스크 할당</span></div>
+                  <div class="frow"><span class="k">고객사</span><span>삼성전자 EDS · 설비공정그룹</span></div>
+                  <div class="frow"><span class="k">설명</span><span>newAMOS로부터 Task를 받아 AMR에 할당·경로탐색하는 VCS의 태스크 할당 영역</span></div>
+                  <div style="margin-top:12px"><span class="btn sm">설정에서 수정</span></div>
+                </div>
+              </div>
+              <div class="setcard">
+                <div class="seth">👥 멤버 · 권한</div>
+                <div class="setb">
+                  <div class="memrow"><span class="av2 a-h">한</span><span style="font-weight:600;font-size:14px">한지훈</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role own" style="margin-left:auto">Owner</span></div>
+                  <div class="memrow"><span class="av2 a-l">이</span><span style="font-weight:600;font-size:14px">이수민</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
+                  <div class="memrow"><span class="av2 a-k">김</span><span style="font-weight:600;font-size:14px">김도현</span><span style="color:var(--fgm);font-size:12.5px">VCS 개발파트</span><span class="role mem" style="margin-left:auto">Member</span></div>
+                  <div style="margin-top:11px"><span class="btn sm">＋ 멤버 초대 (토큰 발급)</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="placeholder" style="margin-top:16px;max-width:1000px">요구사항·산출물·추적성 기능은 준비 중입니다.</div>
           </div>
         </div>
       </div>
     </div></div>
     <div class="specrow">
       <span class="chipspec"><b>진짜 메인 화면</b> 프로젝트를 열면(New/Open/카드 클릭) 항상 여기로 옴, 설정 화면과 분리</span>
-      <span class="chipspec"><b>사이드바 프로젝트 카드</b> 클릭하면 홈으로 돌아옴 (헤더 ☰로 사이드바 자체 열기/닫기)</span>
-      <span class="chipspec"><b>조회 전용</b> 편집 기능 없음 — 수정은 사이드바 "설정"에서</span>
+      <span class="chipspec"><b>대시보드처럼 한눈에</b> 기본 정보 + 멤버·권한을 2열 카드로 바로 확인, 편집은 "설정"으로</span>
+      <span class="chipspec"><b>멤버 초대</b> Owner는 카드 안에서 바로 "＋ 멤버 초대" → 토큰 노출·복사</span>
+      <span class="chipspec"><b>프로필 메뉴</b> 우측 상단 아바타 클릭 → 로그아웃 등 메뉴 (화면 3 참고)</span>
       <span class="chipspec api">GET /api/projects/{id}?userId=</span>
     </div>
   </section>
@@ -466,7 +489,7 @@
           <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 검색<span class="sl">/</span></div>
-          <div class="ico">🔔</div><div class="av">한</div><span class="logout">로그아웃</span>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">

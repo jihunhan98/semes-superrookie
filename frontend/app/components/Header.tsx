@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "../lib/api";
@@ -15,9 +15,21 @@ export default function Header({
 }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUser(getCurrentUser());
+  }, []);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
   const initial = user?.name?.[0] ?? "?";
@@ -50,14 +62,16 @@ export default function Header({
       <span className="sp" />
       <div className="search">🔍 프로젝트 검색</div>
       <div className="ico">🔔</div>
-      <div className="av" title={user?.name ?? "로그인 필요"}>
-        {initial}
-      </div>
-      {user && (
-        <button className="logout" onClick={onLogout}>
-          로그아웃
+      <div className="avmenu" ref={menuRef}>
+        <button className="av" title={user?.name ?? "로그인 필요"} onClick={() => setMenuOpen((v) => !v)}>
+          {initial}
         </button>
-      )}
+        {menuOpen && (
+          <div className="avdrop">
+            <button onClick={onLogout}>로그아웃</button>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../components/Header";
 import ProjectSidebar from "../../../components/ProjectSidebar";
-import { getProject, updateProject, reissueToken, type ProjectDetail } from "../../../lib/api";
+import MembersCard from "../../../components/MembersCard";
+import { getProject, updateProject, type ProjectDetail } from "../../../lib/api";
 import { getCurrentUser } from "../../../lib/session";
-import { colorFor } from "../../../lib/colors";
 
 export default function ProjectSettingsPage() {
   const router = useRouter();
@@ -24,11 +24,6 @@ export default function ProjectSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [reissuing, setReissuing] = useState(false);
-  const [copied, setCopied] = useState(false);
-
   useEffect(() => {
     const user = getCurrentUser();
     if (!user) {
@@ -42,7 +37,6 @@ export default function ProjectSettingsPage() {
         setName(d.name);
         setCustomer(d.customer ?? "");
         setDescription(d.description ?? "");
-        setToken(d.token);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "프로젝트를 불러오지 못했습니다."));
   }, [projectId, router]);
@@ -61,28 +55,6 @@ export default function ProjectSettingsPage() {
     } finally {
       setSaving(false);
     }
-  }
-
-  async function onReissue() {
-    const user = getCurrentUser();
-    if (!user) return;
-    if (!window.confirm("토큰을 재발급하면 기존 토큰은 더 이상 쓸 수 없습니다. 계속할까요?")) return;
-    setReissuing(true);
-    try {
-      const res = await reissueToken(projectId, user.id);
-      setToken(res.token);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "토큰 재발급에 실패했습니다.");
-    } finally {
-      setReissuing(false);
-    }
-  }
-
-  function onCopy() {
-    if (!token) return;
-    navigator.clipboard.writeText(token);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   }
 
   if (error) {
@@ -150,48 +122,7 @@ export default function ProjectSettingsPage() {
               </div>
             </div>
 
-            <div className="setcard">
-              <div className="seth">👥 멤버 · 권한</div>
-              <div className="setb">
-                {detail.members.map((m) => (
-                  <div key={m.userId} className="memrow">
-                    <span className="av2" style={{ background: colorFor(m.name) }}>
-                      {m.name[0]}
-                    </span>
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</span>
-                    <span style={{ color: "var(--muted)", fontSize: 12.5 }}>{m.dept}</span>
-                    <span className={`role ${m.role === "OWNER" ? "own" : "mem"}`} style={{ marginLeft: "auto" }}>
-                      {m.role === "OWNER" ? "Owner" : "Member"}
-                    </span>
-                  </div>
-                ))}
-
-                {isOwner && (
-                  <div style={{ marginTop: 11 }}>
-                    {!inviteOpen ? (
-                      <button className="btn sm" onClick={() => setInviteOpen(true)}>
-                        ＋ 멤버 초대 (토큰 발급)
-                      </button>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 8 }}>
-                          이 토큰을 팀원에게 주면 Open Project로 참여할 수 있습니다.
-                        </div>
-                        <div className="tok">
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{token}</span>
-                          <button className="copy" onClick={onCopy}>
-                            {copied ? "복사됨" : "복사"}
-                          </button>
-                          <button className="reissue" onClick={onReissue} disabled={reissuing}>
-                            {reissuing ? "재발급 중…" : "재발급"}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <MembersCard projectId={detail.id} isOwner={isOwner} members={detail.members} initialToken={detail.token} />
           </div>
         </main>
       </div>

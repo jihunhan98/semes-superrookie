@@ -279,35 +279,55 @@ a {
   flex: 0 0 32px;
 }
 
+.appshell .hdr .avmenu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
 .appshell .hdr .av {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   background: #388bfd;
   color: #fff;
+  border: none;
   display: grid;
   place-items: center;
   font-weight: 700;
   font-size: 13px;
-  flex: 0 0 32px;
-}
-
-.appshell .hdr .logout {
-  background: none;
-  border: 1px solid #444c56;
-  border-radius: 8px;
-  color: #c9d1d9;
-  font-size: 13px;
-  font-weight: 600;
   font-family: inherit;
-  padding: 7px 12px;
   cursor: pointer;
-  white-space: nowrap;
 }
 
-.appshell .hdr .logout:hover {
-  background: #30363d;
-  color: #fff;
+.appshell .hdr .avdrop {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  min-width: 150px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  z-index: 20;
+}
+
+.appshell .hdr .avdrop button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-family: inherit;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.appshell .hdr .avdrop button:hover {
+  background: var(--surface-muted);
 }
 
 .appshell .body {

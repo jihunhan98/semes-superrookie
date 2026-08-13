@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../components/Header";
 import ProjectSidebar from "../../components/ProjectSidebar";
+import MembersCard from "../../components/MembersCard";
 import { getProject, type ProjectDetail } from "../../lib/api";
 import { getCurrentUser } from "../../lib/session";
 
@@ -50,28 +52,52 @@ export default function ProjectHomePage() {
     );
   }
 
+  const isOwner = detail.role === "OWNER";
+
   return (
     <div className="appshell">
       <Header projectName={detail.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
       <div className="body">
         {sidebarOpen && <ProjectSidebar projectId={detail.id} projectName={detail.name} active="home" />}
         <main className="main">
-          <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>{detail.name}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>{detail.name}</h1>
+            <span className={`role ${isOwner ? "own" : "mem"}`}>{isOwner ? "Owner" : "Member"}</span>
+          </div>
           {detail.customer && <p className="psub" style={{ marginBottom: 4 }}>{detail.customer}</p>}
-          {detail.description && (
-            <p style={{ color: "var(--muted)", fontSize: 14, maxWidth: 640 }}>{detail.description}</p>
-          )}
 
-          <div className="pmeta" style={{ fontSize: 13, margin: "18px 0 24px" }}>
-            <span>
-              내 역할 <b>{detail.role === "OWNER" ? "Owner" : "Member"}</b>
-            </span>
-            <span style={{ marginLeft: 18 }}>
-              멤버 <b>{detail.members.length}</b>
-            </span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 1000, marginTop: 18 }}>
+            <div className="setcard">
+              <div className="seth">🗂️ 기본 정보</div>
+              <div className="setb">
+                <div className="frow">
+                  <span className="k">프로젝트명</span>
+                  <span>{detail.name}</span>
+                </div>
+                <div className="frow">
+                  <span className="k">고객사</span>
+                  <span>{detail.customer || "—"}</span>
+                </div>
+                <div className="frow">
+                  <span className="k">설명</span>
+                  <span>{detail.description || "—"}</span>
+                </div>
+                {isOwner && (
+                  <div style={{ marginTop: 12 }}>
+                    <Link className="btn sm" href={`/projects/${detail.id}/settings`}>
+                      설정에서 수정
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <MembersCard projectId={detail.id} isOwner={isOwner} members={detail.members} initialToken={detail.token} />
           </div>
 
-          <div className="placeholder">요구사항·산출물·추적성 기능은 준비 중입니다.</div>
+          <div className="placeholder" style={{ marginTop: 16, maxWidth: 1000 }}>
+            요구사항·산출물·추적성 기능은 준비 중입니다.
+          </div>
         </main>
       </div>
     </div>
