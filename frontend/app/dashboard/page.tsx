@@ -34,10 +34,13 @@ export default function DashboardPage() {
             <Link className="btn prim" href="/projects/new">
               ＋ New Project
             </Link>
+            <Link className="btn" href="/projects/open">
+              📂 Open Project
+            </Link>
           </span>
         </div>
         <p className="psub">
-          최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만듭니다.
+          최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만들거나, 토큰으로 기존 프로젝트를 엽니다.
         </p>
 
         {error && <p className="lmsg err">{error}</p>}
@@ -45,7 +48,7 @@ export default function DashboardPage() {
         {!error && projects === null && <div className="placeholder">불러오는 중…</div>}
 
         {projects !== null && projects.length === 0 && (
-          <div className="placeholder">아직 참여 중인 프로젝트가 없습니다. New Project로 시작해보세요.</div>
+          <div className="placeholder">아직 참여 중인 프로젝트가 없습니다. New Project로 만들거나 Open Project로 참여해보세요.</div>
         )}
 
         {projects !== null && projects.length > 0 && (
@@ -71,9 +74,6 @@ export default function DashboardPage() {
                 </div>
               </Link>
             ))}
-            <Link className="pjc new" href="/projects/new">
-              ＋ New Project
-            </Link>
           </div>
         )}
       </main>

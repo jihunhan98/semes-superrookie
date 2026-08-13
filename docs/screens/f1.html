@@ -276,18 +276,19 @@
     <p class="eyebrow">UI 설계 · 기능 1 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 1 (로그인 · 프로젝트 관리)</h1>
     <p class="lede">서비스에 처음 들어오는 관문. <b>로그인/회원가입</b> 후 <b>프로젝트를 나열</b>하고, <b>New Project</b>로 새로 만들거나
-      <b>프로젝트 카드를 클릭</b>해 이미 속한 프로젝트를 연다. 기존 프로젝트에 새로 참여할 땐 New Project 화면에서 <b>Open Project(토큰)</b>로 넘어간다.
+      <b>프로젝트 카드를 클릭</b>해 이미 속한 프로젝트를 열거나, <b>Open Project</b>로 토큰을 넣어 아직 안 속한 프로젝트에 참여한다.
+      헤더 왼쪽 로고를 누르면 홈(로그인 상태면 프로젝트 목록, 아니면 로그인 화면)으로 돌아간다.
       프로젝트를 열면 나오는 화면(헤더+사이드바)이 실질적인 메인 화면이며, 프로젝트 설정은 <b>DB에 저장</b>되어 팀 전체가 공유·관리한다. 이 화면들을 지나면 기능 2(요구사항)로 들어간다.</p>
     <div class="metarow">
       <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
-      <span class="tag">프로젝트 = DB 저장</span><span class="tag">카드 클릭 = 열기</span>
+      <span class="tag">프로젝트 = DB 저장</span><span class="tag">로고 = 홈</span>
     </div>
     <div class="ia">
       <p class="t">기능 1 화면 흐름</p>
       <div class="row">
         <div class="col"><h4><span class="b">1</span>로그인 · 회원가입</h4><p>사번+비밀번호. 계정이 확정·수정 이력의 <b>작성자</b>가 된다.</p></div>
-        <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>내가 속한 프로젝트 카드 나열 + <b>New Project</b>. 카드 클릭이 곧 열기.</p></div>
-        <div class="col"><h4><span class="b">3</span>새 참여 = 토큰</h4><p>아직 안 속한 프로젝트는 New Project 화면에서 <b>접근 토큰</b>으로 참여.</p></div>
+        <div class="col"><h4><span class="b">2</span>프로젝트 목록</h4><p>내가 속한 프로젝트 카드 나열 + <b>New Project / Open Project</b>. 카드 클릭이 곧 열기.</p></div>
+        <div class="col"><h4><span class="b">3</span>새 참여 = 토큰</h4><p>아직 안 속한 프로젝트는 <b>Open Project</b>에서 접근 토큰으로 참여.</p></div>
         <div class="col"><h4><span class="b">4</span>메인 화면 = DB</h4><p>프로젝트를 열면 나오는 헤더+사이드바 화면(설정 등)이 <b>DB에 저장</b>되어 관리되는 진짜 메인 화면.</p></div>
       </div>
     </div>
@@ -350,7 +351,7 @@
   <!-- 화면 3 프로젝트 목록 -->
   <section class="scr">
     <p class="kicker">화면 3 · 프로젝트</p>
-    <div class="scr-head"><span class="route">/dashboard</span><h2>프로젝트 목록 — New Project + 카드 클릭으로 열기</h2><span class="st newx">신규</span></div>
+    <div class="scr-head"><span class="route">/dashboard</span><h2>프로젝트 목록 — New/Open Project + 카드 클릭으로 열기</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -363,28 +364,28 @@
             <h1 class="pt" style="font-size:26px;margin:0">프로젝트</h1>
             <span style="margin-left:auto;display:flex;gap:10px">
               <span class="btn prim">＋ New Project</span>
+              <span class="btn">📂 Open Project</span>
             </span>
           </div>
-          <p class="psub" style="margin-top:6px">최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만듭니다. 모든 프로젝트는 DB에서 관리됩니다.</p>
+          <p class="psub" style="margin-top:6px">최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만들거나, 토큰으로 기존 프로젝트를 엽니다. 모든 프로젝트는 DB에서 관리됩니다.</p>
           <div class="pjgrid" style="margin-top:16px">
             <div class="pjc"><span class="pic" style="background:#6e40c9">VC</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 태스크 할당</span><span class="role own">Owner</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>멤버 <b>3</b></span></div></div></div>
             <div class="pjc"><span class="pic" style="background:#1f883d">MP</span><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="pnm">VCS · 맵/경로</span><span class="role mem">Member</span></div><div class="pcust">삼성전자 EDS · 설비공정그룹</div><div class="pmeta"><span>멤버 <b>5</b></span></div></div></div>
-            <div class="pjc" style="border-style:dashed;align-items:center;justify-content:center;color:var(--fgm)"><span style="font-size:14px;font-weight:600">＋ New Project</span></div>
           </div>
         </div>
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>카드 클릭 = 열기</b> Open 버튼 없음, 카드 자체가 진입점</span>
+      <span class="chipspec"><b>New / Open 버튼</b> 상단에 나란히, 프로젝트가 하나도 없어도 항상 보임</span>
+      <span class="chipspec"><b>카드 클릭 = 열기</b> 이미 속한 프로젝트는 카드 클릭이 진입점</span>
       <span class="chipspec"><b>카드</b> 이름·고객사·역할·멤버 수</span>
-      <span class="chipspec"><b>새 참여</b> 아직 속하지 않은 프로젝트는 New Project 화면에서 토큰으로</span>
       <span class="chipspec api">GET /api/projects?userId=</span>
     </div>
   </section>
 
   <!-- 화면 4 Open Project (토큰) -->
   <section class="scr">
-    <p class="kicker">화면 4 · 프로젝트 · New Project 화면에서 링크로 진입</p>
+    <p class="kicker">화면 4 · 프로젝트 · 대시보드 상단 Open Project 버튼에서 진입</p>
     <div class="scr-head"><span class="route">/projects/open</span><h2>Open Project — 토큰으로 참여</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh login">
@@ -473,7 +474,7 @@
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New Project) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
+  <p class="foot"><b>범위.</b> 기능 1 — 로그인 · 회원가입 · 프로젝트 목록(New/Open Project) · Open Project(토큰) · 프로젝트 설정(DB) 5화면.
     &nbsp;<b>DB.</b> 사용자 · 프로젝트 · 멤버/역할 · 접근 토큰을 저장.
     &nbsp;<b>다음.</b> 프로젝트를 열면(카드 클릭) → <b>기능 2(요구사항 검토)</b>.</p>
 </div>

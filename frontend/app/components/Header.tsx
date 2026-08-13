@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { User } from "../lib/api";
 import { getCurrentUser } from "../lib/session";
 
@@ -18,6 +19,7 @@ export default function Header({
   }, []);
 
   const initial = user?.name?.[0] ?? "?";
+  const homeHref = user ? "/dashboard" : "/login";
 
   return (
     <header className="hdr">
@@ -26,7 +28,9 @@ export default function Header({
           ☰
         </button>
       )}
-      <span className="mk">RE</span>
+      <Link href={homeHref} className="mk">
+        RE
+      </Link>
       <span className="brand">
         요구사항 엔지니어링
         {projectName && (
