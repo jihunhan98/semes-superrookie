@@ -252,8 +252,8 @@
   <header>
     <p class="eyebrow">UI 설계 · 기능 2 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 2 (요구사항 검토)</h1>
-    <p class="lede">프로젝트를 연 뒤(<b>기능 1</b>) 그 프로젝트의 <b>요구사항</b>을 다룬다. 고객 요구서를 <b>등록</b>하고, AI로 <b>불명확·상충을 검토</b>해 <b>확정</b>하며,
-      확정·수정마다 <b>버전이 커밋처럼</b> 쌓인다. 로그인·프로젝트 선택은 기능 1에서 끝난 상태로 들어온다.</p>
+    <p class="lede">프로젝트 홈(<b>기능 1</b>, <code>/projects/{id}</code>)에서 사이드바 <b>"요구사항"</b>을 누르면 이 화면들로 들어온다. 고객 요구서를 <b>등록</b>하고, AI로 <b>불명확·상충을 검토</b>해 <b>확정</b>하며,
+      확정·수정마다 <b>버전이 커밋처럼</b> 쌓인다. 로그인·프로젝트 선택·홈 대시보드는 기능 1에서 이미 구현되어 있어 이 문서에서는 다루지 않는다.</p>
     <div class="metarow">
       <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
       <span class="tag">상태값 5단계</span><span class="tag">버전 = 커밋 이력</span>
@@ -272,98 +272,25 @@
 
   <!-- (로그인·프로젝트 선택 화면은 기능 1로 이동) -->
 
-  <!-- S1 대시보드 -->
-  <section class="scr">
-    <p class="kicker">화면 1 · 메인</p>
-    <div class="scr-head"><span class="route">/</span><h2>대시보드 (메인)</h2><span class="st done">신규</span></div>
-    <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span>
-          <div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
-        </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Zm5.457-.618 1.42 1.42a.75.75 0 0 1 0 1.06l-1.42 1.42a.75.75 0 1 1-1.06-1.06l.72-.72H9.5a.75.75 0 0 1 0-1.5h.117l-.72-.72a.75.75 0 1 1 1.06-1.06Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
-            <div class="nl">프로젝트</div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8.2 8.2 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224.231.114.454.243.668.386.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63.27.385.506.792.704 1.218.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294.016.257.016.515 0 .772-.01.147.038.246.087.294l.815.806c.475.469.679 1.216.364 1.891a7.977 7.977 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a5.909 5.909 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8.006 8.006 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a5.738 5.738 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8.12 8.12 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6.214 6.214 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a7.92 7.92 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071.214-.143.437-.272.668-.386.133-.066.194-.158.211-.224l.29-1.106C7.009.645 7.556.095 8.299.03 8.53.01 8.764 0 9 0Z"/></svg>설정</a>
-          </aside>
-          <div class="main">
-            <h1 class="pt">안녕하세요, 한지훈님 👋</h1>
-            <p class="psub">VCS · 태스크 할당 프로젝트 — 오늘도 요구사항을 명확하게.</p>
-            <div class="stats">
-              <div class="stat"><div class="n">24</div><div class="l">전체 요구사항</div><div class="d up">＋3 이번 주</div></div>
-              <div class="stat"><div class="n" style="color:var(--green)">18</div><div class="l">확정</div><div class="d up">＋5 이번 주</div></div>
-              <div class="stat"><div class="n" style="color:var(--amber)">6</div><div class="l">검토 대기</div><div class="d">내 담당 2건</div></div>
-              <div class="stat"><div class="n">42</div><div class="l">도출 산출물</div><div class="d">최근 v1.1.0</div></div>
-            </div>
-            <div class="dgrid">
-              <div class="card">
-                <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">최근 활동<span class="mono">모든 활동 보기 →</span></div></div>
-                <div class="feed">
-                  <div class="fi"><span class="av2 a-h">한</span><div><div class="ftxt"><b>한지훈</b>님이 <b>신규 태스크 생성</b>을 <span class="fv">v1.0.1</span>로 확정했습니다</div><div class="ftime">30분 전 · req-tf-01</div></div></div>
-                  <div class="fi"><span class="av2 a-l">이</span><div><div class="ftxt"><b>이수민</b>님이 <b>태스크 할당 기준</b> 검토를 시작했습니다 · 검출 2건</div><div class="ftime">2시간 전 · req-ta-01</div></div></div>
-                  <div class="fi"><span class="av2 a-h">한</span><div><div class="ftxt"><b>한지훈</b>님이 <b>입출고지 와일드카드</b>를 <span class="fv">v1.1.0</span>으로 수정했습니다</div><div class="ftime">어제 · req-mp-01</div></div></div>
-                  <div class="fi"><span class="av2 a-k">김</span><div><div class="ftxt"><b>김도현</b>님이 <b>진행상황 보고 항목</b>에서 산출물 2종을 도출했습니다</div><div class="ftime">3일 전 · req-tf-02</div></div></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:20px">
-                <div class="card">
-                  <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">내 작업 · 검토 대기</div></div>
-                  <div class="list">
-                    <div class="li"><span class="av2 a-h" style="background:var(--amber)">!</span><div><div class="lt">태스크 할당 기준</div><div class="lm"><span class="lid">req-ta-01</span> · 검출 2건</div></div><span class="rt"><span class="lbl amber">검토중</span></span></div>
-                    <div class="li"><span class="av2 a-h" style="background:var(--amber)">!</span><div><div class="lt">알람 복구 재할당</div><div class="lm"><span class="lid">req-ta-02</span> · 검출 1건</div></div><span class="rt"><span class="lbl amber">검토중</span></span></div>
-                  </div>
-                </div>
-                <div class="card">
-                  <div style="padding:14px 18px;border-bottom:1px solid var(--bd)"><div class="sec-t">최근 확정 버전</div></div>
-                  <div class="list">
-                    <div class="li"><div><div class="lt">입출고지 와일드카드</div><div class="lm">한지훈 · 오늘</div></div><span class="rt tagv">🏷 v1.1.0</span></div>
-                    <div class="li"><div><div class="lt">신규 태스크 생성</div><div class="lm">한지훈 · 어제</div></div><span class="rt tagv">🏷 v1.0.1</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div></div>
-    <div class="specrow">
-      <span class="chipspec"><b>구성</b> 인사 + 통계 4 + 활동 피드 + 내 작업 + 최근 버전</span>
-      <span class="chipspec"><b>벤치마킹</b> GitHub 홈 대시보드(활동 타임라인·작성자 아바타)</span>
-      <span class="chipspec"><b>이력</b> 모든 활동에 작성자·시각·버전 표기</span>
-      <span class="chipspec api">GET /dashboard · /activity</span>
-    </div>
-  </section>
-
   <!-- S1b 요구사항 등록 -->
   <section class="scr">
-    <p class="kicker">화면 2 · 요구사항 등록</p>
-    <div class="scr-head"><span class="route">/requirements/new</span><h2>요구사항 등록 — 고객 요구서 업로드 또는 직접 추가</h2><span class="st newx">신규</span></div>
+    <p class="kicker">화면 1 · 요구사항 등록</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/new</span><h2>요구사항 등록 — 고객 요구서 업로드 또는 직접 추가</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
             <div class="nl">프로젝트</div>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
@@ -401,30 +328,29 @@
       <span class="chipspec"><b>두 경로</b> ① 고객 요구서(.docx) 업로드→표 파싱 · ② 직접 행 추가</span>
       <span class="chipspec"><b>파싱</b> 문서 표 → 분류·내용·비고 (docx 표 파싱)</span>
       <span class="chipspec"><b>등록 상태</b> 접수 — 이후 검토 화면에서 확정</span>
-      <span class="chipspec api">POST /requirements/import(docx) · POST /requirements</span>
+      <span class="chipspec api">POST /api/projects/{id}/requirements/import(docx) · POST /api/projects/{id}/requirements</span>
     </div>
   </section>
 
   <!-- S2 요구사항 목록 -->
   <section class="scr">
-    <p class="kicker">화면 3 · 요구사항 목록</p>
-    <div class="scr-head"><span class="route">/requirements?assignee=han</span><h2>요구사항 목록 — 담당자 필터 (Jira처럼 이름 클릭 → 필터)</h2><span class="st done">공통</span></div>
+    <p class="kicker">화면 2 · 요구사항 목록</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements?assignee=han</span><h2>요구사항 목록 — 담당자 필터 (Jira처럼 이름 클릭 → 필터)</h2><span class="st done">공통</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
             <div class="nl">프로젝트</div>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
@@ -465,30 +391,31 @@
       <span class="chipspec"><b>담당자 필터(Jira처럼)</b> 행의 아바타/이름 클릭 → 그 담당자로 필터 · 상단 칩 ✕로 해제</span>
       <span class="chipspec"><b>행</b> 상태 점·제목·ID · 상태/버전 태그·담당자·수정시각</span>
       <span class="chipspec"><b>상태</b> 접수·검토중·확정·변경중·보류 (상단 상태값 참고)</span>
-      <span class="chipspec api">GET /requirements?assignee=&group=category&state=</span>
+      <span class="chipspec api">GET /api/projects/{id}/requirements?assignee=&group=category&state=</span>
     </div>
   </section>
 
   <!-- S2b 요구사항 검토 (AI 검토 & 수정 → 새 버전) -->
   <section class="scr">
-    <p class="kicker">화면 4 · 요구사항 검토(탭)</p>
-    <div class="scr-head"><span class="route">/requirements/req-tf-01/review</span><h2>AI 검토 &amp; 수정 → 새 버전</h2><span class="st newx">신규</span></div>
+    <p class="kicker">화면 3 · 요구사항 검토(탭)</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/review</span><h2>AI 검토 &amp; 수정 → 새 버전</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
             <div class="crumb"><b>요구사항</b> / req-tf-01</div>
@@ -547,30 +474,31 @@
       <span class="chipspec"><b>AI 검토</b> 본문에서 불명확·상충 검출 → 제안(재검토 버튼)</span>
       <span class="chipspec"><b>수정 → 새 버전</b> 현재 v1.0.1 편집 → 확정 시 v1.0.2 생성</span>
       <span class="chipspec"><b>편집</b> 제안 ‘본문에 반영’으로 원클릭 수정 + 하이라이트</span>
-      <span class="chipspec api">POST /analyze · POST /{id}/confirm (→ new version)</span>
+      <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ new version)</span>
     </div>
   </section>
 
   <!-- S3 버전 이력 -->
   <section class="scr">
-    <p class="kicker">화면 5 · 버전 이력(탭)</p>
-    <div class="scr-head"><span class="route">/requirements/req-tf-01/versions</span><h2>버전 이력 — 커밋처럼 쌓인다</h2><span class="st newx">신규</span></div>
+    <p class="kicker">화면 4 · 버전 이력(탭)</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/versions</span><h2>버전 이력 — 커밋처럼 쌓인다</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
-          <span class="burger">☰</span><span class="mk">RE</span>
+          <span class="burger">☰</span><a class="mk">RE</a>
           <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
           <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">＋</div><div class="ico">🔔</div><div class="av">한</div>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
         </div>
         <div class="body">
           <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span><span class="car">▾</span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>대시보드</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Z"/></svg>요구사항<span class="ct">24</span></a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물<span class="ct">42</span></a>
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2c.306 0 .582.187.696.471L10 10.731l1.304-3.26A.751.751 0 0 1 12 7h3.25a.75.75 0 0 1 0 1.5h-2.742l-1.812 4.528a.751.751 0 0 1-1.392 0L6 4.77 4.696 8.03A.75.75 0 0 1 4 8.5H.75a.75.75 0 0 1 0-1.5h2.742l1.812-4.529A.751.751 0 0 1 6 2Z"/></svg>활동</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
             <div class="crumb"><b>요구사항</b> / req-tf-01</div>
@@ -645,11 +573,11 @@
       <span class="chipspec"><b>비교(Git)</b> base ↔ compare 버전 선택 → split diff(±)로 변화 확인</span>
       <span class="chipspec"><b>모델</b> 확정=새 버전 / 수정=다음 버전, 커밋처럼 쌓임</span>
       <span class="chipspec"><b>작성자</b> 버전마다 확정자·시각·사유 기록(로그인 기반)</span>
-      <span class="chipspec api">GET /requirements/{id}/compare?base=&head=</span>
+      <span class="chipspec api">GET /api/projects/{id}/requirements/{reqId}/compare?base=&head=</span>
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 2 — 대시보드 · 요구사항 등록 · 요구사항 목록(담당자 필터) · 요구사항 검토(AI) · 버전 이력 5화면. 로그인·프로젝트 선택은 <b>기능 1</b>에서 처리.
+  <p class="foot"><b>범위.</b> 기능 2 — 요구사항 등록 · 요구사항 목록(담당자 필터) · 요구사항 검토(AI) · 버전 이력, 총 4화면. 로그인·프로젝트 선택·프로젝트 홈은 <b>기능 1</b>에서 이미 구현됨(사이드바 "요구사항" 클릭 시 이 화면들로 진입).
     &nbsp;<b>상태값.</b> 접수 → 검토 중 → 확정 → (수정) 변경 중 → 재확정 · 보류.
     &nbsp;<b>다음.</b> 확정된 요구사항 → <b>기능 3(산출물 도출)</b>.</p>
 </div>
