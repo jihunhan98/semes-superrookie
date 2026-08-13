@@ -138,6 +138,13 @@
   .gh .seg span.on{background:var(--cv);color:var(--fg);box-shadow:0 1px 2px rgba(31,35,40,.12);}
   .gh .rqbar .srch{flex:1;min-width:180px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:8px 12px;color:var(--fgf);font-size:13.5px;}
   .gh .rqbar .t{border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--fgm);font-weight:600;background:var(--cv);}
+  .gh .memfilter{display:flex;align-items:center;gap:8px;margin:2px 0 14px;flex-wrap:wrap;}
+  .gh .memfilter .mf-l{font-size:12.5px;font-weight:700;color:var(--fgm);margin-right:2px;}
+  .gh .mf-av{position:relative;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;opacity:.45;cursor:pointer;}
+  .gh .mf-av.on{opacity:1;box-shadow:0 0 0 2px var(--cv),0 0 0 4px var(--blue);}
+  .gh .mf-av small{position:absolute;top:34px;left:50%;transform:translateX(-50%);background:var(--hdr);color:#fff;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;display:none;}
+  .gh .memfilter .mf-note{font-size:12.5px;color:var(--fgm);margin-left:4px;}
+  .gh .memfilter .mf-note b{color:var(--blue);font-weight:700;}
   .gh .rqlist{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
   .gh .grp+.grp{border-top:1px solid var(--bd);}
   .gh .grph{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--cvs);font-size:13px;font-weight:700;color:var(--fgm);}
@@ -245,27 +252,41 @@
   .gh .rvcommit .aihint{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-s);border-radius:999px;padding:2px 10px;white-space:nowrap;}
   .gh .rvfoot{display:flex;align-items:center;gap:12px;margin-top:16px;}
   .gh .rvfoot .note{font-size:13px;color:var(--fgm);}
-  /* 요구사항 등록 — 모달 다이얼로그 */
-  .gh{position:relative;}
-  .gh .modalov{position:absolute;inset:0;background:rgba(13,17,23,.55);display:flex;justify-content:center;padding-top:44px;z-index:30;}
-  .gh .modal{width:800px;height:fit-content;max-height:980px;background:var(--cv);border-radius:14px;box-shadow:0 24px 60px rgba(1,4,9,.4);overflow:hidden;display:flex;flex-direction:column;}
-  .gh .modal-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--bd);font-size:16px;font-weight:800;color:var(--fg);}
-  .gh .modal-head .x{margin-left:auto;color:var(--fgm);font-size:15px;font-weight:400;}
-  .gh .modal-body{padding:20px;overflow:auto;}
-  .gh .modal-foot{padding:14px 20px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;background:var(--cvs);}
-  .gh .modal-foot .btn{flex:0 0 auto;white-space:nowrap;}
-  .gh .modal-foot .note{font-size:12px;color:var(--fgm);flex:1;min-width:0;}
-  .gh .reqta{width:100%;min-height:78px;border:1px solid var(--bd);border-radius:9px;padding:12px 14px;font-size:14.5px;line-height:1.7;color:var(--fg);}
+  /* 요구사항 등록 — 전용 페이지(입력 ↔ AI 검출 2단 레이아웃) */
+  .gh .regwrap{display:grid;grid-template-columns:1fr 108px 1fr;gap:0;align-items:start;margin-top:18px;}
+  .gh .regcard{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
+  .gh .regcard .rch{padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--cvs);font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .gh .regcard .rcb{padding:16px;}
+  .gh .reqmeta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+  .gh .reqmeta .fi input,.gh .rcb .fi2 input{width:100%;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;font-size:13.5px;color:var(--fg);background:var(--cv);}
+  .gh .reqta{width:100%;min-height:96px;border:1px solid var(--bd);border-radius:9px;padding:12px 14px;font-size:14.5px;line-height:1.7;color:var(--fg);}
   .gh .aihelp{margin-top:14px;background:var(--purple-s);border:1px dashed #d3adf7;border-radius:10px;padding:13px 15px;}
   .gh .aihelp-t{font-size:13px;font-weight:800;color:var(--purple);margin-bottom:9px;display:flex;align-items:center;gap:6px;}
   .gh .aichips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px;}
   .gh .aichip{font-size:11.5px;font-weight:700;background:var(--cv);border:1px solid var(--bd);color:var(--fg);border-radius:999px;padding:3px 10px;}
+  .gh .aichip.warn{background:var(--red-s);color:var(--red);border-color:transparent;}
   .gh .aihelp-ex{font-size:12px;color:var(--fgm);line-height:1.6;}
   .gh .aihelp-ex b{color:var(--purple);font-weight:700;}
-  .gh .airesult{margin-top:16px;}
+  .gh .regmid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding-top:120px;}
+  .gh .regarrow{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .gh .regarrow .ic{width:40px;height:40px;border-radius:50%;background:var(--purple-s);color:var(--purple);display:grid;place-items:center;font-size:17px;}
+  .gh .regarrow .ln{width:2px;height:26px;background:repeating-linear-gradient(180deg,#d3adf7 0 6px,transparent 6px 11px);}
+  .gh .regarrow .lb{font-size:11px;font-weight:800;color:var(--purple);text-align:center;line-height:1.4;}
+  .gh .detectbtn{border:1px solid var(--purple);background:var(--cv);color:var(--purple);border-radius:9px;padding:9px 16px;font-size:13.5px;font-weight:700;white-space:nowrap;}
   .gh .airesult-head{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;margin-bottom:10px;color:var(--fg);}
   .gh .airesult-head .cnt{font-size:11.5px;font-weight:700;background:var(--amber-s);color:var(--amber);border-radius:999px;padding:2px 9px;}
   .gh .airesult-head .spin{margin-left:auto;font-size:12px;font-weight:600;color:var(--fgm);}
+  .gh .find .fact{margin-top:9px;display:flex;align-items:center;gap:8px;}
+  .gh .find .fact .accept{background:var(--green-e);color:#fff;border:1px solid rgba(31,35,40,.15);border-radius:7px;padding:6px 13px;font-size:12.5px;font-weight:700;}
+  .gh .find .fact .pass{background:var(--cv);color:var(--fgm);border:1px solid var(--bd);border-radius:7px;padding:6px 13px;font-size:12.5px;font-weight:700;}
+  .gh .find.conflict{border-color:#ffb3ab;}
+  .gh .find .fconf{font-size:12px;color:var(--fgm);background:var(--cvs);border-radius:7px;padding:7px 10px;margin-top:2px;display:flex;align-items:center;gap:6px;}
+  .gh .aitoggle{margin-top:16px;border:1px solid var(--bd);border-radius:10px;background:var(--cvs);padding:12px 15px;display:flex;align-items:center;gap:12px;}
+  .gh .aitoggle .sw{width:38px;height:22px;border-radius:999px;background:var(--green-e);position:relative;flex:0 0 auto;}
+  .gh .aitoggle .sw .kn{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;}
+  .gh .aitoggle .tx b{font-size:13.5px;font-weight:700;color:var(--fg);display:block;}
+  .gh .aitoggle .tx span{font-size:12px;color:var(--fgm);}
+  .gh .regfoot{display:flex;align-items:center;gap:10px;margin-top:16px;}
 </style>
 </head>
 <body>
@@ -273,8 +294,8 @@
   <header>
     <p class="eyebrow">UI 설계 · 기능 2 · GitHub 스타일</p>
     <h1 class="page">요구사항 엔지니어링 — 기능 2 (요구사항 검토)</h1>
-    <p class="lede">프로젝트 홈(<b>기능 1</b>, <code>/projects/{id}</code>)에서 사이드바 <b>"요구사항"</b>을 누르면 목록이 바로 뜬다(기본 진입 화면). "＋ 새 요구사항"은 <b>모달로 직접 입력</b>만 받는다 — 문서 업로드는 없음.
-      등록 전 AI가 찾아낼 수 있는 불명확 유형을 안내하고, 그 자리에서 <b>미리 검토</b>도 해볼 수 있다. 등록 후에는 AI로 <b>불명확·상충을 검토</b>해 <b>확정</b>하며, 확정·수정마다 <b>버전이 커밋처럼</b> 쌓인다.
+    <p class="lede">프로젝트 홈(<b>기능 1</b>, <code>/projects/{id}</code>)에서 사이드바 <b>"요구사항"</b>을 누르면 목록이 바로 뜬다(기본 진입 화면). "＋ 새 요구사항"은 <b>별도 페이지</b>로 이동한다 — 다이얼로그도, 문서 업로드도 없음.
+      등록 페이지는 왼쪽 입력·오른쪽 AI 검출 결과 구성이며, 검출 항목마다 <b>수용/패스</b>를 고를 수 있고 이 요구사항을 <b>AI 검토 대상에 포함할지</b>도 선택한다. 등록 후에는 상세 화면에서 AI로 <b>불명확·상충을 검토</b>해 <b>확정</b>하며, 확정·수정마다 <b>버전이 커밋처럼</b> 쌓인다.
       로그인·프로젝트 선택·홈 대시보드는 기능 1에서 이미 구현되어 있어 이 문서에서는 다루지 않는다.</p>
     <div class="metarow">
       <span class="tag">1920 × 1080</span><span class="tag on">GitHub / Primer</span>
@@ -297,7 +318,7 @@
   <!-- S2 요구사항 목록 (기본 진입 화면) + 등록 모달 -->
   <section class="scr">
     <p class="kicker">화면 1 · 요구사항 목록 · 기본 진입 화면</p>
-    <div class="scr-head"><span class="route">/projects/{id}/requirements</span><h2>요구사항 목록 — "＋ 새 요구사항" 클릭 시 등록 모달이 뜬다</h2><span class="st done">공통</span></div>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements</span><h2>요구사항 목록 — 프로젝트 내 모든 요구사항을 한눈에</h2><span class="st done">공통</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -317,16 +338,18 @@
             <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
           </aside>
           <div class="main">
-            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항 <span style="color:var(--fgf);font-weight:600;font-size:16px">24</span></h1><span class="btn prim">＋ 새 요구사항</span></div>
+            <div class="toolbar"><h1 class="pt" style="margin:0">요구사항 <span style="color:var(--fgf);font-weight:600;font-size:16px">24</span></h1><a class="btn prim" href="#reg">＋ 새 요구사항</a></div>
             <div class="rqbar">
               <div class="seg"><span class="on">전체</span><span>검토중 6</span><span>확정 18</span></div>
-              <span class="t" style="display:flex;align-items:center;gap:7px"><span class="av2 a-h" style="width:20px;height:20px;font-size:10px">한</span>담당자 ▾</span>
               <span class="srch">🔍 제목·ID·담당자로 검색</span>
               <span class="t">분류별 묶기 ▾</span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin:2px 0 12px">
-              <span style="display:inline-flex;align-items:center;gap:8px;background:var(--blue-s);border:1px solid #79c0ff;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--blue)"><span class="av2 a-h" style="width:18px;height:18px;font-size:9px">한</span>담당자: 한지훈 <b style="font-weight:800">✕</b></span>
-              <span style="font-size:12.5px;color:var(--fgm)">3건 · 이름/아바타를 클릭하면 그 담당자 요구사항만 모아 봅니다</span>
+            <div class="memfilter">
+              <span class="mf-l">담당자</span>
+              <span class="mf-av on" style="background:#6e40c9">한<small>한지훈</small></span>
+              <span class="mf-av" style="background:#1f883d">이<small>이수민</small></span>
+              <span class="mf-av on" style="background:#bf3989">김<small>김도현</small></span>
+              <span class="mf-note">2명 선택 · <b>OR</b>로 필터링 (한지훈 또는 김도현) — 프로젝트 멤버 전원이 후보로 표시되고, 아무도 선택하지 않으면 전체를 보여줍니다</span>
             </div>
             <div class="rqlist">
               <div class="grp">
@@ -342,48 +365,8 @@
               <div class="grp">
                 <div class="grph"><span class="chev">▾</span><span class="gname">맵</span><span class="cnt">1</span><span class="prog">확정 1</span></div>
                 <div class="rqrow"><span class="sdot" style="background:var(--green)"></span><span class="rtit">입출고지 와일드카드</span><span class="rmid">req-mp-01</span>
-                  <span class="rt"><span class="tagv">🏷 v1.1.0</span><span class="av2 a-h" title="한지훈 — 클릭 시 필터" style="outline:2px solid var(--blue);outline-offset:1px">한</span><span class="rup">오늘</span></span></div>
+                  <span class="rt"><span class="tagv">🏷 v1.1.0</span><span class="av2 a-k" title="김도현 — 클릭 시 필터" style="outline:2px solid var(--blue);outline-offset:1px">김</span><span class="rup">오늘</span></span></div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ＋ 새 요구사항 → 등록 모달 (직접 입력 + AI 사전 검토) -->
-        <div class="modalov">
-          <div class="modal">
-            <div class="modal-head">새 요구사항 등록<span class="x">✕</span></div>
-            <div class="modal-body">
-              <div class="fieldlab">요구사항 내용</div>
-              <textarea class="reqta" readonly>이상 발생 시 관련 부서와 협의하여 신속히 조치한다.</textarea>
-
-              <div class="aihelp">
-                <div class="aihelp-t">🤖 AI가 등록할 때 이런 점을 함께 찾아드려요</div>
-                <div class="aichips">
-                  <span class="aichip">정량 기준 부재</span><span class="aichip">모호한 정도부사</span><span class="aichip">주어·주체 불명확</span>
-                  <span class="aichip">조건 발생 시점 불명확</span><span class="aichip">예외·경계 조건 누락</span><span class="aichip">접속사 범위 모호</span>
-                  <span class="aichip">시간·일정 모호</span>
-                </div>
-                <div class="aihelp-ex">예: <b>"충분한 내구성"</b> → 수치 기준 없음 · <b>"적절히 조정한다"</b> → 정도 불명확. 아래 "AI로 검토해보기"를 누르면 지금 쓴 문장에서 바로 찾아드립니다.</div>
-              </div>
-
-              <div class="airesult">
-                <div class="airesult-head">🔎 AI 사전 검토 결과 <span class="cnt">2건 발견</span><span class="spin">방금 검토됨</span></div>
-                <div class="find">
-                  <div class="ft"><span class="ftype2 amb">주어·주체 불명확</span><span class="fspan2">"관련 부서와 협의하여"</span></div>
-                  <div class="frs2">누가 조치를 수행하는지 특정되지 않아 담당이 불분명할 수 있음</div>
-                  <div class="fsug">✎ 제안: 담당 부서를 명시 (예: <b>설비관리팀</b>과 협의하여)<span class="apply">문장에 반영 →</span></div>
-                </div>
-                <div class="find" style="margin-bottom:0">
-                  <div class="ft"><span class="ftype2 cf">시간·일정 모호</span><span class="fspan2">"신속히"</span></div>
-                  <div class="frs2">구체적인 처리 시간·기한이 없어 해석이 갈릴 수 있음</div>
-                  <div class="fsug">✎ 제안: 기준 시간을 명시 (예: <b>이상 감지 후 5분 이내</b>)<span class="apply">문장에 반영 →</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-foot">
-              <span class="btn">↻ AI로 검토해보기</span>
-              <span class="btn prim">등록 → 접수</span>
-              <span class="note">지금 확인은 미리보기입니다. 정식 검토·확정은 등록 후 상세 화면(검토 탭)에서 진행합니다.</span>
             </div>
           </div>
         </div>
@@ -391,23 +374,120 @@
     </div></div>
     <div class="specrow">
       <span class="chipspec"><b>기본 화면</b> 사이드바 "요구사항" 클릭 시 항상 이 목록으로 진입 (문서 업로드 화면 없음)</span>
-      <span class="chipspec"><b>담당자 필터(Jira처럼)</b> 행의 아바타/이름 클릭 → 그 담당자로 필터 · 상단 칩 ✕로 해제</span>
+      <span class="chipspec"><b>담당자 필터(Jira처럼)</b> 프로젝트 멤버 전원이 아바타로 표시 · 여러 명 클릭 시 OR로 필터 · 아무도 선택 안 하면 전체 표시</span>
       <span class="chipspec"><b>행</b> 상태 점·제목·ID · 상태/버전 태그·담당자·수정시각</span>
       <span class="chipspec"><b>상태</b> 접수·검토중·확정·변경중·보류 (상단 상태값 참고)</span>
       <span class="chipspec api">GET /api/projects/{id}/requirements?assignee=&group=category&state=</span>
     </div>
+  </section>
+
+  <!-- S1b 요구사항 등록 (전용 페이지, 다이얼로그 아님) -->
+  <section class="scr" id="reg">
+    <p class="kicker">화면 2 · 요구사항 등록 · "＋ 새 요구사항" 클릭 시 이동</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/new</span><h2>요구사항 등록 — 입력 ↔ AI 검출을 한 화면에서</h2><span class="st newx">신규</span></div>
+    <div class="stage"><div class="canvas">
+      <div class="gh">
+        <div class="hdr">
+          <span class="burger">☰</span><a class="mk">RE</a>
+          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
+          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
+          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
+        </div>
+        <div class="body">
+          <aside class="side">
+            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
+            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
+            <div class="nl">프로젝트</div>
+            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
+          </aside>
+          <div class="main">
+            <div class="crumb"><b>요구사항</b> / 등록</div>
+            <h1 class="pt" style="margin:0 0 4px">새 요구사항 등록</h1>
+            <p class="psub">왼쪽에 내용을 입력하고 "검출 실행"을 누르면 오른쪽에 AI가 찾아낸 불명확·상충을 보여줍니다. 등록 직후 상태는 <b style="color:var(--fg)">접수</b>.</p>
+
+            <div class="regwrap">
+              <div class="regcard">
+                <div class="rch">📝 요구사항 입력</div>
+                <div class="rcb">
+                  <div class="reqmeta">
+                    <div class="fi2"><div class="fieldlab">요구사항 ID</div><input value="req-am-03"></div>
+                    <div class="fi2"><div class="fieldlab">요청자 소속</div><input value="삼성전자 EDS · 설비공정그룹"></div>
+                    <div class="fi2"><div class="fieldlab">요청자 이름</div><input value="김민석 책임"></div>
+                  </div>
+                  <div class="fieldlab">요구사항 내용</div>
+                  <textarea class="reqta" readonly>AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다.</textarea>
+
+                  <div class="aihelp">
+                    <div class="aihelp-t">🤖 AI가 검출 시 이런 점을 찾아드려요</div>
+                    <div class="aichips">
+                      <span class="aichip">정량 기준 부재</span><span class="aichip">모호한 정도부사</span><span class="aichip">주어·주체 불명확</span>
+                      <span class="aichip">조건 발생 시점 불명확</span><span class="aichip">예외·경계 조건 누락</span><span class="aichip">접속사 범위 모호</span>
+                      <span class="aichip">시간·일정 모호</span><span class="aichip warn">기존 요구사항과 상충</span>
+                    </div>
+                    <div class="aihelp-ex">예: <b>"가용한 AMR"</b> → IDLE·SoC 등 판정 기준 없음 · <b>"가장 가까운"</b> → 거리 기준(직선/경로) 불명확. 다른 요구사항과 배치되면 <b>상충</b>으로도 표시됩니다.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="regmid">
+                <div class="regarrow"><div class="ic">🤖</div><div class="ln"></div><div class="lb">AI가<br>검출합니다</div></div>
+                <span class="detectbtn">🔍 검출 실행</span>
+              </div>
+
+              <div class="regcard">
+                <div class="rch">🔎 AI 검출 결과 <span class="airesult-head" style="margin:0;padding:0"><span class="cnt">3건 발견</span></span><span style="margin-left:auto;font-size:12px;color:var(--fgm);font-weight:500">검출 완료</span></div>
+                <div class="rcb">
+                  <div class="find">
+                    <div class="ft"><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가용한 AMR"</span></div>
+                    <div class="frs2">무엇을 '가용'으로 볼지 판정 기준이 없어 해석이 갈릴 수 있음</div>
+                    <div class="fsug">✎ 제안: <b>가용한 AMR</b> = IDLE 상태이며 SoC(배터리) 값이 최소값 이상인 AMR<span class="apply">문장에 반영 →</span></div>
+                    <div class="fact"><span class="accept">✓ 수용</span><span class="pass">⤫ 패스</span></div>
+                  </div>
+                  <div class="find">
+                    <div class="ft"><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가장 가까운"</span></div>
+                    <div class="frs2">거리를 어떤 기준으로 잴지 정의되지 않음</div>
+                    <div class="fsug">✎ 제안: <b>가장 가까운</b> = 맵 경로상 맨해튼 거리 기준 최단 경로<span class="apply">문장에 반영 →</span></div>
+                    <div class="fact"><span class="accept">✓ 수용</span><span class="pass">⤫ 패스</span></div>
+                  </div>
+                  <div class="find conflict" style="margin-bottom:0">
+                    <div class="ft"><span class="ftype2 cf">기존 요구사항과 상충</span><span class="fspan2">req-ta-01</span></div>
+                    <div class="frs2">req-ta-01은 "요청 순"으로 우선순위를 정하는데, 이 요구사항은 "거리 순"이라 배치될 수 있음</div>
+                    <div class="fconf">⚠ 두 요구사항의 우선순위 기준이 다릅니다 — 협의 후 하나로 통일이 필요합니다</div>
+                    <div class="fact"><span class="accept">✓ 수용</span><span class="pass">⤫ 패스</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="aitoggle">
+              <div class="sw"><div class="kn"></div></div>
+              <div class="tx"><b>AI 검토 받기</b><span>켜두면 등록 후 이 요구사항이 정식 AI 검토(검토 탭) 대상에 포함됩니다. 끄면 사람이 직접 검토·확정합니다.</span></div>
+            </div>
+
+            <div class="regfoot">
+              <span class="btn prim">등록 → 접수</span>
+              <span class="btn">취소</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>등록 모달</b> "＋ 새 요구사항" 클릭 시 뜸 — 텍스트 칸 하나에 직접 입력만(docx 업로드 없음)</span>
-      <span class="chipspec"><b>안내 박스</b> 등록 전, AI가 찾아낼 수 있는 불명확 유형 7종을 예시와 함께 미리 설명</span>
-      <span class="chipspec"><b>사전 검토</b> "AI로 검토해보기" 클릭 시 지금 문장을 즉시 분석해 안내 박스 바로 아래에 결과 표시 (spike-ambiguity-detector.md 판정 방식 재사용)</span>
-      <span class="chipspec"><b>등록</b> 검토 결과와 무관하게 "등록 → 접수"로 바로 저장 가능(강제 아님) — 정식 확정은 상세 화면의 검토 탭에서</span>
-      <span class="chipspec api">POST /api/projects/{id}/requirements/preview-analyze · POST /api/projects/{id}/requirements</span>
+      <span class="chipspec"><b>전용 페이지</b> 다이얼로그가 아니라 별도 URL로 이동 — 왼쪽 입력, 오른쪽 AI 검출 결과, 가운데는 "AI가 검출합니다" 방향 표시</span>
+      <span class="chipspec"><b>입력 필드</b> 요구사항 ID · 요청자 소속 · 요청자 이름 · 요구사항 내용</span>
+      <span class="chipspec"><b>검출 버튼</b> 별도 버튼으로 분리, 클릭 시 로딩 상태 표시 → 완료되면 결과 카드 표시 (개발 시 백엔드 sleep으로 지연 시뮬레이션 예정)</span>
+      <span class="chipspec"><b>결과 처리</b> 발견 항목마다 <b>수용</b>(문장에 반영) / <b>패스</b>(무시) 선택 — "기존 요구사항과 상충" 카테고리 포함</span>
+      <span class="chipspec"><b>AI 검토 여부 선택</b> 등록 시 이 요구사항을 정식 AI 검토 대상에 포함할지 토글로 선택</span>
+      <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/preview-analyze · POST /api/projects/{id}/requirements</span>
     </div>
   </section>
 
   <!-- S2b 요구사항 검토 (AI 검토 & 수정 → 새 버전) -->
   <section class="scr">
-    <p class="kicker">화면 2 · 요구사항 검토(탭)</p>
+    <p class="kicker">화면 3 · 요구사항 검토(탭)</p>
     <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/review</span><h2>AI 검토 &amp; 수정 → 새 버전</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
@@ -490,7 +570,7 @@
 
   <!-- S3 버전 이력 -->
   <section class="scr">
-    <p class="kicker">화면 3 · 버전 이력(탭)</p>
+    <p class="kicker">화면 4 · 버전 이력(탭)</p>
     <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/versions</span><h2>버전 이력 — 커밋처럼 쌓인다</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
@@ -587,7 +667,7 @@
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 2 — 요구사항 목록(기본 진입, 담당자 필터) · 요구사항 등록(모달, 직접 입력 + AI 사전 검토) · 요구사항 검토(AI) · 버전 이력, 총 3화면. 로그인·프로젝트 선택·프로젝트 홈은 <b>기능 1</b>에서 이미 구현됨(사이드바 "요구사항" 클릭 시 이 화면들로 진입).
+  <p class="foot"><b>범위.</b> 기능 2 — 요구사항 목록(기본 진입, 멤버 전원 OR 필터) · 요구사항 등록(전용 페이지, 입력↔AI 검출) · 요구사항 검토(AI) · 버전 이력, 총 4화면. 로그인·프로젝트 선택·프로젝트 홈은 <b>기능 1</b>에서 이미 구현됨(사이드바 "요구사항" 클릭 시 이 화면들로 진입).
     &nbsp;<b>상태값.</b> 접수 → 검토 중 → 확정 → (수정) 변경 중 → 재확정 · 보류.
     &nbsp;<b>다음.</b> 확정된 요구사항 → <b>기능 3(산출물 도출)</b>.</p>
 </div>
