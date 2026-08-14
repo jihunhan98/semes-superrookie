@@ -47,6 +47,8 @@
   .fnode.green{border-color:#1f883d;} .fnode.green .cap{color:#1f883d;}
   .fnode.good{border-color:#1f883d;background:#dafbe126;}
   .fnode.warn{border-color:#d4a72c;background:#fff8c526;}
+  .fnode.load{border-color:#9a6700;background:#fff8c526;border-style:dashed;}
+  .fnode.load .cap{color:#9a6700;}
   .fdecision{background:#fff8c526;border:1.5px dashed #d4a72c;border-radius:10px;padding:8px 18px;font-size:12.5px;font-weight:800;color:#9a6700;text-align:center;min-width:230px;}
   .fgate{background:#fbefff40;border:2px dashed #8250df;border-radius:10px;padding:9px 20px;font-size:13px;font-weight:800;color:#6e40c9;text-align:center;max-width:440px;}
   .fgate .cap{display:block;font-size:11px;font-weight:500;margin-top:4px;line-height:1.5;}
@@ -77,7 +79,7 @@
   .gh{--cv:#fff;--cvs:#f6f8fa;--cvi:#eef1f4;--bd:#d1d9e0;--bdm:#d8dee4;--fg:#1f2328;--fgm:#59636e;--fgf:#818b98;
     --blue:#0969da;--blue-s:#ddf4ff;--green:#1a7f37;--green-e:#1f883d;--green-s:#dafbe1;--purple:#8250df;--purple-s:#fbefff;
     --amber:#9a6700;--amber-s:#fff8c5;--red:#cf222e;--red-s:#ffebe9;--hdr:#24292f;
-    width:1920px;height:1080px;background:var(--cvs);color:var(--fg);font-size:15px;display:flex;flex-direction:column;}
+    width:1920px;height:1080px;background:var(--cvs);color:var(--fg);font-size:15px;display:flex;flex-direction:column;position:relative;}
   .gh *{box-sizing:border-box;}
   .gh a{color:inherit;text-decoration:none;}
   /* header (dark) */
@@ -331,6 +333,13 @@
   .gh .fr-lock{font-size:11px;color:var(--fgf);white-space:nowrap;}
   .gh .fieldsexample{margin-top:14px;max-width:1000px;border:1px dashed var(--bd);border-radius:10px;padding:12px 15px;}
   .gh .fieldsexample-t{font-size:11.5px;font-weight:700;color:var(--fgm);margin-bottom:8px;}
+  /* 등록 — 로딩 오버레이 (AI 초기 검토 대기) */
+  .gh .loadingov{position:absolute;top:62px;left:0;right:0;bottom:0;background:rgba(246,248,250,.92);display:flex;align-items:center;justify-content:center;z-index:40;}
+  .gh .loadcard{text-align:center;max-width:400px;}
+  .gh .spinner{width:42px;height:42px;border:4px solid var(--cvi);border-top-color:var(--purple);border-radius:50%;margin:0 auto 18px;animation:reqspin 1s linear infinite;}
+  @keyframes reqspin{to{transform:rotate(360deg);}}
+  .gh .load-t{font-size:15px;font-weight:800;color:var(--fg);margin-bottom:8px;}
+  .gh .load-sub{font-size:12.5px;color:var(--fgm);line-height:1.65;}
   #scr-edit .rvsplit .rvhead{padding:8px 14px;}
   #scr-edit .rvsplit .rvbody{padding:10px 14px;}
   #scr-edit .rvsplit .find{padding:8px 11px;margin-bottom:0;}
@@ -390,7 +399,9 @@
         <div class="fvline"></div>
         <a class="fnode" href="#reg">📝 요구사항 입력<span class="cap">ID·요청자 소속/이름·본문만 작성 · AI 관련 요소 없음</span></a>
         <div class="fvline"></div>
-        <a class="fnode green" href="#reg">💾 "등록하기" → 접수 저장<span class="cap">저장 직후 AI가 백그라운드에서 자동 분석 시작(모든 요구사항 대상) · 사람 개입 없음</span></a>
+        <a class="fnode load" href="#reg">⏳ "등록하기" 클릭 → 로딩<span class="cap">클릭 즉시 완료 아님 — 저장 + AI 초기 검토(본문 전체, 모든 요구사항 대상)가 끝날 때까지 로딩 표시</span></a>
+        <div class="fvline"></div>
+        <a class="fnode green" href="#reg">💾 접수 저장 완료<span class="cap">로딩이 끝나야 완료 — 이 시점부터 AI 참고 의견이 이미 준비되어 있음</span></a>
         <div class="fvline"></div>
         <a class="fnode" href="#scr-list">📋 목록에 노출<span class="cap">접수 상태로 표시 · 프로젝트 멤버 전원 열람 가능</span></a>
         <div class="fvline"></div>
@@ -502,9 +513,9 @@
           <div class="main">
             <div class="crumb" style="margin-bottom:3px"><b>요구사항</b> / 등록</div>
             <h1 class="pt" style="margin:0 0 2px">새 요구사항 등록</h1>
-            <p class="psub" style="margin-bottom:10px">그냥 입력하고 등록하면 끝입니다. AI 검토는 강제가 아니며, 나중에 상세 화면에서 언제든 받을 수 있습니다.</p>
+            <p class="psub" style="margin-bottom:10px">입력하고 등록하면, 저장과 함께 AI가 자동으로 초기 검토를 시작합니다.</p>
 
-            <div class="regcard" style="max-width:900px">
+            <div class="regcard" style="max-width:900px;opacity:.5;pointer-events:none">
               <div class="rch">📝 요구사항 입력</div>
               <div class="rcb">
                 <div class="reqmeta">
@@ -517,10 +528,18 @@
               </div>
             </div>
 
-            <div class="regfoot" style="max-width:900px">
-              <span class="btn prim">등록하기</span>
+            <div class="regfoot" style="max-width:900px;opacity:.5">
+              <span class="btn prim">⏳ 등록 중…</span>
               <span class="btn">취소</span>
-              <span class="note">등록하면 상태는 <b style="color:var(--fg)">접수</b>가 됩니다. AI 검토가 필요하면 등록 후 상세 화면에서 "검토하고 확정하기"를 누르세요.</span>
+              <span class="note">등록하면 상태는 <b style="color:var(--fg)">접수</b>가 됩니다.</span>
+            </div>
+
+            <div class="loadingov">
+              <div class="loadcard">
+                <div class="spinner"></div>
+                <div class="load-t">요구사항을 저장하고 AI가 초기 검토를 하고 있습니다…</div>
+                <div class="load-sub">보통 5~10초 정도 걸립니다. 완료되면 접수 상태로 등록되고,<br>상세 화면에서 바로 AI 참고 의견을 확인할 수 있습니다.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -528,9 +547,10 @@
     </div></div>
     <div class="specrow">
       <span class="chipspec"><b>전용 페이지</b> 다이얼로그가 아니라 별도 URL로 이동</span>
-      <span class="chipspec"><b>순수 입력</b> AI 관련 요소를 전부 뺐다 — 요구사항 ID·요청자 소속·요청자 이름·내용만 입력하고 "등록하기"만 누르면 끝</span>
-      <span class="chipspec"><b>AI 검토는 여기서 하지 않음</b> 등록 직후엔 접수 상태로만 저장 — 검토·확정은 상세 화면(화면 3)의 "검토하고 확정하기"에서, AI와 본문을 어떻게 주고받는지는 화면 4에서 다룬다</span>
-      <span class="chipspec api">POST /api/projects/{id}/requirements</span>
+      <span class="chipspec"><b>순수 입력</b> AI 관련 요소를 화면에 전부 뺐다 — 요구사항 ID·요청자 소속·요청자 이름·내용만 입력</span>
+      <span class="chipspec"><b>"등록하기" = 로딩</b> 클릭 즉시 완료되지 않는다 — 저장과 AI 초기 검토(본문 전체)가 함께 끝날 때까지 로딩 화면을 보여주고, 그동안 폼은 비활성화됨</span>
+      <span class="chipspec"><b>완료 시점</b> 로딩이 끝나면 접수 상태로 등록 완료 + AI 참고 의견이 이미 준비된 상태 — 상세 화면(화면 3)에서 바로 확인 가능, 확정은 "검토하고 확정하기"(화면 4)에서</span>
+      <span class="chipspec api">POST /api/projects/{id}/requirements (동기 응답 — AI 분석 완료 후 반환)</span>
     </div>
   </section>
 
@@ -615,6 +635,30 @@
       <span class="chipspec api">GET /api/projects/{id}/requirements/{reqId}</span>
     </div>
   </section>
+
+  <div class="flowbox" style="margin-top:40px">
+    <p class="flowtitle">🔬 수정 → 합의 → 확정 상세 흐름 — 화면 4 안에서 실제로 어떤 순서로 일어나는지</p>
+    <p class="flowsub">위 전체 흐름의 "AI 참고 확인 + 본문 수정" ~ "확정 저장" 구간(6~9단계)만 확대한 것이다. 로딩이 어디서 몇 번 나오는지, 합의가 어디서 시스템 밖으로 나가는지를 기준으로 읽는다.</p>
+    <div class="flowchart">
+      <a class="fnode start" href="#scr-detail">📄 상세 화면<span class="cap">"수정하기" 또는 "검토하고 확정하기" 클릭</span></a>
+      <div class="fvline"></div>
+      <a class="fnode" href="#scr-edit">✏️ 수정 화면 진입 + 사유 입력<span class="cap">고객 요청이든 직접 판단이든 자유 서술</span></a>
+      <div class="fvline"></div>
+      <a class="fnode load" href="#scr-edit">⏳ 로딩 — AI가 사유+본문 분석 중<span class="cap">사유 입력을 마치면 자동 시작 · 완료까지 로딩 표시(수 초)</span></a>
+      <div class="fvline"></div>
+      <a class="fnode purple" href="#scr-edit">🤖 AI 참고 의견 확인<span class="cap">참고용 배지 명시 · 제안 문장 미리보기, "적용하기"는 선택</span></a>
+      <div class="fvline"></div>
+      <a class="fnode" href="#scr-edit">📝 최종 본문 확정<span class="cap">AI 제안을 적용했든, 직접 고쳐 썼든 상관없이 이 내용이 다음 단계로 넘어감</span></a>
+      <div class="fvline"></div>
+      <div class="fgate">📩 고객과 협의 <span class="cap" style="color:#6e40c9">시스템 밖에서 진행(메일·전화·미팅 등) · 이 화면은 협의 자체를 대신하지 않고, 협의 "결과"만 기록한다</span></div>
+      <div class="fvline"></div>
+      <a class="fnode" href="#scr-edit">🤝 고객 합의 기록 입력<span class="cap">합의 방법·고객측 담당자·합의일·합의 내용</span></a>
+      <div class="fvline"></div>
+      <a class="fnode purple" href="#scr-edit">✅ 변경 사유 확인 + "확정 저장" 클릭<span class="cap">합의 기록이 없으면 이 버튼 자체가 비활성화되어 눌리지 않음</span></a>
+      <div class="fvline"></div>
+      <a class="fnode good" href="#scr-detail">🏷 새 버전 생성 완료<span class="cap">상세 화면·버전 이력에 즉시 반영</span></a>
+    </div>
+  </div>
 
   <!-- S2c 요구사항 수정 (확정본 변경 · 변경분만 AI 검토) -->
   <section class="scr" id="scr-edit">
