@@ -165,10 +165,11 @@
   .gh .rqbar .t{border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--fgm);font-weight:600;background:var(--cv);}
   .gh .memfilter{display:flex;align-items:center;gap:8px;margin:2px 0 14px;flex-wrap:wrap;}
   .gh .memfilter .mf-l{font-size:12.5px;font-weight:700;color:var(--fgm);margin-right:2px;}
-  .gh .mf-av{position:relative;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;opacity:.45;cursor:pointer;}
-  .gh .mf-av.on{opacity:1;box-shadow:0 0 0 2px var(--cv),0 0 0 4px var(--blue);}
-  .gh .mf-av small{position:absolute;top:34px;left:50%;transform:translateX(-50%);background:var(--hdr);color:#fff;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;display:none;}
-  .gh .memfilter .mf-note{font-size:12.5px;color:var(--fgm);margin-left:4px;}
+  .gh .mf-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bd);background:var(--cv);border-radius:8px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--fgm);cursor:pointer;}
+  .gh .mf-chip .ck{width:14px;height:14px;border:1.5px solid var(--bdm);border-radius:4px;display:grid;place-items:center;font-size:10px;color:transparent;flex:0 0 auto;}
+  .gh .mf-chip.on{border-color:var(--blue);background:var(--blue-s);color:var(--blue);font-weight:700;}
+  .gh .mf-chip.on .ck{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .gh .memfilter .mf-note{font-size:12.5px;color:var(--fgm);margin-left:6px;}
   .gh .memfilter .mf-note b{color:var(--blue);font-weight:700;}
   .gh .rqlist{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
   .gh .grp+.grp{border-top:1px solid var(--bd);}
@@ -274,8 +275,9 @@
   .gh .find .fsug{margin-top:9px;background:var(--blue-s);border:1px dashed #79c0ff;border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--blue);display:flex;align-items:center;gap:8px;}
   .gh .find .fsug .apply{margin-left:auto;font-weight:700;white-space:nowrap;}
   .gh .rvcommit{margin-top:12px;border:1px solid var(--bd);border-radius:10px;background:var(--cvs);padding:11px 15px;}
-  .gh .rvcommit .commitin{margin-top:7px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:11px 13px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:8px;}
-  .gh .rvcommit .aihint{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-s);border-radius:999px;padding:2px 10px;white-space:nowrap;}
+  .gh .commitin{margin-top:7px;border:1px solid var(--bd);border-radius:8px;background:var(--cv);padding:11px 13px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:8px;}
+  .gh .rvcommit .commitin{margin-top:7px;}
+  .gh .aihint{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-s);border-radius:999px;padding:2px 10px;white-space:nowrap;}
   .gh .rvfoot{display:flex;align-items:center;gap:12px;margin-top:12px;}
   .gh .rvfoot .note{font-size:13px;color:var(--fgm);}
   /* 요구사항 등록 — 전용 페이지(세로 흐름: 입력 → 선택 → 결과) */
@@ -317,11 +319,30 @@
   .gh .aisuggest-act .applied{font-size:12px;font-weight:700;color:var(--green);}
   .gh .aidisclaim{background:#fff8c540;border:1px solid #d4a72c66;border-radius:8px;padding:9px 12px;font-size:12px;color:#9a6700;line-height:1.55;margin-bottom:12px;}
   .gh .aidisclaim b{color:#7d5200;}
-  .gh .rvbody.consensus{padding:9px 14px 11px;}
-  .gh .cnote{font-size:11px;color:var(--fgm);margin-bottom:7px;}
-  .gh .crow{display:flex;gap:22px;flex-wrap:wrap;font-size:12.5px;color:var(--fg);padding-bottom:8px;border-bottom:1px solid var(--bdm);margin-bottom:7px;}
+  .gh .crow{display:flex;gap:22px;flex-wrap:wrap;font-size:12.5px;color:var(--fg);padding-bottom:9px;border-bottom:1px solid var(--bdm);margin-bottom:9px;}
   .gh .crow b{color:var(--fgm);font-weight:600;margin-right:5px;}
   .gh .ctext{font-size:12.5px;color:var(--fg);}
+  /* 요구사항 수정 — 4단계 위저드 레이아웃 */
+  .gh .wizard{margin-top:16px;max-width:1600px;}
+  .gh .wstep{display:flex;gap:16px;position:relative;padding-bottom:16px;}
+  .gh .wstep:last-child{padding-bottom:0;}
+  .gh .wstep:not(:last-child)::before{content:"";position:absolute;left:15px;top:34px;bottom:2px;width:2px;background:var(--bd);}
+  .gh .wnum{width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;font-weight:800;display:grid;place-items:center;z-index:1;}
+  .gh .wnum.ok{background:var(--purple);}
+  .gh .wbody{flex:1;min-width:0;}
+  .gh .wtitle{font-size:15px;font-weight:800;color:var(--fg);margin:5px 0 9px;}
+  .gh .wsub{font-size:12.5px;font-weight:500;color:var(--fgm);margin-left:9px;}
+  .gh .wsub b{color:var(--fg);font-weight:700;}
+  .gh .wcard{border:1px solid var(--bd);border-radius:12px;background:var(--cv);overflow:hidden;}
+  .gh .wch{padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--cvs);font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .gh .wch .rt{margin-left:auto;display:flex;align-items:center;}
+  .gh .wcb{padding:14px 16px;}
+  .gh .w2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  .gh .wnote{font-size:11.5px;color:var(--fgm);text-align:center;padding-top:9px;}
+  .gh .wcb.consensus{padding:12px 16px;}
+  .gh .wcb>.commitin:first-child{margin-top:0;}
+  .gh .wfoot{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .gh .wfoot .note{font-size:12px;color:var(--fgm);}
   /* 요구사항 항목 설정 */
   .gh .fieldsinfo{background:var(--blue-s);border:1px dashed #79c0ff;border-radius:10px;padding:12px 15px;font-size:12.5px;color:var(--fg);line-height:1.65;margin-bottom:14px;max-width:1000px;}
   .gh .fieldrow{display:flex;align-items:center;gap:10px;padding:10px 16px;}
@@ -334,22 +355,19 @@
   .gh .fieldsexample{margin-top:14px;max-width:1000px;border:1px dashed var(--bd);border-radius:10px;padding:12px 15px;}
   .gh .fieldsexample-t{font-size:11.5px;font-weight:700;color:var(--fgm);margin-bottom:8px;}
   /* 등록 — 로딩 오버레이 (AI 초기 검토 대기) */
-  .gh .loadingov{position:absolute;top:62px;left:0;right:0;bottom:0;background:rgba(246,248,250,.92);display:flex;align-items:center;justify-content:center;z-index:40;}
-  .gh .loadcard{text-align:center;max-width:400px;}
-  .gh .spinner{width:42px;height:42px;border:4px solid var(--cvi);border-top-color:var(--purple);border-radius:50%;margin:0 auto 18px;animation:reqspin 1s linear infinite;}
+  .gh .loadstate{max-width:900px;margin-top:22px;padding-top:16px;border-top:1px dashed var(--bd);}
+  .gh .ls-cap{font-size:11.5px;font-weight:700;color:var(--fgf);margin-bottom:9px;}
+  .gh .loadbar{display:flex;align-items:center;gap:16px;border:1.5px solid var(--purple);background:var(--purple-s);border-radius:12px;padding:16px 20px;}
+  .gh .spinner{width:30px;height:30px;border:3.5px solid #e5d4f7;border-top-color:var(--purple);border-radius:50%;flex:0 0 auto;animation:reqspin 1s linear infinite;}
   @keyframes reqspin{to{transform:rotate(360deg);}}
-  .gh .load-t{font-size:15px;font-weight:800;color:var(--fg);margin-bottom:8px;}
-  .gh .load-sub{font-size:12.5px;color:var(--fgm);line-height:1.65;}
-  #scr-edit .rvsplit .rvhead{padding:8px 14px;}
-  #scr-edit .rvsplit .rvbody{padding:10px 14px;}
-  #scr-edit .rvsplit .find{padding:8px 11px;margin-bottom:0;}
-  #scr-edit .rvsplit .find .frs2{font-size:11.5px;}
-  #scr-edit .aidisclaim{padding:7px 10px;font-size:11.5px;margin-bottom:9px;}
-  #scr-edit .aisuggest{padding:7px 10px;font-size:12px;margin-top:5px;}
-  #scr-edit .aisuggest-act{margin-top:6px;}
-  #scr-edit .regcard .rcb{padding:8px 16px;}
-  #scr-edit .regcard .rch{padding:7px 16px;}
-  #scr-edit .reqmeta{margin-bottom:6px;}
+  .gh .load-t{font-size:14px;font-weight:800;color:var(--fg);margin-bottom:4px;}
+  .gh .load-sub{font-size:12px;color:var(--fgm);line-height:1.6;}
+  #scr-edit .find{padding:12px 14px;}
+  #scr-edit .find .frs2{font-size:13px;line-height:1.6;}
+  #scr-edit .find .fspan2{font-size:14px;}
+  #scr-edit .aisuggest{font-size:13.5px;padding:11px 13px;line-height:1.7;}
+  #scr-edit .editbox2{font-size:13.5px;line-height:1.75;}
+  #scr-edit .wnote{font-size:12px;}
   /* 요구사항 상세 — Jira 이슈 스타일 세부 정보 사이드바 */
   .gh .jiraside{border:1px solid var(--bd);border-radius:12px;background:var(--cv);padding:2px 16px 16px;}
   .gh .jiratitle{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--fgm);padding:13px 0 9px;border-bottom:1px solid var(--bdm);}
@@ -459,9 +477,9 @@
             </div>
             <div class="memfilter">
               <span class="mf-l">담당자</span>
-              <span class="mf-av on" style="background:#6e40c9">한<small>한지훈</small></span>
-              <span class="mf-av" style="background:#1f883d">이<small>이수민</small></span>
-              <span class="mf-av on" style="background:#bf3989">김<small>김도현</small></span>
+              <span class="mf-chip on"><span class="ck">✓</span>한지훈</span>
+              <span class="mf-chip"><span class="ck">✓</span>이수민</span>
+              <span class="mf-chip on"><span class="ck">✓</span>김도현</span>
               <span class="mf-note">2명 선택 · <b>OR</b>로 필터링 (한지훈 또는 김도현) — 프로젝트 멤버 전원이 후보로 표시되고, 아무도 선택하지 않으면 전체를 보여줍니다</span>
             </div>
             <div class="rqlist">
@@ -481,7 +499,7 @@
     <div class="specrow">
       <span class="chipspec"><b>기본 화면</b> 사이드바 "요구사항" 클릭 시 항상 이 목록으로 진입 (문서 업로드 화면 없음)</span>
       <span class="chipspec"><b>분류 없이 플랫 목록</b> 카테고리별로 묶지 않고 하나의 목록으로 표시 (검색·담당자·상태 필터로 충분)</span>
-      <span class="chipspec"><b>담당자 필터(Jira처럼)</b> 프로젝트 멤버 전원이 아바타로 표시 · 여러 명 클릭 시 OR로 필터 · 아무도 선택 안 하면 전체 표시</span>
+      <span class="chipspec"><b>담당자 필터(Jira처럼)</b> 프로젝트 멤버 전원을 <b>이름 칩</b>으로 표시(체크 표시로 선택 여부가 명확) · 여러 명 클릭 시 OR로 필터 · 아무도 선택 안 하면 전체 표시</span>
       <span class="chipspec"><b>행</b> 클릭하면 상세 화면(화면 3)으로 이동 · 상태 점·제목·ID·상태/버전 태그·담당자·수정시각</span>
       <span class="chipspec"><b>상태</b> 접수·검토중·확정·변경중·보류 (상단 상태값 참고)</span>
       <span class="chipspec api">GET /api/projects/{id}/requirements?assignee=&group=category&state=</span>
@@ -491,7 +509,7 @@
   <!-- S1b 요구사항 등록 (전용 페이지, 다이얼로그 아님) -->
   <section class="scr" id="reg">
     <p class="kicker">화면 2 · 요구사항 등록 · "＋ 새 요구사항" 클릭 시 이동</p>
-    <div class="scr-head"><span class="route">/projects/{id}/requirements/new</span><h2>요구사항 등록 — 그냥 입력만 하면 끝</h2><span class="st newx">신규</span></div>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/new</span><h2>요구사항 등록 — 입력 후 저장 + AI 초기 검토까지</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -515,7 +533,7 @@
             <h1 class="pt" style="margin:0 0 2px">새 요구사항 등록</h1>
             <p class="psub" style="margin-bottom:10px">입력하고 등록하면, 저장과 함께 AI가 자동으로 초기 검토를 시작합니다.</p>
 
-            <div class="regcard" style="max-width:900px;opacity:.5;pointer-events:none">
+            <div class="regcard" style="max-width:900px">
               <div class="rch">📝 요구사항 입력</div>
               <div class="rcb">
                 <div class="reqmeta">
@@ -528,17 +546,20 @@
               </div>
             </div>
 
-            <div class="regfoot" style="max-width:900px;opacity:.5">
-              <span class="btn prim">⏳ 등록 중…</span>
+            <div class="regfoot" style="max-width:900px">
+              <span class="btn prim">등록하기</span>
               <span class="btn">취소</span>
               <span class="note">등록하면 상태는 <b style="color:var(--fg)">접수</b>가 됩니다.</span>
             </div>
 
-            <div class="loadingov">
-              <div class="loadcard">
+            <div class="loadstate">
+              <div class="ls-cap">＊ "등록하기"를 누른 뒤의 상태 — 완료될 때까지 폼은 잠기고 아래 표시가 나타납니다</div>
+              <div class="loadbar">
                 <div class="spinner"></div>
-                <div class="load-t">요구사항을 저장하고 AI가 초기 검토를 하고 있습니다…</div>
-                <div class="load-sub">보통 5~10초 정도 걸립니다. 완료되면 접수 상태로 등록되고,<br>상세 화면에서 바로 AI 참고 의견을 확인할 수 있습니다.</div>
+                <div>
+                  <div class="load-t">요구사항을 저장하고 AI가 초기 검토를 하고 있습니다…</div>
+                  <div class="load-sub">보통 5~10초 소요 · 완료되면 접수 상태로 등록되고, 상세 화면에서 바로 AI 참고 의견을 확인할 수 있습니다.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -685,69 +706,81 @@
           <div class="main">
             <div class="crumb"><b>요구사항</b> / req-tf-01 / 수정</div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">신규 태스크 생성</h1><span class="lbl blue" style="padding:2px 11px">변경 중</span><span class="tagv">🏷 v1.0.1 → v1.0.2</span></div>
-            <div class="rvbanner" style="margin-top:10px">📝 <b>사유</b>를 입력해 확정본(v1.0.1)을 수정합니다 — 변경된 부분만 AI가 검토합니다 <span class="verprev">v1.0.1 → v1.0.2</span></div>
 
-            <div class="rvsplit" style="max-width:1700px;margin-top:10px">
-              <div class="regcard" style="margin-top:0">
-                <div class="rch">📝 사유</div>
-                <div class="rcb" style="padding:8px 14px">
-                  <div class="fieldlab" style="margin-bottom:5px">왜 바꾸는지 — 고객 요청이든 직접 판단이든 자유롭게. AI 검토가 이 내용을 참고합니다.</div>
-                  <textarea class="reqta" readonly style="min-height:34px;font-size:12.5px">req-ta-01과 우선순위 기준이 달라 충돌합니다. 두 요구사항 모두 SoC(배터리 잔량) 높은 순으로 통일해주세요. — 삼성전자 EDS 김민석 책임</textarea>
+            <div class="wizard">
+              <div class="wstep">
+                <div class="wnum">1</div>
+                <div class="wbody">
+                  <div class="wtitle">수정 사유 <span class="wsub">왜 바꾸는지 — 고객 요청이든 직접 판단이든 자유롭게. AI가 이 내용을 함께 참고합니다.</span></div>
+                  <div class="wcard"><div class="wcb">
+                    <textarea class="reqta" readonly style="min-height:38px">req-ta-01과 우선순위 기준이 달라 충돌합니다. 두 요구사항 모두 SoC(배터리 잔량) 높은 순으로 통일해주세요. — 삼성전자 EDS 김민석 책임</textarea>
+                  </div></div>
                 </div>
               </div>
-              <div class="rvcard">
-                <div class="rvhead">🔒 현재 확정 내용 <span class="rt"><span class="tagv" style="color:var(--fgm)">🏷 v1.0.1</span></span></div>
-                <div class="rvbody" style="padding:8px 14px">
-                  <div class="editbox2" style="cursor:default;font-size:12.5px">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.</div>
-                </div>
-              </div>
-            </div>
 
-            <div class="rvsplit" style="max-width:1700px">
-              <div class="rvcard">
-                <div class="rvhead">🤖 AI 참고 의견 <span class="rt"><span class="cnt" style="background:var(--purple-s);color:var(--purple)">자동 분석됨</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
-                <div class="rvbody">
-                  <div class="aidisclaim">⚠️ AI 의견은 <b>참고용</b>입니다. 합리적이라 판단되어도 <b>고객 합의 없이는 확정할 수 없습니다</b> — 아래 "고객 합의" 기록이 있어야 확정 저장이 가능합니다.</div>
-                  <div class="find" style="border-color:#3fb95055;background:#dafbe11a">
-                    <div class="ft"><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
-                    <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
+              <div class="wstep">
+                <div class="wnum">2</div>
+                <div class="wbody">
+                  <div class="wtitle">AI 참고 의견을 보고 본문 수정 <span class="wsub">AI 의견은 <b>참고용</b>입니다 — 적용할지 말지는 사람이 결정합니다.</span></div>
+                  <div class="w2col">
+                    <div class="wcard">
+                      <div class="wch">🤖 AI 참고 의견 <span class="rt"><span class="cnt" style="background:var(--purple-s);color:var(--purple)">자동 분석됨</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
+                      <div class="wcb">
+                        <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:12px">
+                          <div class="ft"><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
+                          <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
+                        </div>
+                        <div class="fieldlab">제안된 문장</div>
+                        <div class="aisuggest">…최대 1건만 허용한다. <b>생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</b></div>
+                        <div class="aisuggest-act"><span class="btn acc sm">⬇ 이 제안 적용하기</span><span class="applied">✓ 적용됨</span></div>
+                        <div class="wnote">이번에 바뀐 부분만 분석 · 새로운 이슈 없음</div>
+                      </div>
+                    </div>
+                    <div class="wcard">
+                      <div class="wch">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">직접 수정 가능</span></span></div>
+                      <div class="wcb">
+                        <div class="fieldlab">현재 확정본 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">v1.0.1</span></div>
+                        <div class="editbox2" style="cursor:default;color:var(--fgm);margin-bottom:14px">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.</div>
+                        <div class="fieldlab">수정 후 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— 저장될 내용</span></div>
+                        <div class="editbox2 editing">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.<ins> 생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</ins><span class="caret2"></span></div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="fieldlab" style="margin-top:12px">제안된 전체 문장</div>
-                  <div class="aisuggest">…최대 1건만 허용한다. <b>생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</b></div>
-                  <div class="aisuggest-act"><span class="btn acc sm">⬇ 이 제안 적용하기</span><span class="applied">✓ 적용됨 — 오른쪽 본문에 반영됨</span></div>
-                  <div style="font-size:11.5px;color:var(--fgm);text-align:center;padding-top:6px">본문 전체가 아니라 <b>이번에 바뀐 부분만</b> 분석했습니다 · 새로운 이슈 없음</div>
                 </div>
               </div>
-              <div class="rvcard">
-                <div class="rvhead">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">수정 가능</span></span></div>
-                <div class="rvbody">
-                  <div class="fieldlab">직접 고치거나, 왼쪽 "적용하기"로 AI 제안을 그대로 가져올 수 있습니다</div>
-                  <div class="editbox2 editing">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.<ins> 생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</ins><span class="caret2"></span></div>
-                </div>
-              </div>
-            </div>
 
-            <div class="rvcard" style="margin-top:10px;max-width:1700px;border-color:#8250df66">
-              <div class="rvhead" style="background:#fbefff40;color:#6e40c9">🤝 고객 합의 <span class="rt" style="color:var(--green);font-weight:700;font-size:12px">✓ 합의 완료</span></div>
-              <div class="rvbody consensus">
-                <div class="cnote">이 기록이 있어야 아래 "확정 저장"이 활성화됩니다.</div>
-                <div class="crow">
-                  <span><b>방법</b> 이메일</span>
-                  <span><b>고객측 담당자</b> 삼성전자 EDS 김민석 책임</span>
-                  <span><b>합의일</b> 2026-08-14</span>
+              <div class="wstep">
+                <div class="wnum ok">3</div>
+                <div class="wbody">
+                  <div class="wtitle">고객 합의 <span class="wsub">고객과 협의한 <b>결과</b>를 기록합니다 — 이 기록 없이는 확정할 수 없습니다.</span></div>
+                  <div class="wcard" style="border-color:#8250df66">
+                    <div class="wcb consensus">
+                      <div class="crow">
+                        <span><b>방법</b> 이메일</span>
+                        <span><b>고객측 담당자</b> 삼성전자 EDS 김민석 책임</span>
+                        <span><b>합의일</b> 2026-08-14</span>
+                        <span style="margin-left:auto;color:var(--green);font-weight:700">✓ 합의 완료</span>
+                      </div>
+                      <div class="ctext">위 수정안(우선순위 req-ta-01 기준 통일)에 동의함. 회신 메일로 확인.</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="ctext">위 수정안(우선순위 req-ta-01 기준 통일)에 동의함. 회신 메일로 확인.</div>
               </div>
-            </div>
 
-            <div class="rvcommit" style="max-width:1700px">
-              <div class="fieldlab">변경 사유 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— 이 문구가 버전 이력의 제목이 됩니다 (커밋 메시지)</span></div>
-              <div class="commitin">req-ta-01과 우선순위 기준 통일 (고객 요청 반영, 합의 완료)<span class="aihint">✨ AI 제안 · 편집 가능</span></div>
-            </div>
-            <div class="rvfoot" style="max-width:1700px">
-              <span class="btn prim">확정 저장 → v1.0.2</span>
-              <span class="btn">취소</span>
-              <span class="note">고객 합의 기록이 없으면 이 버튼은 비활성화됩니다. 작성자(한지훈)·시각·변경 사유와 함께 <b style="color:var(--fg)">버전 이력</b>에 새 버전으로 남습니다</span>
+              <div class="wstep">
+                <div class="wnum">4</div>
+                <div class="wbody">
+                  <div class="wtitle">변경 사유 확인 후 확정 <span class="wsub">이 문구가 버전 이력의 제목이 됩니다 (커밋 메시지).</span></div>
+                  <div class="wcard"><div class="wcb">
+                    <div class="commitin">req-ta-01과 우선순위 기준 통일 (고객 요청 반영, 합의 완료)<span class="aihint">✨ AI 제안 · 편집 가능</span></div>
+                    <div class="wfoot">
+                      <span class="btn prim">확정 저장 → v1.0.2</span>
+                      <span class="btn">취소</span>
+                      <span class="note">3단계 합의 기록이 없으면 비활성화됩니다 · 작성자·시각·사유와 함께 <b style="color:var(--fg)">버전 이력</b>에 남습니다</span>
+                    </div>
+                  </div></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
