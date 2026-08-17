@@ -34,4 +34,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleInvalidToken(ApiErrors.InvalidProjectToken e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(ApiErrors.RequirementNotFound.class)
+    public ResponseEntity<Map<String, String>> handleRequirementNotFound(ApiErrors.RequirementNotFound e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(ApiErrors.DuplicateReqKey.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateReqKey(ApiErrors.DuplicateReqKey e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
 }

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "ReqOps API",
-    "description": "기능 1 — 회원가입/로그인/프로젝트 관리 API 테스트 컬렉션. 세션/토큰 없음 — 프로젝트 API는 요청 바디/쿼리에 userId를 직접 넘긴다.",
+    "description": "기능 1(회원가입·로그인·프로젝트) + 기능 2(요구사항 목록·최초 등록·AI 검토) API 테스트 컬렉션. 세션/토큰 없음 — 모든 API는 요청 바디/쿼리에 userId를 직접 넘긴다.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,6 +27,18 @@
       "value": "",
       "type": "string",
       "description": "프로젝트 생성/토큰 재발급 응답의 token 값을 넣는다."
+    },
+    {
+      "key": "requirementId",
+      "value": "1",
+      "type": "string",
+      "description": "요구사항 등록 응답의 id 값을 넣는다."
+    },
+    {
+      "key": "aiBaseUrl",
+      "value": "http://localhost:8001",
+      "type": "string",
+      "description": "AI 서버(FastAPI) 주소. 백엔드의 app.ai.base-url과 같아야 한다."
     }
   ],
   "item": [
@@ -268,6 +280,214 @@
               "query": [{ "key": "userId", "value": "{{userId}}" }]
             },
             "description": "이전 토큰은 폐기되어 더 이상 참여에 쓸 수 없다. Owner가 아니면 403."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "요구사항",
+      "description": "기능 2 — 목록 · 최초 등록 · 상세 · AI 재분석. 등록은 저장 후 AI 검토까지 마치고 응답하므로 몇 초 걸릴 수 있다.",
+      "item": [
+        {
+          "name": "요구사항 최초 등록",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"reqKey\": \"req-am-03\",\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"requesterDept\": \"삼성전자 EDS · 설비공정그룹\",\n  \"requesterName\": \"김민석 책임\"\n}"
+            },
+            "description": "201 CREATED. 응답 본문은 상세 응답과 같은 모양이며 findings[]와 aiDraftContent가 이미 채워져 있다.\n- aiDraftContent: AI 제안이 반영된 문장. 프론트는 이 값을 '확정될 본문' 입력칸의 초기값으로 쓴다.\n- aiEngine: rule | rule+llm | unavailable. AI 서버가 죽어 있어도 등록 자체는 성공한다(unavailable).\n응답의 id를 requirementId 변수에 넣어두면 아래 요청에 바로 쓸 수 있다."
+          },
+          "response": []
+        },
+        {
+          "name": "요구사항 등록 실패 - ID 중복",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"reqKey\": \"req-am-03\",\n  \"content\": \"같은 프로젝트에 같은 요구사항 ID를 다시 등록한다.\"\n}"
+            },
+            "description": "'요구사항 최초 등록'을 먼저 실행한 뒤 같은 reqKey로 보내면 409가 나야 한다."
+          },
+          "response": []
+        },
+        {
+          "name": "요구사항 등록 실패 - 필수값 누락",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"reqKey\": \"\",\n  \"content\": \"\"\n}"
+            },
+            "description": "reqKey·content는 @NotBlank — 400과 함께 유효성 오류가 나야 한다."
+          },
+          "response": []
+        },
+        {
+          "name": "요구사항 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "등록 최신순. 각 행은 reqKey·content·state/stateLabel·version·assigneeName·findingCount를 담는다. 상태/담당자/검색 필터는 프론트에서 처리한다."
+          },
+          "response": []
+        },
+        {
+          "name": "담당자 필터 후보",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/assignees?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "assignees"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "프로젝트 멤버 전원. 요구사항이 하나도 없어도 목록 화면의 담당자 칩은 채워진다."
+          },
+          "response": []
+        },
+        {
+          "name": "요구사항 상세",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "content(등록 원문)와 aiDraftContent(AI 제안 반영본)를 함께 내려준다. 'AI 제안 적용' API는 따로 없다 — 프론트가 aiDraftContent를 본문 입력칸의 초기값으로 쓰고, 사용자는 그 텍스트를 그대로 두거나 직접 고친다."
+          },
+          "response": []
+        },
+        {
+          "name": "요구사항 상세 실패 - 없는 ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/999999?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "999999"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "404가 나야 한다."
+          },
+          "response": []
+        },
+        {
+          "name": "AI 재분석",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/analyze?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "analyze"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "화면의 '↻ 다시 분석'. 기존 findings를 지우고 다시 채운다. 등록 시 AI 서버가 죽어 있어 aiEngine이 unavailable이었다면 이 API로 복구한다."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI 서버 (FastAPI)",
+      "description": "백엔드가 호출하는 AI 서버를 직접 두드려보는 요청들. 백엔드 없이 검출 규칙만 확인할 때 쓴다.",
+      "item": [
+        {
+          "name": "헬스체크",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiBaseUrl}}/health",
+              "host": ["{{aiBaseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "ollama 항목이 true면 LLM 오버레이까지 동작하는 상태, false면 규칙 기반만 동작한다."
+          },
+          "response": []
+        },
+        {
+          "name": "검출 유형 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiBaseUrl}}/types",
+              "host": ["{{aiBaseUrl}}"],
+              "path": ["types"]
+            },
+            "description": "정량 기준 부재 · 모호한 부사 · 주체 불명확 등 검출 유형 8종."
+          },
+          "response": []
+        },
+        {
+          "name": "전체 분석 (최초 등록)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{aiBaseUrl}}/analyze",
+              "host": ["{{aiBaseUrl}}"],
+              "path": ["analyze"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"existing\": [\n    { \"reqKey\": \"req-ta-01\", \"content\": \"AMR 할당은 요청 순으로 처리한다.\" }\n  ]\n}"
+            },
+            "description": "baseContent가 없으면 scope=\"full\" — 문장 전체를 본다. existing[]을 함께 넘기면 기존 요구사항과의 상충도 검출한다(위 예시는 '가장 가까운' ↔ '요청 순' 상충)."
+          },
+          "response": []
+        },
+        {
+          "name": "변경분 분석 (확정본 수정)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{aiBaseUrl}}/analyze",
+              "host": ["{{aiBaseUrl}}"],
+              "path": ["analyze"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 직선거리가 가장 짧은 AMR을 선택한다. 단, SoC 20% 미만이면 제외하고 3초 이내에 재할당한다.\",\n  \"baseContent\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"reason\": \"고객사 요청 — 정량 기준 명시\"\n}"
+            },
+            "description": "baseContent가 있으면 scope=\"diff\" — 확정본 대비 바뀐 부분만 본다. 백엔드는 아직 이 경로를 쓰지 않는다(확정본 수정 미구현)."
           },
           "response": []
         }

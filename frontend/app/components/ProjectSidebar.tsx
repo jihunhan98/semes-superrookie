@@ -12,14 +12,11 @@ const SETTINGS_ICON = (
   </>
 );
 
+const REQUIREMENTS_ICON = (
+  <path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z" />
+);
+
 const PLACEHOLDER_NAV_ITEMS = [
-  {
-    key: "requirements",
-    label: "요구사항",
-    icon: (
-      <path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z" />
-    ),
-  },
   {
     key: "artifacts",
     label: "산출물",
@@ -34,7 +31,7 @@ const PLACEHOLDER_NAV_ITEMS = [
   },
 ] as const;
 
-type NavKey = "home" | (typeof PLACEHOLDER_NAV_ITEMS)[number]["key"] | "settings";
+type NavKey = "home" | "requirements" | (typeof PLACEHOLDER_NAV_ITEMS)[number]["key"] | "settings";
 
 export default function ProjectSidebar({
   projectId,
@@ -62,6 +59,16 @@ export default function ProjectSidebar({
           {HOME_ICON}
         </svg>
         홈
+      </Link>
+
+      <Link
+        href={`/projects/${projectId}/requirements`}
+        className={`nav${active === "requirements" ? " on" : ""}`}
+      >
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          {REQUIREMENTS_ICON}
+        </svg>
+        요구사항
       </Link>
 
       {PLACEHOLDER_NAV_ITEMS.map((item) => (

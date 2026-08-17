@@ -16,7 +16,10 @@
   --red-soft: #ffebe9;
   --purple: #8250df;
   --purple-soft: #fbefff;
+  --amber: #9a6700;
+  --amber-soft: #fff8c5;
   --shadow: 0 8px 24px rgba(31, 35, 40, 0.1);
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,6 +41,8 @@
     --red-soft: #3d1418;
     --purple: #a371f7;
     --purple-soft: #3a1d5c;
+    --amber: #d29922;
+    --amber-soft: #3b2c07;
     --shadow: 0 8px 24px rgba(1, 4, 9, 0.6);
   }
 }
@@ -742,4 +747,520 @@ a {
 
 .tok .reissue {
   color: var(--red);
+}
+
+/* ── 요구사항 (기능 2) ── */
+
+.rqtoolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rqbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.seg {
+  display: inline-flex;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.seg button {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.seg button.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(31, 35, 40, 0.12);
+}
+
+.srch {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.srch:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 담당자 필터 — 아바타가 아니라 이름 칩. 체크 표시로 선택 여부가 명확하다. */
+.memfilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 14px;
+  flex-wrap: wrap;
+}
+
+.memfilter .mf-l {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.mf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mf-chip .ck {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--line-muted);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: transparent;
+  flex: 0 0 auto;
+}
+
+.mf-chip.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mf-chip.on .ck {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.memfilter .mf-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.memfilter .mf-note b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* 목록 — 분류 그룹 없이 플랫. ID가 크고 이름이 작다. */
+.rqlist {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.rqrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-top: 1px solid var(--line-muted);
+  text-decoration: none;
+  color: inherit;
+}
+
+.rqrow:first-child {
+  border-top: none;
+}
+
+.rqrow:hover {
+  background: var(--surface-muted);
+}
+
+.rqrow .sdot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: 0 0 11px;
+}
+
+.rqrow .rmid {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rqrow .rtit {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rqrow .rt {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+.rqrow .rasg {
+  font-size: 12.5px;
+  color: var(--muted);
+  width: 64px;
+  text-align: right;
+}
+
+.rqrow .rup {
+  font-size: 12px;
+  color: var(--faint);
+  width: 96px;
+  text-align: right;
+}
+
+.tagv {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.lbl {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.lbl.blue {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.cnt {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.crumb {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.crumb b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 등록 화면 */
+.regcard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+  max-width: 900px;
+}
+
+.regcard .rch {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.regcard .rcb {
+  padding: 14px 16px;
+}
+
+.reqmeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fieldlab {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.fi2 input,
+.reqta {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  padding: 8px 11px;
+  font-size: 13.5px;
+}
+
+.reqta {
+  min-height: 110px;
+  padding: 12px 14px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.fi2 input:focus,
+.reqta:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.fi2 input:disabled,
+.reqta:disabled {
+  background: var(--surface-muted);
+  color: var(--muted);
+}
+
+.regfoot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  max-width: 900px;
+  flex-wrap: wrap;
+}
+
+.regfoot .note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 등록 로딩 — 저장 + AI 초기 검토가 끝날 때까지 */
+.loadstate {
+  max-width: 900px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+.loadbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1.5px solid var(--purple);
+  background: var(--purple-soft);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3.5px solid var(--line);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  flex: 0 0 auto;
+  animation: reqspin 1s linear infinite;
+}
+
+@keyframes reqspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.load-t {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.load-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* 상세 — 왼쪽 AI(읽기 전용) / 오른쪽 본문(편집) */
+.w2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.wcard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.wcard.readonly,
+.wcard.readonly .wcb {
+  background: var(--surface-muted);
+}
+
+.wch {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wch .rt {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.wcb {
+  padding: 14px 16px;
+}
+
+.find {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 6px 10px 10px 6px;
+  background: var(--surface);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.find .ft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.ftype2 {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.ftype2.amb {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.ftype2.cf {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.find .fspan2 {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.find .frs2 {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.aisuggest {
+  margin-top: 8px;
+  border: 1px dashed var(--accent);
+  background: var(--accent-soft);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.65;
+}
+
+.fconf {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--surface-muted);
+  border-radius: 7px;
+  padding: 8px 11px;
+}
+
+/* AI 제안이 이미 반영된 상태임을 알리는 안내 — 적용 버튼은 없다. */
+.prefill {
+  background: var(--green-soft);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--green);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.prefill b {
+  color: var(--ink);
+}
+
+.prefill-act {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.pf-orig {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.jf {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-muted);
 }

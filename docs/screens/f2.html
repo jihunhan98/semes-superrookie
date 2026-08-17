@@ -327,8 +327,12 @@
   .gh .regfoot .note{font-size:12px;color:var(--fgm);}
   .gh .aisuggest{margin-top:6px;border:1px dashed #79c0ff;background:var(--blue-s);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--fg);line-height:1.6;}
   .gh .aisuggest b{color:var(--blue);}
-  .gh .aisuggest-act{display:flex;align-items:center;gap:10px;margin-top:8px;}
-  .gh .aisuggest-act .applied{font-size:12px;font-weight:700;color:var(--green);}
+  .gh .wcard.readonly{background:var(--cvs);}
+  .gh .wcard.readonly .wcb{background:var(--cvs);}
+  .gh .prefill{background:#dafbe140;border:1px solid #3fb95066;border-radius:8px;padding:9px 12px;font-size:12px;color:var(--green);line-height:1.55;margin-bottom:10px;}
+  .gh .prefill b{color:var(--fg);}
+  .gh .prefill-act{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .gh .pf-orig{font-size:11.5px;color:var(--fgf);}
   .gh .aidisclaim{background:#fff8c540;border:1px solid #d4a72c66;border-radius:8px;padding:9px 12px;font-size:12px;color:#9a6700;line-height:1.55;margin-bottom:12px;}
   .gh .aidisclaim b{color:#7d5200;}
   .gh .crow{display:flex;gap:22px;flex-wrap:wrap;font-size:12.5px;color:var(--fg);padding-bottom:9px;border-bottom:1px solid var(--bdm);margin-bottom:9px;}
@@ -686,7 +690,7 @@
           <div class="fvline"></div>
           <a class="fnode purple" href="#scr-confirm">🤖 AI 참고 의견<span class="cap"><b>본문 전체</b>를 대상으로 분석 · 등록 시 이미 자동 분석되어 바로 표시</span></a>
           <div class="fvline"></div>
-          <a class="fnode" href="#scr-confirm">📝 최종 본문 확정<span class="cap">제안 적용 또는 직접 편집</span></a>
+          <a class="fnode" href="#scr-confirm">📝 최종 본문 확정<span class="cap">제안이 이미 반영된 텍스트를 그대로 쓰거나 직접 편집</span></a>
           <div class="fvline"></div>
           <div class="fgate" style="max-width:none">🤝 고객 합의</div>
           <div class="fvline"></div>
@@ -744,31 +748,29 @@
               <div class="wstep">
                 <div class="wnum">1</div>
                 <div class="wbody">
-                  <div class="wtitle">AI 참고 의견을 보고 본문 확정 <span class="wsub">등록 시 이미 <b>본문 전체</b>를 자동 분석했습니다. AI 의견은 <b>참고용</b>이며, 적용 여부는 사람이 결정합니다.</span></div>
+                  <div class="wtitle">AI 검토 결과를 보고 본문 확정 <span class="wsub">등록 시 이미 <b>본문 전체</b>를 자동 분석했습니다. 왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.</span></div>
                   <div class="w2col">
-                    <div class="wcard">
-                      <div class="wch">🤖 AI 참고 의견 <span class="rt"><span class="cnt">2건 발견</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
+                    <div class="wcard readonly">
+                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px">2건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
                       <div class="wcb">
                         <div class="find">
                           <div class="ft"><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가용한 AMR" · "가장 가까운"</span></div>
                           <div class="frs2">무엇을 '가용'으로, 무엇을 '가깝다'로 볼지 판정 기준이 없어 해석이 갈릴 수 있음</div>
-                          <div class="aisuggest">✎ <b>가용한 AMR</b> = IDLE 상태이며 SoC 최소값 이상 · <b>가장 가까운</b> = 맵 경로상 맨해튼 거리 최단 경로</div>
-                          <div class="aisuggest-act"><span class="btn acc sm">⬇ 이 제안 적용하기</span><span class="applied">✓ 적용됨</span></div>
+                          <div class="aisuggest">✎ 제안: <b>가용한 AMR</b> = IDLE 상태이며 SoC 최소값 이상 · <b>가장 가까운</b> = 맵 경로상 맨해튼 거리 최단 경로</div>
                         </div>
                         <div class="find" style="margin-bottom:0">
                           <div class="ft"><span class="ftype2 cf">기존 요구사항과 상충</span><span class="fspan2">req-ta-01</span></div>
                           <div class="frs2">req-ta-01은 "요청 순"으로 우선순위를 정하는데, 이 요구사항은 "거리 순"이라 배치될 수 있음</div>
-                          <div class="fconf">⚠ 본문 수정만으론 해결 안 됨 — 고객 협의에서 함께 정리 필요<span class="apply">req-ta-01 보기 →</span></div>
+                          <div class="fconf">⚠ 문장 수정만으론 해결 안 됨 — 고객 협의에서 함께 정리 필요<span class="apply">req-ta-01 보기 →</span></div>
                         </div>
                       </div>
                     </div>
                     <div class="wcard">
-                      <div class="wch">✏️ 확정될 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">직접 수정 가능</span></span></div>
+                      <div class="wch">✏️ 확정될 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span></span></div>
                       <div class="wcb">
-                        <div class="fieldlab">등록 원문 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— 접수 시 저장된 그대로</span></div>
-                        <div class="editbox2" style="cursor:default;color:var(--fgm);margin-bottom:14px">AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다.</div>
-                        <div class="fieldlab">확정될 내용 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— v1.0.0으로 저장됩니다</span></div>
+                        <div class="prefill">⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나, 아래 텍스트를 직접 고치세요.</div>
                         <div class="editbox2 editing">AMR 매칭 시 <ins>IDLE 상태이며 SoC 최소값 이상인</ins> AMR 중 <ins>맵 경로상 맨해튼 거리 최단 경로에 있는</ins> AMR을 선택한다.<span class="caret2"></span></div>
+                        <div class="prefill-act"><span class="btn sm">↩ 등록 원문으로 되돌리기</span><span class="pf-orig">등록 원문: "AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다."</span></div>
                       </div>
                     </div>
                   </div>
@@ -816,6 +818,7 @@
       <span class="chipspec"><b>이 화면이 따로 있는 이유</b> 최초 확정은 "처음 쓴 문장이 명확한가"를 보는 것이라, "이미 합의된 문장을 왜 바꾸는가"를 다루는 수정(화면 5)과 성격이 다르다</span>
       <span class="chipspec"><b>수정 사유 없음</b> 바꿀 원본이 없으므로 사유 입력 단계 자체가 없다 — 버전 이력 제목은 "최초 확정"으로 자동 기록</span>
       <span class="chipspec"><b>AI 검토 범위</b> <b>본문 전체</b>가 대상 (수정 화면은 바뀐 부분만)</span>
+      <span class="chipspec"><b>AI 카드는 읽기 전용</b> AI 쪽에는 버튼이 없다 — 제안은 <b>확정될 본문에 이미 반영된 상태</b>로 채워져 나오고, 사용자는 그 텍스트를 그대로 쓰거나 직접 고치거나 "되돌리기"로 등록 원문으로 되돌린다</span>
       <span class="chipspec"><b>진입 조건</b> 상태가 접수·검토 중일 때만 — 확정된 뒤에는 상세 화면에 "수정하기"가 대신 표시된다</span>
       <span class="chipspec"><b>고객 합의 필수</b> AI 의견이 합리적이어도 그것만으로 확정 불가 · 합의 안 되면 <b>보류</b>로 남기고 나중에 이어서 확정</span>
       <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ v1.0.0)</span>
@@ -862,10 +865,10 @@
               <div class="wstep">
                 <div class="wnum">2</div>
                 <div class="wbody">
-                  <div class="wtitle">AI 참고 의견을 보고 본문 수정 <span class="wsub">AI 의견은 <b>참고용</b>입니다 — 적용할지 말지는 사람이 결정합니다.</span></div>
+                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.</span></div>
                   <div class="w2col">
-                    <div class="wcard">
-                      <div class="wch">🤖 AI 참고 의견 <span class="rt"><span class="cnt" style="background:var(--purple-s);color:var(--purple)">자동 분석됨</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
+                    <div class="wcard readonly">
+                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span></span></div>
                       <div class="wcb">
                         <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:12px">
                           <div class="ft"><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
@@ -873,17 +876,15 @@
                         </div>
                         <div class="fieldlab">제안된 문장</div>
                         <div class="aisuggest">…최대 1건만 허용한다. <b>생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</b></div>
-                        <div class="aisuggest-act"><span class="btn acc sm">⬇ 이 제안 적용하기</span><span class="applied">✓ 적용됨</span></div>
                         <div class="wnote">이번에 바뀐 부분만 분석 · 새로운 이슈 없음</div>
                       </div>
                     </div>
                     <div class="wcard">
-                      <div class="wch">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">직접 수정 가능</span></span></div>
+                      <div class="wch">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span></span></div>
                       <div class="wcb">
-                        <div class="fieldlab">현재 확정본 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">v1.0.1</span></div>
-                        <div class="editbox2" style="cursor:default;color:var(--fgm);margin-bottom:14px">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.</div>
-                        <div class="fieldlab">수정 후 <span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--fgf)">— 저장될 내용</span></div>
+                        <div class="prefill">⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나, 아래 텍스트를 직접 고치세요.</div>
                         <div class="editbox2 editing">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.<ins> 생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</ins><span class="caret2"></span></div>
+                        <div class="prefill-act"><span class="btn sm">↩ 확정본(v1.0.1)으로 되돌리기</span><span class="pf-orig">되돌리면 AI 제안이 빠진 원래 확정 문장으로 돌아갑니다</span></div>
                       </div>
                     </div>
                   </div>
@@ -932,7 +933,7 @@
       <span class="chipspec"><b>진입 조건</b> 상태가 확정일 때만 — 상세 화면(화면 3)의 "수정하기"에서 온다</span>
       <span class="chipspec"><b>수정 사유</b> 고객 요청이든 직접 판단한 이유든 자유 서술 — AI 검토가 이 내용을 함께 참고하고, 그대로 <b>버전 이력의 제목</b>이 된다</span>
       <span class="chipspec"><b>변경분만 AI 검토</b> 확정본 전체가 아니라 이번에 수정된 부분 + 사유만 분석 · 이미 합의된 나머지는 다시 건드리지 않음</span>
-      <span class="chipspec"><b>AI 제안은 미리보기 → 명시적 적용</b> 자동으로 본문에 꽂아넣지 않고, 제안 문장을 먼저 보여준 뒤 "적용하기"를 눌러야 반영됨 — 안 눌러도 됨, 직접 고쳐 써도 됨</span>
+      <span class="chipspec"><b>AI 카드는 읽기 전용</b> AI 쪽에는 버튼이 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>확정될 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 원문으로 돌릴지만 결정</span>
       <span class="chipspec"><b>고객 합의 필수</b> 합의 방법·고객측 담당자·합의일·합의 내용을 기록해야 "확정 저장"이 활성화됨 · 합의가 안 되면 <b>고객 합의 대기</b>로 남고 나중에 이어서 확정</span>
       <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/diff-analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ new version)</span>
     </div>

@@ -47,4 +47,18 @@ public final class ApiErrors {
             super("유효하지 않은 접근 토큰입니다.");
         }
     }
+
+    /** 요구사항을 찾을 수 없음 → 404 */
+    public static class RequirementNotFound extends RuntimeException {
+        public RequirementNotFound(Long id) {
+            super("요구사항을 찾을 수 없습니다: " + id);
+        }
+    }
+
+    /** 같은 프로젝트에 같은 요구사항 ID가 이미 있음 → 409 */
+    public static class DuplicateReqKey extends RuntimeException {
+        public DuplicateReqKey(String reqKey) {
+            super("이미 사용 중인 요구사항 ID입니다: " + reqKey);
+        }
+    }
 }

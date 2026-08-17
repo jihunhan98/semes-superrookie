@@ -113,3 +113,104 @@ export function updateProject(id: number, input: ProjectInput): Promise<ProjectD
 export function reissueToken(id: number, userId: number): Promise<{ token: string }> {
   return postJson<{ token: string }>(`/api/projects/${id}/token/reissue?userId=${userId}`);
 }
+
+// ── 요구사항 (기능 2) ──────────────────────────────────────────
+
+export type ReqState =
+  | "RECEIVED"
+  | "IN_REVIEW"
+  | "PENDING_CONSENSUS"
+  | "CONFIRMED"
+  | "REVISING"
+  | "ON_HOLD";
+
+/** AI 검토 결과 한 건 — 화면에서 읽기 전용으로만 보여준다. */
+export type Finding = {
+  findingType: string;
+  targetSpan: string | null;
+  reason: string | null;
+  suggestion: string | null;
+  /** 상충 유형일 때 상대 요구사항 ID. 그 외에는 null. */
+  conflictReqKey: string | null;
+};
+
+export type RequirementSummary = {
+  id: number;
+  reqKey: string;
+  content: string;
+  state: ReqState;
+  stateLabel: string;
+  version: string | null;
+  assigneeId: number | null;
+  assigneeName: string | null;
+  findingCount: number;
+  updatedAt: string | null;
+};
+
+export type RequirementDetail = {
+  id: number;
+  projectId: number;
+  reqKey: string;
+  content: string;
+  requesterDept: string | null;
+  requesterName: string | null;
+  state: ReqState;
+  stateLabel: string;
+  version: string | null;
+  assigneeId: number | null;
+  assigneeName: string | null;
+  /** AI 제안이 이미 반영된 문장 — 확정 화면 본문에 미리 채워지는 값. */
+  aiDraftContent: string;
+  aiEngine: string;
+  findings: Finding[];
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type RequirementInput = {
+  userId: number;
+  reqKey: string;
+  content: string;
+  requesterDept: string;
+  requesterName: string;
+};
+
+export type AssigneeCandidate = { userId: number; name: string };
+
+export function listRequirements(projectId: number, userId: number): Promise<RequirementSummary[]> {
+  return getJson<RequirementSummary[]>(`/api/projects/${projectId}/requirements?userId=${userId}`);
+}
+
+export function listAssignees(projectId: number, userId: number): Promise<AssigneeCandidate[]> {
+  return getJson<AssigneeCandidate[]>(`/api/projects/${projectId}/requirements/assignees?userId=${userId}`);
+}
+
+/**
+ * 요구사항 등록.
+ *
+ * 저장 + AI 초기 검토가 끝난 뒤에 응답이 온다(동기). 그래서 이 Promise 가 풀릴 때까지
+ * 화면에 로딩을 띄워야 하고, 응답에는 AI 참고 의견이 이미 들어 있다.
+ */
+export function createRequirement(projectId: number, input: RequirementInput): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(`/api/projects/${projectId}/requirements`, input);
+}
+
+export function getRequirement(
+  projectId: number,
+  requirementId: number,
+  userId: number,
+): Promise<RequirementDetail> {
+  return getJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}?userId=${userId}`,
+  );
+}
+
+export function reanalyzeRequirement(
+  projectId: number,
+  requirementId: number,
+  userId: number,
+): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/analyze?userId=${userId}`,
+  );
+}
