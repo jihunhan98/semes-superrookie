@@ -101,9 +101,10 @@ public class RequirementService {
                 .toList();
 
         // draft 가 없으면(=AI 미가동으로 저장 안 됨) 원문을 그대로 쓴다.
-        String draft = aiDraftRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
-                .map(RequirementAiDraft::getDraftContent)
-                .orElse(r.getContent());
+        RequirementAiDraft aiDraft = aiDraftRepository
+                .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+        String draft = aiDraft == null ? r.getContent() : aiDraft.getDraftContent();
+        String engine = aiDraft == null ? "unavailable" : aiDraft.getEngine();
 
         String assigneeName = r.getAssigneeId() == null ? null
                 : userRepository.findById(r.getAssigneeId()).map(User::getName).orElse(null);
@@ -114,7 +115,7 @@ public class RequirementService {
                 r.getState().name(), r.getState().label(), r.getVersion(),
                 r.getAssigneeId(), assigneeName,
                 draft,
-                findings.isEmpty() ? "unavailable" : "ok",
+                engine,
                 findings,
                 r.getCreatedAt() == null ? null : r.getCreatedAt().format(TS),
                 r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS));
@@ -146,7 +147,8 @@ public class RequirementService {
         }
         String draft = (ai.draftContent() == null || ai.draftContent().isBlank())
                 ? originalContent : ai.draftContent();
-        aiDraftRepository.save(new RequirementAiDraft(requirementId, draft));
+        String engine = (ai.engine() == null || ai.engine().isBlank()) ? "unavailable" : ai.engine();
+        aiDraftRepository.save(new RequirementAiDraft(requirementId, draft, engine));
     }
 
     /** 상충 검출에 쓸 같은 프로젝트의 다른 요구사항들. */

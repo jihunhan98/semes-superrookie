@@ -25,15 +25,20 @@ public class RequirementAiDraft {
     @Column(name = "draft_content", nullable = false)
     private String draftContent;
 
+    /** 판정 경로: llm-api(사내 LLM) / ollama(로컬) / rule(규칙만) / unavailable(AI 미응답). */
+    @Column(name = "engine", nullable = false, length = 20)
+    private String engine;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     protected RequirementAiDraft() {
     }
 
-    public RequirementAiDraft(Long requirementId, String draftContent) {
+    public RequirementAiDraft(Long requirementId, String draftContent, String engine) {
         this.requirementId = requirementId;
         this.draftContent = draftContent;
+        this.engine = engine;
     }
 
     @PrePersist
@@ -44,5 +49,6 @@ public class RequirementAiDraft {
     public Long getId() { return id; }
     public Long getRequirementId() { return requirementId; }
     public String getDraftContent() { return draftContent; }
+    public String getEngine() { return engine; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

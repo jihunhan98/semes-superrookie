@@ -19,6 +19,14 @@ function isConflict(findingType: string) {
   return findingType.includes("상충");
 }
 
+/** 어느 판정 경로로 나온 결과인지 — 참고 자료의 신뢰 수준을 사용자가 알 수 있게. */
+const ENGINE_LABEL: Record<string, string> = {
+  "llm-api": "사내 LLM",
+  ollama: "로컬 LLM",
+  rule: "규칙 기반",
+  unavailable: "AI 미응답",
+};
+
 export default function RequirementDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string; reqId: string }>();
@@ -121,6 +129,9 @@ export default function RequirementDetailPage() {
                   <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
                     읽기 전용
                   </span>
+                  <span className="lbl" style={{ padding: "1px 9px", marginLeft: 6, background: "var(--surface-muted)", color: "var(--muted)" }}>
+                    {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
+                  </span>
                   <span className="cnt" style={{ marginLeft: 8 }}>
                     {req.findings.length}건
                   </span>
@@ -132,8 +143,9 @@ export default function RequirementDetailPage() {
               <div className="wcb">
                 {req.findings.length === 0 ? (
                   <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                    검출된 불명확·상충이 없습니다.
-                    {req.aiEngine === "unavailable" && " (AI 서버가 응답하지 않았다면 “다시 분석”을 눌러보세요.)"}
+                    {req.aiEngine === "unavailable"
+                      ? "AI 서버가 응답하지 않아 검토를 못 했습니다. “다시 분석”을 눌러보세요."
+                      : "검출된 불명확·상충이 없습니다."}
                   </p>
                 ) : (
                   req.findings.map((f, i) => (

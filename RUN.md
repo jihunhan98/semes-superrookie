@@ -24,7 +24,9 @@ uvicorn main:app --port 8001
 ```
 
 - 포트 `8001` (백엔드의 `app.ai.base-url`과 맞춰야 한다)
-- 기본은 **규칙 기반**이라 별도 모델 없이 바로 동작한다. 로컬에 Ollama가 떠 있으면(`OLLAMA_URL`, 기본 `http://localhost:11434`) LLM 검출을 얹어 함께 내려준다 — 없으면 자동으로 규칙 기반만 쓴다.
+- 판정 경로는 **사내 LLM API(GPT-OSS-120B) → 로컬 Ollama → 규칙 기반** 순으로 잡힌다. 사내망이면 설정 없이 사내 LLM을 쓰고, 사내망 밖이면 자동으로 규칙 기반으로 내려가므로 어디서든 그대로 개발할 수 있다.
+- 실제로 어느 엔진이 잡혔는지는 `curl http://localhost:8001/health`의 `active`로 확인한다.
+- 사내 서버 주소·모델명은 소스가 아니라 환경 변수로 넘긴다: `LLM_API_BASE`(기본 `http://INTERNAL-LLM-HOST:6100/v1`) · `LLM_API_MODEL`
 - 빠른 확인:
   ```bash
   curl -X POST http://localhost:8001/analyze \

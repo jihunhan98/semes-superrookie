@@ -33,7 +33,7 @@ SEMES는 삼성전자로부터 요구사항 명세서를 받아 **VCS**(Vehicle 
 
 ### 1.3 운영 환경 · 제약
 - **폐쇄망**: 반입(inbound)만 허용, **반출(outbound) 차단**. 외부 AI API(Claude/GPT 등) 사용 불가.
-- **AI는 사내에서만**: 로컬 LLM(Qwen3-8B) 또는 사내 LLM API(GPT-OSS-120B)로만 추론. 모델 가중치는 저장소에 포함하지 않는다.
+- **AI는 사내에서만**: 사내 LLM API(GPT-OSS-120B, OpenAI 호환 `POST /v1/chat/completions`) 또는 로컬 LLM(Ollama)으로만 추론. 둘 다 없으면 규칙 기반으로 동작한다. 모델 가중치는 저장소에 포함하지 않고, 주소·모델명은 소스가 아니라 환경 변수로 넘긴다(`ai-model/README.md`).
 - **사내 프록시**가 SSL 검사를 하여 npm/pip/Maven 등이 막히므로, 배포 시 사전 빌드 산출물(프론트 정적 빌드, 백엔드 jar)을 함께 제공한다.
 
 ---
@@ -43,7 +43,7 @@ SEMES는 삼성전자로부터 요구사항 명세서를 받아 **VCS**(Vehicle 
 폐쇄망 안의 3계층 + 데이터베이스.
 
 ```
-[웹 UI · React(Next.js)]  →  [백엔드 · Spring Boot(Java 21)]  →  [AI 서버 · FastAPI]  →  로컬 Qwen3-8B / 사내 GPT-OSS-120B
+[웹 UI · React(Next.js)]  →  [백엔드 · Spring Boot(Java 21)]  →  [AI 서버 · FastAPI]  →  사내 GPT-OSS-120B / 로컬 Ollama / 규칙
                                         │
                                    [Oracle DB]
 ```
@@ -53,7 +53,7 @@ SEMES는 삼성전자로부터 요구사항 명세서를 받아 **VCS**(Vehicle 
 | 프론트엔드 | 로그인·대시보드·검토·산출물·추적성 화면 | React (Next.js) |
 | 백엔드 | 요구사항·버전·산출물·추적성·사용자 관리, AI 중개 | Spring Boot (Java 21) |
 | AI 서버 | 무상태 검출·생성 추론 | FastAPI (Python) |
-| 모델 | 검출·제안·도출 추론 | 로컬 Qwen3-8B / 사내 GPT-OSS-120B · 규칙 mock 폴백 |
+| 모델 | 검출·제안·도출 추론 | 사내 GPT-OSS-120B(OpenAI 호환 API) → 로컬 Ollama → 규칙 기반 폴백 |
 | DB | 요구사항·버전·검출·산출물·링크·사용자 저장 | Oracle |
 
 - AI 서버는 **무상태**: 요청마다 프롬프트를 받아 결과(JSON)만 반환. 상태·이력은 백엔드/DB가 관리.
