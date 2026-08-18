@@ -33,12 +33,37 @@ import rules
 log = logging.getLogger("ai-model")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
+
+def _load_dotenv() -> None:
+    """ai-model/.env 를 읽어 환경 변수로 올린다 (.env 는 커밋되지 않는다).
+
+    python-dotenv 를 쓰지 않는 이유: 폐쇄망에 반입할 패키지를 하나라도 줄이려고.
+    이미 셸에 설정된 값이 우선이라, 실행할 때 준 값이 .env 에 덮이지 않는다.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
+
 # ── 엔진 1: 사내 LLM API 서비스 (OpenAI 호환) ─────────────────────
 # OpenAI 파이썬 라이브러리와 같은 규격이라, 아래 호출은 이것과 동등하다.
-#   client = OpenAI(api_key="EMPTY", base_url="http://INTERNAL-LLM-HOST:6100/v1")
+#   client = OpenAI(api_key="...", base_url=LLM_API_BASE)
 #   client.chat.completions.create(model=..., messages=[...])
 # 폐쇄망 반출이 막혀 있어 외부 API는 못 쓰고, 이 사내 서비스만 쓸 수 있다.
-LLM_API_BASE = os.getenv("LLM_API_BASE", "http://INTERNAL-LLM-HOST:6100/v1")
+#
+# 사내 서버 주소는 소스에 두지 않는다 — 저장소가 사외로 나가도 사내망 정보가 같이
+# 나가면 안 되므로. 커밋되지 않는 ai-model/.env 나 환경 변수로 넘긴다.
+# 비어 있으면 이 엔진은 그냥 없는 것으로 보고 Ollama → 규칙 순으로 내려간다.
+LLM_API_BASE = os.getenv("LLM_API_BASE", "").strip()
 LLM_API_MODEL = os.getenv("LLM_API_MODEL", "gpt-4")  # 서버가 서빙하는 모델명에 맞춘다
 LLM_API_KEY = os.getenv("LLM_API_KEY", "EMPTY")      # 사내 서비스는 인증 없이 EMPTY
 LLM_API_TIMEOUT = float(os.getenv("LLM_API_TIMEOUT", "30"))
@@ -242,6 +267,8 @@ def _cached_probe(key: str, check) -> bool:
 
 
 def _llm_api_available() -> bool:
+    if not LLM_API_BASE:  # 주소를 안 넣었으면 이 엔진은 없는 것으로 본다.
+        return False
     return _cached_probe("llm-api", lambda: _reachable(LLM_API_BASE))
 
 

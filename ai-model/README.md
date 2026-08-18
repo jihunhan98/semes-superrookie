@@ -24,8 +24,8 @@ Spring Boot 백엔드가 요구사항 등록/수정 시 이 서버를 호출한�
 > 다만 폐쇄망에 `openai` 패키지를 반입하지 않으려고 표준 라이브러리로 직접 보낸다.
 >
 > ```python
-> client = OpenAI(api_key="EMPTY", base_url="http://INTERNAL-LLM-HOST:6100/v1")
-> client.chat.completions.create(model=..., messages=[...])
+> client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_API_BASE)
+> client.chat.completions.create(model=LLM_API_MODEL, messages=[...])
 > ```
 
 ## 실행
@@ -38,8 +38,16 @@ pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
-사내망에 있으면 아무 설정 없이 사내 LLM API를 잡는다. 사내망 밖(집·외부 PC)이면
-자동으로 규칙 기반으로 내려가므로, 그대로 개발해도 된다.
+사내 LLM API를 쓰려면 주소를 `.env`에 넣는다. **사내 서버 주소는 사내망 정보라
+저장소에 두지 않는다** — `.env`는 `.gitignore`에 있어 커밋되지 않는다.
+
+```bash
+cp .env.example .env
+# .env 를 열어 LLM_API_BASE / LLM_API_MODEL 을 채운다 (실제 값은 팀 내부에서 받는다)
+```
+
+주소를 안 채워도 서버는 정상 동작한다 — Ollama → 규칙 기반 순으로 내려가므로
+사내망 밖(집·외부 PC)에서도 그대로 개발할 수 있다.
 
 로컬 Ollama까지 쓰려면 먼저 띄운다 (없어도 서버는 정상 동작한다):
 
@@ -53,7 +61,7 @@ ollama pull qwen2.5:7b-instruct
 | 변수 | 기본값 | 설명 |
 |---|---|---|
 | `LLM_BACKEND` | `auto` | `auto` / `llm-api` / `ollama` / `rule` — 엔진을 강제하고 싶을 때 |
-| `LLM_API_BASE` | `http://INTERNAL-LLM-HOST:6100/v1` | **사내 LLM API** 주소 (`/v1`까지 포함) |
+| `LLM_API_BASE` | (없음) | **사내 LLM API** 주소 (`/v1`까지 포함). 비어 있으면 이 엔진을 건너뛴다 |
 | `LLM_API_MODEL` | `gpt-4` | 사내 서버가 서빙하는 모델명 — 서버에 맞게 조정 |
 | `LLM_API_KEY` | `EMPTY` | 사내 서비스는 인증이 없어 `EMPTY` |
 | `LLM_API_TIMEOUT` | `30` | 사내 LLM 응답 대기 시간(초) |
@@ -64,8 +72,8 @@ ollama pull qwen2.5:7b-instruct
 
 `ANALYZE_DELAY=3` 으로 띄우면 등록 시 3초 로딩이 걸려서 프론트 로딩 화면을 확인할 수 있다.
 
-> 사내 서버의 주소·모델명은 환경에 따라 바뀔 수 있다. 소스를 고치지 말고
-> `LLM_API_BASE` / `LLM_API_MODEL`로 넘긴다.
+값은 `ai-model/.env`(커밋 안 됨)에 넣거나 실행할 때 환경 변수로 준다. 셸에 이미 설정된
+값이 `.env`보다 우선한다. 소스에 사내 주소를 적지 않는다.
 
 ## API
 
@@ -121,7 +129,7 @@ AI 검토 결과 카드는 읽기 전용이고, 사용자는 이 draft 텍스트
 {
   "status": "ok",
   "backend": "auto",
-  "llmApi": { "reachable": true, "base": "http://INTERNAL-LLM-HOST:6100/v1", "model": "gpt-4" },
+  "llmApi": { "reachable": true, "base": "http://…사내 LLM 주소…/v1", "model": "gpt-4" },
   "ollama": { "reachable": false, "model": "qwen2.5:7b-instruct" },
   "active": "llm-api"
 }
@@ -146,4 +154,6 @@ ai-model/
   main.py           # FastAPI 앱 — /analyze, /health, /types
   rules.py          # 규칙 기반 검출기 (기본 동작)
   requirements.txt
+  .env.example      # 설정 템플릿 — .env 로 복사해서 채운다
+  .env              # 사내 LLM 주소 등 — .gitignore 되어 커밋되지 않는다
 ```
