@@ -129,3 +129,11 @@ COMMENT ON COLUMN requirements.version         IS '확정 시 부여되는 Semve
 COMMENT ON TABLE  requirement_findings         IS 'AI 검토 결과(읽기 전용 참고 자료)';
 COMMENT ON TABLE  requirement_ai_drafts        IS 'AI 제안이 반영된 문장 — 확정 화면 본문에 미리 채워짐';
 COMMENT ON COLUMN requirement_ai_drafts.engine IS '판정 경로: llm-api(사내 LLM) / ollama(로컬) / rule(규칙만) / unavailable(AI 미응답)';
+
+-- ============================================================
+-- 마이그레이션 — 이미 만들어져 있는 DB에 뒤늦게 추가된 컬럼
+-- (새로 설치하는 경우엔 위 CREATE TABLE에 이미 포함되어 있어 아래는 필요 없다)
+-- ============================================================
+
+-- requirement_ai_drafts.engine 컬럼이 추가되기 전에 이미 테이블을 만들었다면 실행.
+-- ALTER TABLE requirement_ai_drafts ADD engine VARCHAR2(20) DEFAULT 'rule' NOT NULL;
