@@ -3,6 +3,9 @@
 요구사항 문장에서 **불명확한 표현**과 **기존 요구사항과의 상충**을 찾아내는 FastAPI 서버.
 Spring Boot 백엔드가 요구사항 등록/수정 시 이 서버를 호출한다.
 
+> 프론트 입력부터 규칙 기반 검출, LLM 프롬프트 구성, 응답 필터링, draft 생성, 저장,
+> 화면 표시까지 전체 흐름을 그림으로 정리한 것: [`docs/img/ai-flow-detail.svg`](../docs/img/ai-flow-detail.svg)
+
 ## 판정 경로 3갈래
 
 폐쇄망은 반출이 막혀 있어 외부 AI API(Claude/GPT 등)를 쓸 수 없다. 쓸 수 있는 건
