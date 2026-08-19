@@ -305,7 +305,7 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": {{userId}},\n  \"reqKey\": \"req-am-03\",\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"requesterDept\": \"삼성전자 EDS · 설비공정그룹\",\n  \"requesterName\": \"김민석 책임\"\n}"
             },
-            "description": "201 CREATED. 응답 본문은 상세 응답과 같은 모양이며 findings[]와 aiDraftContent가 이미 채워져 있다.\n- aiDraftContent: AI 제안이 반영된 문장. 프론트는 이 값을 '확정될 본문' 입력칸의 초기값으로 쓴다.\n- aiEngine: llm-api(사내 LLM) | ollama(로컬) | rule(규칙만) | unavailable(AI 미응답). AI 서버가 죽어 있어도 등록 자체는 성공한다.\n응답의 id를 requirementId 변수에 넣어두면 아래 요청에 바로 쓸 수 있다."
+            "description": "201 CREATED. 응답 본문은 상세 응답과 같은 모양이며 findings[]와 aiDraftContent가 이미 채워져 있다.\n- aiDraftContent: AI 제안이 반영된 문장. 프론트는 이 값을 '확정될 본문' 입력칸의 초기값으로 쓴다.\n- aiEngine: llm-api(사내 LLM이 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만). AI 서버가 죽어 있어도 등록 자체는 성공한다.\n응답의 id를 requirementId 변수에 넣어두면 아래 요청에 바로 쓸 수 있다."
           },
           "response": []
         },
@@ -434,7 +434,7 @@
               "host": ["{{aiBaseUrl}}"],
               "path": ["health"]
             },
-            "description": "각 엔진의 도달 여부와, 지금 요청이 오면 실제로 쓰일 엔진(active)을 반환한다.\n- llmApi.reachable: 사내 LLM API(OpenAI 호환) 도달 여부 — 사내망에서만 true\n- ollama.reachable: 개발 PC 로컬 Ollama 도달 여부\n- active: llm-api > ollama > rule 순으로 잡힌 결과. 폐쇄망 배포 후 '사내 LLM이 실제로 잡혔는지' 확인하는 용도."
+            "description": "사내 LLM API(OpenAI 호환) 주소가 설정되어 있는지를 반환한다.\n- llmApiConfigured: true면 LLM_API_BASE가 채워져 있다는 뜻(실제 연결까지 보장하진 않음)\n- 폐쇄망 배포 후 '사내 LLM 주소가 제대로 들어갔는지' 빠르게 확인하는 용도."
           },
           "response": []
         },
@@ -467,7 +467,7 @@
               "mode": "raw",
               "raw": "{\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"existing\": [\n    { \"reqKey\": \"req-ta-01\", \"content\": \"AMR 할당은 요청 순으로 처리한다.\" }\n  ]\n}"
             },
-            "description": "baseContent가 없으면 scope=\"full\" — 문장 전체를 본다. existing[]을 함께 넘기면 기존 요구사항과의 상충도 검출한다(위 예시는 '가장 가까운' ↔ '요청 순' 상충).\n응답의 engine으로 어느 경로가 답했는지 확인한다 — llm-api(사내 LLM) / ollama(로컬) / rule(규칙만)."
+            "description": "baseContent가 없으면 scope=\"full\" — 문장 전체를 본다. existing[]을 함께 넘기면 기존 요구사항과의 상충도 검출한다(위 예시는 '가장 가까운' ↔ '요청 순' 상충).\n응답의 engine으로 사내 LLM이 응답했는지 확인한다 — llm-api(응답함) / unavailable(미응답, 규칙 결과만)."
           },
           "response": []
         },

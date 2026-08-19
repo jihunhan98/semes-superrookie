@@ -1,289 +1,323 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 3420" font-family="'Noto Sans CJK KR','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 2640" font-family="'Noto Sans CJK KR','Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L8,3 L0,6 Z" fill="#8b96a3"/>
     </marker>
-    <marker id="arrowR" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#B23B3B"/>
-    </marker>
     <style>
-      .h1   { font-size:30px; font-weight:800; fill:#1B2A4A; }
+      .h1   { font-size:28px; font-weight:800; fill:#1B2A4A; }
       .h1s  { font-size:14px; fill:#63707E; }
       .h2   { font-size:19px; font-weight:800; }
-      .h3   { font-size:14px; font-weight:700; fill:#1B2A4A; }
-      .body { font-size:13.3px; fill:#2B3A55; }
+      .h3   { font-size:14.5px; font-weight:700; fill:#1B2A4A; }
+      .body { font-size:13.5px; fill:#2B3A55; }
       .mut  { font-size:12.5px; fill:#63707E; }
-      .code { font-family:'Noto Sans Mono CJK KR','D2Coding','Consolas',monospace; font-size:12.3px; fill:#1B2A4A; }
-      .codek{ font-family:'Noto Sans Mono CJK KR','D2Coding','Consolas',monospace; font-size:12.3px; fill:#7A3E00; font-weight:700; }
       .num  { font-size:15px; font-weight:800; fill:#ffffff; text-anchor:middle; }
       .box  { fill:#ffffff; stroke-width:2; rx:14; }
-      .codebg { fill:#F6F7F9; stroke:#D9DEE5; stroke-width:1; rx:8; }
       .edge { stroke:#8b96a3; stroke-width:2.4; fill:none; marker-end:url(#arrow); }
-      .edgeR { stroke:#B23B3B; stroke-width:2.4; fill:none; marker-end:url(#arrowR); stroke-dasharray:6 4; }
-      .edgelabel { font-family:'Noto Sans Mono CJK KR','D2Coding','Consolas',monospace; font-size:12px; fill:#4b5966; }
-      .lbl  { font-size:11.5px; font-weight:700; fill:#ffffff; }
+      .pill { font-size:12px; font-weight:700; fill:#ffffff; text-anchor:middle; }
+      .th   { font-size:13px; font-weight:800; fill:#ffffff; }
+      .td   { font-size:13px; fill:#2B3A55; }
+      .tdm  { font-size:12px; fill:#63707E; }
     </style>
   </defs>
 
-  <rect x="0" y="0" width="1320" height="3420" fill="#FBFCFD"/>
+  <rect x="0" y="0" width="1320" height="2640" fill="#FBFCFD"/>
 
   <!-- ============ Title ============ -->
-  <text class="h1" x="30" y="46">AI 검토 흐름 — 요구사항 등록 → 확정될 본문 생성</text>
-  <text class="h1s" x="30" y="70">프론트 입력부터 규칙 기반 검출, LLM 프롬프트(사내 LLM API / 로컬 Ollama), 응답 필터링, draft 생성, 저장, 화면 표시까지 실제 코드 기준 전체 경로</text>
+  <text class="h1" x="30" y="44">AI 검토 프로세스</text>
+  <text class="h1s" x="30" y="66">요구사항을 입력하면 어떤 순서로 검토되고, 화면에 어떻게 나타나는지를 정리한 흐름</text>
 
-  <!-- 범례 -->
+  <!-- ============ SECTION 1 : 최초 등록 vs 확정본 수정 ============ -->
+  <text class="h2" x="30" y="112" fill="#1B2A4A">1. 언제 검토가 도나 — 최초 등록과 확정본 수정은 시작이 다르다</text>
+  <text class="mut" x="30" y="132">① · ② 단계만 다르고, ③ 단계부터는 완전히 같은 방식으로 진행된다.</text>
+
+  <!-- 컬럼 헤더 -->
+  <rect x="20" y="150" width="610" height="34" rx="17" fill="#2C7A8C"/>
+  <text class="pill" x="325" y="172">최초 등록</text>
+  <rect x="690" y="150" width="610" height="34" rx="17" fill="#C1621B"/>
+  <text class="pill" x="995" y="172">확정본 수정  ·  설계만 완료 · 개발 예정</text>
+
+  <!-- 왼쪽 컬럼: 최초 등록 -->
   <g>
-    <rect x="30" y="86" width="14" height="14" rx="3" fill="#2C7A8C"/><text class="mut" x="50" y="97">프론트</text>
-    <rect x="120" y="86" width="14" height="14" rx="3" fill="#2A8A57"/><text class="mut" x="140" y="97">백엔드(Spring)</text>
-    <rect x="255" y="86" width="14" height="14" rx="3" fill="#6B4FA0"/><text class="mut" x="275" y="97">AI 서버 진입/조정</text>
-    <rect x="405" y="86" width="14" height="14" rx="3" fill="#5B6B79"/><text class="mut" x="425" y="97">규칙 기반(rules.py)</text>
-    <rect x="560" y="86" width="14" height="14" rx="3" fill="#C1621B"/><text class="mut" x="580" y="97">LLM 호출</text>
-    <rect x="665" y="86" width="14" height="14" rx="3" fill="#B23B3B"/><text class="mut" x="685" y="97">안전장치(환각 방지 등)</text>
-    <rect x="830" y="86" width="14" height="14" rx="3" fill="#1E7A63"/><text class="mut" x="850" y="97">draft 생성</text>
-    <rect x="935" y="86" width="14" height="14" rx="3" fill="#D9DEE5"/><text class="mut" x="955" y="97">코드/JSON 원문</text>
+    <rect class="box" x="20" y="198" width="610" height="84" stroke="#2C7A8C"/>
+    <circle cx="52" cy="228" r="14" fill="#2C7A8C"/><text class="num" x="52" y="233">1</text>
+    <text class="h3" x="76" y="234">요구사항 내용을 입력한다</text>
+    <text class="mut" x="76" y="256">수정 사유는 필요 없다 — 바꿀 원본이 아직 없으므로.</text>
+  </g>
+  <line class="edge" x1="325" y1="282" x2="325" y2="308"/>
+  <g>
+    <rect class="box" x="20" y="308" width="610" height="84" stroke="#2C7A8C"/>
+    <circle cx="52" cy="338" r="14" fill="#2C7A8C"/><text class="num" x="52" y="343">2</text>
+    <text class="h3" x="76" y="344">AI가 문장 전체를 검토한다</text>
+    <text class="mut" x="76" y="366">저장과 동시에 자동으로 실행된다 — 별도로 켜고 끄는 옵션은 없다.</text>
+  </g>
+  <line class="edge" x1="325" y1="392" x2="325" y2="418"/>
+
+  <!-- 오른쪽 컬럼: 확정본 수정 -->
+  <g>
+    <rect class="box" x="690" y="198" width="610" height="84" stroke="#C1621B"/>
+    <circle cx="722" cy="228" r="14" fill="#C1621B"/><text class="num" x="722" y="233">1</text>
+    <text class="h3" x="746" y="234">확정된 문장을 고치고, 수정 사유를 입력한다</text>
+    <text class="mut" x="746" y="256">수정 사유는 필수 — 대부분 고객사 요청으로 바뀌기 때문.</text>
+  </g>
+  <line class="edge" x1="995" y1="282" x2="995" y2="308"/>
+  <g>
+    <rect class="box" x="690" y="308" width="610" height="84" stroke="#C1621B"/>
+    <circle cx="722" cy="338" r="14" fill="#C1621B"/><text class="num" x="722" y="343">2</text>
+    <text class="h3" x="746" y="344">AI가 바뀐 부분과 사유만 검토한다</text>
+    <text class="mut" x="746" y="366">이미 고객과 합의된 나머지 문장은 다시 건드리지 않는다.</text>
+  </g>
+  <line class="edge" x1="995" y1="392" x2="995" y2="418"/>
+
+  <!-- 여기서부터 동일 -->
+  <rect x="470" y="398" width="380" height="26" rx="13" fill="#EFF1F3" stroke="#B9C2CC"/>
+  <text class="mut" x="660" y="416" text-anchor="middle">여기서부터는 두 흐름이 완전히 같다</text>
+
+  <g>
+    <rect class="box" x="20" y="432" width="1280" height="72" stroke="#5B6B79"/>
+    <circle cx="52" cy="468" r="14" fill="#5B6B79"/><text class="num" x="52" y="473">3</text>
+    <text class="h3" x="76" y="462">검토 의견과, 제안이 반영된 초안이 함께 화면에 뜬다</text>
+    <text class="mut" x="76" y="484">AI 의견은 참고용으로만 보여주고, 초안은 바로 고칠 수 있는 텍스트로 채워진다.</text>
+  </g>
+  <line class="edge" x1="660" y1="504" x2="660" y2="530"/>
+  <g>
+    <rect class="box" x="20" y="530" width="1280" height="72" stroke="#5B6B79"/>
+    <circle cx="52" cy="566" r="14" fill="#5B6B79"/><text class="num" x="52" y="571">4</text>
+    <text class="h3" x="76" y="560">사용자가 그대로 두거나 원하는 대로 고친다</text>
+    <text class="mut" x="76" y="582">AI 제안을 "적용"하는 버튼은 없다 — 이미 반영된 텍스트를 그냥 편집하는 것이 전부다.</text>
+  </g>
+  <line class="edge" x1="325" y1="602" x2="325" y2="628"/>
+  <line class="edge" x1="995" y1="602" x2="995" y2="628"/>
+
+  <g>
+    <rect class="box" x="20" y="628" width="610" height="60" stroke="#2C7A8C"/>
+    <circle cx="52" cy="658" r="14" fill="#2C7A8C"/><text class="num" x="52" y="663">5</text>
+    <text class="h3" x="76" y="664">등록 완료 — 상태: 접수</text>
+  </g>
+  <g>
+    <rect class="box" x="690" y="628" width="610" height="60" stroke="#C1621B"/>
+    <circle cx="722" cy="658" r="14" fill="#C1621B"/><text class="num" x="722" y="663">5</text>
+    <text class="h3" x="746" y="664">수정 완료 — 새 버전으로 저장</text>
   </g>
 
-  <!-- ============ SECTION 1 : 프론트 입력 & 등록 요청 ============ -->
-  <g>
-    <rect class="box" x="20" y="118" width="1280" height="238" stroke="#2C7A8C"/>
-    <circle cx="52" cy="150" r="15" fill="#2C7A8C"/><text class="num" x="52" y="155">1</text>
-    <text class="h2" x="76" y="156" fill="#2C7A8C">프론트 — 요구사항 등록 화면 입력</text>
-    <text class="body" x="52" y="182">/projects/{id}/requirements/new 화면에서 아래 항목을 입력하고 [등록하기]를 누른다.</text>
-    <text class="body" x="52" y="204">· 요구사항 ID(reqKey), 요구사항 내용(content), 요청자 소속·이름 — AI 검토 여부를 사용자가 고르는 옵션은 없다(모든 등록에 자동 적용).</text>
+  <!-- ============ SECTION 2 : 검토는 어떻게 진행되나 ============ -->
+  <text class="h2" x="30" y="742" fill="#6B4FA0">2. 검토는 어떻게 진행되나</text>
+  <text class="mut" x="30" y="762">정해둔 규칙을 먼저 확인하고, 사내 LLM에게 물어봐서 놓친 게 있으면 보충한다.</text>
 
-    <rect class="codebg" x="52" y="222" width="1216" height="118"/>
-    <text class="code" x="66" y="242">POST /api/projects/{projectId}/requirements</text>
-    <text class="code" x="66" y="262">{ "userId": 1, "reqKey": "req-am-03",</text>
-    <text class="code" x="86" y="280">"content": "AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.",</text>
-    <text class="code" x="86" y="298">"requesterDept": "삼성전자 EDS · 설비공정그룹", "requesterName": "김민석 책임" }</text>
-    <text class="mut" x="66" y="322">↳ 등록 화면은 이 요청이 끝날 때까지 로딩을 보여준다 — 저장과 AI 초기 검토가 같은 요청 안에서 함께 끝나기 때문.</text>
+  <g>
+    <rect class="box" x="20" y="778" width="400" height="96" stroke="#2C7A8C"/>
+    <text class="h3" x="40" y="804" fill="#1B5E6B">프론트 — 요청</text>
+    <text class="body" x="40" y="826">사용자가 입력한 요구사항</text>
+    <text class="body" x="40" y="846">내용을 AI 서버로 보낸다</text>
   </g>
-  <line class="edge" x1="660" y1="356" x2="660" y2="398"/>
+  <line class="edge" x1="420" y1="826" x2="460" y2="826"/>
 
-  <!-- ============ SECTION 2 : 백엔드 RequirementService.create() ============ -->
   <g>
-    <rect class="box" x="20" y="398" width="1280" height="252" stroke="#2A8A57"/>
-    <circle cx="52" cy="430" r="15" fill="#2A8A57"/><text class="num" x="52" y="435">2</text>
-    <text class="h2" x="76" y="436" fill="#2A8A57">백엔드 — RequirementService.create()</text>
-    <text class="body" x="52" y="462">① Requirement 저장(state=RECEIVED)  ② 같은 프로젝트의 기존 요구사항 목록 조회 — existingOf()  ③ AiClient.analyzeFull() 호출</text>
-    <text class="mut" x="52" y="482">RestClient는 SimpleClientHttpRequestFactory 사용 — 기본 팩토리가 붙이는 Upgrade: h2c 헤더를 uvicorn이 웹소켓 업그레이드로 오인해 422를 내기 때문.</text>
-
-    <rect class="codebg" x="52" y="500" width="1216" height="132"/>
-    <text class="code" x="66" y="520">POST http://localhost:8001/analyze   (app.ai.base-url, timeout-ms=30000)</text>
-    <text class="code" x="66" y="540">{ "content": "…등록 원문 그대로…",</text>
-    <text class="code" x="86" y="558">"baseContent": null,   ← 최초 등록이라 항상 null (확정본 수정 때만 채워짐, 지금 미구현)</text>
-    <text class="code" x="86" y="576">"reason": null,</text>
-    <text class="code" x="86" y="594">"existing": [ { "reqKey": "req-ta-01", "content": "AMR 할당은 요청 순으로 처리한다." }, … ] }  ← 상충 비교용, 이 요구사항 자신은 제외</text>
-    <text class="mut" x="66" y="618">↳ AiClient는 예외가 나도 던지지 않는다 — 실패 시 findings=[] · draftContent=원문 · engine="unavailable" 로 대체(graceful degrade), 등록은 그대로 성공.</text>
+    <rect class="box" x="460" y="778" width="400" height="96" stroke="#6B4FA0"/>
+    <text class="h3" x="480" y="804" fill="#4A2E7A">AI 서버 — 검토</text>
+    <text class="body" x="480" y="826">정해둔 규칙으로 먼저 확인하고,</text>
+    <text class="body" x="480" y="846">사내 LLM에게 물어봐서 보충한다</text>
   </g>
-  <line class="edge" x1="660" y1="650" x2="660" y2="692"/>
+  <line class="edge" x1="860" y1="826" x2="900" y2="826"/>
 
-  <!-- ============ SECTION 3 : AI 서버 진입 — 분석 대상 결정 ============ -->
   <g>
-    <rect class="box" x="20" y="692" width="1280" height="150" stroke="#6B4FA0"/>
-    <circle cx="52" cy="724" r="15" fill="#6B4FA0"/><text class="num" x="52" y="729">3</text>
-    <text class="h2" x="76" y="730" fill="#6B4FA0">AI 서버(FastAPI) — POST /analyze 진입 · _analysis_target()</text>
-    <text class="body" x="52" y="756">baseContent 유무로 검토 범위를 정한다.</text>
-    <rect x="52" y="770" width="590" height="52" rx="8" fill="#F3EEFA" stroke="#C9B8E8"/>
-    <text class="code" x="66" y="792">baseContent 없음 → scope="full"</text>
-    <text class="mut" x="66" y="810">최초 등록 — 본문(content) 전체를 검토 대상으로 삼는다.</text>
-    <rect x="662" y="770" width="606" height="52" rx="8" fill="#F3EEFA" stroke="#C9B8E8"/>
-    <text class="code" x="676" y="792">baseContent 있음 → scope="diff"  (확정본 수정, 현재 미구현 경로)</text>
-    <text class="mut" x="676" y="810">확정본에 없던 추가분만 + "(수정 사유: …)" 를 검토 대상으로 삼는다.</text>
-  </g>
-  <line class="edge" x1="660" y1="842" x2="660" y2="884"/>
-
-  <!-- ============ SECTION 4 : 규칙 기반 검출 (항상 실행) ============ -->
-  <g>
-    <rect class="box" x="20" y="884" width="1280" height="360" stroke="#5B6B79"/>
-    <circle cx="52" cy="916" r="15" fill="#5B6B79"/><text class="num" x="52" y="921">4</text>
-    <text class="h2" x="76" y="922" fill="#5B6B79">규칙 기반 검출 — rules.detect()  (LLM 유무와 무관하게 항상 먼저 실행)</text>
-    <text class="body" x="52" y="948">rules.py의 PHRASE_RULES 사전에 등록된 구절이 본문에 그대로 들어있는지 문자열로 매칭한다 (프롬프트 아님 — 순수 코드).</text>
-
-    <rect class="codebg" x="52" y="964" width="1216" height="92"/>
-    <text class="code" x="66" y="984">PHRASE_RULES = [ (구절, 유형, 이유, 제안, 치환문구), … ]  — 예:</text>
-    <text class="code" x="66" y="1002">("가용한 AMR", 정량 기준 부재, "무엇을 '가용'으로 볼지 기준이 없어 해석이 갈릴 수 있음", "IDLE 상태이며 SoC 최소값 이상", 치환="IDLE 상태이며 SoC 최소값 이상인 AMR")</text>
-    <text class="code" x="66" y="1020">("가장 가까운", 정량 기준 부재, "거리 기준(직선/경로) 미정의", …, 치환="맵 경로상 맨해튼 거리 기준 최단 경로에 있는")   /   ("신속히","즉시","적절히" 등 총 16개 구절 사전)</text>
-    <text class="mut" x="66" y="1040">치환문구가 있는 항목만 나중에 build_draft()에서 실제로 문장을 바꾼다. 상충처럼 문장 치환이 불가능한 유형은 치환문구가 None.</text>
-
-    <text class="h3" x="52" y="1082">+ 예외·경계 조건 누락</text>
-    <text class="body" x="52" y="1102">정규식으로 "경우에 한하여/때에만" 같은 조건부 표현은 있는데 "그 외/아니면" 같은 예외 처리 언급이 없으면 검출.</text>
-
-    <text class="h3" x="52" y="1140">+ 기존 요구사항과 상충 — _detect_conflicts()</text>
-    <text class="body" x="52" y="1160">"선택·우선순위 기준" 같은 축(axis)마다 canonical 값 사전을 두고, 표현이 달라도 같은 뜻이면 매칭한다.</text>
-    <rect class="codebg" x="52" y="1174" width="1216" height="58"/>
-    <text class="code" x="66" y="1194">"거리 순": ["가장 가까운","가까운 순","거리 순","최단 거리","최단 경로"]   /   "요청 순": ["요청 순","요청순","접수 순","선착순"]   /   "배터리 잔량 순": [...]   /   "등록 순": [...]</text>
-    <text class="mut" x="66" y="1214">이 요구사항이 쓴 값과 existing[] 중 하나라도 다른 값을 쓰면 T_CONFLICT 검출 — 문장 치환으론 안 풀리므로 고객 협의 대상으로만 표시(치환문구 없음).</text>
-  </g>
-  <line class="edge" x1="660" y1="1244" x2="660" y2="1286"/>
-
-  <!-- ============ SECTION 5 : 엔진 선택 (3단계 우선순위) ============ -->
-  <g>
-    <rect class="box" x="20" y="1286" width="1280" height="256" stroke="#6B4FA0" stroke-dasharray="8 5"/>
-    <circle cx="52" cy="1318" r="15" fill="#6B4FA0"/><text class="num" x="52" y="1323">5</text>
-    <text class="h2" x="76" y="1324" fill="#6B4FA0">엔진 선택 — _pick_engine()  (매 요청마다 도달 가능한 것을 고른다, 10초 캐시)</text>
-
-    <rect x="52" y="1342" width="380" height="90" rx="10" fill="#FCEFE3" stroke="#E3A876"/>
-    <text class="h3" x="66" y="1366" fill="#7A3E00">① llm-api  (우선)</text>
-    <text class="body" x="66" y="1386">사내 LLM API (GPT-OSS-120B)</text>
-    <text class="mut" x="66" y="1404">LLM_API_BASE 도달 가능하면 선택</text>
-    <text class="mut" x="66" y="1420">(비어있거나 안 죽어있으면 skip)</text>
-
-    <rect x="452" y="1342" width="380" height="90" rx="10" fill="#EFF3E8" stroke="#B3C79A"/>
-    <text class="h3" x="466" y="1366" fill="#3E5A1F">② ollama  (차선)</text>
-    <text class="body" x="466" y="1386">개발 PC 로컬 Ollama</text>
-    <text class="mut" x="466" y="1404">llm-api 없을 때만, OLLAMA_URL</text>
-    <text class="mut" x="466" y="1420">/api/tags 로 확인</text>
-
-    <rect x="852" y="1342" width="416" height="90" rx="10" fill="#EFF1F3" stroke="#B9C2CC"/>
-    <text class="h3" x="866" y="1366" fill="#3A4552">③ rule  (항상 가능)</text>
-    <text class="body" x="866" y="1386">규칙 기반 결과만 사용 — 4번 결과 그대로</text>
-    <text class="mut" x="866" y="1404">llm-api·ollama 둘 다 없을 때, 또는</text>
-    <text class="mut" x="866" y="1420">LLM_BACKEND=rule 로 강제한 경우</text>
-
-    <text class="mut" x="52" y="1454">우선순위 이유: 로컬 Qwen3-8B보다 GPT-OSS-120B(사내) 쪽이 한국어 판정 품질이 낫고, 개발 PC마다 모델을 따로 받아둘 필요가 없어서.</text>
-
-    <rect x="60" y="1474" width="600" height="46" rx="8" fill="#FFFFFF" stroke="#C9B8E8"/>
-    <text class="body" x="76" y="1502">① 또는 ② 선택됨 → 아래 6번(LLM 프롬프트 구성·호출)으로 진행</text>
-
-    <rect x="720" y="1474" width="548" height="46" rx="8" fill="#FFFFFF" stroke="#B9C2CC"/>
-    <text class="body" x="736" y="1502">③ rule 선택됨 → 6·7번 건너뛰고 곧바로 8번(draft 생성)으로 진행</text>
-  </g>
-  <line class="edge" x1="660" y1="1542" x2="660" y2="1584"/>
-
-  <!-- ============ SECTION 6 : LLM 프롬프트 구성 & 호출 ============ -->
-  <g>
-    <rect class="box" x="20" y="1584" width="1280" height="546" stroke="#C1621B"/>
-    <circle cx="52" cy="1616" r="15" fill="#C1621B"/><text class="num" x="52" y="1621">6</text>
-    <text class="h2" x="76" y="1622" fill="#C1621B">LLM 호출 — 프롬프트 구성 (llm-api·ollama 공통)</text>
-    <text class="body" x="52" y="1648">System 메시지(고정)와 User 메시지(요청마다 채워짐) 두 개를 만든다. 소스는 ai-model/main.py의 _SYSTEM_PROMPT · _user_msg().</text>
-
-    <text class="h3" x="52" y="1674">System 메시지 — 코드에 고정 문자열로 박혀 있음 (수정하려면 이 문자열만 고치면 됨)</text>
-    <rect class="codebg" x="52" y="1686" width="1216" height="186"/>
-    <text class="code" x="66" y="1706">당신은 반도체 장비 소프트웨어(VCS/AMR) 요구사항을 검토하는 전문가다.</text>
-    <text class="code" x="66" y="1724">주어진 요구사항 문장에서 개발자와 고객이 서로 다르게 해석할 수 있는 부분을 찾아라.</text>
-    <text class="code" x="66" y="1750">검출 유형은 다음 중 하나만 사용한다:</text>
-    <text class="code" x="66" y="1768">정량 기준 부재, 모호한 정도부사, 주어·주체 불명확, 조건 발생 시점 불명확,</text>
-    <text class="code" x="66" y="1786">예외·경계 조건 누락, 접속사 범위 모호, 시간·일정 모호</text>
-    <text class="code" x="66" y="1812">반드시 아래 JSON 형식으로만 답한다. 문제가 없으면 findings 를 빈 배열로 둔다.</text>
-    <text class="code" x="66" y="1830">{"findings":[{"findingType":"유형","targetSpan":"문제가 된 구절",</text>
-    <text class="code" x="86" y="1848">"reason":"왜 문제인지","suggestion":"어떻게 바꾸면 좋은지"}]}</text>
-    <text class="code" x="66" y="1866">targetSpan 은 반드시 원문에 그대로 등장하는 구절이어야 한다.</text>
-
-    <text class="h3" x="52" y="1902">User 메시지 — 요청마다 채워짐 (_user_msg)</text>
-    <rect class="codebg" x="52" y="1914" width="1216" height="56"/>
-    <text class="code" x="66" y="1936">요구사항: {content}</text>
-    <text class="code" x="66" y="1954">수정 사유: {reason}   ← reason 이 있을 때만 이 줄이 붙는다 (최초 등록은 항상 없음)</text>
-
-    <line x1="660" y1="1970" x2="660" y2="1998" stroke="#8b96a3" stroke-width="2" marker-end="url(#arrow)"/>
-
-    <rect x="52" y="2006" width="590" height="112" rx="10" fill="#FCEFE3" stroke="#E3A876"/>
-    <text class="h3" x="66" y="2028" fill="#7A3E00">llm-api 분기 (OpenAI 호환)</text>
-    <text class="code" x="66" y="2048">POST {LLM_API_BASE}/chat/completions</text>
-    <text class="code" x="66" y="2064">Authorization: Bearer {LLM_API_KEY}</text>
-    <text class="code" x="66" y="2082">{ "model": LLM_API_MODEL,</text>
-    <text class="code" x="86" y="2098">"messages":[{role:"system",…},{role:"user",…}],</text>
-    <text class="code" x="86" y="2114">"temperature": 0 }</text>
-
-    <rect x="662" y="2006" width="606" height="112" rx="10" fill="#EFF3E8" stroke="#B3C79A"/>
-    <text class="h3" x="676" y="2028" fill="#3E5A1F">ollama 분기</text>
-    <text class="code" x="676" y="2048">POST {OLLAMA_URL}/api/generate</text>
-    <text class="code" x="676" y="2064">{ "model": OLLAMA_MODEL,</text>
-    <text class="code" x="696" y="2080">"prompt": system + "\n\n" + user,</text>
-    <text class="code" x="696" y="2096">"format": "json",  ← Ollama 는 JSON 강제 가능</text>
-    <text class="code" x="696" y="2112">"stream": false }</text>
-
-    <text class="mut" x="52" y="2140">사내 LLM API는 format=json 옵션이 없어 응답에 설명 문장이 섞여 올 수 있다 → 7번의 _parse_json()이 처리한다.</text>
-  </g>
-  <line class="edge" x1="360" y1="2130" x2="360" y2="2172"/>
-
-  <!-- ============ SECTION 7 : 응답 파싱 & 안전장치 ============ -->
-  <g>
-    <rect class="box" x="20" y="2172" width="1280" height="298" stroke="#B23B3B"/>
-    <circle cx="52" cy="2204" r="15" fill="#B23B3B"/><text class="num" x="52" y="2209">7</text>
-    <text class="h2" x="76" y="2210" fill="#B23B3B">응답 파싱 &amp; 안전장치 — 실패해도 등록을 막지 않는다</text>
-
-    <rect x="52" y="2228" width="1216" height="66" rx="8" fill="#FBEAEA" stroke="#E4AFAF"/>
-    <text class="h3" x="66" y="2248" fill="#8A2020">① _parse_json() — 모델이 앞뒤에 잡담을 붙여도 파싱</text>
-    <text class="body" x="66" y="2268">json.loads 실패하면 텍스트에서 첫 "{" ~ 마지막 "}" 만 잘라 다시 시도. 그래도 안 되면 빈 dict.</text>
-    <text class="mut" x="66" y="2286">예: "네, 검토했습니다. {"findings":[...]} 이상입니다." → 가운데 JSON만 추출</text>
-
-    <rect x="52" y="2302" width="1216" height="66" rx="8" fill="#FBEAEA" stroke="#E4AFAF"/>
-    <text class="h3" x="66" y="2322" fill="#8A2020">② 환각 방지 — 정의 안 된 유형 · 원문에 없는 구절은 버린다 (_to_findings)</text>
-    <text class="body" x="66" y="2342">findingType이 rules.ALL_TYPES 8종에 없으면 skip. targetSpan이 실제 본문(content)에 없으면 skip — LLM이 지어낸 구절 차단.</text>
-
-    <rect x="52" y="2376" width="1216" height="66" rx="8" fill="#FBEAEA" stroke="#E4AFAF"/>
-    <text class="h3" x="66" y="2396" fill="#8A2020">③ _merge() — 규칙 결과가 항상 우선, LLM은 새로 찾은 것만 추가</text>
-    <text class="body" x="66" y="2416">(유형, 구절) 키가 이미 4번(규칙) 결과에 있으면 LLM 쪽은 버림. 규칙 기반은 LLM 유무와 관계없이 항상 최종 결과에 남는다.</text>
-
-    <rect x="52" y="2450" width="1216" height="20" rx="6" fill="#FBEAEA" stroke="#E4AFAF"/>
-    <text class="mut" x="66" y="2464" fill="#8A2020">④ 위 과정 중 예외(타임아웃·연결 실패 등) 발생 → 로그만 남기고 규칙 결과 그대로 사용, engine="rule" 유지 (요청 자체는 실패하지 않음)</text>
-  </g>
-  <line class="edge" x1="660" y1="2470" x2="660" y2="2512"/>
-
-  <!-- ============ SECTION 8 : draft 생성 ============ -->
-  <g>
-    <rect class="box" x="20" y="2512" width="1280" height="150" stroke="#1E7A63"/>
-    <circle cx="52" cy="2544" r="15" fill="#1E7A63"/><text class="num" x="52" y="2549">8</text>
-    <text class="h2" x="76" y="2550" fill="#1E7A63">확정될 본문 생성 — rules.build_draft()  (rule 경로만 왔어도 여기서 항상 실행)</text>
-    <text class="body" x="52" y="2576">등록 원문(content)을 기준으로, 검출된 findings 중 치환문구(replacement)가 있고 그 구절이 원문에 실제로 있는 항목만 문자열 치환한다.</text>
-    <rect class="codebg" x="52" y="2590" width="1216" height="52"/>
-    <text class="code" x="66" y="2610">draft = content;  for f in findings:  if f.replacement and f.target_span in draft:  draft = draft.replace(f.target_span, f.replacement)</text>
-    <text class="mut" x="66" y="2628">상충(T_CONFLICT)처럼 치환문구가 없는 항목은 draft에 반영되지 않는다 — 문장 수정으론 안 풀리므로 고객 협의로만 안내.</text>
-  </g>
-  <line class="edge" x1="660" y1="2662" x2="660" y2="2704"/>
-
-  <!-- ============ SECTION 9 : AI 서버 응답 ============ -->
-  <g>
-    <rect class="box" x="20" y="2704" width="1280" height="126" stroke="#6B4FA0"/>
-    <circle cx="52" cy="2736" r="15" fill="#6B4FA0"/><text class="num" x="52" y="2741">9</text>
-    <text class="h2" x="76" y="2742" fill="#6B4FA0">AI 서버 → 백엔드 응답</text>
-    <rect class="codebg" x="52" y="2756" width="1216" height="60"/>
-    <text class="code" x="66" y="2776">{ "findings":[{findingType,targetSpan,reason,suggestion,conflictReqKey}, …],</text>
-    <text class="code" x="86" y="2794">"draftContent": "…치환 반영된 문장…", "engine": "llm-api|ollama|rule", "scope": "full|diff", "elapsedMs": 812 }</text>
-  </g>
-  <line class="edge" x1="660" y1="2830" x2="660" y2="2872"/>
-
-  <!-- ============ SECTION 10 : 백엔드 저장 ============ -->
-  <g>
-    <rect class="box" x="20" y="2872" width="1280" height="164" stroke="#2A8A57"/>
-    <circle cx="52" cy="2904" r="15" fill="#2A8A57"/><text class="num" x="52" y="2909">10</text>
-    <text class="h2" x="76" y="2910" fill="#2A8A57">백엔드 — RequirementService.saveAiResult()</text>
-    <text class="body" x="52" y="2936">findings 각 항목을 REQUIREMENT_FINDINGS 행으로 저장. draftContent + engine을 REQUIREMENT_AI_DRAFTS 행으로 저장.</text>
-    <text class="body" x="52" y="2956">AI 서버 자체가 안 뜬 경우(AiClient 호출 실패)에는 engine="unavailable", draftContent=등록 원문 그대로가 저장된다.</text>
-    <rect class="codebg" x="52" y="2970" width="1216" height="50"/>
-    <text class="code" x="66" y="2990">REQUIREMENT_FINDINGS(requirement_id, finding_type, target_span, reason, suggestion, conflict_req_key)</text>
-    <text class="code" x="66" y="3008">REQUIREMENT_AI_DRAFTS(requirement_id, draft_content, engine, created_at)   ← 재분석하면 새 행이 쌓이고 마지막 것을 쓴다</text>
-  </g>
-  <line class="edge" x1="660" y1="3036" x2="660" y2="3078"/>
-
-  <!-- ============ SECTION 11 : 화면 표시 ============ -->
-  <g>
-    <rect class="box" x="20" y="3078" width="1280" height="300" stroke="#2C7A8C"/>
-    <circle cx="52" cy="3110" r="15" fill="#2C7A8C"/><text class="num" x="52" y="3115">11</text>
-    <text class="h2" x="76" y="3116" fill="#2C7A8C">프론트 — 요구사항 상세 화면에 표시</text>
-    <text class="body" x="52" y="3142">/projects/{id}/requirements/{reqId} 화면이 GET으로 상세를 받아 좌우 두 카드로 나눠 보여준다.</text>
-
-    <rect x="52" y="3156" width="590" height="196" rx="10" fill="#F1F8FA" stroke="#9FCBD3"/>
-    <text class="h3" x="66" y="3180" fill="#1B5E6B">🤖 AI 검토 결과 — 읽기 전용, 버튼 없음</text>
-    <text class="body" x="66" y="3202">findings 목록을 유형·구절·이유·제안 그대로 나열만 한다.</text>
-    <text class="body" x="66" y="3222">"제안 적용" 버튼이 없다 — 적용은 오른쪽 카드의 초기값으로</text>
-    <text class="body" x="66" y="3240">이미 반영되어 있는 방식이라 별도 액션이 필요 없다.</text>
-    <text class="mut" x="66" y="3264">engine 배지: 사내 LLM / 로컬 LLM / 규칙 기반 / AI 미응답</text>
-    <text class="mut" x="66" y="3282">(unavailable) 중 하나를 그대로 노출.</text>
-    <text class="mut" x="66" y="3306">findings=0 이면서 engine=unavailable → "AI가 응답하지</text>
-    <text class="mut" x="66" y="3324">못했다"는 문구, engine이 정상이면 "검출 없음" 문구로 구분.</text>
-
-    <rect x="662" y="3156" width="606" height="196" rx="10" fill="#EAF3EC" stroke="#9FCBAA"/>
-    <text class="h3" x="676" y="3180" fill="#1F5E38">✏️ 확정될 본문 — 여기서만 편집</text>
-    <text class="body" x="676" y="3202">textarea 초기값 = draftContent (AI 제안이 이미 반영된 문장).</text>
-    <text class="body" x="676" y="3222">사용자는 이 텍스트를 그대로 두거나 자유롭게 고친다 — 그게</text>
-    <text class="body" x="676" y="3240">곧 "제안을 적용할지 말지"의 전부다.</text>
-    <text class="mut" x="676" y="3264">"↩ 등록 원문으로 되돌리기" 버튼 — draft를 등록 원문(content)</text>
-    <text class="mut" x="676" y="3282">으로 되돌린다. draft ≠ content 일 때만 활성화.</text>
-    <text class="mut" x="676" y="3306">"↻ 다시 분석" 버튼 — findings·draft를 지우고 3~10번을</text>
-    <text class="mut" x="676" y="3324">처음부터 다시 실행한다(재조회, 등록 흐름과 동일 경로).</text>
+    <rect class="box" x="900" y="778" width="400" height="96" stroke="#2C7A8C"/>
+    <text class="h3" x="920" y="804" fill="#1B5E6B">프론트 — 응답 받음</text>
+    <text class="body" x="920" y="826">검토 의견과, 제안이 반영된</text>
+    <text class="body" x="920" y="846">초안을 함께 받는다</text>
   </g>
 
-  <text class="mut" x="30" y="3402">docs/img/ai-flow-detail.svg · ai-model/main.py · ai-model/rules.py · backend RequirementService/AiClient 기준으로 작성 (2026-08)</text>
+  <text class="mut" x="30" y="892">※ 사내 LLM이 응답하지 못해도(주소 미설정·연결 실패 등) 검토 자체가 막히지 않는다 — 규칙 결과만으로 그대로 진행된다.</text>
+
+  <!-- ============ SECTION 3 : 규칙 기반 검출 표 ============ -->
+  <text class="h2" x="30" y="944" fill="#5B6B79">3. 정해둔 규칙으로 무엇을 찾아내나</text>
+  <text class="mut" x="30" y="964">문장 안에 특정 표현이 있으면, 유형별로 미리 준비된 이유·제안을 붙여서 검출한다.</text>
+
+  <g font-family="'Noto Sans CJK KR','Malgun Gothic',sans-serif">
+    <rect x="20" y="980" width="1280" height="40" fill="#5B6B79" rx="8"/>
+    <rect x="20" y="1000" width="1280" height="20" fill="#5B6B79"/>
+    <text class="th" x="36"  y="1005">검출 유형</text>
+    <text class="th" x="236" y="1005">예시 표현</text>
+    <text class="th" x="576" y="1005">왜 문제인가</text>
+    <text class="th" x="916" y="1005">제안</text>
+
+    <!-- rows -->
+    <g>
+      <rect x="20" y="1020" width="1280" height="52" fill="#F6F7F9"/>
+      <text class="td" x="36" y="1042" font-weight="700">정량 기준 부재</text>
+      <text class="td" x="236" y="1042">가용한 AMR · 가장 가까운 · 충분한</text>
+      <text class="td" x="576" y="1042">판정 기준(가용·거리·수치)이 없어 사람마다 다르게 해석</text>
+      <text class="td" x="916" y="1042">구체적인 기준값으로 명시</text>
+      <text class="tdm" x="916" y="1060">예) IDLE 상태이며 SoC 최소값 이상</text>
+    </g>
+    <g>
+      <rect x="20" y="1072" width="1280" height="52" fill="#FFFFFF"/>
+      <text class="td" x="36" y="1094" font-weight="700">모호한 정도부사</text>
+      <text class="td" x="236" y="1094">적절히 · 적절한</text>
+      <text class="td" x="576" y="1094">판단 주체와 기준이 정해져 있지 않음</text>
+      <text class="td" x="916" y="1094">구체적인 조정 범위·기준값을 명시</text>
+    </g>
+    <g>
+      <rect x="20" y="1124" width="1280" height="52" fill="#F6F7F9"/>
+      <text class="td" x="36" y="1146" font-weight="700">주어·주체 불명확</text>
+      <text class="td" x="236" y="1146">관련 부서 · 담당자가</text>
+      <text class="td" x="576" y="1146">누가 하는지 특정되지 않아 담당이 불분명함</text>
+      <text class="td" x="916" y="1146">담당 조직·역할명을 구체적으로 명시</text>
+    </g>
+    <g>
+      <rect x="20" y="1176" width="1280" height="52" fill="#FFFFFF"/>
+      <text class="td" x="36" y="1198" font-weight="700">조건 발생 시점 불명확</text>
+      <text class="td" x="236" y="1198">필요 시 · 이상 발생 시</text>
+      <text class="td" x="576" y="1198">어떤 조건에서 발생하는지가 정의되지 않음</text>
+      <text class="td" x="916" y="1198">판정 가능한 조건으로 명시</text>
+      <text class="tdm" x="916" y="1216">예) 알람 코드 E-1xx 수신 시</text>
+    </g>
+    <g>
+      <rect x="20" y="1228" width="1280" height="52" fill="#F6F7F9"/>
+      <text class="td" x="36" y="1250" font-weight="700">예외·경계 조건 누락</text>
+      <text class="td" x="236" y="1250">"~경우에만"처럼 조건은 있는데</text>
+      <text class="tdm" x="236" y="1266">예외 처리 언급이 없는 문장</text>
+      <text class="td" x="576" y="1250">조건을 만족하지 못하는 경우의 동작이 정의되지 않음</text>
+      <text class="td" x="916" y="1250">조건 불충족 시 동작(거부·대기·알림 등)도 함께 명시</text>
+    </g>
+    <g>
+      <rect x="20" y="1280" width="1280" height="52" fill="#FFFFFF"/>
+      <text class="td" x="36" y="1302" font-weight="700">접속사 범위 모호</text>
+      <text class="td" x="236" y="1302">등을 · 및</text>
+      <text class="td" x="576" y="1302">묶거나 포함하는 범위가 어디까지인지 열려 있음</text>
+      <text class="td" x="916" y="1302">대상을 나열하거나 문장을 분리해서 범위를 한정</text>
+    </g>
+    <g>
+      <rect x="20" y="1332" width="1280" height="52" fill="#F6F7F9"/>
+      <text class="td" x="36" y="1354" font-weight="700">시간·일정 모호</text>
+      <text class="td" x="236" y="1354">신속히 · 즉시 · 가능한 한 빠르게</text>
+      <text class="tdm" x="236" y="1370">주기적으로</text>
+      <text class="td" x="576" y="1354">처리 시간·주기가 수치로 정해져 있지 않음</text>
+      <text class="td" x="916" y="1354">시간·주기를 수치로 명시</text>
+      <text class="tdm" x="916" y="1372">예) 이상 감지 후 5분 이내 · 10초 간격</text>
+    </g>
+    <g>
+      <rect x="20" y="1384" width="1280" height="66" fill="#FBEAEA"/>
+      <text class="td" x="36" y="1406" font-weight="700" fill="#8A2020">기존 요구사항과 상충</text>
+      <text class="td" x="236" y="1406">같은 프로젝트 다른 요구사항과</text>
+      <text class="tdm" x="236" y="1422">비교해서 검출</text>
+      <text class="td" x="576" y="1406">같은 기준(예: 선택 순서)을 서로 다른 값으로 정하고 있음</text>
+      <text class="tdm" x="576" y="1424">문장만 고쳐서는 해결되지 않는다</text>
+      <text class="td" x="916" y="1406">기준을 하나로 통일 — 고객과 협의 필요</text>
+    </g>
+    <rect x="20" y="980" width="1280" height="470" fill="none" stroke="#D9DEE5" stroke-width="1.5" rx="8"/>
+  </g>
+
+  <!-- 상충 판정 예시 -->
+  <rect x="20" y="1462" width="1280" height="86" rx="10" fill="#FBEAEA" stroke="#E4AFAF"/>
+  <text class="h3" x="36" y="1486" fill="#8A2020">상충은 표현이 달라도 뜻이 같으면 매칭한다 — 예: "선택·우선순위 기준"</text>
+  <text class="td" x="36" y="1510">요청 순 (요청순·접수 순·선착순)</text>
+  <text class="td" x="356" y="1510">거리 순 (가장 가까운·최단 거리·최단 경로)</text>
+  <text class="td" x="756" y="1510">배터리 잔량 순 (SoC 높은 순)</text>
+  <text class="td" x="1056" y="1510">등록 순</text>
+  <text class="mut" x="36" y="1534">→ 이 네 가지 중 서로 다른 값을 쓰는 두 요구사항이 있으면 "상충"으로 검출한다.</text>
+
+  <!-- ============ SECTION 4 : AI에게 보내는 지시사항 ============ -->
+  <text class="h2" x="30" y="1592" fill="#9A6B12">4. LLM을 쓸 때 — AI에게 이렇게 요청한다</text>
+  <text class="mut" x="30" y="1612">규칙만으로는 못 잡는 것까지 봐 달라고, LLM에게 아래 내용을 함께 전달한다.</text>
+
+  <rect x="20" y="1628" width="1280" height="230" rx="14" fill="#FBF2DD" stroke="#D9B25A"/>
+  <text class="h3" x="52" y="1660" fill="#7A5A0E">역할</text>
+  <text class="body" x="140" y="1660">"반도체 장비 소프트웨어(VCS/AMR) 요구사항을 검토하는 전문가"라고 알려준다.</text>
+
+  <text class="h3" x="52" y="1692" fill="#7A5A0E">미션</text>
+  <text class="body" x="140" y="1692">"개발자와 고객이 서로 다르게 해석할 수 있는 부분을 찾아라"고 지시한다.</text>
+
+  <text class="h3" x="52" y="1724" fill="#7A5A0E">찾아야 할 유형</text>
+  <text class="body" x="140" y="1724">위 3번 표의 검출 유형 7가지(상충 제외) 중에서만 고르게 한다.</text>
+
+  <text class="h3" x="52" y="1756" fill="#7A5A0E">지켜야 할 규칙</text>
+  <text class="body" x="140" y="1756">"문제 구절은 반드시 원문에 실제로 있는 표현이어야 한다" — 없는 말을 지어내지 못하게</text>
+  <text class="body" x="140" y="1774">막는 안전장치. 이걸 어긴 답은 검토 결과에서 자동으로 제외된다.</text>
+
+  <text class="h3" x="52" y="1806" fill="#7A5A0E">함께 보내는 것</text>
+  <text class="body" x="180" y="1806">검토할 요구사항 내용 (확정본 수정인 경우, 사용자가 입력한 수정 사유도 같이).</text>
+
+  <text class="mut" x="52" y="1838">↳ 이 지시사항은 코드 안에 고정 문구로 들어 있어서, 검토 기준을 바꾸고 싶으면 이 문구만 수정하면 된다.</text>
+
+  <text class="h3" x="30" y="1892" fill="#1B2A4A">LLM이 돌려주는 답 — 결과에서 쓰는 4가지</text>
+  <g>
+    <rect x="20" y="1904" width="1280" height="40" fill="#5B6B79" rx="8"/>
+    <rect x="20" y="1924" width="1280" height="20" fill="#5B6B79"/>
+    <text class="th" x="36" y="1929">항목</text>
+    <text class="th" x="220" y="1929">의미</text>
+    <rect x="20" y="1944" width="1280" height="44" fill="#F6F7F9"/>
+    <text class="td" x="36" y="1970" font-weight="700">검출 유형</text>
+    <text class="td" x="220" y="1970">3번 표에 있는 유형 중 하나</text>
+    <rect x="20" y="1988" width="1280" height="44" fill="#FFFFFF"/>
+    <text class="td" x="36" y="2014" font-weight="700">문제 구절</text>
+    <text class="td" x="220" y="2014">원문에서 문제가 된 부분 그대로</text>
+    <rect x="20" y="2032" width="1280" height="44" fill="#F6F7F9"/>
+    <text class="td" x="36" y="2058" font-weight="700">이유</text>
+    <text class="td" x="220" y="2058">왜 문제인지에 대한 설명</text>
+    <rect x="20" y="2076" width="1280" height="44" fill="#FFFFFF"/>
+    <text class="td" x="36" y="2102" font-weight="700">제안</text>
+    <text class="td" x="220" y="2102">어떻게 고치면 좋은지</text>
+    <rect x="20" y="1904" width="1280" height="216" fill="none" stroke="#D9DEE5" stroke-width="1.5" rx="8"/>
+  </g>
+
+  <!-- ============ SECTION 5 : 화면 표시 ============ -->
+  <text class="h2" x="30" y="2168" fill="#2A8A57">5. 화면에는 이렇게 나타난다</text>
+  <text class="mut" x="30" y="2188">검토가 끝나면 좌우 두 카드로 나뉘어 보인다.</text>
+
+  <rect x="20" y="2204" width="622" height="132" rx="10" fill="#F1F8FA" stroke="#9FCBD3"/>
+  <text class="h3" x="40" y="2230" fill="#1B5E6B">AI 검토 결과 — 참고만, 버튼 없음</text>
+  <text class="body" x="40" y="2254">검출된 유형·구절·이유·제안을 그대로 나열만 한다.</text>
+  <text class="body" x="40" y="2274">"적용" 버튼이 없다 — 적용은 오른쪽 카드에 이미 반영되어 있다.</text>
+  <text class="mut" x="40" y="2300">배지로 사내 LLM이 검토에 응답했는지(사내 LLM / AI 미응답)도 보여준다.</text>
+  <text class="mut" x="40" y="2318">검출이 0건이어도 "문제 없음"과 "AI가 못 봤음"은 다른 문구로 구분해서 알려준다.</text>
+
+  <rect x="678" y="2204" width="622" height="132" rx="10" fill="#EAF3EC" stroke="#9FCBAA"/>
+  <text class="h3" x="698" y="2230" fill="#1F5E38">확정될 본문 — 여기서만 편집</text>
+  <text class="body" x="698" y="2254">제안이 이미 반영된 문장으로 미리 채워져 있다.</text>
+  <text class="body" x="698" y="2274">그대로 두거나 자유롭게 고치면 그게 곧 "제안 적용 여부"다.</text>
+  <text class="mut" x="698" y="2300">"등록 원문으로 되돌리기"로 처음 입력한 문장으로 언제든 되돌릴 수 있다.</text>
+  <text class="mut" x="698" y="2318">마음에 안 들면 "다시 분석"으로 처음부터 다시 검토를 받을 수 있다.</text>
+
+  <!-- ============ SECTION 6 : 고객 협의 → 확정 ============ -->
+  <rect x="20" y="2372" width="1280" height="30" rx="15" fill="#9A6B12"/>
+  <text class="pill" x="660" y="2392">설계 완료 · 개발 예정</text>
+  <text class="h2" x="30" y="2436" fill="#9A6B12">6. 화면을 본 다음 — 고객과 협의해서 확정한다</text>
+  <text class="mut" x="30" y="2456">AI 의견을 참고해서 초안을 손본 뒤에도, 확정은 반드시 고객과의 협의를 거쳐야 한다.</text>
+
+  <g>
+    <rect class="box" x="20" y="2472" width="304" height="112" stroke="#9A6B12"/>
+    <circle cx="52" cy="2502" r="14" fill="#9A6B12"/><text class="num" x="52" y="2507">1</text>
+    <text class="h3" x="76" y="2508">팀 내부에서 먼저 조정한다</text>
+    <text class="mut" x="40" y="2530">검토 의견과 초안을 보고</text>
+    <text class="mut" x="40" y="2548">본문을 다듬는다</text>
+  </g>
+  <line class="edge" x1="324" y1="2528" x2="344" y2="2528"/>
+
+  <g>
+    <rect class="box" x="344" y="2472" width="304" height="112" stroke="#9A6B12"/>
+    <circle cx="376" cy="2502" r="14" fill="#9A6B12"/><text class="num" x="376" y="2507">2</text>
+    <text class="h3" x="400" y="2508">고객과 협의한다</text>
+    <text class="mut" x="364" y="2530">AI 의견이 합리적이어도</text>
+    <text class="mut" x="364" y="2548">그것만으로는 확정하지 않는다</text>
+  </g>
+  <line class="edge" x1="648" y1="2528" x2="668" y2="2528"/>
+
+  <g>
+    <rect class="box" x="668" y="2472" width="304" height="112" stroke="#9A6B12"/>
+    <circle cx="700" cy="2502" r="14" fill="#9A6B12"/><text class="num" x="700" y="2507">3</text>
+    <text class="h3" x="724" y="2508">합의 내용을 기록한다</text>
+    <text class="mut" x="688" y="2530">협의 방법·고객측 담당자·</text>
+    <text class="mut" x="688" y="2548">합의일 — 기록 없인 확정 불가</text>
+  </g>
+  <line class="edge" x1="972" y1="2528" x2="992" y2="2528"/>
+
+  <g>
+    <rect class="box" x="992" y="2472" width="308" height="112" stroke="#9A6B12"/>
+    <circle cx="1024" cy="2502" r="14" fill="#9A6B12"/><text class="num" x="1024" y="2507">4</text>
+    <text class="h3" x="1048" y="2508">확정 — 버전이 매겨진다</text>
+    <text class="mut" x="1012" y="2530">최초 확정은 v1.0.0</text>
+    <text class="mut" x="1012" y="2548">이후 수정은 v1.0.x</text>
+  </g>
+
+  <text class="mut" x="30" y="2610">docs/img/ai-flow-detail.svg · 2026-08</text>
 </svg>

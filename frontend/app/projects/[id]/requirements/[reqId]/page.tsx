@@ -22,8 +22,6 @@ function isConflict(findingType: string) {
 /** 어느 판정 경로로 나온 결과인지 — 참고 자료의 신뢰 수준을 사용자가 알 수 있게. */
 const ENGINE_LABEL: Record<string, string> = {
   "llm-api": "사내 LLM",
-  ollama: "로컬 LLM",
-  rule: "규칙 기반",
   unavailable: "AI 미응답",
 };
 

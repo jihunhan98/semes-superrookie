@@ -25,8 +25,8 @@ uvicorn main:app --port 8001
 ```
 
 - 포트 `8001` (백엔드의 `app.ai.base-url`과 맞춰야 한다)
-- 판정 경로는 **사내 LLM API(GPT-OSS-120B) → 로컬 Ollama → 규칙 기반** 순으로 잡힌다. 셋 다 응답 형태가 같아서, 아무것도 없어도 규칙 기반으로 그대로 개발할 수 있다.
-- 실제로 어느 엔진이 잡혔는지는 `curl http://localhost:8001/health`의 `active`로 확인한다.
+- 규칙 기반 검출이 항상 먼저 돌고, 그 위에 **사내 LLM API(GPT-OSS-120B)**를 한 번 더 호출해 보충한다. 사내 LLM이 응답하지 않아도(주소 미설정 포함) 규칙 결과만으로 그대로 개발할 수 있다.
+- 사내 LLM 주소가 잡혔는지는 `curl http://localhost:8001/health`의 `llmApiConfigured`로 확인한다.
 - **사내 서버 주소는 소스·문서에 두지 않는다** — 저장소가 사외로 나가도 사내망 정보는 남지 않도록. `ai-model/.env`(`.gitignore` 처리됨)에 `LLM_API_BASE` · `LLM_API_MODEL`을 넣는다. 실제 값은 팀 내부에서 받는다.
 - 빠른 확인:
   ```bash

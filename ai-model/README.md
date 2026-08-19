@@ -3,25 +3,19 @@
 요구사항 문장에서 **불명확한 표현**과 **기존 요구사항과의 상충**을 찾아내는 FastAPI 서버.
 Spring Boot 백엔드가 요구사항 등록/수정 시 이 서버를 호출한다.
 
-> 프론트 입력부터 규칙 기반 검출, LLM 프롬프트 구성, 응답 필터링, draft 생성, 저장,
-> 화면 표시까지 전체 흐름을 그림으로 정리한 것: [`docs/img/ai-flow-detail.svg`](../docs/img/ai-flow-detail.svg)
+> 사용자 입력부터 검토 결과가 화면에 뜨기까지 전체 과정을 그림으로 정리한 것:
+> [`docs/img/ai-flow-detail.svg`](../docs/img/ai-flow-detail.svg)
 
-## 판정 경로 3갈래
+## 검출 방식 — 규칙 기반 + 사내 LLM
 
-폐쇄망은 반출이 막혀 있어 외부 AI API(Claude/GPT 등)를 쓸 수 없다. 쓸 수 있는 건
-**사내 LLM API**와 **개발 PC의 로컬 Ollama** 둘뿐인데, 둘 다 언제든 안 떠 있을 수 있다.
-그렇다고 요구사항 등록이 막히면 안 되므로 **규칙 기반이 항상 깔려 있고**, 그 위에
-쓸 수 있는 LLM을 얹는다. 어느 경로든 응답 형태는 같아서 백엔드는 차이를 모른다.
+**규칙 기반 검출이 항상 먼저 실행된다.** 미리 정해둔 표현이 문장에 있으면 그 자리에서
+바로 잡아낸다(치환 제안까지 나온다). 그 위에 **사내 LLM API**(GPT-OSS-120B, OpenAI 호환)를
+한 번 더 호출해서, 규칙이 못 잡는 것까지 보충한다.
 
-| 우선순위 | `engine` | 무엇 | 규격 |
-|---|---|---|---|
-| 1 | `llm-api` | **사내 LLM API 서비스** (GPT-OSS-120B) | OpenAI 호환 `POST /v1/chat/completions` |
-| 2 | `ollama` | 개발 PC 로컬 Ollama | `POST /api/generate` |
-| 3 | `rule` | 규칙 기반 — 항상 동작 | (로컬 파이썬) |
-
-매 요청 전에 위에서부터 도달 가능한지 확인하고, 안 되면 아래로 내려간다.
-호출 중에 실패해도 규칙 결과로 응답한다 — 등록이 막히는 일은 없다.
-지금 어느 경로가 잡혀 있는지는 `GET /health`의 `active`로 확인한다.
+사내 LLM이 응답하지 못해도(주소 미설정·연결 실패·타임아웃) 요청 자체는 실패하지
+않는다 — 규칙 기반 결과만 담아 `engine: "unavailable"`로 응답한다. 그래서 요구사항
+등록은 사내 LLM 상태와 무관하게 항상 끝까지 진행된다. 폐쇄망이라 외부 AI API
+(Claude/GPT 등)는 애초에 쓸 수 없고, 이 사내 서비스 하나만 쓴다.
 
 > 사내 LLM API는 OpenAI 파이썬 라이브러리와 같은 규격이라, 아래 호출과 동등하다.
 > 다만 폐쇄망에 `openai` 패키지를 반입하지 않으려고 표준 라이브러리로 직접 보낸다.
@@ -49,28 +43,17 @@ cp .env.example .env
 # .env 를 열어 LLM_API_BASE / LLM_API_MODEL 을 채운다 (실제 값은 팀 내부에서 받는다)
 ```
 
-주소를 안 채워도 서버는 정상 동작한다 — Ollama → 규칙 기반 순으로 내려가므로
+주소를 안 채워도 서버는 정상 동작한다 — 규칙 기반 결과만으로 응답하므로
 사내망 밖(집·외부 PC)에서도 그대로 개발할 수 있다.
-
-로컬 Ollama까지 쓰려면 먼저 띄운다 (없어도 서버는 정상 동작한다):
-
-```bash
-ollama serve
-ollama pull qwen2.5:7b-instruct
-```
 
 ## 환경 변수
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
-| `LLM_BACKEND` | `auto` | `auto` / `llm-api` / `ollama` / `rule` — 엔진을 강제하고 싶을 때 |
-| `LLM_API_BASE` | (없음) | **사내 LLM API** 주소 (`/v1`까지 포함). 비어 있으면 이 엔진을 건너뛴다 |
+| `LLM_API_BASE` | (없음) | **사내 LLM API** 주소 (`/v1`까지 포함). 비어 있으면 LLM 호출을 건너뛴다 |
 | `LLM_API_MODEL` | `gpt-4` | 사내 서버가 서빙하는 모델명 — 서버에 맞게 조정 |
 | `LLM_API_KEY` | `EMPTY` | 사내 서비스는 인증이 없어 `EMPTY` |
 | `LLM_API_TIMEOUT` | `30` | 사내 LLM 응답 대기 시간(초) |
-| `OLLAMA_URL` | `http://localhost:11434` | Ollama 주소 |
-| `OLLAMA_MODEL` | `qwen2.5:7b-instruct` | 사용할 로컬 모델 |
-| `OLLAMA_TIMEOUT` | `20` | Ollama 응답 대기 시간(초) |
 | `ANALYZE_DELAY` | `0` | **인위적 지연(초)** — 등록 화면 로딩 UI 테스트용 |
 
 `ANALYZE_DELAY=3` 으로 띄우면 등록 시 3초 로딩이 걸려서 프론트 로딩 화면을 확인할 수 있다.
@@ -111,13 +94,13 @@ ollama pull qwen2.5:7b-instruct
     }
   ],
   "draftContent": "AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 …",
-  "engine": "llm-api",   // llm-api | ollama | rule
+  "engine": "llm-api",   // llm-api(사내 LLM 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만)
   "scope": "full",
   "elapsedMs": 3
 }
 ```
 
-LLM이 붙은 경우에도 **규칙 결과가 먼저**이고 LLM이 새로 찾은 것만 뒤에 덧붙는다.
+**규칙 결과가 먼저**이고 LLM이 새로 찾은 것만 뒤에 덧붙는다.
 LLM이 원문에 없는 구절(`targetSpan`)이나 정의되지 않은 유형을 만들어내면 버린다(환각 방지).
 
 `draftContent`가 화면의 **"확정될 본문"에 그대로 채워지는 값**이다.
@@ -125,17 +108,11 @@ AI 검토 결과 카드는 읽기 전용이고, 사용자는 이 draft 텍스트
 
 ### `GET /health`
 
-사내 LLM·Ollama 각각의 도달 여부와, **지금 요청이 오면 실제로 쓰일 엔진**(`active`)을 반환한다.
-폐쇄망에 배포한 뒤 "사내 LLM이 실제로 잡혔는지" 확인하는 용도다.
+사내 LLM API 주소가 설정되어 있는지를 반환한다. 폐쇄망에 배포한 뒤
+"사내 LLM 주소가 제대로 들어갔는지" 빠르게 확인하는 용도다.
 
 ```jsonc
-{
-  "status": "ok",
-  "backend": "auto",
-  "llmApi": { "reachable": true, "base": "http://…사내 LLM 주소…/v1", "model": "gpt-4" },
-  "ollama": { "reachable": false, "model": "qwen2.5:7b-instruct" },
-  "active": "llm-api"
-}
+{ "status": "ok", "llmApiConfigured": true, "llmApiModel": "gpt-4" }
 ```
 
 ### `GET /types`
@@ -155,7 +132,7 @@ AI 검토 결과 카드는 읽기 전용이고, 사용자는 이 draft 텍스트
 ```
 ai-model/
   main.py           # FastAPI 앱 — /analyze, /health, /types
-  rules.py          # 규칙 기반 검출기 (기본 동작)
+  rules.py          # 규칙 기반 검출기 (항상 먼저 실행)
   requirements.txt
   .env.example      # 설정 템플릿 — .env 로 복사해서 채운다
   .env              # 사내 LLM 주소 등 — .gitignore 되어 커밋되지 않는다

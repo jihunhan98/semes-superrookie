@@ -48,7 +48,7 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
   "assigneeId": 1, "assigneeName": "한지훈",
   // AI 제안이 이미 반영된 문장 — 확정 화면의 "확정될 본문"에 그대로 채워진다.
   "aiDraftContent": "AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 …",
-  // 어느 경로로 판정했는지. llm-api(사내 LLM) | ollama(로컬) | rule(규칙만) | unavailable(AI 미응답)
+  // 어느 경로로 판정했는지. llm-api(사내 LLM이 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만)
   "aiEngine": "llm-api",
   "findings": [                                        // 화면에서 읽기 전용으로만 표시
     { "findingType": "정량 기준 부재", "targetSpan": "가용한 AMR",
@@ -64,8 +64,8 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 
 > **AI 서버가 죽어 있어도 등록은 된다.** 이 경우 `findings`는 빈 배열, `aiDraftContent`는
 > 원문과 같고 `aiEngine`이 `unavailable`이 된다. 나중에 "다시 분석"으로 재요청할 수 있다.
-> `aiEngine`이 `rule`인데 `findings`가 비어 있는 것과는 다르다 — 그건 AI가 정상적으로
-> 검토했고 걸린 게 없다는 뜻이다. 화면도 두 경우를 다른 문구로 구분해서 보여준다.
+> `findings`가 비어 있어도 `aiEngine`이 `llm-api`이면 다른 뜻이다 — 사내 LLM이 정상적으로
+> 검토했고 걸린 게 없다는 뜻. 화면도 두 경우를 다른 문구로 구분해서 보여준다.
 
 ### 2.2 미구현 (다음 단계)
 
@@ -85,22 +85,22 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | 메서드 | 경로 | 설명 | 요청 | 응답 |
 |---|---|---|---|---|
 | POST | `/analyze` | 불명확·상충 검출 + 제안 반영 문장 생성 | `content`*str · `baseContent`str · `reason`str · `existing`[{reqKey, content}] | `200` {findings[], draftContent, engine, scope, elapsedMs} |
-| GET | `/health` | 각 엔진 도달 여부 + 지금 쓰일 엔진 | — | `200` {status, backend, llmApi{}, ollama{}, active} |
+| GET | `/health` | 사내 LLM API 주소 설정 여부 | — | `200` {status, llmApiConfigured, llmApiModel} |
 | GET | `/types` | 검출 유형 목록 | — | `200` {types[]} |
 
 - `baseContent`가 있으면 `scope: "diff"` — 바뀐 부분과 사유만 검토한다(확정본 수정).
 - 없으면 `scope: "full"` — 본문 전체를 검토한다(최초 확정).
 
-**판정 경로 3갈래** — 매 요청 전에 위에서부터 도달 가능한지 확인하고, 안 되면 아래로 내려간다.
+**판정 방식** — 규칙 기반 검출이 항상 먼저 실행되고, 그 위에 사내 LLM API를 한 번 더
+호출해 보충한다.
 
-| 우선순위 | `engine` | 무엇 | 호출 규격 |
-|---|---|---|---|
-| 1 | `llm-api` | 사내 LLM API 서비스(GPT-OSS-120B) | OpenAI 호환 `POST {LLM_API_BASE}/chat/completions` · `Authorization: Bearer {LLM_API_KEY}` |
-| 2 | `ollama` | 개발 PC 로컬 Ollama | `POST {OLLAMA_URL}/api/generate` (`format: json`) |
-| 3 | `rule` | 규칙 기반 — 항상 동작 | (로컬 파이썬) |
+| `engine` | 무엇 | 호출 규격 |
+|---|---|---|
+| `llm-api` | 사내 LLM API 서비스(GPT-OSS-120B)가 응답함 | OpenAI 호환 `POST {LLM_API_BASE}/chat/completions` · `Authorization: Bearer {LLM_API_KEY}` |
+| `unavailable` | 사내 LLM 미응답(주소 미설정·연결 실패·타임아웃) — 규칙 결과만 | — |
 
-- 폐쇄망은 반출이 막혀 외부 AI API를 못 쓴다. 그래서 사내 LLM API와 로컬 Ollama 둘뿐이고,
-  둘 다 없어도 규칙 기반으로 항상 응답한다.
+- 폐쇄망은 반출이 막혀 외부 AI API를 못 쓴다. 그래서 사내 LLM API 하나만 쓰고,
+  응답하지 못해도 규칙 기반으로 항상 응답한다.
 - LLM이 붙어도 **규칙 결과가 먼저**이고 LLM이 새로 찾은 것만 덧붙는다. LLM이 원문에 없는
   `targetSpan`이나 정의되지 않은 유형을 만들어내면 버린다(환각 방지).
 - 주소·모델명은 소스가 아니라 환경 변수로 넘긴다 (`LLM_API_BASE` / `LLM_API_MODEL` 등,

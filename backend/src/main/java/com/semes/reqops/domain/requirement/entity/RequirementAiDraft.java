@@ -25,7 +25,7 @@ public class RequirementAiDraft {
     @Column(name = "draft_content", nullable = false)
     private String draftContent;
 
-    /** 판정 경로: llm-api(사내 LLM) / ollama(로컬) / rule(규칙만) / unavailable(AI 미응답). */
+    /** 판정 경로: llm-api(사내 LLM이 응답함) / unavailable(사내 LLM 미응답, 규칙 결과만). */
     @Column(name = "engine", nullable = false, length = 20)
     private String engine;
 
