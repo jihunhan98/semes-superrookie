@@ -13,8 +13,18 @@ run-all.bat      실행 — AI 서버 / 백엔드 / 프론트를 각각 새 창�
 stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세스를 정리한다
 ```
 
-- 서버마다 **창이 따로 열린다**. 로그가 한 창에 섞이면 어느 쪽 에러인지 구분이 안 되기 때문.
-- 처음 한 번은 준비가 필요하다(가상환경·`npm install`·Maven). 안 되어 있으면 `run-all.bat`이 무엇이 빠졌는지 알려주고 멈춘다.
+서버마다 **창이 따로 열린다** — 로그가 한 창에 섞이면 어느 쪽 에러인지 구분이 안 되기 때문.
+
+**환경에 맞춰 알아서 고른다.** 하나가 준비 안 됐다고 전부 멈추지 않고, 띄울 수 있는 것만 띄운 뒤 못 띄운 건 이유와 함께 마지막에 모아서 알려준다.
+
+| | 찾는 순서 | 없으면 |
+|---|---|---|
+| AI 서버 | `ai-model\.venv` → `ai-model\venv` | 건너뜀 (등록은 되고, 규칙 기반으로만 검토됨) |
+| 백엔드 | `mvnw.cmd` → PATH의 `mvn` → `MAVEN_HOME`/`M2_HOME` → `backend\target\*.jar` | 건너뜀 — **IDE에서 `ReqopsApplication` 실행** |
+| 프론트 | `frontend\node_modules`(개발 서버) → `frontend\dist\standalone`(빌드 산출물) | 건너뜀 |
+
+- **Maven이 없어도 된다.** IDE에서 백엔드를 띄우고 배치는 AI·프론트만 담당하게 두면 된다. Maven을 PATH에 넣거나 `mvn clean package`로 jar을 한 번 만들어두면 그때부터는 배치가 백엔드까지 자동으로 띄운다.
+- **`npm install`이 안 돼도 된다.** `frontend/dist/standalone`이 저장소에 커밋되어 있어서, Node만 있으면 빌드 없이 바로 돌아간다. 다만 이 산출물은 프론트 코드를 고칠 때마다 다시 빌드해서 커밋해야 반영된다.
 - 백엔드는 기동에 20~40초 걸린다. `Started ReqopsApplication` 로그가 뜨면 준비 완료.
 - 프론트가 뜨면 브라우저로 `http://localhost:3000/login`이 자동으로 열린다.
 
