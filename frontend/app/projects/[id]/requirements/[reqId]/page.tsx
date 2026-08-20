@@ -116,16 +116,18 @@ export default function RequirementDetailPage() {
               {req.stateLabel}
             </span>
             {req.version && <span className="tagv">🏷 v{req.version}</span>}
-            {/* 확정 전이면 확정 화면으로, 확정 후에는 수정 화면으로 간다(수정은 다음 단계). */}
-            {!req.version && (
-              <Link
-                className="btn prim"
-                href={`/projects/${project.id}/requirements/${req.id}/review`}
-                style={{ marginLeft: "auto" }}
-              >
-                검토하고 확정하기
-              </Link>
-            )}
+            {/* 확정 전이면 최초 확정 화면(화면 4), 확정 후에는 수정 화면(화면 5). */}
+            <Link
+              className="btn prim"
+              href={
+                req.version
+                  ? `/projects/${project.id}/requirements/${req.id}/edit`
+                  : `/projects/${project.id}/requirements/${req.id}/review`
+              }
+              style={{ marginLeft: "auto" }}
+            >
+              {req.version ? "수정하기" : "검토하고 확정하기"}
+            </Link>
           </div>
 
           <div className="w2col" style={{ marginTop: 16, maxWidth: 1400 }}>

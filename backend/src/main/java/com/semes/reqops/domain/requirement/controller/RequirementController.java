@@ -3,6 +3,7 @@ package com.semes.reqops.domain.requirement.controller;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.DiffAnalyzeRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DetailResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.SummaryResponse;
 import com.semes.reqops.domain.requirement.service.RequirementService;
@@ -58,6 +59,19 @@ public class RequirementController {
                                     @PathVariable Long requirementId,
                                     @RequestParam Long userId) {
         return requirementService.reanalyze(projectId, requirementId, userId);
+    }
+
+    /**
+     * 확정본 수정 시 AI 검토 — 확정본 대비 <b>바뀐 부분과 사유만</b> 본다.
+     *
+     * <p>본문 전체를 보는 {@code /analyze} 와 나눠 둔 이유: 이미 고객과 합의된 나머지
+     * 문장을 다시 검토해서 흔들지 않으려는 것.
+     */
+    @PostMapping("/{requirementId}/diff-analyze")
+    public DetailResponse diffAnalyze(@PathVariable Long projectId,
+                                      @PathVariable Long requirementId,
+                                      @Valid @RequestBody DiffAnalyzeRequest request) {
+        return requirementService.diffAnalyze(projectId, requirementId, request);
     }
 
     /**

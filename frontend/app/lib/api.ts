@@ -255,6 +255,22 @@ export function reanalyzeRequirement(
   );
 }
 
+/**
+ * 확정본 수정 시 AI 검토 — 확정본 대비 바뀐 부분과 사유만 본다.
+ *
+ * 확정본(baseContent)은 서버가 DB에서 가져오므로 보내지 않는다.
+ */
+export function diffAnalyzeRequirement(
+  projectId: number,
+  requirementId: number,
+  input: { userId: number; content: string; reason: string },
+): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/diff-analyze`,
+    input,
+  );
+}
+
 /** 고객 합의 기록 — 확정의 전제 조건. */
 export function recordConsensus(
   projectId: number,

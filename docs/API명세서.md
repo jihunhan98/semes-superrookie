@@ -36,6 +36,7 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | GET | `/api/projects/{projectId}/requirements/assignees` | 담당자 필터 후보(프로젝트 멤버 전원) | `userId`*num (query) | `200` [{userId, name}] |
 | GET | `/api/projects/{projectId}/requirements/{reqId}` | 상세 — AI 검토 결과와 draft 포함 | `userId`*num (query) | `200` 상세 응답(아래)<br>`404` 없음 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/analyze` | AI 재분석("↻ 다시 분석") — 기존 검출을 지우고 다시 저장 | `userId`*num (query) | `200` 상세 응답(아래) |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | **확정본 수정 시 AI 검토** — 확정본 대비 바뀐 부분과 사유만 본다. 확정본은 서버가 DB에서 가져오므로 보내지 않는다 | `userId`*num · `content`*str · `reason`*str | `200` 상세 응답(아래) |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/consensus` | **고객 합의 기록** — 확정의 전제 조건. 합의할 때마다 새로 쌓이고 확정은 마지막 기록을 근거로 삼는다 | `userId`*num · `method`*str · `customerContact`*str · `agreedOn`*str(yyyy-MM-dd) · `note`str · `agreedContent`*str | `200` 상세 응답(아래)<br>`400` 합의일 형식 오류 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | **확정** → 버전 부여(최초 v1.0.0). 본문을 확정본으로 덮어쓰고 이력에 한 줄 남긴다 | `userId`*num · `content`*str · `title`str(생략 시 "최초 확정") | `200` 상세 응답(아래)<br>`409` 합의 기록 없음 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/hold` | **보류** — 고객 협의가 더 필요할 때. 나중에 이어서 확정 가능 | `userId`*num (query) | `200` 상세 응답(아래) |
@@ -66,7 +67,10 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
     "agreedContent": "AMR 매칭 시 IDLE 상태이며 …",
     "recordedByName": "한지훈", "createdAt": "2026-08-16 14:20"
   },
-  "canConfirm": true,          // 합의 기록이 있고 아직 확정 전이면 true
+  // 아직 확정에 쓰이지 않은 합의 기록이 있으면 true.
+  // "확정 전"이 아니라 "미사용 합의" 기준이다 — 확정본 수정은 이미 확정된 것을 다시
+  // 확정하므로, 확정 여부로 막으면 재확정이 불가능해진다.
+  "canConfirm": true,
   "nextVersion": "1.0.0",      // 확정하면 부여될 버전 — 화면의 "확정 시 v1.0.0"
   "versions": [                // 확정 이력(최신순). 확정 전에는 빈 배열
     { "id": 1, "version": "1.0.0", "title": "최초 확정",
@@ -94,7 +98,6 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
-| POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | 확정본 수정 시 **변경분만** AI 검토 |
 | GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | 버전 diff (이력 자체는 상세 응답의 `versions`로 이미 내려간다) |
 | GET/PUT | `/api/projects/{projectId}/requirement-fields` | 프로젝트별 요구사항 항목 구성 |
 

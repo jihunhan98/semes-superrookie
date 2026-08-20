@@ -6,6 +6,7 @@ import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.DiffAnalyzeRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DetailResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.FindingResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.SummaryResponse;
@@ -130,6 +131,9 @@ public class RequirementService {
                 .map(this::toConsensusResponse)
                 .orElse(null);
 
+        RequirementVersion lastVersion = versionRepository
+                .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+
         List<VersionResponse> versions = versionRepository
                 .findByRequirementIdOrderByIdDesc(requirementId).stream()
                 .map(v -> new VersionResponse(
@@ -138,8 +142,10 @@ public class RequirementService {
                         v.getCreatedAt() == null ? null : v.getCreatedAt().format(TS)))
                 .toList();
 
-        // 확정 가능 조건: 합의 기록이 있고, 아직 확정 전이다.
-        boolean canConfirm = consensus != null && !r.isConfirmed();
+        // 확정 가능 조건: 아직 확정에 쓰이지 않은 합의 기록이 있을 것.
+        // "확정 전"이 아니라 "미사용 합의"를 기준으로 삼는 이유 — 확정본 수정은 이미
+        // 확정된 요구사항을 다시 확정하므로, 확정 여부로 막으면 수정 확정이 불가능해진다.
+        boolean canConfirm = consensus != null && isUnusedConsensus(consensus.id(), lastVersion);
 
         return new DetailResponse(
                 r.getId(), r.getProjectId(), r.getReqKey(), r.getContent(),
@@ -173,6 +179,34 @@ public class RequirementService {
     }
 
     /**
+     * 확정본 수정 시 AI 검토 — 확정본 대비 <b>바뀐 부분과 사유만</b> 본다.
+     *
+     * <p>최초 확정(본문 전체)과 달리, 이미 고객과 합의된 나머지 문장은 다시 건드리지
+     * 않는다. 결과는 재분석과 마찬가지로 기존 검출을 지우고 새로 저장한다 — 화면이
+     * 언제나 "가장 최근 검토 결과"만 보여주도록.
+     *
+     * <p>본문 자체는 아직 저장하지 않는다. 확정 단계에서 최종 문장을 받아 반영한다.
+     */
+    @Transactional
+    public DetailResponse diffAnalyze(Long projectId, Long requirementId, DiffAnalyzeRequest req) {
+        requireMember(projectId, req.userId());
+        Requirement r = findInProject(projectId, requirementId);
+
+        findingRepository.deleteByRequirementId(requirementId);
+        aiDraftRepository.deleteAll(aiDraftRepository.findByRequirementId(requirementId));
+
+        AiAnalyzeDto.Response ai = aiClient.analyzeDiff(
+                req.content(), r.getContent(), req.reason(), existingOf(projectId, requirementId));
+        saveAiResult(requirementId, ai, req.content());
+
+        // 목록에서 "지금 손대는 중"으로 보이게 한다. 버전은 재확정 전까지 그대로.
+        r.startRevision();
+        requirementRepository.save(r);
+
+        return detail(projectId, requirementId, req.userId());
+    }
+
+    /**
      * 고객 합의 기록 — 확정의 전제 조건.
      *
      * <p>AI 의견이 합리적이어도 그것만으로는 확정할 수 없다. 이 기록이 남아야 확정
@@ -196,10 +230,10 @@ public class RequirementService {
     }
 
     /**
-     * 확정 — 합의된 본문을 확정본으로 삼고 버전을 부여한다.
+     * 확정 — 합의된 본문을 확정본으로 삼고 버전을 부여한다. 최초 확정과 재확정 공통.
      *
-     * <p>합의 기록이 없으면 거부한다. 화면에서도 버튼이 비활성화되지만, API 단에서도
-     * 막아야 "합의 없이 확정된 요구사항"이 만들어지지 않는다.
+     * <p>아직 확정에 쓰이지 않은 합의 기록이 없으면 거부한다. 화면에서도 버튼이
+     * 비활성화되지만, API 단에서도 막아야 "합의 없이 확정된 요구사항"이 만들어지지 않는다.
      */
     @Transactional
     public DetailResponse confirm(Long projectId, Long requirementId, ConfirmRequest req) {
@@ -210,8 +244,16 @@ public class RequirementService {
                 .findFirstByRequirementIdOrderByIdDesc(requirementId)
                 .orElseThrow(ApiErrors.ConsensusRequired::new);
 
+        RequirementVersion lastVersion = versionRepository
+                .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+        // 같은 합의로 두 번 확정하면 두 번째 버전은 근거 없이 올라간 셈이 된다.
+        if (!isUnusedConsensus(consensus.getId(), lastVersion)) {
+            throw new ApiErrors.ConsensusRequired();
+        }
+
         String version = nextVersionOf(requirementId);
         // 최초 확정은 바꿀 원본이 없어 사유를 받지 않는다 — 이력 제목을 서버가 넣는다.
+        // 확정본 수정은 화면에서 받은 변경 사유가 그대로 이력 제목이 된다.
         String title = blankToNull(req.title()) == null ? "최초 확정" : req.title().trim();
 
         r.confirm(req.content(), version);
@@ -234,6 +276,21 @@ public class RequirementService {
     }
 
     // ── 내부 구현 ────────────────────────────────────────────────
+
+    /**
+     * 이 합의 기록이 아직 확정에 쓰이지 않았는지.
+     *
+     * <p>확정 한 번은 합의 한 건을 "소비"한다. 같은 합의로 두 번 확정하면 두 번째
+     * 버전은 근거 없이 올라간 셈이 되므로, 마지막 버전이 근거로 삼은 합의보다 뒤에
+     * 기록된 합의가 있을 때만 확정을 연다.
+     */
+    private boolean isUnusedConsensus(Long consensusId, RequirementVersion lastVersion) {
+        if (lastVersion == null) {
+            return true;   // 아직 확정한 적이 없다 — 최초 확정
+        }
+        Long used = lastVersion.getConsensusId();
+        return used == null || consensusId > used;
+    }
 
     private ConsensusResponse toConsensusResponse(RequirementConsensus c) {
         return new ConsensusResponse(

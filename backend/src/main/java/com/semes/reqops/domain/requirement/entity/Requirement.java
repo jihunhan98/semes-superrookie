@@ -102,6 +102,17 @@ public class Requirement {
         }
     }
 
+    /**
+     * 확정본을 고치기 시작 — 목록에서 "지금 손대는 중"으로 보이게 한다.
+     *
+     * <p>버전은 그대로 둔다. 재확정 전까지는 여전히 이전 버전이 유효한 확정본이기 때문.
+     */
+    public void startRevision() {
+        if (this.state == ReqState.CONFIRMED) {
+            this.state = ReqState.REVISING;
+        }
+    }
+
     /** 확정된 적이 있는지 — 화면에서 "확정하기"와 "수정하기"를 가르는 기준. */
     public boolean isConfirmed() {
         return this.state == ReqState.CONFIRMED && this.version != null;
