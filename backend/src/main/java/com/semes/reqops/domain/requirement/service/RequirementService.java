@@ -2,16 +2,24 @@ package com.semes.reqops.domain.requirement.service;
 
 import com.semes.reqops.domain.project.entity.Membership;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DetailResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.FindingResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.SummaryResponse;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.VersionResponse;
 import com.semes.reqops.domain.requirement.entity.Requirement;
 import com.semes.reqops.domain.requirement.entity.RequirementAiDraft;
+import com.semes.reqops.domain.requirement.entity.RequirementConsensus;
 import com.semes.reqops.domain.requirement.entity.RequirementFinding;
+import com.semes.reqops.domain.requirement.entity.RequirementVersion;
 import com.semes.reqops.domain.requirement.repository.RequirementAiDraftRepository;
+import com.semes.reqops.domain.requirement.repository.RequirementConsensusRepository;
 import com.semes.reqops.domain.requirement.repository.RequirementFindingRepository;
 import com.semes.reqops.domain.requirement.repository.RequirementRepository;
+import com.semes.reqops.domain.requirement.repository.RequirementVersionRepository;
 import com.semes.reqops.domain.user.entity.User;
 import com.semes.reqops.domain.user.repository.UserRepository;
 import com.semes.reqops.global.ai.AiAnalyzeDto;
@@ -21,7 +29,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,10 +41,16 @@ import java.util.stream.Collectors;
 public class RequirementService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter D = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /** 최초 확정 버전. 이후 수정은 patch 만 올린다(1.0.1, 1.0.2 …). */
+    private static final String FIRST_VERSION = "1.0.0";
 
     private final RequirementRepository requirementRepository;
     private final RequirementFindingRepository findingRepository;
     private final RequirementAiDraftRepository aiDraftRepository;
+    private final RequirementConsensusRepository consensusRepository;
+    private final RequirementVersionRepository versionRepository;
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final AiClient aiClient;
@@ -109,6 +125,22 @@ public class RequirementService {
         String assigneeName = r.getAssigneeId() == null ? null
                 : userRepository.findById(r.getAssigneeId()).map(User::getName).orElse(null);
 
+        ConsensusResponse consensus = consensusRepository
+                .findFirstByRequirementIdOrderByIdDesc(requirementId)
+                .map(this::toConsensusResponse)
+                .orElse(null);
+
+        List<VersionResponse> versions = versionRepository
+                .findByRequirementIdOrderByIdDesc(requirementId).stream()
+                .map(v -> new VersionResponse(
+                        v.getId(), v.getVersion(), v.getTitle(), v.getContent(),
+                        userName(v.getConfirmedBy()),
+                        v.getCreatedAt() == null ? null : v.getCreatedAt().format(TS)))
+                .toList();
+
+        // 확정 가능 조건: 합의 기록이 있고, 아직 확정 전이다.
+        boolean canConfirm = consensus != null && !r.isConfirmed();
+
         return new DetailResponse(
                 r.getId(), r.getProjectId(), r.getReqKey(), r.getContent(),
                 r.getRequesterDept(), r.getRequesterName(),
@@ -117,6 +149,10 @@ public class RequirementService {
                 draft,
                 engine,
                 findings,
+                consensus,
+                canConfirm,
+                nextVersionOf(requirementId),
+                versions,
                 r.getCreatedAt() == null ? null : r.getCreatedAt().format(TS),
                 r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS));
     }
@@ -136,7 +172,119 @@ public class RequirementService {
         return detail(projectId, requirementId, userId);
     }
 
+    /**
+     * 고객 합의 기록 — 확정의 전제 조건.
+     *
+     * <p>AI 의견이 합리적이어도 그것만으로는 확정할 수 없다. 이 기록이 남아야 확정
+     * 버튼이 열린다. 합의할 때마다 새 행을 쌓고, 확정은 항상 마지막 행을 근거로 삼는다.
+     */
+    @Transactional
+    public DetailResponse recordConsensus(Long projectId, Long requirementId, ConsensusRequest req) {
+        requireMember(projectId, req.userId());
+        Requirement r = findInProject(projectId, requirementId);
+
+        consensusRepository.save(new RequirementConsensus(
+                requirementId, req.method().trim(), req.customerContact().trim(),
+                parseDate(req.agreedOn()), blankToNull(req.note()),
+                req.agreedContent(), req.userId()));
+
+        // 합의까지 끝났으니 "고객 합의 대기"로 올린다. 확정은 아직 별도 단계.
+        r.markPendingConsensus();
+        requirementRepository.save(r);
+
+        return detail(projectId, requirementId, req.userId());
+    }
+
+    /**
+     * 확정 — 합의된 본문을 확정본으로 삼고 버전을 부여한다.
+     *
+     * <p>합의 기록이 없으면 거부한다. 화면에서도 버튼이 비활성화되지만, API 단에서도
+     * 막아야 "합의 없이 확정된 요구사항"이 만들어지지 않는다.
+     */
+    @Transactional
+    public DetailResponse confirm(Long projectId, Long requirementId, ConfirmRequest req) {
+        requireMember(projectId, req.userId());
+        Requirement r = findInProject(projectId, requirementId);
+
+        RequirementConsensus consensus = consensusRepository
+                .findFirstByRequirementIdOrderByIdDesc(requirementId)
+                .orElseThrow(ApiErrors.ConsensusRequired::new);
+
+        String version = nextVersionOf(requirementId);
+        // 최초 확정은 바꿀 원본이 없어 사유를 받지 않는다 — 이력 제목을 서버가 넣는다.
+        String title = blankToNull(req.title()) == null ? "최초 확정" : req.title().trim();
+
+        r.confirm(req.content(), version);
+        requirementRepository.save(r);
+
+        versionRepository.save(new RequirementVersion(
+                requirementId, version, title, req.content(), consensus.getId(), req.userId()));
+
+        return detail(projectId, requirementId, req.userId());
+    }
+
+    /** 보류 — 고객 협의가 더 필요할 때. 나중에 이어서 확정할 수 있다. */
+    @Transactional
+    public DetailResponse hold(Long projectId, Long requirementId, Long userId) {
+        requireMember(projectId, userId);
+        Requirement r = findInProject(projectId, requirementId);
+        r.hold();
+        requirementRepository.save(r);
+        return detail(projectId, requirementId, userId);
+    }
+
     // ── 내부 구현 ────────────────────────────────────────────────
+
+    private ConsensusResponse toConsensusResponse(RequirementConsensus c) {
+        return new ConsensusResponse(
+                c.getId(), c.getMethod(), c.getCustomerContact(),
+                c.getAgreedOn() == null ? null : c.getAgreedOn().format(D),
+                c.getNote(), c.getAgreedContent(),
+                userName(c.getRecordedBy()),
+                c.getCreatedAt() == null ? null : c.getCreatedAt().format(TS));
+    }
+
+    /**
+     * 다음에 부여될 버전.
+     *
+     * <p>확정 이력이 없으면 1.0.0, 있으면 patch 를 하나 올린다. 지금은 확정본 수정이
+     * 아직 없어 실질적으로 항상 1.0.0 이지만, 화면이 "확정 시 v?" 를 미리 보여줘야 해서
+     * 조회 시점에도 계산해 내려준다.
+     */
+    private String nextVersionOf(Long requirementId) {
+        return versionRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
+                .map(v -> bumpPatch(v.getVersion()))
+                .orElse(FIRST_VERSION);
+    }
+
+    private String bumpPatch(String version) {
+        String[] parts = version.split("\\.");
+        if (parts.length != 3) {
+            return FIRST_VERSION;
+        }
+        try {
+            return parts[0] + "." + parts[1] + "." + (Integer.parseInt(parts[2]) + 1);
+        } catch (NumberFormatException e) {
+            return FIRST_VERSION;
+        }
+    }
+
+    private LocalDate parseDate(String value) {
+        try {
+            return LocalDate.parse(value.trim(), D);
+        } catch (DateTimeParseException e) {
+            throw new ApiErrors.InvalidAgreedDate(value);
+        }
+    }
+
+    private String userName(Long userId) {
+        return userId == null ? null
+                : userRepository.findById(userId).map(User::getName).orElse(null);
+    }
+
+    private String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s;
+    }
 
     /** AI 응답을 findings + draft 로 저장한다. */
     private void saveAiResult(Long requirementId, AiAnalyzeDto.Response ai, String originalContent) {

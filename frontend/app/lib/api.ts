@@ -147,6 +147,29 @@ export type RequirementSummary = {
   updatedAt: string | null;
 };
 
+/** 고객 합의 기록. 이 기록이 있어야만 확정할 수 있다. */
+export type Consensus = {
+  id: number;
+  method: string;
+  customerContact: string;
+  agreedOn: string;
+  note: string | null;
+  /** 합의 시점의 본문. 지금 본문과 다르면 재합의가 필요하다는 신호. */
+  agreedContent: string;
+  recordedByName: string | null;
+  createdAt: string | null;
+};
+
+/** 확정 이력 한 줄. */
+export type RequirementVersion = {
+  id: number;
+  version: string;
+  title: string;
+  content: string;
+  confirmedByName: string | null;
+  createdAt: string | null;
+};
+
 export type RequirementDetail = {
   id: number;
   projectId: number;
@@ -163,8 +186,25 @@ export type RequirementDetail = {
   aiDraftContent: string;
   aiEngine: string;
   findings: Finding[];
+  /** 가장 최근 합의 기록. 없으면 null — 이 값이 null 이면 확정할 수 없다. */
+  consensus: Consensus | null;
+  canConfirm: boolean;
+  /** 확정하면 부여될 버전 — 화면에 "확정 시 v1.0.0" 으로 미리 보여준다. */
+  nextVersion: string;
+  versions: RequirementVersion[];
   createdAt: string | null;
   updatedAt: string | null;
+};
+
+export type ConsensusInput = {
+  userId: number;
+  method: string;
+  customerContact: string;
+  /** yyyy-MM-dd */
+  agreedOn: string;
+  note: string;
+  /** 이 합의로 확정하기로 한 본문 — 화면의 "확정될 본문" 값. */
+  agreedContent: string;
 };
 
 export type RequirementInput = {
@@ -212,5 +252,40 @@ export function reanalyzeRequirement(
 ): Promise<RequirementDetail> {
   return postJson<RequirementDetail>(
     `/api/projects/${projectId}/requirements/${requirementId}/analyze?userId=${userId}`,
+  );
+}
+
+/** 고객 합의 기록 — 확정의 전제 조건. */
+export function recordConsensus(
+  projectId: number,
+  requirementId: number,
+  input: ConsensusInput,
+): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/consensus`,
+    input,
+  );
+}
+
+/** 확정 — 합의 기록이 없으면 서버가 409로 거부한다. */
+export function confirmRequirement(
+  projectId: number,
+  requirementId: number,
+  input: { userId: number; content: string; title?: string },
+): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/confirm`,
+    input,
+  );
+}
+
+/** 보류 — 고객 협의가 더 필요할 때. 나중에 이어서 확정할 수 있다. */
+export function holdRequirement(
+  projectId: number,
+  requirementId: number,
+  userId: number,
+): Promise<RequirementDetail> {
+  return postJson<RequirementDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/hold?userId=${userId}`,
   );
 }

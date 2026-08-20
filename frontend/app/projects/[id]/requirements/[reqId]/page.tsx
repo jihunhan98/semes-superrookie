@@ -116,6 +116,16 @@ export default function RequirementDetailPage() {
               {req.stateLabel}
             </span>
             {req.version && <span className="tagv">🏷 v{req.version}</span>}
+            {/* 확정 전이면 확정 화면으로, 확정 후에는 수정 화면으로 간다(수정은 다음 단계). */}
+            {!req.version && (
+              <Link
+                className="btn prim"
+                href={`/projects/${project.id}/requirements/${req.id}/review`}
+                style={{ marginLeft: "auto" }}
+              >
+                검토하고 확정하기
+              </Link>
+            )}
           </div>
 
           <div className="w2col" style={{ marginTop: 16, maxWidth: 1400 }}>
@@ -214,9 +224,66 @@ export default function RequirementDetailPage() {
             </span>
           </div>
 
-          <div className="placeholder" style={{ marginTop: 16, maxWidth: 1400 }}>
-            고객 합의 기록과 확정(→ v1.0.0)은 다음 단계에서 구현됩니다.
+          {/* 고객 합의 기록 — 확정의 근거. 아직 없으면 확정 화면으로 안내한다. */}
+          <div className="wcard" style={{ marginTop: 16, maxWidth: 1400, borderColor: "var(--purple)" }}>
+            <div className="wch">
+              🤝 고객 합의
+              {req.consensus && <span className="rt cdone">✓ 합의 완료</span>}
+            </div>
+            <div className="wcb consensus">
+              {req.consensus ? (
+                <>
+                  <div className="crow">
+                    <span>
+                      <b>방법</b>
+                      {req.consensus.method}
+                    </span>
+                    <span>
+                      <b>고객측 담당자</b>
+                      {req.consensus.customerContact}
+                    </span>
+                    <span>
+                      <b>합의일</b>
+                      {req.consensus.agreedOn}
+                    </span>
+                    {req.consensus.recordedByName && (
+                      <span>
+                        <b>기록</b>
+                        {req.consensus.recordedByName}
+                      </span>
+                    )}
+                  </div>
+                  {req.consensus.note && <div className="ctext">{req.consensus.note}</div>}
+                </>
+              ) : (
+                <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                  아직 합의 기록이 없습니다. AI 의견이 합리적이어도 <b>고객 합의 없이는 확정할 수
+                  없습니다</b> — 위 &ldquo;검토하고 확정하기&rdquo;에서 기록하세요.
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* 확정 이력 — 확정한 적이 있을 때만 보여준다. */}
+          {req.versions.length > 0 && (
+            <div className="wcard" style={{ marginTop: 16, maxWidth: 1400 }}>
+              <div className="wch">📜 확정 이력</div>
+              <div className="wcb">
+                {req.versions.map((v) => (
+                  <div key={v.id} className="find" style={{ marginBottom: 10 }}>
+                    <div className="ft">
+                      <span className="tagv">🏷 v{v.version}</span>
+                      <span className="fspan2">{v.title}</span>
+                      <span className="pf-orig" style={{ marginLeft: "auto" }}>
+                        {v.confirmedByName ?? "—"} · {v.createdAt ?? ""}
+                      </span>
+                    </div>
+                    <div className="frs2">{v.content}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

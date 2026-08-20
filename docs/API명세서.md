@@ -36,6 +36,9 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | GET | `/api/projects/{projectId}/requirements/assignees` | 담당자 필터 후보(프로젝트 멤버 전원) | `userId`*num (query) | `200` [{userId, name}] |
 | GET | `/api/projects/{projectId}/requirements/{reqId}` | 상세 — AI 검토 결과와 draft 포함 | `userId`*num (query) | `200` 상세 응답(아래)<br>`404` 없음 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/analyze` | AI 재분석("↻ 다시 분석") — 기존 검출을 지우고 다시 저장 | `userId`*num (query) | `200` 상세 응답(아래) |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/consensus` | **고객 합의 기록** — 확정의 전제 조건. 합의할 때마다 새로 쌓이고 확정은 마지막 기록을 근거로 삼는다 | `userId`*num · `method`*str · `customerContact`*str · `agreedOn`*str(yyyy-MM-dd) · `note`str · `agreedContent`*str | `200` 상세 응답(아래)<br>`400` 합의일 형식 오류 |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | **확정** → 버전 부여(최초 v1.0.0). 본문을 확정본으로 덮어쓰고 이력에 한 줄 남긴다 | `userId`*num · `content`*str · `title`str(생략 시 "최초 확정") | `200` 상세 응답(아래)<br>`409` 합의 기록 없음 |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/hold` | **보류** — 고객 협의가 더 필요할 때. 나중에 이어서 확정 가능 | `userId`*num (query) | `200` 상세 응답(아래) |
 
 **상세 응답**
 
@@ -54,9 +57,29 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
     { "findingType": "정량 기준 부재", "targetSpan": "가용한 AMR",
       "reason": "…", "suggestion": "…", "conflictReqKey": null }
   ],
+  // 가장 최근 고객 합의 기록. 없으면 null — null 이면 확정할 수 없다.
+  "consensus": {
+    "id": 1, "method": "대면 미팅",
+    "customerContact": "삼성전자 EDS 김민석 책임", "agreedOn": "2026-08-16",
+    "note": "가용/최단거리 판정 기준을 위 문장대로 확정하기로 합의.",
+    // 합의 시점의 본문 스냅샷. 지금 본문과 다르면 화면이 "재합의 필요"를 경고한다.
+    "agreedContent": "AMR 매칭 시 IDLE 상태이며 …",
+    "recordedByName": "한지훈", "createdAt": "2026-08-16 14:20"
+  },
+  "canConfirm": true,          // 합의 기록이 있고 아직 확정 전이면 true
+  "nextVersion": "1.0.0",      // 확정하면 부여될 버전 — 화면의 "확정 시 v1.0.0"
+  "versions": [                // 확정 이력(최신순). 확정 전에는 빈 배열
+    { "id": 1, "version": "1.0.0", "title": "최초 확정",
+      "content": "…확정된 본문…", "confirmedByName": "한지훈",
+      "createdAt": "2026-08-16 14:25" }
+  ],
   "createdAt": "2026-08-17 09:10", "updatedAt": "2026-08-17 09:12"
 }
 ```
+
+> **확정에는 반드시 합의 기록이 필요하다.** 화면에서도 버튼이 비활성화되지만, API도
+> 합의 기록이 없으면 `409`로 거부한다 — "합의 없이 확정된 요구사항"이 만들어지면 안 되므로.
+> 확정하면 `content`가 확정본으로 덮어써지고, 그전 문장은 `versions[]`에 남는다.
 
 > **AI 제안에는 "적용" API가 없다.** 백엔드가 `aiDraftContent`로 제안이 반영된 문장을 이미
 > 만들어 내려주고, 프론트는 그 값을 본문 입력칸의 초기값으로 쓴다. 사용자는 그 텍스트를
@@ -72,10 +95,7 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | 확정본 수정 시 **변경분만** AI 검토 |
-| POST | `/api/projects/{projectId}/requirements/{reqId}/consensus` | 고객 합의 기록(방법·담당자·일자·내용) |
-| POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | 확정 → 새 버전 (합의 기록 없으면 거부) |
-| GET | `/api/projects/{projectId}/requirements/{reqId}/versions` | 버전 이력 |
-| GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | 버전 diff |
+| GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | 버전 diff (이력 자체는 상세 응답의 `versions`로 이미 내려간다) |
 | GET/PUT | `/api/projects/{projectId}/requirement-fields` | 프로젝트별 요구사항 항목 구성 |
 
 ### 2.3 AI 서버 (`ai-model`, FastAPI · 기본 8001)

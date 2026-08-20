@@ -44,4 +44,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleDuplicateReqKey(ApiErrors.DuplicateReqKey e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(ApiErrors.ConsensusRequired.class)
+    public ResponseEntity<Map<String, String>> handleConsensusRequired(ApiErrors.ConsensusRequired e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(ApiErrors.InvalidAgreedDate.class)
+    public ResponseEntity<Map<String, String>> handleInvalidAgreedDate(ApiErrors.InvalidAgreedDate e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+    }
 }

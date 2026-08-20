@@ -61,4 +61,23 @@ public final class ApiErrors {
             super("이미 사용 중인 요구사항 ID입니다: " + reqKey);
         }
     }
+
+    /**
+     * 고객 합의 기록 없이 확정을 시도함 → 409
+     *
+     * <p>화면에서도 버튼이 비활성화되지만, API 단에서도 막아야 "합의 없이 확정된
+     * 요구사항"이 만들어지지 않는다.
+     */
+    public static class ConsensusRequired extends RuntimeException {
+        public ConsensusRequired() {
+            super("고객 합의 기록이 있어야 확정할 수 있습니다.");
+        }
+    }
+
+    /** 합의일 형식이 yyyy-MM-dd가 아님 → 400 */
+    public static class InvalidAgreedDate extends RuntimeException {
+        public InvalidAgreedDate(String value) {
+            super("합의일은 yyyy-MM-dd 형식이어야 합니다: " + value);
+        }
+    }
 }

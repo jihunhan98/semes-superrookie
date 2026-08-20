@@ -418,6 +418,80 @@
             "description": "화면의 '↻ 다시 분석'. 기존 findings를 지우고 다시 채운다. 등록 시 AI 서버가 죽어 있어 aiEngine이 unavailable이었다면 이 API로 복구한다."
           },
           "response": []
+        },
+        {
+          "name": "고객 합의 기록",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/consensus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "consensus"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"method\": \"대면 미팅\",\n  \"customerContact\": \"삼성전자 EDS 김민석 책임\",\n  \"agreedOn\": \"2026-08-16\",\n  \"note\": \"가용/최단거리 판정 기준을 위 문장대로 확정하기로 합의. req-ta-01 우선순위 상충은 별도 건으로 후속 협의.\",\n  \"agreedContent\": \"AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다.\"\n}"
+            },
+            "description": "확정의 전제 조건. 이 기록이 없으면 확정 API가 409로 거부한다.\n- agreedContent: 화면의 '확정될 본문' 값을 그대로 보낸다. 합의 시점 스냅샷으로 남아서, 이후 본문이 바뀌면 화면이 '합의한 문장과 다르다'고 경고하는 근거가 된다.\n- agreedOn: yyyy-MM-dd 형식이 아니면 400.\n합의할 때마다 새로 쌓이고, 확정은 가장 마지막 기록을 근거로 삼는다."
+          },
+          "response": []
+        },
+        {
+          "name": "확정 (→ v1.0.0)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "confirm"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다.\"\n}"
+            },
+            "description": "'고객 합의 기록'을 먼저 실행해야 성공한다. 안 하면 409.\n- title 을 생략하면 서버가 '최초 확정'으로 넣는다(최초 확정은 바꿀 원본이 없어 수정 사유를 받지 않으므로).\n- 성공하면 content 가 확정본으로 덮어써지고 version 이 1.0.0 이 된다. 그전 문장은 응답의 versions[] 에 남는다."
+          },
+          "response": []
+        },
+        {
+          "name": "확정 실패 - 합의 기록 없음",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "confirm"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"합의 기록 없이 확정을 시도한다.\"\n}"
+            },
+            "description": "합의 기록이 한 건도 없는 요구사항 id 로 requirementId 를 바꿔서 실행하면 409 가 나야 한다. 화면에서도 버튼이 비활성화되지만, API 단에서도 막아야 '합의 없이 확정된 요구사항'이 만들어지지 않는다."
+          },
+          "response": []
+        },
+        {
+          "name": "보류",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/hold?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "hold"],
+              "query": [{ "key": "userId", "value": "{{userId}}" }]
+            },
+            "description": "고객 협의가 더 필요할 때. 상태만 보류로 바꾸고, 나중에 이어서 확정할 수 있다."
+          },
+          "response": []
         }
       ]
     },

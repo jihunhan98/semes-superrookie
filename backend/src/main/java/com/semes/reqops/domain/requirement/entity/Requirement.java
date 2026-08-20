@@ -77,6 +77,36 @@ public class Requirement {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * 확정 — 합의된 본문을 확정본으로 삼고 버전을 부여한다.
+     *
+     * <p>등록 원문(content)을 확정본으로 <b>덮어쓴다</b>. 원문이 필요하면 버전 이력
+     * (requirement_versions)에 각 버전의 본문이 남아 있으므로 거기서 볼 수 있다.
+     */
+    public void confirm(String confirmedContent, String newVersion) {
+        this.content = confirmedContent;
+        this.version = newVersion;
+        this.state = ReqState.CONFIRMED;
+    }
+
+    /** 보류 — 고객 협의가 더 필요해 확정을 미룬다. 나중에 이어서 확정할 수 있다. */
+    public void hold() {
+        this.state = ReqState.ON_HOLD;
+    }
+
+    /** 합의 기록이 들어와 확정 직전 단계로 올린다(아직 확정은 아니다). */
+    public void markPendingConsensus() {
+        if (this.state == ReqState.RECEIVED || this.state == ReqState.IN_REVIEW
+                || this.state == ReqState.ON_HOLD) {
+            this.state = ReqState.PENDING_CONSENSUS;
+        }
+    }
+
+    /** 확정된 적이 있는지 — 화면에서 "확정하기"와 "수정하기"를 가르는 기준. */
+    public boolean isConfirmed() {
+        return this.state == ReqState.CONFIRMED && this.version != null;
+    }
+
     public Long getId() { return id; }
     public Long getProjectId() { return projectId; }
     public String getReqKey() { return reqKey; }

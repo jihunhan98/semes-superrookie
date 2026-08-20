@@ -1,5 +1,7 @@
 package com.semes.reqops.domain.requirement.controller;
 
+import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DetailResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.SummaryResponse;
@@ -56,5 +58,34 @@ public class RequirementController {
                                     @PathVariable Long requirementId,
                                     @RequestParam Long userId) {
         return requirementService.reanalyze(projectId, requirementId, userId);
+    }
+
+    /**
+     * 고객 합의 기록 — 확정 화면 2단계.
+     *
+     * <p>이 기록이 있어야만 확정할 수 있다. 합의할 때마다 새로 쌓이고,
+     * 확정은 가장 마지막 기록을 근거로 삼는다.
+     */
+    @PostMapping("/{requirementId}/consensus")
+    public DetailResponse recordConsensus(@PathVariable Long projectId,
+                                          @PathVariable Long requirementId,
+                                          @Valid @RequestBody ConsensusRequest request) {
+        return requirementService.recordConsensus(projectId, requirementId, request);
+    }
+
+    /** 확정 — 확정 화면 3단계. 합의 기록이 없으면 409. */
+    @PostMapping("/{requirementId}/confirm")
+    public DetailResponse confirm(@PathVariable Long projectId,
+                                  @PathVariable Long requirementId,
+                                  @Valid @RequestBody ConfirmRequest request) {
+        return requirementService.confirm(projectId, requirementId, request);
+    }
+
+    /** 보류 — 고객 협의가 더 필요할 때. 나중에 이어서 확정할 수 있다. */
+    @PostMapping("/{requirementId}/hold")
+    public DetailResponse hold(@PathVariable Long projectId,
+                               @PathVariable Long requirementId,
+                               @RequestParam Long userId) {
+        return requirementService.hold(projectId, requirementId, userId);
     }
 }
