@@ -46,17 +46,20 @@ if defined PYEXE (
 )
 
 rem ── 2. 백엔드 (Spring Boot · 8080) ───────────────────────────
-rem  mvn 이 PATH 에 없는 환경이 흔해서(IDE 안에 내장된 Maven 만 있는 경우)
-rem  mvnw -^> mvn -^> 빌드된 jar 순으로 찾아본다. 셋 다 없으면 IDE 에서
-rem  직접 실행하라고 안내만 하고 나머지는 그대로 띄운다.
+rem  mvn 이 PATH 에 없는 환경이 흔하다(IDE 안에 내장된 Maven 만 있는 경우).
+rem  찾는 순서는 "확실한 것 먼저":
+rem    1) PATH 의 mvn            - 바로 됨
+rem    2) MAVEN_HOME / M2_HOME   - 설치는 돼 있는데 PATH 에만 없는 경우
+rem    3) mvnw.cmd (래퍼)        - Maven 없어도 되지만 첫 실행 때 내려받는다
+rem    4) 이미 만들어 둔 jar     - 네트워크 불필요. 단, 소스 수정분은 반영 안 됨
+rem  다 없으면 IDE 에서 직접 실행하라고 안내만 하고 나머지는 그대로 띄운다.
 
 set "BACKCMD="
-if exist "backend\mvnw.cmd" set "BACKCMD=mvnw.cmd spring-boot:run"
-if not defined BACKCMD (
-  where mvn >nul 2>&1
-  if not errorlevel 1 set "BACKCMD=mvn spring-boot:run"
-)
-rem PATH 에 없더라도 MAVEN_HOME/M2_HOME 이 잡혀 있으면 그걸 쓴다.
+set "BACKNOTE="
+
+where mvn >nul 2>&1
+if not errorlevel 1 set "BACKCMD=mvn spring-boot:run"
+
 rem 전체 경로를 명령에 박으면 cmd /k "..." 안에서 따옴표가 중첩돼 깨지므로,
 rem PATH 앞에 붙여서 이름만으로 부를 수 있게 한다(자식 창이 이 PATH 를 물려받는다).
 if not defined BACKCMD if defined MAVEN_HOME if exist "%MAVEN_HOME%\bin\mvn.cmd" (
@@ -67,19 +70,26 @@ if not defined BACKCMD if defined M2_HOME if exist "%M2_HOME%\bin\mvn.cmd" (
   set "PATH=%M2_HOME%\bin;%PATH%"
   set "BACKCMD=mvn spring-boot:run"
 )
-rem 이미 패키징해 둔 jar 이 있으면 Maven 없이도 띄울 수 있다.
+if not defined BACKCMD if exist "backend\mvnw.cmd" (
+  set "BACKCMD=mvnw.cmd spring-boot:run"
+  set "BACKNOTE=래퍼 - 첫 실행은 Maven 내려받느라 오래 걸립니다"
+)
 if not defined BACKCMD (
-  for %%j in (backend\target\*.jar) do if not defined BACKCMD set "BACKCMD=java -jar target\%%~nxj"
+  for %%j in (backend\target\*.jar) do if not defined BACKCMD (
+    set "BACKCMD=java -jar target\%%~nxj"
+    set "BACKNOTE=기존 jar - 최근 소스 수정은 반영되지 않았을 수 있습니다"
+  )
 )
 
 if defined BACKCMD (
   echo  [2/3] 백엔드 실행            http://localhost:8080
+  if defined BACKNOTE echo        ^> %BACKNOTE%
   start "ReqOps - 백엔드 (8080)" cmd /k "chcp 65001 >nul && cd /d backend && %BACKCMD%"
   rem 백엔드는 Oracle 연결까지 있어서 기동이 오래 걸린다. 로그를 흐름대로
   rem 보려고 프론트 띄우기 전에 잠깐 기다린다.
   timeout /t 5 /nobreak >nul
 ) else (
-  echo  [2/3] 백엔드 건너뜀          mvn/mvnw/jar 없음 — IDE 에서 실행하세요
+  echo  [2/3] 백엔드 건너뜀          Maven 을 못 찾음 — IDE 에서 실행하세요
   set "SKIPPED=1"
   set "MSG_BACK=1"
 )
@@ -136,10 +146,11 @@ if defined SKIPPED (
   )
   if defined MSG_BACK (
     echo.
-    echo  백엔드 - mvn 을 못 찾았습니다. IDE 에서 ReqopsApplication 을 실행하거나,
-    echo    아래 중 하나를 준비하면 다음부터 이 배치가 자동으로 띄웁니다.
-    echo      1^) Maven 을 설치하고 PATH 에 추가
-    echo      2^) backend 폴더에서 한 번 패키징: mvn clean package  ^(target\*.jar 생성^)
+    echo  백엔드 - Maven 을 못 찾았습니다. 지금은 IDE 에서 ReqopsApplication 을
+    echo    실행하시면 되고, 아래 중 하나를 해두면 다음부터는 이 배치가 띄웁니다.
+    echo      1^) backend\mvnw.cmd 실행  - Maven 설치 없이 자동으로 받아옵니다
+    echo      2^) MAVEN_HOME 환경변수를 Maven 설치 폴더로 지정
+    echo      3^) IDE 의 Maven 패널에서 package 를 한 번 실행  ^(target\*.jar 생성^)
   )
   if defined MSG_FRONT (
     echo.

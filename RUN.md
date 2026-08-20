@@ -23,7 +23,7 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 | 백엔드 | `mvnw.cmd` → PATH의 `mvn` → `MAVEN_HOME`/`M2_HOME` → `backend\target\*.jar` | 건너뜀 — **IDE에서 `ReqopsApplication` 실행** |
 | 프론트 | `frontend\node_modules`(개발 서버) → `frontend\dist\standalone`(빌드 산출물) | 건너뜀 |
 
-- **Maven이 없어도 된다.** IDE에서 백엔드를 띄우고 배치는 AI·프론트만 담당하게 두면 된다. Maven을 PATH에 넣거나 `mvn clean package`로 jar을 한 번 만들어두면 그때부터는 배치가 백엔드까지 자동으로 띄운다.
+- **Maven이 설치돼 있지 않아도 된다.** `backend/mvnw.cmd`(Maven Wrapper)가 저장소에 있어서, 첫 실행 때 Maven을 알아서 내려받아 쓴다. 사내 프록시에 막혀 내려받지 못하면 IDE에서 백엔드를 띄우고 배치는 AI·프론트만 담당하게 두면 된다.
 - **`npm install`이 안 돼도 된다.** `frontend/dist/standalone`이 저장소에 커밋되어 있어서, Node만 있으면 빌드 없이 바로 돌아간다. 다만 이 산출물은 프론트 코드를 고칠 때마다 다시 빌드해서 커밋해야 반영된다.
 - 백엔드는 기동에 20~40초 걸린다. `Started ReqopsApplication` 로그가 뜨면 준비 완료.
 - 프론트가 뜨면 브라우저로 `http://localhost:3000/login`이 자동으로 열린다.
@@ -67,10 +67,19 @@ uvicorn main:app --port 8001
 
 ```bash
 cd backend
-mvn spring-boot:run
+mvnw.cmd spring-boot:run     # Windows — Maven 설치 불필요
+./mvnw spring-boot:run       # Mac/Linux
+mvn spring-boot:run          # Maven 이 이미 설치돼 있으면 이것도 된다
 ```
 
-> 사내 폐쇄망이라 라이브러리 자동 다운로드가 막히면, `~/.m2/settings.xml`에 사내 저장소(미러)를 잡거나 미리 받아둔 `.m2`를 사용한다. (상세 절차는 아래 "폐쇄망 빌드" 참고)
+**Maven을 설치할 필요는 없다.** `mvnw`(Maven Wrapper)가 저장소에 들어 있어서, 첫 실행 때 지정된 버전(3.9.9)의 Maven을 `~/.m2/wrapper`로 내려받아 쓴다. 두 번째부터는 받아둔 걸 재사용하므로 빠르다.
+
+> 사내 프록시에 막혀 래퍼가 Maven을 못 받으면 세 가지 대안이 있다.
+> 1. **IDE에서 실행** — IntelliJ/STS는 내장 Maven을 쓰므로 그냥 `ReqopsApplication`을 실행하면 된다. 제일 확실하다.
+> 2. **IDE의 Maven 패널에서 `package`를 한 번 실행** — `backend/target/*.jar`이 생기고, 그 뒤로는 `java -jar target\reqops-backend-0.0.1.jar`로 띄울 수 있다(`run-all.bat`도 이걸 자동으로 찾는다).
+> 3. **Maven을 직접 설치**하고 `MAVEN_HOME` 환경변수를 설치 폴더로 지정 — PATH에 안 넣어도 `run-all.bat`이 찾는다.
+
+> 라이브러리 자동 다운로드 자체가 막히면, `~/.m2/settings.xml`에 사내 저장소(미러)를 잡거나 미리 받아둔 `.m2`를 사용한다. (상세 절차는 아래 "폐쇄망 빌드" 참고)
 
 - 포트 `8080`
 - 엔드포인트: 인증(`POST /api/signup`, `POST /api/login`), 프로젝트(`/api/projects…`), 요구사항(`/api/projects/{projectId}/requirements…`)
