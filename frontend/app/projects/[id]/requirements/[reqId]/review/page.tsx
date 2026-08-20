@@ -22,8 +22,16 @@ function isConflict(findingType: string) {
   return findingType.includes("상충");
 }
 
+/**
+ * 어떻게 검토됐는지 배지.
+ *
+ * rule 은 "검토를 못 했다"가 아니라 "규칙 기반으로 검토했다"는 뜻이다 — 규칙 검출은
+ * 사내 LLM 유무와 무관하게 항상 돌기 때문. 그래서 unavailable(=AI 서버 자체가 응답
+ * 못 함)과 구분해서 표시한다.
+ */
 const ENGINE_LABEL: Record<string, string> = {
   "llm-api": "사내 LLM",
+  rule: "규칙 기반",
   unavailable: "AI 미응답",
 };
 

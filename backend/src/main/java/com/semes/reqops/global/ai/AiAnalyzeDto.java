@@ -33,7 +33,7 @@ public final class AiAnalyzeDto {
 
     /**
      * @param draftContent 제안이 모두 반영된 문장 — 확정 화면 본문에 미리 채워지는 값
-     * @param engine       llm-api(사내 LLM이 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만).
+     * @param engine       llm-api(사내 LLM 응답) | rule(규칙 기반만 — LLM 미설정·실패).
      *                     AI 서버 자체가 응답하지 않으면(호출 실패) 백엔드가 unavailable 로 채운다.
      * @param scope        full | diff — 본문 전체를 봤는지, 변경분만 봤는지
      */

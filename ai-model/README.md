@@ -13,7 +13,7 @@ Spring Boot 백엔드가 요구사항 등록/수정 시 이 서버를 호출한�
 한 번 더 호출해서, 규칙이 못 잡는 것까지 보충한다.
 
 사내 LLM이 응답하지 못해도(주소 미설정·연결 실패·타임아웃) 요청 자체는 실패하지
-않는다 — 규칙 기반 결과만 담아 `engine: "unavailable"`로 응답한다. 그래서 요구사항
+않는다 — 규칙 기반 결과만 담아 `engine: "rule"`로 응답한다. 그래서 요구사항
 등록은 사내 LLM 상태와 무관하게 항상 끝까지 진행된다. 폐쇄망이라 외부 AI API
 (Claude/GPT 등)는 애초에 쓸 수 없고, 이 사내 서비스 하나만 쓴다.
 
@@ -94,7 +94,7 @@ cp .env.example .env
     }
   ],
   "draftContent": "AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 …",
-  "engine": "llm-api",   // llm-api(사내 LLM 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만)
+  "engine": "llm-api",   // llm-api(사내 LLM 응답) | rule(규칙 기반만 — LLM 미설정·실패)
   "scope": "full",
   "elapsedMs": 3
 }

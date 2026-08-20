@@ -7,8 +7,12 @@ Spring Boot 백엔드가 요구사항 등록/수정 시 이 서버를 호출한�
      규칙이 못 잡는 것까지 보충한다.
 
 사내 LLM이 응답하지 못해도(주소 미설정·연결 실패·타임아웃) 요청 자체는 실패하지
-않는다 — 규칙 기반 결과만 담아 engine="unavailable"로 응답한다. 그래서 요구사항
-등록은 AI 서버 상태와 무관하게 항상 끝까지 진행된다.
+않는다 — 규칙 기반 결과만 담아 engine="rule"로 응답한다. 그래서 요구사항 등록은
+사내 LLM 상태와 무관하게 항상 끝까지 진행된다.
+
+engine="unavailable"은 이 서버가 내려주는 값이 아니다. 이 서버 자체가 응답하지
+못했을 때 백엔드가 채우는 값이다 — "규칙만 돌았다"(rule)와 "아무 검토도 못
+했다"(unavailable)는 화면에서 다르게 보여야 하므로 섞지 않는다.
 
 실행:
     uvicorn main:app --host 0.0.0.0 --port 8001
@@ -100,7 +104,7 @@ class AnalyzeResponse(BaseModel):
     findings: list[FindingOut]
     # 제안이 모두 반영된 문장 — 확정 화면의 "확정될 본문"에 그대로 채워진다.
     draftContent: str
-    # llm-api(사내 LLM 응답 받음) | unavailable(LLM 미응답, 규칙 결과만) — 운영 중 확인용
+    # llm-api(사내 LLM 응답 받음) | rule(LLM 미응답, 규칙 결과만) — 운영 중 확인용
     engine: str
     scope: str  # full | diff
     elapsedMs: int
@@ -135,7 +139,10 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     existing = [e.model_dump() for e in req.existing]
     findings = rules.detect(target, existing)
 
-    engine = "unavailable"
+    # 규칙 검출은 위에서 이미 돌았다. 그래서 LLM 을 못 써도 "검토는 됐다"가 맞다 —
+    # 여기서 unavailable 을 쓰면 화면에 "AI 미응답 N건" 같은 앞뒤 안 맞는 표시가 나온다.
+    # unavailable 은 AI 서버 자체가 응답하지 못한 경우에만 백엔드가 채운다.
+    engine = "rule"
     if LLM_API_BASE:
         try:
             extra = _ask_llm_api(target, req.reason)

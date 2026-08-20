@@ -25,7 +25,12 @@ public class RequirementAiDraft {
     @Column(name = "draft_content", nullable = false)
     private String draftContent;
 
-    /** 판정 경로: llm-api(사내 LLM이 응답함) / unavailable(사내 LLM 미응답, 규칙 결과만). */
+    /**
+     * 판정 경로: llm-api(사내 LLM 응답) / rule(규칙 기반만) / unavailable(AI 서버 자체 미응답).
+     *
+     * <p>rule 은 "검토를 못 했다"가 아니다 — 규칙 검출은 LLM 유무와 무관하게 항상 돌기
+     * 때문에, LLM 만 못 쓴 경우와 아무 검토도 못 한 경우를 구분해서 저장한다.
+     */
     @Column(name = "engine", nullable = false, length = 20)
     private String engine;
 

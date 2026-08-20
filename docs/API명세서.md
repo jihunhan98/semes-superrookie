@@ -53,7 +53,8 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
   "assigneeId": 1, "assigneeName": "한지훈",
   // AI 제안이 이미 반영된 문장 — 확정 화면의 "확정될 본문"에 그대로 채워진다.
   "aiDraftContent": "AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 …",
-  // 어느 경로로 판정했는지. llm-api(사내 LLM이 응답함) | unavailable(사내 LLM 미응답, 규칙 결과만)
+  // 어느 경로로 판정했는지.
+  // llm-api(사내 LLM이 응답함) | rule(규칙 기반만 — LLM 미설정·실패) | unavailable(AI 서버 자체 미응답)
   "aiEngine": "llm-api",
   "findings": [                                        // 화면에서 읽기 전용으로만 표시
     { "findingType": "정량 기준 부재", "targetSpan": "가용한 AMR",
@@ -94,8 +95,18 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 
 > **AI 서버가 죽어 있어도 등록은 된다.** 이 경우 `findings`는 빈 배열, `aiDraftContent`는
 > 원문과 같고 `aiEngine`이 `unavailable`이 된다. 나중에 "다시 분석"으로 재요청할 수 있다.
-> `findings`가 비어 있어도 `aiEngine`이 `llm-api`이면 다른 뜻이다 — 사내 LLM이 정상적으로
-> 검토했고 걸린 게 없다는 뜻. 화면도 두 경우를 다른 문구로 구분해서 보여준다.
+>
+> `aiEngine`은 세 값을 구분해서 봐야 한다. 검출 0건의 뜻이 서로 다르기 때문이다.
+>
+> | `aiEngine` | 검출 0건의 뜻 | 화면 표시 |
+> |---|---|---|
+> | `llm-api` | 사내 LLM이 검토했고 걸린 게 없다 | 사내 LLM |
+> | `rule` | LLM은 못 썼지만 규칙 검토는 돌았고 걸린 게 없다 | 규칙 기반 |
+> | `unavailable` | 아무 검토도 못 했다 — 다시 분석이 필요하다 | AI 미응답 |
+>
+> `rule`은 "검토를 못 했다"가 **아니다.** 규칙 검출은 LLM 유무와 무관하게 항상 돌기 때문에
+> `rule`이면서 검출이 여러 건일 수 있다. 이 구분이 없으면 검출이 있는데도 "AI 미응답"으로
+> 보이는 앞뒤 안 맞는 표시가 나온다.
 
 ### 2.2 미구현 (다음 단계)
 
@@ -122,7 +133,8 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | `engine` | 무엇 | 호출 규격 |
 |---|---|---|
 | `llm-api` | 사내 LLM API 서비스(GPT-OSS-120B)가 응답함 | OpenAI 호환 `POST {LLM_API_BASE}/chat/completions` · `Authorization: Bearer {LLM_API_KEY}` |
-| `unavailable` | 사내 LLM 미응답(주소 미설정·연결 실패·타임아웃) — 규칙 결과만 | — |
+| `rule` | 사내 LLM 미응답(주소 미설정·연결 실패·타임아웃) — 규칙 결과만 | — |
+| `unavailable` | AI 서버 자체가 응답하지 않음. 이 값은 AI 서버가 아니라 **백엔드가** 채운다 | — |
 
 - 폐쇄망은 반출이 막혀 외부 AI API를 못 쓴다. 그래서 사내 LLM API 하나만 쓰고,
   응답하지 못해도 규칙 기반으로 항상 응답한다.
