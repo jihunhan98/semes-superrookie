@@ -39,6 +39,7 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | **확정본 수정 시 AI 검토** — 확정본 대비 바뀐 부분과 사유만 본다. 확정본은 서버가 DB에서 가져오므로 보내지 않는다 | `userId`*num · `content`*str · `reason`*str | `200` 상세 응답(아래) |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/consensus` | **고객 합의 기록** — 확정의 전제 조건. 합의할 때마다 새로 쌓이고 확정은 마지막 기록을 근거로 삼는다 | `userId`*num · `method`*str · `customerContact`*str · `agreedOn`*str(yyyy-MM-dd) · `note`str · `agreedContent`*str | `200` 상세 응답(아래)<br>`400` 합의일 형식 오류 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | **확정** → 버전 부여(최초 v1.0.0). 본문을 확정본으로 덮어쓰고 이력에 한 줄 남긴다 | `userId`*num · `content`*str · `title`str(생략 시 "최초 확정") | `200` 상세 응답(아래)<br>`409` 합의 기록 없음 |
+| GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | **버전 비교** — 줄 단위 diff 를 split 뷰용으로 짝지어 반환. base/head 생략 시 "직전 ↔ 최신" | `userId`*num · `base`str · `head`str (query) | `200` {baseVersion, headVersion, headTitle, added, removed, rows[]}<br>`404` 없는 버전 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/hold` | **보류** — 고객 협의가 더 필요할 때. 나중에 이어서 확정 가능 | `userId`*num (query) | `200` 상세 응답(아래) |
 
 **상세 응답**
@@ -74,7 +75,9 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
   "nextVersion": "1.0.0",      // 확정하면 부여될 버전 — 화면의 "확정 시 v1.0.0"
   "versions": [                // 확정 이력(최신순). 확정 전에는 빈 배열
     { "id": 1, "version": "1.0.0", "title": "최초 확정",
-      "content": "…확정된 본문…", "confirmedByName": "한지훈",
+      "content": "…확정된 본문…",
+      // 이전 버전 대비 어느 자리가 올랐는지. 첫 확정은 MINOR
+      "kind": "MINOR", "confirmedByName": "한지훈",
       "createdAt": "2026-08-16 14:25" }
   ],
   "createdAt": "2026-08-17 09:10", "updatedAt": "2026-08-17 09:12"
@@ -98,7 +101,6 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
-| GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | 버전 diff (이력 자체는 상세 응답의 `versions`로 이미 내려간다) |
 | GET/PUT | `/api/projects/{projectId}/requirement-fields` | 프로젝트별 요구사항 항목 구성 |
 
 ### 2.3 AI 서버 (`ai-model`, FastAPI · 기본 8001)

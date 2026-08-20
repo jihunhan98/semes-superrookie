@@ -500,6 +500,24 @@
           "response": []
         },
         {
+          "name": "버전 비교 (split diff)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/compare?userId={{userId}}&base=1.0.0&head=1.0.1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "compare"],
+              "query": [
+                { "key": "userId", "value": "{{userId}}" },
+                { "key": "base", "value": "1.0.0", "description": "생략하면 head 의 직전 버전" },
+                { "key": "head", "value": "1.0.1", "description": "생략하면 최신 버전" }
+              ]
+            },
+            "description": "두 버전 사이에 무엇이 바뀌었는지 줄 단위로 비교한다.\n- rows[] 는 split 뷰가 좌우를 나란히 그릴 수 있게 이미 짝지어져 있다. type: ctx(그대로) / add / del / change(좌우 모두 있음)\n- base·head 를 모두 생략하면 '직전 버전 ↔ 최신 버전'을 본다.\n- 이력에 없는 버전을 주면 404.\n- 확정 이력이 하나뿐이면 base 가 null 로 오고 전부 추가로 나온다."
+          },
+          "response": []
+        },
+        {
           "name": "보류",
           "request": {
             "method": "POST",

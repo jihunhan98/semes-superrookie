@@ -74,6 +74,13 @@ public final class ApiErrors {
         }
     }
 
+    /** 비교하려는 버전이 이력에 없음 → 404 */
+    public static class VersionNotFound extends RuntimeException {
+        public VersionNotFound(String version) {
+            super("해당 버전을 찾을 수 없습니다: " + version);
+        }
+    }
+
     /** 합의일 형식이 yyyy-MM-dd가 아님 → 400 */
     public static class InvalidAgreedDate extends RuntimeException {
         public InvalidAgreedDate(String value) {

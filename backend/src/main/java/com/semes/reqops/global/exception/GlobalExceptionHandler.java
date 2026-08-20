@@ -50,6 +50,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
     }
 
+    @ExceptionHandler(ApiErrors.VersionNotFound.class)
+    public ResponseEntity<Map<String, String>> handleVersionNotFound(ApiErrors.VersionNotFound e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
+
     @ExceptionHandler(ApiErrors.InvalidAgreedDate.class)
     public ResponseEntity<Map<String, String>> handleInvalidAgreedDate(ApiErrors.InvalidAgreedDate e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));

@@ -1,5 +1,6 @@
 package com.semes.reqops.domain.requirement.controller;
 
+import com.semes.reqops.domain.requirement.dto.RequirementDto.CompareResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
@@ -93,6 +94,20 @@ public class RequirementController {
                                   @PathVariable Long requirementId,
                                   @Valid @RequestBody ConfirmRequest request) {
         return requirementService.confirm(projectId, requirementId, request);
+    }
+
+    /**
+     * 버전 비교 — 화면 6의 split diff.
+     *
+     * <p>base/head 를 생략하면 "직전 버전 ↔ 최신 버전"을 본다.
+     */
+    @GetMapping("/{requirementId}/compare")
+    public CompareResponse compare(@PathVariable Long projectId,
+                                   @PathVariable Long requirementId,
+                                   @RequestParam Long userId,
+                                   @RequestParam(required = false) String base,
+                                   @RequestParam(required = false) String head) {
+        return requirementService.compare(projectId, requirementId, userId, base, head);
     }
 
     /** 보류 — 고객 협의가 더 필요할 때. 나중에 이어서 확정할 수 있다. */

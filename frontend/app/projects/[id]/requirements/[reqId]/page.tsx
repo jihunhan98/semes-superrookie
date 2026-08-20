@@ -130,6 +130,15 @@ export default function RequirementDetailPage() {
             </Link>
           </div>
 
+          {/* 본문 ↔ 버전 이력 탭 */}
+          <div className="rtabs">
+            <a className="on">본문</a>
+            <Link href={`/projects/${project.id}/requirements/${req.id}/versions`}>
+              버전 이력
+              <span className="ct">{req.versions.length}</span>
+            </Link>
+          </div>
+
           <div className="w2col" style={{ marginTop: 16, maxWidth: 1400 }}>
             {/* 왼쪽: AI 검토 결과 — 읽기 전용. 버튼(적용하기) 없음. */}
             <div className="wcard readonly">
@@ -266,25 +275,17 @@ export default function RequirementDetailPage() {
             </div>
           </div>
 
-          {/* 확정 이력 — 확정한 적이 있을 때만 보여준다. */}
+          {/* 확정 이력은 "버전 이력" 탭에서 diff 와 함께 본다 — 여기서 중복해 보여주지 않는다. */}
           {req.versions.length > 0 && (
-            <div className="wcard" style={{ marginTop: 16, maxWidth: 1400 }}>
-              <div className="wch">📜 확정 이력</div>
-              <div className="wcb">
-                {req.versions.map((v) => (
-                  <div key={v.id} className="find" style={{ marginBottom: 10 }}>
-                    <div className="ft">
-                      <span className="tagv">🏷 v{v.version}</span>
-                      <span className="fspan2">{v.title}</span>
-                      <span className="pf-orig" style={{ marginLeft: "auto" }}>
-                        {v.confirmedByName ?? "—"} · {v.createdAt ?? ""}
-                      </span>
-                    </div>
-                    <div className="frs2">{v.content}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 16 }}>
+              확정 이력 {req.versions.length}건 ·{" "}
+              <Link
+                href={`/projects/${project.id}/requirements/${req.id}/versions`}
+                style={{ color: "var(--accent)", fontWeight: 600 }}
+              >
+                버전 이력에서 무엇이 바뀌었는지 비교 →
+              </Link>
+            </p>
           )}
         </main>
       </div>

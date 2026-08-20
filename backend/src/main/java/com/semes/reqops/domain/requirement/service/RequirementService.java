@@ -2,12 +2,14 @@ package com.semes.reqops.domain.requirement.service;
 
 import com.semes.reqops.domain.project.entity.Membership;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.CompareResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConfirmRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.ConsensusResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.CreateRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DiffAnalyzeRequest;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.DetailResponse;
+import com.semes.reqops.domain.requirement.dto.RequirementDto.DiffRow;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.FindingResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.SummaryResponse;
 import com.semes.reqops.domain.requirement.dto.RequirementDto.VersionResponse;
@@ -33,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -134,13 +138,8 @@ public class RequirementService {
         RequirementVersion lastVersion = versionRepository
                 .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
 
-        List<VersionResponse> versions = versionRepository
-                .findByRequirementIdOrderByIdDesc(requirementId).stream()
-                .map(v -> new VersionResponse(
-                        v.getId(), v.getVersion(), v.getTitle(), v.getContent(),
-                        userName(v.getConfirmedBy()),
-                        v.getCreatedAt() == null ? null : v.getCreatedAt().format(TS)))
-                .toList();
+        List<VersionResponse> versions = toVersionResponses(
+                versionRepository.findByRequirementIdOrderByIdDesc(requirementId));
 
         // 확정 가능 조건: 아직 확정에 쓰이지 않은 합의 기록이 있을 것.
         // "확정 전"이 아니라 "미사용 합의"를 기준으로 삼는 이유 — 확정본 수정은 이미
@@ -265,6 +264,47 @@ public class RequirementService {
         return detail(projectId, requirementId, req.userId());
     }
 
+    /**
+     * 두 버전 비교 — 화면 6의 split diff.
+     *
+     * <p>base/head 를 생략하면 "직전 버전 ↔ 최신 버전"을 기본으로 본다. 확정이 한 번
+     * 뿐이면 비교할 이전 버전이 없으므로 base 를 빈 문자열로 두고 전부 추가로 보여준다.
+     */
+    @Transactional(readOnly = true)
+    public CompareResponse compare(Long projectId, Long requirementId, Long userId,
+                                   String baseVersion, String headVersion) {
+        requireMember(projectId, userId);
+        findInProject(projectId, requirementId);
+
+        // 오래된 것부터 — 기본값(직전 ↔ 최신)을 고르기 쉽게.
+        List<RequirementVersion> all = new ArrayList<>(
+                versionRepository.findByRequirementIdOrderByIdDesc(requirementId));
+        Collections.reverse(all);
+
+        if (all.isEmpty()) {
+            throw new ApiErrors.VersionNotFound("확정 이력이 없습니다");
+        }
+
+        RequirementVersion head = pickVersion(all, headVersion, all.get(all.size() - 1));
+        RequirementVersion base = baseVersion == null || baseVersion.isBlank()
+                ? previousOf(all, head)
+                : pickVersion(all, baseVersion, null);
+
+        String baseText = base == null ? "" : base.getContent();
+        List<DiffRow> rows = LineDiff.rows(baseText, head.getContent());
+
+        int added = (int) rows.stream().filter(r -> r.headText() != null && !"ctx".equals(r.type())).count();
+        int removed = (int) rows.stream().filter(r -> r.baseText() != null && !"ctx".equals(r.type())).count();
+
+        return new CompareResponse(
+                base == null ? null : base.getVersion(),
+                head.getVersion(),
+                head.getTitle(),
+                userName(head.getConfirmedBy()),
+                head.getCreatedAt() == null ? null : head.getCreatedAt().format(TS),
+                added, removed, rows);
+    }
+
     /** 보류 — 고객 협의가 더 필요할 때. 나중에 이어서 확정할 수 있다. */
     @Transactional
     public DetailResponse hold(Long projectId, Long requirementId, Long userId) {
@@ -290,6 +330,74 @@ public class RequirementService {
         }
         Long used = lastVersion.getConsensusId();
         return used == null || consensusId > used;
+    }
+
+    /**
+     * 버전 이력 응답 — 각 줄에 MAJOR/MINOR/PATCH 를 붙인다.
+     *
+     * <p>이력은 최신순으로 들어오므로, 바로 다음 원소(=한 단계 이전 버전)와 비교한다.
+     */
+    private List<VersionResponse> toVersionResponses(List<RequirementVersion> newestFirst) {
+        List<VersionResponse> out = new ArrayList<>();
+        for (int i = 0; i < newestFirst.size(); i++) {
+            RequirementVersion v = newestFirst.get(i);
+            RequirementVersion prev = i + 1 < newestFirst.size() ? newestFirst.get(i + 1) : null;
+            out.add(new VersionResponse(
+                    v.getId(), v.getVersion(), v.getTitle(), v.getContent(),
+                    kindOf(prev == null ? null : prev.getVersion(), v.getVersion()),
+                    userName(v.getConfirmedBy()),
+                    v.getCreatedAt() == null ? null : v.getCreatedAt().format(TS)));
+        }
+        return out;
+    }
+
+    /**
+     * 두 버전을 비교해 어느 자리가 올랐는지 판정한다.
+     *
+     * <p>첫 확정(이전 버전 없음)은 MINOR 로 본다 — 문구를 다듬은 게 아니라 해석을
+     * 처음 확정한 것이기 때문.
+     */
+    private String kindOf(String prev, String cur) {
+        if (prev == null) {
+            return "MINOR";
+        }
+        String[] p = prev.split("\\.");
+        String[] c = cur.split("\\.");
+        if (p.length != 3 || c.length != 3) {
+            return "PATCH";
+        }
+        if (!p[0].equals(c[0])) {
+            return "MAJOR";
+        }
+        if (!p[1].equals(c[1])) {
+            return "MINOR";
+        }
+        return "PATCH";
+    }
+
+    /** 이력에서 특정 버전을 찾는다. 없으면 fallback, fallback 도 없으면 404. */
+    private RequirementVersion pickVersion(List<RequirementVersion> all, String version,
+                                           RequirementVersion fallback) {
+        if (version != null && !version.isBlank()) {
+            for (RequirementVersion v : all) {
+                if (v.getVersion().equals(version.trim())) {
+                    return v;
+                }
+            }
+            if (fallback == null) {
+                throw new ApiErrors.VersionNotFound(version);
+            }
+        }
+        if (fallback == null) {
+            throw new ApiErrors.VersionNotFound(version);
+        }
+        return fallback;
+    }
+
+    /** 이력에서 head 바로 앞 버전. head 가 첫 버전이면 null. */
+    private RequirementVersion previousOf(List<RequirementVersion> oldestFirst, RequirementVersion head) {
+        int idx = oldestFirst.indexOf(head);
+        return idx > 0 ? oldestFirst.get(idx - 1) : null;
     }
 
     private ConsensusResponse toConsensusResponse(RequirementConsensus c) {

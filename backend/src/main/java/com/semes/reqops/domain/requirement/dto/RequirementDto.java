@@ -136,13 +136,49 @@ public final class RequirementDto {
             @NotBlank String reason
     ) {}
 
-    /** 버전 이력 한 줄. */
+    /**
+     * 버전 이력 한 줄.
+     *
+     * @param kind MAJOR / MINOR / PATCH — 이전 버전과 비교해 어느 자리가 올랐는지.
+     *             첫 확정은 MINOR 로 본다(해석을 처음 확정한 것이므로).
+     */
     public record VersionResponse(
             Long id,
             String version,
             String title,
             String content,
+            String kind,
             String confirmedByName,
             String createdAt
+    ) {}
+
+    /**
+     * 버전 비교 결과 — split 뷰가 좌우 줄을 나란히 그릴 수 있게 정렬된 행으로 준다.
+     *
+     * @param added   추가된 줄 수
+     * @param removed 삭제된 줄 수
+     */
+    public record CompareResponse(
+            String baseVersion,
+            String headVersion,
+            String headTitle,
+            String headConfirmedByName,
+            String headCreatedAt,
+            int added,
+            int removed,
+            List<DiffRow> rows
+    ) {}
+
+    /**
+     * diff 한 행. 왼쪽(base)과 오른쪽(head)을 함께 담는다.
+     *
+     * @param type ctx(그대로) / add(추가) / del(삭제) / change(바뀜 — 좌우 모두 있음)
+     */
+    public record DiffRow(
+            String type,
+            Integer baseNo,
+            String baseText,
+            Integer headNo,
+            String headText
     ) {}
 }

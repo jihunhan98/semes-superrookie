@@ -166,8 +166,30 @@ export type RequirementVersion = {
   version: string;
   title: string;
   content: string;
+  /** 이전 버전 대비 어느 자리가 올랐는지. 첫 확정은 MINOR. */
+  kind: "MAJOR" | "MINOR" | "PATCH";
   confirmedByName: string | null;
   createdAt: string | null;
+};
+
+/** 버전 비교 diff 한 행 — split 뷰가 좌우를 나란히 그릴 수 있게 짝지어져 있다. */
+export type DiffRow = {
+  type: "ctx" | "add" | "del" | "change";
+  baseNo: number | null;
+  baseText: string | null;
+  headNo: number | null;
+  headText: string | null;
+};
+
+export type CompareResult = {
+  baseVersion: string | null;
+  headVersion: string;
+  headTitle: string;
+  headConfirmedByName: string | null;
+  headCreatedAt: string | null;
+  added: number;
+  removed: number;
+  rows: DiffRow[];
 };
 
 export type RequirementDetail = {
@@ -292,6 +314,26 @@ export function confirmRequirement(
   return postJson<RequirementDetail>(
     `/api/projects/${projectId}/requirements/${requirementId}/confirm`,
     input,
+  );
+}
+
+/**
+ * 두 버전 비교 — 화면 6의 split diff.
+ *
+ * base/head 를 생략하면 서버가 "직전 버전 ↔ 최신 버전"을 골라준다.
+ */
+export function compareVersions(
+  projectId: number,
+  requirementId: number,
+  userId: number,
+  base?: string | null,
+  head?: string | null,
+): Promise<CompareResult> {
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (base) q.set("base", base);
+  if (head) q.set("head", head);
+  return getJson<CompareResult>(
+    `/api/projects/${projectId}/requirements/${requirementId}/compare?${q}`,
   );
 }
 
