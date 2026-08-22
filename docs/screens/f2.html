@@ -327,6 +327,18 @@
   .gh .regfoot .note{font-size:12px;color:var(--fgm);}
   .gh .aisuggest{margin-top:6px;border:1px dashed #79c0ff;background:var(--blue-s);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--fg);line-height:1.6;}
   .gh .aisuggest b{color:var(--blue);}
+  /* 원문 하이라이트 — 검출 카드에 구절만 적으면 원문 어디인지 눈으로 찾아야 해서,
+     원문을 그대로 보여주고 그 위에 번호 붙은 형광펜을 칠한다. */
+  .gh .srcbox{border:1px solid var(--bd);border-radius:10px;background:var(--cv);padding:11px 14px 13px;margin-bottom:12px;}
+  .gh .srcbox .sh{font-size:11.5px;font-weight:700;color:var(--fgm);margin-bottom:8px;display:flex;align-items:baseline;gap:8px;}
+  .gh .srcbox .shhint{font-weight:500;color:var(--fgf);font-size:11px;}
+  .gh .srctext{font-size:14px;color:var(--fg);line-height:2.05;}
+  .gh mark.hl{background:var(--amber-s);color:var(--fg);border-bottom:2px solid var(--amber);border-radius:3px;padding:1px 1px 0;}
+  .gh mark.hl.cf{background:var(--red-s);border-bottom-color:var(--red);}
+  .gh mark.hl .no{display:inline-block;vertical-align:super;margin-left:3px;min-width:14px;height:14px;line-height:14px;text-align:center;font-size:9.5px;font-weight:800;border-radius:999px;background:var(--amber);color:#fff;padding:0 3px;}
+  .gh mark.hl.cf .no{background:var(--red);}
+  .gh .find .fno{display:inline-flex;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:11px;font-weight:800;border-radius:999px;color:#fff;padding:0 5px;justify-content:center;}
+  .gh .find .fno.amb{background:var(--amber);} .gh .find .fno.cf{background:var(--red);}
   .gh .wcard.readonly{background:var(--cvs);}
   .gh .wcard.readonly .wcb{background:var(--cvs);}
   .gh .prefill{background:#dafbe140;border:1px solid #3fb95066;border-radius:8px;padding:9px 12px;font-size:12px;color:var(--green);line-height:1.55;margin-bottom:10px;}
@@ -753,13 +765,18 @@
                     <div class="wcard readonly">
                       <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px">2건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
                       <div class="wcb">
+                        <!-- 원문 + 형광펜 — 지적된 구절이 원문 어디인지 번호로 바로 보여준다. -->
+                        <div class="srcbox">
+                          <div class="sh">등록 원문 <span class="shhint">형광펜 = AI가 지적한 구절 · 번호를 아래 카드와 맞춰 보세요</span></div>
+                          <div class="srctext">AMR 매칭 시 <mark class="hl amb">가용한 AMR<span class="no">1</span></mark> 중 <mark class="hl cf">가장 가까운<span class="no">2</span></mark> AMR을 선택한다.</div>
+                        </div>
                         <div class="find">
-                          <div class="ft"><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가용한 AMR" · "가장 가까운"</span></div>
-                          <div class="frs2">무엇을 '가용'으로, 무엇을 '가깝다'로 볼지 판정 기준이 없어 해석이 갈릴 수 있음</div>
-                          <div class="aisuggest">✎ 제안: <b>가용한 AMR</b> = IDLE 상태이며 SoC 최소값 이상 · <b>가장 가까운</b> = 맵 경로상 맨해튼 거리 최단 경로</div>
+                          <div class="ft"><span class="fno amb">1</span><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가용한 AMR"</span></div>
+                          <div class="frs2">무엇을 '가용'으로 볼지 판정 기준이 없어 해석이 갈릴 수 있음</div>
+                          <div class="aisuggest">✎ 제안: <b>가용한 AMR</b> = IDLE 상태이며 SoC 최소값 이상</div>
                         </div>
                         <div class="find" style="margin-bottom:0">
-                          <div class="ft"><span class="ftype2 cf">기존 요구사항과 상충</span><span class="fspan2">req-ta-01</span></div>
+                          <div class="ft"><span class="fno cf">2</span><span class="ftype2 cf">기존 요구사항과 상충</span><span class="fspan2">"가장 가까운" · req-ta-01</span></div>
                           <div class="frs2">req-ta-01은 "요청 순"으로 우선순위를 정하는데, 이 요구사항은 "거리 순"이라 배치될 수 있음</div>
                           <div class="fconf">⚠ 문장 수정만으론 해결 안 됨 — 고객 협의에서 함께 정리 필요<span class="apply">req-ta-01 보기 →</span></div>
                         </div>

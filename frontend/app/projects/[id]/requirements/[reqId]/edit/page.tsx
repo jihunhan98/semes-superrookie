@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import AiFindings from "../../../../../components/AiFindings";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import {
@@ -15,11 +16,6 @@ import {
   type RequirementDetail,
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
-
-/** 상충은 문장 수정으로 해결되지 않으므로 다른 색으로 구분한다. */
-function isConflict(findingType: string) {
-  return findingType.includes("상충");
-}
 
 const METHODS = ["대면 미팅", "화상회의", "유선", "메일"];
 
@@ -280,37 +276,20 @@ export default function RequirementEditPage() {
                             {analyzing ? "분석 중…" : "AI 검토 실행"}
                           </button>
                         </>
-                      ) : req.findings.length === 0 ? (
-                        <>
-                          <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                            바뀐 부분에서 새로 검출된 문제가 없습니다.
-                          </p>
-                          <div className="wnote">이번에 바뀐 부분만 분석 · 새로운 이슈 없음</div>
-                        </>
                       ) : (
                         <>
-                          {req.findings.map((f, i) => (
-                            <div
-                              key={i}
-                              className="find"
-                              style={i === req.findings.length - 1 ? { marginBottom: 0 } : undefined}
-                            >
-                              <div className="ft">
-                                <span className={`ftype2 ${isConflict(f.findingType) ? "cf" : "amb"}`}>
-                                  {f.findingType}
-                                </span>
-                                {f.targetSpan && <span className="fspan2">&ldquo;{f.targetSpan}&rdquo;</span>}
-                              </div>
-                              {f.reason && <div className="frs2">{f.reason}</div>}
-                              {f.suggestion && (
-                                <div className={isConflict(f.findingType) ? "fconf" : "aisuggest"}>
-                                  {isConflict(f.findingType) ? "⚠ " : "✎ 제안: "}
-                                  {f.suggestion}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          <div className="wnote">이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음</div>
+                          {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
+                          <AiFindings
+                            content={draft}
+                            findings={req.findings}
+                            contentLabel="최종 본문 (변경분만 검토)"
+                            empty="바뀐 부분에서 새로 검출된 문제가 없습니다."
+                          />
+                          <div className="wnote">
+                            {req.findings.length === 0
+                              ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
+                              : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
+                          </div>
                         </>
                       )}
                       {analyzed && (

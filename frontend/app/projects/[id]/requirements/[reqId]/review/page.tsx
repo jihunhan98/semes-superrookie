@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import AiFindings from "../../../../../components/AiFindings";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import {
@@ -16,11 +17,6 @@ import {
   type RequirementDetail,
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
-
-/** 상충은 문장 수정으로 해결되지 않으므로 다른 색으로 구분한다. */
-function isConflict(findingType: string) {
-  return findingType.includes("상충");
-}
 
 /**
  * 어떻게 검토됐는지 배지.
@@ -264,35 +260,18 @@ export default function RequirementReviewPage() {
                       </span>
                     </div>
                     <div className="wcb">
-                      {req.findings.length === 0 ? (
-                        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                          {req.aiEngine === "unavailable"
+                      {/* 원문 + 형광펜. 오른쪽 "확정될 본문"은 제안이 이미 반영된 문장이라
+                          지적이 어디였는지는 여기 원문에서 봐야 한다. */}
+                      <AiFindings
+                        content={req.content}
+                        findings={req.findings}
+                        contentLabel="등록 원문"
+                        empty={
+                          req.aiEngine === "unavailable"
                             ? "AI 서버가 응답하지 않아 검토를 못 했습니다. “다시 분석”을 눌러보세요."
-                            : "검출된 불명확·상충이 없습니다."}
-                        </p>
-                      ) : (
-                        req.findings.map((f, i) => (
-                          <div
-                            key={i}
-                            className="find"
-                            style={i === req.findings.length - 1 ? { marginBottom: 0 } : undefined}
-                          >
-                            <div className="ft">
-                              <span className={`ftype2 ${isConflict(f.findingType) ? "cf" : "amb"}`}>
-                                {f.findingType}
-                              </span>
-                              {f.targetSpan && <span className="fspan2">&ldquo;{f.targetSpan}&rdquo;</span>}
-                            </div>
-                            {f.reason && <div className="frs2">{f.reason}</div>}
-                            {f.suggestion && (
-                              <div className={isConflict(f.findingType) ? "fconf" : "aisuggest"}>
-                                {isConflict(f.findingType) ? "⚠ " : "✎ 제안: "}
-                                {f.suggestion}
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
+                            : "검출된 불명확·상충이 없습니다."
+                        }
+                      />
                     </div>
                   </div>
 
