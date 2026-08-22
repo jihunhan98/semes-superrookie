@@ -4,14 +4,16 @@
 
 띄우는 순서는 **DB → AI 서버 → 백엔드 → 프론트**. AI 서버가 꺼져 있어도 요구사항 등록 자체는 성공한다(검출 0건 + `aiEngine: "unavailable"`).
 
-## 0. 한 번에 실행 (Windows)
+## 0. 한 번에 실행 (Windows / macOS·Linux)
 
-DB만 미리 띄워두면, 나머지 세 서버는 배치파일 하나로 실행된다.
+DB만 미리 띄워두면, 나머지 세 서버는 스크립트 하나로 실행된다.
 
 ```
-run-all.bat      실행 — AI 서버 / 백엔드 / 프론트를 각각 새 창에 띄운다
-stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세스를 정리한다
+run-all.bat / run-all.sh      실행 — AI 서버 / 백엔드 / 프론트를 각각 새 창에 띄운다
+stop-all.bat / stop-all.sh    종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세스를 정리한다
 ```
+
+Windows는 `.bat`, macOS·Linux는 `.sh`를 쓴다 (`./run-all.sh` — 처음 한 번은 `chmod +x run-all.sh stop-all.sh`가 필요할 수 있다). macOS에서는 Terminal.app 새 탭으로 띄우고, 그 외 환경에서는 백그라운드로 돌리고 `.run-logs/*.log`에 로그를 남긴다.
 
 서버마다 **창이 따로 열린다** — 로그가 한 창에 섞이면 어느 쪽 에러인지 구분이 안 되기 때문.
 
@@ -19,12 +21,12 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 
 | | 찾는 순서 | 없으면 |
 |---|---|---|
-| AI 서버 | `ai-model\.venv` → `ai-model\venv` | 건너뜀 (등록은 되고, 규칙 기반으로만 검토됨) |
-| 백엔드 | `mvnw.cmd` → PATH의 `mvn` → `MAVEN_HOME`/`M2_HOME` → `backend\target\*.jar` | 건너뜀 — **IDE에서 `ReqopsApplication` 실행** |
-| 프론트 | `frontend\node_modules`(개발 서버) → `frontend\dist\standalone`(빌드 산출물) | 건너뜀 |
+| AI 서버 | `ai-model/.venv` → `ai-model/venv` | 건너뜀 (등록은 되고, 규칙 기반으로만 검토됨) |
+| 백엔드 | (Win) `mvnw.cmd` → PATH의 `mvn` → `MAVEN_HOME`/`M2_HOME` → `backend/target/*.jar` · (Mac/Linux) PATH의 `mvn` → `mvnw` → `backend/target/*.jar` | 건너뜀 — **IDE에서 `ReqopsApplication` 실행** |
+| 프론트 | `frontend/node_modules`(개발 서버 — 실제로 컴파일됨) → `frontend/dist/standalone`(커밋된 빌드 산출물) | 건너뜀 |
 
-- **Maven이 설치돼 있지 않아도 된다.** `backend/mvnw.cmd`(Maven Wrapper)가 저장소에 있어서, 첫 실행 때 Maven을 알아서 내려받아 쓴다. 사내 프록시에 막혀 내려받지 못하면 IDE에서 백엔드를 띄우고 배치는 AI·프론트만 담당하게 두면 된다.
-- **`npm install`이 안 돼도 된다.** `frontend/dist/standalone`이 저장소에 커밋되어 있어서, Node만 있으면 빌드 없이 바로 돌아간다. 다만 이 산출물은 프론트 코드를 고칠 때마다 다시 빌드해서 커밋해야 반영된다.
+- **Maven이 설치돼 있지 않아도 된다.** `backend/mvnw`(Maven Wrapper, Mac/Linux) · `mvnw.cmd`(Windows)가 저장소에 있어서, 첫 실행 때 Maven을 알아서 내려받아 쓴다. 사내 프록시에 막혀 내려받지 못하면 IDE에서 백엔드를 띄우고 스크립트는 AI·프론트만 담당하게 두면 된다.
+- **`npm install`이 안 돼도 된다.** `frontend/dist/standalone`이 저장소에 커밋되어 있어서, Node만 있으면 빌드 없이 바로 돌아간다. 다만 이 산출물은 프론트 코드를 고칠 때마다 다시 빌드해서 커밋해야 반영된다. 개발용 컴퓨터에 `npm install`을 해 두면 `node_modules`가 생겨서 스크립트가 자동으로 개발 서버(`npm run dev`)를 띄운다 — 코드를 고치면 바로 반영된다.
 - 백엔드는 기동에 20~40초 걸린다. `Started ReqopsApplication` 로그가 뜨면 준비 완료.
 - 프론트가 뜨면 브라우저로 `http://localhost:3000/login`이 자동으로 열린다.
 
@@ -168,8 +170,9 @@ mvn -o -Dmaven.repo.local=/opt/repo/m2-offline clean package
 ## 현재 범위
 
 - **기능 1 — 회원가입·로그인·프로젝트**: 구현 완료 (목록/생성/참여/설정·토큰 재발급)
-- **기능 2 — 요구사항**: 목록 · 최초 등록 · 상세(AI 자동 검토, 재분석)까지 구현 완료
-- **기능 2 — 이후 추가**: 확정본 수정(변경분만 AI 검토), 고객 합의 기록, 확정(v1.0.0)·버전 이력·비교, 프로젝트별 요구사항 항목 설정
+- **기능 2 — 요구사항**: 목록 · 최초 등록 · 상세(AI 자동 검토, 재분석) · 고객 합의 기록 ·
+  최초 확정(v1.0.0) · 확정본 수정(변경분만 AI 검토) · 버전 이력·비교까지 구현 완료
+- **기능 2 — 남은 것**: 프로젝트별 요구사항 항목(필드) 설정 (FR-2-11)
 
 명세: `docs/기능명세서.md` · `docs/API명세서.md` · `docs/테이블명세서.md`
 화면: `docs/화면정의서.html`(기능 1) · `docs/screens/f2.html`(기능 2)
