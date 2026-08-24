@@ -1,16 +1,16 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/dashboard/page": "app/dashboard/page.js",
+  "/page": "app/page.js",
   "/projects/[id]/page": "app/projects/[id]/page.js",
   "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
   "/projects/[id]/requirements/[reqId]/edit/page": "app/projects/[id]/requirements/[reqId]/edit/page.js",
   "/projects/[id]/requirements/[reqId]/page": "app/projects/[id]/requirements/[reqId]/page.js",
   "/projects/[id]/requirements/[reqId]/review/page": "app/projects/[id]/requirements/[reqId]/review/page.js",
   "/projects/[id]/requirements/[reqId]/versions/page": "app/projects/[id]/requirements/[reqId]/versions/page.js",
   "/projects/[id]/requirements/new/page": "app/projects/[id]/requirements/new/page.js",
-  "/projects/[id]/settings/page": "app/projects/[id]/settings/page.js",
   "/projects/[id]/requirements/page": "app/projects/[id]/requirements/page.js",
+  "/projects/[id]/settings/page": "app/projects/[id]/settings/page.js",
   "/projects/new/page": "app/projects/new/page.js",
   "/projects/open/page": "app/projects/open/page.js",
   "/signup/page": "app/signup/page.js"

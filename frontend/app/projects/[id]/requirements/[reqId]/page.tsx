@@ -9,7 +9,6 @@ import ProjectSidebar from "../../../../components/ProjectSidebar";
 import {
   getProject,
   getRequirement,
-  reanalyzeRequirement,
   type ProjectDetail,
   type RequirementDetail,
 } from "../../../../lib/api";
@@ -38,7 +37,6 @@ export default function RequirementDetailPage() {
   const [req, setReq] = useState<RequirementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [reanalyzing, setReanalyzing] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -55,20 +53,6 @@ export default function RequirementDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
-
-  async function onReanalyze() {
-    const user = getCurrentUser();
-    if (!user) return;
-    setReanalyzing(true);
-    try {
-      const updated = await reanalyzeRequirement(projectId, requirementId, user.id);
-      setReq(updated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "재분석에 실패했습니다.");
-    } finally {
-      setReanalyzing(false);
-    }
-  }
 
   if (error) {
     return (
@@ -136,10 +120,10 @@ export default function RequirementDetailPage() {
             </Link>
           </div>
 
-          {/* 이 화면은 읽기 전용이다 — 본문을 고치는 건 위 "수정하기"로 들어간 화면
-              (최초 확정/확정본 수정)에서만 한다. 그래서 편집용 textarea 를 여기 두지
-              않는다. AI 검토 결과 카드 안에서 본문(등록 원문 또는 확정본)을 하이라이트와
-              함께 그대로 보여준다. */}
+          {/* 이 화면은 읽기 전용이다 — 다시 분석 같은 동작도 여기 두지 않는다.
+              본문을 고치거나 AI를 다시 돌리는 건 위 "수정하기"로 들어간 화면
+              (최초 확정/확정본 수정)에서만 한다. AI 검토 결과 카드 안에서
+              본문(등록 원문 또는 확정본)을 하이라이트와 함께 그대로 보여주기만 한다. */}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1400 }}>
             <div className="wch">
               🤖 AI 검토 결과
@@ -153,9 +137,6 @@ export default function RequirementDetailPage() {
                 <span className="cnt" style={{ marginLeft: 8 }}>
                   {req.findings.length}건
                 </span>
-                <button className="btn sm" style={{ marginLeft: 8 }} onClick={onReanalyze} disabled={reanalyzing}>
-                  {reanalyzing ? "분석 중…" : "↻ 다시 분석"}
-                </button>
               </span>
             </div>
             <div className="wcb">
@@ -167,7 +148,7 @@ export default function RequirementDetailPage() {
                 contentLabel={req.version ? `확정본 v${req.version}` : "등록 원문"}
                 empty={
                   req.aiEngine === "unavailable"
-                    ? "AI 서버가 응답하지 않아 검토를 못 했습니다. “다시 분석”을 눌러보세요."
+                    ? "AI 서버가 응답하지 않아 검토를 못 했습니다. 위 “수정하기”에서 다시 시도할 수 있습니다."
                     : "검출된 불명확·상충이 없습니다."
                 }
               />
