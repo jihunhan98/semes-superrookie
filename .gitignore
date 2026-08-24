@@ -73,3 +73,13 @@ next-env.d.ts
 # offline maven repo / build (커밋 금지)
 backend/m2-offline/
 backend/target/
+
+# ===== 프론트 빌드 산출물 (frontend/dist) =====
+# 사용자가 npm install 없이 바로 실행할 수 있도록 standalone 빌드 결과를
+# 저장소에 커밋해 둔다. 위 dist/ .next/ 규칙이 이 경로도 가려버려서,
+# 빌드할 때마다 파일명이 새 해시로 바뀌면 그 새 파일이 git add -A 에서
+# 조용히 빠지는 사고가 반복됐다(오래된 해시 파일만 커밋에 남고, HTML이
+# 가리키는 새 해시 파일은 없어서 브라우저에서 404). 이 경로만 명시적으로
+# 되살린다 — frontend/.next(로컬 개발 캐시)는 여전히 무시된다.
+!frontend/dist/
+!frontend/dist/**
