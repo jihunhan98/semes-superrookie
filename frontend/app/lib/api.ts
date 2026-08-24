@@ -158,6 +158,8 @@ export type Consensus = {
   agreedContent: string;
   recordedByName: string | null;
   createdAt: string | null;
+  /** 이 합의로 확정된 버전. 아직 확정에 안 쓰였으면 null — 다음 확정의 근거가 된다. */
+  usedForVersion: string | null;
 };
 
 /** 확정 이력 한 줄. */

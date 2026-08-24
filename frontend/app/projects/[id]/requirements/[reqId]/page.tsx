@@ -40,9 +40,6 @@ export default function RequirementDetailPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [reanalyzing, setReanalyzing] = useState(false);
 
-  // 확정될 본문 — AI 제안이 반영된 draft 로 시작하고, 사용자가 자유롭게 편집한다.
-  const [draft, setDraft] = useState("");
-
   useEffect(() => {
     const user = getCurrentUser();
     if (!user) {
@@ -55,7 +52,6 @@ export default function RequirementDetailPage() {
       .then(([p, r]) => {
         setProject(p);
         setReq(r);
-        setDraft(r.aiDraftContent);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
@@ -67,7 +63,6 @@ export default function RequirementDetailPage() {
     try {
       const updated = await reanalyzeRequirement(projectId, requirementId, user.id);
       setReq(updated);
-      setDraft(updated.aiDraftContent);
     } catch (err) {
       setError(err instanceof Error ? err.message : "재분석에 실패했습니다.");
     } finally {
@@ -97,8 +92,6 @@ export default function RequirementDetailPage() {
     );
   }
 
-  const dirty = draft !== req.content;
-
   return (
     <div className="appshell">
       <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
@@ -119,7 +112,8 @@ export default function RequirementDetailPage() {
               {req.stateLabel}
             </span>
             {req.version && <span className="tagv">🏷 v{req.version}</span>}
-            {/* 확정 전이면 최초 확정 화면(화면 4), 확정 후에는 수정 화면(화면 5). */}
+            {/* 이 페이지는 읽기 전용 — 실제 편집(확정 포함)은 전부 이 버튼 너머에서 한다.
+                확정 전이면 최초 확정 화면(화면 4), 확정 후에는 확정본 수정 화면(화면 5). */}
             <Link
               className="btn prim"
               href={
@@ -129,7 +123,7 @@ export default function RequirementDetailPage() {
               }
               style={{ marginLeft: "auto" }}
             >
-              {req.version ? "수정하기" : "검토하고 확정하기"}
+              수정하기
             </Link>
           </div>
 
@@ -142,70 +136,41 @@ export default function RequirementDetailPage() {
             </Link>
           </div>
 
-          <div className="w2col" style={{ marginTop: 16, maxWidth: 1400 }}>
-            {/* 왼쪽: AI 검토 결과 — 읽기 전용. 버튼(적용하기) 없음. */}
-            <div className="wcard readonly">
-              <div className="wch">
-                🤖 AI 검토 결과
-                <span className="rt">
-                  <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                    읽기 전용
-                  </span>
-                  <span className="lbl" style={{ padding: "1px 9px", marginLeft: 6, background: "var(--surface-muted)", color: "var(--muted)" }}>
-                    {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
-                  </span>
-                  <span className="cnt" style={{ marginLeft: 8 }}>
-                    {req.findings.length}건
-                  </span>
-                  <button className="btn sm" style={{ marginLeft: 8 }} onClick={onReanalyze} disabled={reanalyzing}>
-                    {reanalyzing ? "분석 중…" : "↻ 다시 분석"}
-                  </button>
+          {/* 이 화면은 읽기 전용이다 — 본문을 고치는 건 위 "수정하기"로 들어간 화면
+              (최초 확정/확정본 수정)에서만 한다. 그래서 편집용 textarea 를 여기 두지
+              않는다. AI 검토 결과 카드 안에서 본문(등록 원문 또는 확정본)을 하이라이트와
+              함께 그대로 보여준다. */}
+          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1400 }}>
+            <div className="wch">
+              🤖 AI 검토 결과
+              <span className="rt">
+                <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
+                  읽기 전용
                 </span>
-              </div>
-              <div className="wcb">
-                {/* 원문을 먼저 보여주고 지적된 구절에 형광펜을 칠한다 — 구절만 적어 두면
-                    사용자가 원문 어디인지 직접 찾아야 해서 불편하다. */}
-                <AiFindings
-                  content={req.content}
-                  findings={req.findings}
-                  contentLabel={req.version ? `확정본 v${req.version}` : "등록 원문"}
-                  empty={
-                    req.aiEngine === "unavailable"
-                      ? "AI 서버가 응답하지 않아 검토를 못 했습니다. “다시 분석”을 눌러보세요."
-                      : "검출된 불명확·상충이 없습니다."
-                  }
-                />
-              </div>
+                <span className="lbl" style={{ padding: "1px 9px", marginLeft: 6, background: "var(--surface-muted)", color: "var(--muted)" }}>
+                  {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
+                </span>
+                <span className="cnt" style={{ marginLeft: 8 }}>
+                  {req.findings.length}건
+                </span>
+                <button className="btn sm" style={{ marginLeft: 8 }} onClick={onReanalyze} disabled={reanalyzing}>
+                  {reanalyzing ? "분석 중…" : "↻ 다시 분석"}
+                </button>
+              </span>
             </div>
-
-            {/* 오른쪽: 확정될 본문 — AI 제안이 이미 반영된 상태로 채워져 있고, 여기서만 편집한다. */}
-            <div className="wcard">
-              <div className="wch">
-                ✏️ 확정될 본문
-                <span className="rt">
-                  <span className="lbl blue" style={{ padding: "1px 9px" }}>
-                    여기서만 편집
-                  </span>
-                </span>
-              </div>
-              <div className="wcb">
-                {dirty ? (
-                  <div className="prefill">
-                    ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 두거나 직접 고치세요.
-                  </div>
-                ) : (
-                  <div className="prefill" style={{ background: "var(--surface-muted)", borderColor: "var(--line)", color: "var(--muted)" }}>
-                    지금은 <b>등록 원문과 같습니다</b>. 자유롭게 고칠 수 있습니다.
-                  </div>
-                )}
-                <textarea className="reqta" value={draft} onChange={(e) => setDraft(e.target.value)} />
-                <div className="prefill-act">
-                  <button className="btn sm" onClick={() => setDraft(req.content)} disabled={!dirty}>
-                    ↩ 등록 원문으로 되돌리기
-                  </button>
-                  <span className="pf-orig">등록 원문: &ldquo;{req.content}&rdquo;</span>
-                </div>
-              </div>
+            <div className="wcb">
+              {/* 원문을 먼저 보여주고 지적된 구절에 형광펜을 칠한다 — 구절만 적어 두면
+                  사용자가 원문 어디인지 직접 찾아야 해서 불편하다. */}
+              <AiFindings
+                content={req.content}
+                findings={req.findings}
+                contentLabel={req.version ? `확정본 v${req.version}` : "등록 원문"}
+                empty={
+                  req.aiEngine === "unavailable"
+                    ? "AI 서버가 응답하지 않아 검토를 못 했습니다. “다시 분석”을 눌러보세요."
+                    : "검출된 불명확·상충이 없습니다."
+                }
+              />
             </div>
           </div>
 
@@ -223,11 +188,17 @@ export default function RequirementDetailPage() {
             </span>
           </div>
 
-          {/* 고객 합의 기록 — 확정의 근거. 아직 없으면 확정 화면으로 안내한다. */}
+          {/* 고객 합의 기록 — 확정의 근거. 어느 버전이 이 합의로 확정됐는지(또는 아직
+              확정에 안 쓰였는지)를 같이 보여준다 — "합의는 했는데 이게 언제 확정에
+              반영된 건지" 를 따로 찾아보지 않아도 되게. */}
           <div className="wcard" style={{ marginTop: 16, maxWidth: 1400, borderColor: "var(--purple)" }}>
             <div className="wch">
               🤝 고객 합의
-              {req.consensus && <span className="rt cdone">✓ 합의 완료</span>}
+              {req.consensus && (
+                <span className="rt cdone">
+                  {req.consensus.usedForVersion ? `✓ v${req.consensus.usedForVersion} 확정 근거` : "✓ 합의 완료"}
+                </span>
+              )}
             </div>
             <div className="wcb consensus">
               {req.consensus ? (
@@ -253,11 +224,16 @@ export default function RequirementDetailPage() {
                     )}
                   </div>
                   {req.consensus.note && <div className="ctext">{req.consensus.note}</div>}
+                  {!req.consensus.usedForVersion && (
+                    <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "10px 0 0" }}>
+                      아직 어떤 확정에도 쓰이지 않았습니다 — 다음 확정의 근거가 됩니다.
+                    </p>
+                  )}
                 </>
               ) : (
                 <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
                   아직 합의 기록이 없습니다. AI 의견이 합리적이어도 <b>고객 합의 없이는 확정할 수
-                  없습니다</b> — 위 &ldquo;검토하고 확정하기&rdquo;에서 기록하세요.
+                  없습니다</b> — 위 &ldquo;수정하기&rdquo;에서 기록하세요.
                 </p>
               )}
             </div>

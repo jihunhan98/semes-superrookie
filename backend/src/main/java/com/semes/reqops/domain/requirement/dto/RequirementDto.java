@@ -80,6 +80,9 @@ public final class RequirementDto {
      *
      * <p>{@code agreedContent} 는 합의 시점의 본문이다. 합의 후 본문을 또 고치면 이 값과
      * 달라지므로, 화면이 "재합의가 필요하다"고 알려주는 근거가 된다.
+     *
+     * @param usedForVersion 이 합의로 확정된 버전. 아직 확정에 안 쓰였으면 null —
+     *                       그 경우 다음 확정의 근거가 된다.
      */
     public record ConsensusResponse(
             Long id,
@@ -89,7 +92,8 @@ public final class RequirementDto {
             String note,
             String agreedContent,
             String recordedByName,
-            String createdAt
+            String createdAt,
+            String usedForVersion
     ) {}
 
     /** 합의 기록 요청 — 이 기록이 있어야만 확정할 수 있다. */

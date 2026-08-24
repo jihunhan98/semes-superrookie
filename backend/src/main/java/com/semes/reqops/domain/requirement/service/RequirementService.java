@@ -130,16 +130,15 @@ public class RequirementService {
         String assigneeName = r.getAssigneeId() == null ? null
                 : userRepository.findById(r.getAssigneeId()).map(User::getName).orElse(null);
 
+        List<RequirementVersion> versionEntities =
+                versionRepository.findByRequirementIdOrderByIdDesc(requirementId);
+        RequirementVersion lastVersion = versionEntities.isEmpty() ? null : versionEntities.get(0);
+        List<VersionResponse> versions = toVersionResponses(versionEntities);
+
         ConsensusResponse consensus = consensusRepository
                 .findFirstByRequirementIdOrderByIdDesc(requirementId)
-                .map(this::toConsensusResponse)
+                .map(c -> toConsensusResponse(c, versionEntities))
                 .orElse(null);
-
-        RequirementVersion lastVersion = versionRepository
-                .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
-
-        List<VersionResponse> versions = toVersionResponses(
-                versionRepository.findByRequirementIdOrderByIdDesc(requirementId));
 
         // 확정 가능 조건: 아직 확정에 쓰이지 않은 합의 기록이 있을 것.
         // "확정 전"이 아니라 "미사용 합의"를 기준으로 삼는 이유 — 확정본 수정은 이미
@@ -400,13 +399,20 @@ public class RequirementService {
         return idx > 0 ? oldestFirst.get(idx - 1) : null;
     }
 
-    private ConsensusResponse toConsensusResponse(RequirementConsensus c) {
+    /** versions 에서 이 합의로 확정된 버전을 찾는다. 없으면 아직 확정에 안 쓰인 것이다. */
+    private ConsensusResponse toConsensusResponse(RequirementConsensus c, List<RequirementVersion> versions) {
+        String usedForVersion = versions.stream()
+                .filter(v -> c.getId().equals(v.getConsensusId()))
+                .map(RequirementVersion::getVersion)
+                .findFirst()
+                .orElse(null);
         return new ConsensusResponse(
                 c.getId(), c.getMethod(), c.getCustomerContact(),
                 c.getAgreedOn() == null ? null : c.getAgreedOn().format(D),
                 c.getNote(), c.getAgreedContent(),
                 userName(c.getRecordedBy()),
-                c.getCreatedAt() == null ? null : c.getCreatedAt().format(TS));
+                c.getCreatedAt() == null ? null : c.getCreatedAt().format(TS),
+                usedForVersion);
     }
 
     /**
