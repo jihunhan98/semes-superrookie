@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
+      "value": "http://localhost:41010",
       "type": "string"
     },
     {
@@ -36,7 +36,7 @@
     },
     {
       "key": "aiBaseUrl",
-      "value": "http://localhost:8001",
+      "value": "http://localhost:41020",
       "type": "string",
       "description": "AI 서버(FastAPI) 주소. 백엔드의 app.ai.base-url과 같아야 한다."
     }

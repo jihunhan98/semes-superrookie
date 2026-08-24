@@ -91,7 +91,7 @@ cd ai-model
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8001
+uvicorn main:app --host 0.0.0.0 --port 41020
 ```
 
 사내 LLM API를 쓰려면 주소를 `.env`에 넣는다. **사내 서버 주소는 사내망 정보라

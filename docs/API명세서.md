@@ -116,7 +116,7 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 |---|---|---|
 | GET/PUT | `/api/projects/{projectId}/requirement-fields` | 프로젝트별 요구사항 항목 구성 |
 
-### 2.3 AI 서버 (`ai-model`, FastAPI · 기본 8001)
+### 2.3 AI 서버 (`ai-model`, FastAPI · 기본 41020 — 이 브랜치는 8001에서 옮김)
 
 백엔드만 이 서버를 호출한다. 프론트는 직접 호출하지 않는다.
 

@@ -13,13 +13,14 @@ spring:
       hibernate.format_sql: true
 
 server:
-  port: 8080
+  # 이 워크스테이션은 8080이 다른 프로세스와 겹쳐서, 흔히 안 쓰는 41xxx 대역으로 옮겼다.
+  port: 41010
 
 # 프론트(Next.js) 개발 서버 오리진
 app:
-  cors-origin: http://localhost:3000
+  cors-origin: http://localhost:41000
   ai:
     # 요구사항 검토 AI 서버(ai-model, FastAPI). 미가동이어도 등록은 되며 검출 0건으로 처리된다.
-    base-url: http://localhost:8001
+    base-url: http://localhost:41020
     # AI 응답 대기 시간. 등록 요청이 이 시간만큼 걸릴 수 있어(로딩 화면) 넉넉히 잡는다.
     timeout-ms: 30000

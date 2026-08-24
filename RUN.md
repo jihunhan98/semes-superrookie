@@ -4,13 +4,19 @@
 
 띄우는 순서는 **DB → AI 서버 → 백엔드 → 프론트**. AI 서버가 꺼져 있어도 요구사항 등록 자체는 성공한다(검출 0건 + `aiEngine: "unavailable"`).
 
+> 이 브랜치(`claude/workstation-ports`)는 특정 워크스테이션에서 기본 포트
+> (프론트 3000 · 백엔드 8080 · AI 서버 8001)가 다른 프로세스와 겹쳐서, 흔히
+> 안 쓰는 41xxx 대역(**프론트 41000 · 백엔드 41010 · AI 서버 41020**)으로
+> 옮긴 버전이다. 기본 포트로 잘 돌아가는 환경이면 이 브랜치 말고
+> `main`/`claude/maven-closed-network-build-gl4rbf`를 쓴다.
+
 ## 0. 한 번에 실행 (Windows)
 
 DB만 미리 띄워두면, 나머지 세 서버는 배치파일 하나로 실행된다.
 
 ```
 run-all.bat      실행 — AI 서버 / 백엔드 / 프론트를 각각 새 창에 띄운다
-stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세스를 정리한다
+stop-all.bat     종료 — 41020 / 41010 / 41000 포트를 물고 있는 프로세스를 정리한다
 ```
 
 서버마다 **창이 따로 열린다** — 로그가 한 창에 섞이면 어느 쪽 에러인지 구분이 안 되기 때문.
@@ -26,7 +32,7 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 - **Maven이 설치돼 있지 않아도 된다.** `backend/mvnw.cmd`(Maven Wrapper)가 저장소에 있어서, 첫 실행 때 Maven을 알아서 내려받아 쓴다. 사내 프록시에 막혀 내려받지 못하면 IDE에서 백엔드를 띄우고 배치는 AI·프론트만 담당하게 두면 된다.
 - **`npm install`이 안 돼도 된다.** `frontend/dist/standalone`이 저장소에 커밋되어 있어서, Node만 있으면 빌드 없이 바로 돌아간다. 다만 이 산출물은 프론트 코드를 고칠 때마다 다시 빌드해서 커밋해야 반영된다.
 - 백엔드는 기동에 20~40초 걸린다. `Started ReqopsApplication` 로그가 뜨면 준비 완료.
-- 프론트가 뜨면 브라우저로 `http://localhost:3000/login`이 자동으로 열린다.
+- 프론트가 뜨면 브라우저로 `http://localhost:41000/login`이 자동으로 열린다.
 
 아래 1~4는 각각을 따로 띄우거나, 무슨 일이 일어나는지 확인할 때 참고한다.
 
@@ -47,20 +53,20 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 cd ai-model
 pip install -r requirements.txt
 cp .env.example .env      # 사내 LLM 주소를 쓸 때만. 안 채워도 서버는 뜬다.
-uvicorn main:app --port 8001
+uvicorn main:app --port 41020
 ```
 
-- 포트 `8001` (백엔드의 `app.ai.base-url`과 맞춰야 한다)
+- 포트 `41020` (백엔드의 `app.ai.base-url`과 맞춰야 한다)
 - 규칙 기반 검출이 항상 먼저 돌고, 그 위에 **사내 LLM API(GPT-OSS-120B)**를 한 번 더 호출해 보충한다. 사내 LLM이 응답하지 않아도(주소 미설정 포함) 규칙 결과만으로 그대로 개발할 수 있다.
-- 사내 LLM 주소가 잡혔는지는 `curl http://localhost:8001/health`의 `llmApiConfigured`로 확인한다.
+- 사내 LLM 주소가 잡혔는지는 `curl http://localhost:41020/health`의 `llmApiConfigured`로 확인한다.
 - **사내 서버 주소는 소스·문서에 두지 않는다** — 저장소가 사외로 나가도 사내망 정보는 남지 않도록. `ai-model/.env`(`.gitignore` 처리됨)에 `LLM_API_BASE` · `LLM_API_MODEL`을 넣는다. 실제 값은 팀 내부에서 받는다.
 - 빠른 확인:
   ```bash
-  curl -X POST http://localhost:8001/analyze \
+  curl -X POST http://localhost:41020/analyze \
     -H "Content-Type: application/json" \
     -d '{"content":"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다."}'
   ```
-- 로딩 UI를 확인하려면 `ANALYZE_DELAY=3 uvicorn main:app --port 8001`처럼 응답을 일부러 늦출 수 있다.
+- 로딩 UI를 확인하려면 `ANALYZE_DELAY=3 uvicorn main:app --port 41020`처럼 응답을 일부러 늦출 수 있다.
 - 자세한 내용은 `ai-model/README.md`.
 
 ## 3. 백엔드 (Spring Boot · Maven)
@@ -81,28 +87,28 @@ mvn spring-boot:run          # Maven 이 이미 설치돼 있으면 이것도 �
 
 > 라이브러리 자동 다운로드 자체가 막히면, `~/.m2/settings.xml`에 사내 저장소(미러)를 잡거나 미리 받아둔 `.m2`를 사용한다. (상세 절차는 아래 "폐쇄망 빌드" 참고)
 
-- 포트 `8080`
+- 포트 `41010`
 - 엔드포인트: 인증(`POST /api/signup`, `POST /api/login`), 프로젝트(`/api/projects…`), 요구사항(`/api/projects/{projectId}/requirements…`)
 - AI 서버 주소·타임아웃은 `application.yml`의 `app.ai.base-url` / `app.ai.timeout-ms`
 - 빠른 확인:
   ```bash
-  curl -X POST http://localhost:8080/api/signup \
+  curl -X POST http://localhost:41010/api/signup \
     -H "Content-Type: application/json" \
     -d '{"empNo":"20213456","name":"한지훈","dept":"VCS 개발파트","password":"secret123"}'
   ```
-- Postman: `postman/ReqOps.postman_collection.json`을 Postman에 임포트(File → Import)하면 인증·프로젝트·요구사항·AI 서버 요청이 성공/실패 케이스까지 바로 실행 가능한 상태로 들어있다. `baseUrl`(기본 `http://localhost:8080`)·`aiBaseUrl`(기본 `http://localhost:8001`) 변수만 필요하면 바꾼다.
+- Postman: `postman/ReqOps.postman_collection.json`을 Postman에 임포트(File → Import)하면 인증·프로젝트·요구사항·AI 서버 요청이 성공/실패 케이스까지 바로 실행 가능한 상태로 들어있다. `baseUrl`(기본 `http://localhost:41010`)·`aiBaseUrl`(기본 `http://localhost:41020`) 변수만 필요하면 바꾼다.
 
 ## 4. 프론트 (Next.js)
 
 ```bash
 cd frontend
 npm install
-npm run dev              # http://localhost:3000
+npm run dev              # http://localhost:41000
 ```
 
 - `/signup` 회원가입, `/login` 로그인, `/dashboard` 프로젝트 목록
 - `/projects/{id}/requirements` 요구사항 목록 · `/projects/{id}/requirements/new` 등록 · `/projects/{id}/requirements/{reqId}` 상세(AI 검토 결과 + 확정될 본문)
-- 백엔드 주소는 `NEXT_PUBLIC_BACKEND`(기본 `http://localhost:8080`)
+- 백엔드 주소는 `NEXT_PUBLIC_BACKEND`(기본 `http://localhost:41010`)
 - 빌드 산출물로 바로 띄우려면 `frontend/dist/standalone/run.sh`(윈도우는 `run.bat`) — `npm install` 없이 `node server.js`로 뜬다.
 
 ## 5. 폐쇄망(에어갭) 환경에서 백엔드 빌드하기

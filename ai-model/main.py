@@ -14,8 +14,8 @@ engine="unavailable"은 이 서버가 내려주는 값이 아니다. 이 서버 
 못했을 때 백엔드가 채우는 값이다 — "규칙만 돌았다"(rule)와 "아무 검토도 못
 했다"(unavailable)는 화면에서 다르게 보여야 하므로 섞지 않는다.
 
-실행:
-    uvicorn main:app --host 0.0.0.0 --port 8001
+실행 (이 워크스테이션은 8001이 다른 프로세스와 겹쳐서 41020으로 옮겼다):
+    uvicorn main:app --host 0.0.0.0 --port 41020
 """
 
 from __future__ import annotations

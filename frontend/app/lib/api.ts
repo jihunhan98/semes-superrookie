@@ -1,5 +1,6 @@
 // 백엔드(Spring Boot) 주소. 세션/토큰 없음 — 로그인 결과 user만 받아 사용.
-export const BACKEND = process.env.NEXT_PUBLIC_BACKEND ?? "http://localhost:8080";
+// 이 워크스테이션은 8080이 다른 프로세스와 겹쳐서, 흔히 안 쓰는 41xxx 대역으로 옮겼다.
+export const BACKEND = process.env.NEXT_PUBLIC_BACKEND ?? "http://localhost:41010";
 
 export type User = {
   id: number;
