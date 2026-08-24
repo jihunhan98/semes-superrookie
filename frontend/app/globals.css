@@ -1609,6 +1609,62 @@ mark.hl.cf.on {
   color: var(--purple);
 }
 
+/* 고객 합의의 증빙 파일 첨부 — 지금은 디자인만, 서버 업로드는 나중에 붙인다. */
+.fileattach {
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.filelist {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filelist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  background: var(--surface);
+}
+
+.filelist .fname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filelist .fsize {
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.filelist .filex {
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.filelist .filex:hover {
+  background: var(--surface-muted);
+  color: var(--ink);
+}
+
 .jf {
   display: flex;
   align-items: center;

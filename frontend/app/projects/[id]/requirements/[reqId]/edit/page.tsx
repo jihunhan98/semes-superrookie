@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import AiFindings from "../../../../../components/AiFindings";
@@ -17,12 +17,27 @@ import {
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
 
+/**
+ * 어떻게 검토됐는지 배지. 상세·최초 확정 화면과 동일한 세 상태.
+ */
+const ENGINE_LABEL: Record<string, string> = {
+  "llm-api": "사내 LLM",
+  rule: "규칙 기반",
+  unavailable: "AI 미응답",
+};
+
 const METHODS = ["대면 미팅", "화상회의", "유선", "메일"];
 
 function today() {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 }
 
 export default function RequirementEditPage() {
@@ -46,17 +61,23 @@ export default function RequirementEditPage() {
   // 2단계 — 최종 본문 + AI 검토
   const [draft, setDraft] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
-  const [analyzed, setAnalyzed] = useState(false);
   // 3단계 — 고객 합의
   const [method, setMethod] = useState(METHODS[0]);
   const [contact, setContact] = useState("");
   const [agreedOn, setAgreedOn] = useState(today());
   const [note, setNote] = useState("");
   const [savingConsensus, setSavingConsensus] = useState(false);
+  // 증빙 파일 — 디자인만. 아직 서버로 올리지 않고 화면에만 표시한다.
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // 4단계 — 변경 사유(버전 이력 제목) + 확정
   const [commitTitle, setCommitTitle] = useState("");
   const [confirming, setConfirming] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  // 에러는 단계별로 따로 둔다 — 하나로 합치면 "변경 사유를 입력하세요" 같은 4단계
+  // 오류가 2단계 AI 검토 버튼 옆에도 같이 뜨는 식으로 엉뚱한 곳에 나타난다.
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [consensusError, setConsensusError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -83,11 +104,11 @@ export default function RequirementEditPage() {
     const user = getCurrentUser();
     if (!user) return;
     if (!reason.trim()) {
-      setActionError("수정 사유를 먼저 입력하세요 — AI가 이 내용을 함께 참고합니다.");
+      setAnalyzeError("수정 사유를 먼저 입력하세요 — AI가 이 내용을 함께 참고합니다. (위 1단계)");
       return;
     }
     setAnalyzing(true);
-    setActionError(null);
+    setAnalyzeError(null);
     try {
       const updated = await diffAnalyzeRequirement(projectId, requirementId, {
         userId: user.id,
@@ -97,25 +118,34 @@ export default function RequirementEditPage() {
       setReq(updated);
       // 제안이 반영된 문장으로 본문을 채운다 — 화면 4와 같은 방식.
       setDraft(updated.aiDraftContent);
-      setAnalyzed(true);
       // 변경 사유 기본값으로 수정 사유를 넣어준다. 그대로 써도 되고 고쳐도 된다.
       if (!commitTitle.trim()) setCommitTitle(reason.trim());
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "AI 검토에 실패했습니다.");
+      setAnalyzeError(err instanceof Error ? err.message : "AI 검토에 실패했습니다.");
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  /** 증빙 파일 첨부 — 지금은 화면에만 표시. 같은 파일을 다시 고를 수 있게 매번 비운다. */
+  function onPickFiles(files: FileList | null) {
+    const picked = Array.from(files ?? []);
+    setFiles((prev) => [...prev, ...picked]);
+  }
+
+  function removeFile(i: number) {
+    setFiles((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   async function onSaveConsensus() {
     const user = getCurrentUser();
     if (!user) return;
     if (!contact.trim()) {
-      setActionError("고객측 담당자를 입력하세요.");
+      setConsensusError("고객측 담당자를 입력하세요.");
       return;
     }
     setSavingConsensus(true);
-    setActionError(null);
+    setConsensusError(null);
     try {
       const updated = await recordConsensus(projectId, requirementId, {
         userId: user.id,
@@ -127,7 +157,7 @@ export default function RequirementEditPage() {
       });
       setReq(updated);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "합의 기록에 실패했습니다.");
+      setConsensusError(err instanceof Error ? err.message : "합의 기록에 실패했습니다.");
     } finally {
       setSavingConsensus(false);
     }
@@ -137,11 +167,11 @@ export default function RequirementEditPage() {
     const user = getCurrentUser();
     if (!user) return;
     if (!commitTitle.trim()) {
-      setActionError("변경 사유를 입력하세요 — 버전 이력의 제목이 됩니다.");
+      setConfirmError("변경 사유를 입력하세요 — 버전 이력의 제목이 됩니다.");
       return;
     }
     setConfirming(true);
-    setActionError(null);
+    setConfirmError(null);
     try {
       await confirmRequirement(projectId, requirementId, {
         userId: user.id,
@@ -150,7 +180,7 @@ export default function RequirementEditPage() {
       });
       router.push(`/projects/${projectId}/requirements/${requirementId}`);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "확정에 실패했습니다.");
+      setConfirmError(err instanceof Error ? err.message : "확정에 실패했습니다.");
       setConfirming(false);
     }
   }
@@ -236,23 +266,24 @@ export default function RequirementEditPage() {
               </div>
             </div>
 
-            {/* ── 2단계 : AI 검토 결과를 보고 본문 수정 ─────────────── */}
+            {/* ── 2단계 : AI 검토 결과를 보고 본문 수정 ───────────────
+                최초 확정 화면(화면 4)의 1단계와 완전히 같은 구조 — 왼쪽은 항상
+                떠 있는 읽기 전용 결과 카드(+ 다시 분석 버튼), 오른쪽은 편집만. */}
             <div className="wstep">
-              <div className={`wnum${analyzed ? " ok" : ""}`}>2</div>
+              <div className="wnum">2</div>
               <div className="wbody">
                 <div className="wtitle">
                   AI 검토 결과를 보고 본문 수정
                   <span className="wsub">
-                    왼쪽은 지금 확정된 <b>v{baseVersion} 원문</b>(읽기 전용)이고, 오른쪽에서 고친 뒤
-                    AI 검토를 실행하면 오른쪽에 결과가 나타납니다.
+                    왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.
                   </span>
                 </div>
 
                 <div className="w2col">
-                  {/* 왼쪽: v1.0.0 본문 — 지금 확정된 원문 그대로. 편집 중에도 비교 기준으로 고정. */}
+                  {/* 왼쪽: AI 검토 결과 — 변경분만 분석. 적용 버튼 없음. */}
                   <div className="wcard readonly">
                     <div className="wch">
-                      📄 v{baseVersion} 본문
+                      🤖 AI 검토 결과
                       <span className="rt">
                         <span
                           className="lbl"
@@ -260,41 +291,71 @@ export default function RequirementEditPage() {
                         >
                           읽기 전용
                         </span>
+                        <span
+                          className="lbl"
+                          style={{
+                            padding: "1px 9px",
+                            marginLeft: 6,
+                            background: "var(--surface-muted)",
+                            color: "var(--muted)",
+                          }}
+                        >
+                          {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
+                        </span>
+                        <span className="cnt diff" style={{ marginLeft: 6 }}>
+                          변경분만 분석
+                        </span>
+                        <span className="cnt" style={{ marginLeft: 8 }}>
+                          {req.findings.length}건
+                        </span>
+                        <button
+                          className="btn sm"
+                          style={{ marginLeft: 8 }}
+                          onClick={onAnalyze}
+                          disabled={analyzing}
+                        >
+                          {analyzing ? "분석 중…" : "↻ 다시 분석"}
+                        </button>
                       </span>
                     </div>
                     <div className="wcb">
-                      <div className="srcbox" style={{ marginBottom: 12 }}>
-                        <div className="sh">확정본 v{baseVersion}</div>
-                        <div className="srctext">{baseContent}</div>
+                      {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
+                      <AiFindings
+                        content={draft}
+                        findings={req.findings}
+                        contentLabel="최종 본문 (변경분만 검토)"
+                        empty="바뀐 부분에서 새로 검출된 문제가 없습니다. 본문을 고친 뒤 “다시 분석”을 눌러보세요."
+                      />
+                      <div className="wnote">
+                        {req.findings.length === 0
+                          ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
+                          : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
                       </div>
-                      <button className="btn prim" onClick={onAnalyze} disabled={analyzing}>
-                        {analyzing ? "분석 중…" : analyzed ? "↻ 다시 분석" : "AI 검토 실행"}
-                      </button>
-                      <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "10px 0 0" }}>
-                        오른쪽 본문을 고치고 위 버튼을 누르면, 확정본 대비 <b>바뀐 부분과 수정
-                        사유만</b> 검토합니다. 이미 합의된 나머지 문장은 건드리지 않습니다.
-                      </p>
+                      {analyzeError && (
+                        <p className="lmsg err" style={{ marginTop: 10, marginBottom: 0 }}>
+                          {analyzeError}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* 오른쪽: AI 결과 + 편집 — 여기서만 편집. 분석 전엔 빈 편집칸, 분석 후엔
-                      AI 결과(하이라이트·검출)가 위에 뜨고 그 아래에서 계속 고친다. */}
+                  {/* 오른쪽: 최종 본문 — 여기서만 편집 */}
                   <div className="wcard">
                     <div className="wch">
-                      🤖 AI 결과
+                      ✏️ 최종 본문
                       <span className="rt">
                         <span className="lbl blue" style={{ padding: "1px 9px" }}>
                           여기서만 편집
                         </span>
-                        {analyzed && (
-                          <span className="cnt diff" style={{ marginLeft: 6 }}>
-                            변경분만 분석
-                          </span>
-                        )}
                       </span>
                     </div>
                     <div className="wcb">
-                      {!analyzed ? (
+                      {dirty ? (
+                        <div className="prefill">
+                          ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나,
+                          아래 텍스트를 직접 고치세요.
+                        </div>
+                      ) : (
                         <div
                           className="prefill"
                           style={{
@@ -303,28 +364,9 @@ export default function RequirementEditPage() {
                             color: "var(--muted)",
                           }}
                         >
-                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 아래에서 고친 뒤 왼쪽의
-                          AI 검토를 실행하면 여기에 결과가 나타납니다.
+                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 고칠 부분을 수정한 뒤 왼쪽에서
+                          AI 검토를 실행하세요.
                         </div>
-                      ) : (
-                        <>
-                          {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
-                          <AiFindings
-                            content={draft}
-                            findings={req.findings}
-                            contentLabel="최종 본문 (변경분만 검토)"
-                            empty="바뀐 부분에서 새로 검출된 문제가 없습니다."
-                          />
-                          <div className="wnote">
-                            {req.findings.length === 0
-                              ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
-                              : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
-                          </div>
-                          <div className="prefill">
-                            ⬇ 아래 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로
-                            확정하거나 직접 고치세요.
-                          </div>
-                        </>
                       )}
                       <textarea
                         className="reqta"
@@ -433,6 +475,61 @@ export default function RequirementEditPage() {
                           onChange={(e) => setNote(e.target.value)}
                           placeholder="위 수정안(우선순위 req-ta-01 기준 통일)에 동의함. 회신 메일로 확인."
                         />
+
+                        {/* 증빙 파일 — 디자인만. 실제 업로드·저장은 나중에 붙인다. */}
+                        <div className="fieldlab">
+                          증빙 파일{" "}
+                          <span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 11.5 }}>
+                            (선택 · 준비 중)
+                          </span>
+                        </div>
+                        <div className="fileattach">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              onPickFiles(e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn sm"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            📎 파일 첨부
+                          </button>
+                          <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 10 }}>
+                            회신 메일 캡처·회의록 등 합의 근거를 첨부하세요 — 지금은 화면에만
+                            표시되고 저장되지 않습니다.
+                          </span>
+                          {files.length > 0 && (
+                            <ul className="filelist">
+                              {files.map((f, i) => (
+                                <li key={`${f.name}-${i}`}>
+                                  <span className="fname">📄 {f.name}</span>
+                                  <span className="fsize">{formatFileSize(f.size)}</span>
+                                  <button
+                                    type="button"
+                                    className="filex"
+                                    onClick={() => removeFile(i)}
+                                    aria-label="파일 제거"
+                                  >
+                                    ✕
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {consensusError && (
+                          <p className="lmsg err" style={{ marginTop: 12, marginBottom: 0 }}>
+                            {consensusError}
+                          </p>
+                        )}
                         <div className="wfoot">
                           <button className="btn prim" onClick={onSaveConsensus} disabled={savingConsensus}>
                             {savingConsensus ? "저장 중…" : "합의 기록 저장"}
@@ -466,9 +563,9 @@ export default function RequirementEditPage() {
                       />
                       <span className="aihint">✨ 수정 사유에서 채움 · 편집 가능</span>
                     </div>
-                    {actionError && (
+                    {confirmError && (
                       <p className="lmsg err" style={{ marginBottom: 0 }}>
-                        {actionError}
+                        {confirmError}
                       </p>
                     )}
                     <div className="wfoot">

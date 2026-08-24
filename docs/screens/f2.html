@@ -882,25 +882,27 @@
               <div class="wstep">
                 <div class="wnum">2</div>
                 <div class="wbody">
-                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 지금 확정된 <b>v1.0.1 원문</b>(읽기 전용)이고, 오른쪽에서 고친 뒤 AI 검토를 실행하면 오른쪽에 결과가 나타납니다.</span></div>
+                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다. 최초 확정 화면(화면 4)의 1단계와 같은 구조 — "다시 분석"이 항상 떠 있다.</span></div>
                   <div class="w2col">
                     <div class="wcard readonly">
-                      <div class="wch">📄 v1.0.1 본문 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span></span></div>
+                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span><span class="cnt" style="margin-left:6px">1건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
                       <div class="wcb">
-                        <div class="editbox2" style="margin-bottom:12px">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.</div>
-                        <span class="btn prim">AI 검토 실행</span>
-                        <p style="font-size:12.5px;color:var(--fgm);margin:10px 0 0">오른쪽 본문을 고치고 위 버튼을 누르면, 확정본 대비 <b>바뀐 부분과 수정 사유만</b> 검토합니다.</p>
+                        <!-- 검출 구절은 바뀐 뒤 문장(오른쪽 최종 본문) 기준이라 그 문장에 형광펜을 칠한다. -->
+                        <div class="srcbox">
+                          <div class="sh">최종 본문 (변경분만 검토) <span class="shhint">형광펜 = AI가 지적한 구절</span></div>
+                          <div class="srctext">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다. <mark class="hl amb">생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC 높은 순으로 정한다<span class="no">1</span></mark>.</div>
+                        </div>
+                        <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:0">
+                          <div class="ft"><span class="fno amb">1</span><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
+                          <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
+                        </div>
+                        <div class="wnote">이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음</div>
                       </div>
                     </div>
                     <div class="wcard">
-                      <div class="wch">🤖 AI 결과 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span><span class="cnt" style="margin-left:6px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span></span></div>
+                      <div class="wch">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span></span></div>
                       <div class="wcb">
-                        <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:12px">
-                          <div class="ft"><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
-                          <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
-                        </div>
-                        <div class="wnote">이번에 바뀐 부분만 분석 · 새로운 이슈 없음</div>
-                        <div class="prefill">⬇ 아래 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나 직접 고치세요.</div>
+                        <div class="prefill">⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나, 아래 텍스트를 직접 고치세요.</div>
                         <div class="editbox2 editing">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.<ins> 생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</ins><span class="caret2"></span></div>
                         <div class="prefill-act"><span class="btn sm">↩ 확정본(v1.0.1)으로 되돌리기</span></div>
                       </div>
@@ -951,8 +953,9 @@
       <span class="chipspec"><b>진입 조건</b> 상태가 확정일 때만 — 상세 화면(화면 3)의 "수정하기"에서 온다</span>
       <span class="chipspec"><b>수정 사유</b> 고객 요청이든 직접 판단한 이유든 자유 서술 — AI 검토가 이 내용을 함께 참고하고, 그대로 <b>버전 이력의 제목</b>이 된다</span>
       <span class="chipspec"><b>변경분만 AI 검토</b> 확정본 전체가 아니라 이번에 수정된 부분 + 사유만 분석 · 이미 합의된 나머지는 다시 건드리지 않음</span>
-      <span class="chipspec"><b>AI 카드는 읽기 전용</b> AI 쪽에는 버튼이 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>확정될 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 원문으로 돌릴지만 결정</span>
+      <span class="chipspec"><b>AI 카드는 읽기 전용</b> "다시 분석" 외에 다른 버튼은 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>최종 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 확정본으로 돌릴지만 결정</span>
       <span class="chipspec"><b>고객 합의 필수</b> 합의 방법·고객측 담당자·합의일·합의 내용을 기록해야 "확정 저장"이 활성화됨 · 합의가 안 되면 <b>고객 합의 대기</b>로 남고 나중에 이어서 확정</span>
+      <span class="chipspec"><b>증빙 파일 첨부</b> 합의 내용 아래에서 회신 메일 캡처·회의록 등을 첨부할 수 있다 — 지금은 화면 디자인만이고 실제 업로드·저장은 다음 단계에서 붙인다</span>
       <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/diff-analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ new version)</span>
     </div>
   </section>
