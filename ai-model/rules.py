@@ -173,22 +173,44 @@ def _axis_values(text: str, value_map: dict[str, list[str]]) -> list[str]:
     return found
 
 
+def _axis_matches(text: str, value_map: dict[str, list[str]]) -> list[tuple[str, str]]:
+    """텍스트에 등장하는 축 값을 (canonical 이름, 실제로 매치된 문구) 로 모은다.
+
+    _axis_values 와 달리 실제 매치된 문구(원문 그대로의 부분 문자열)를 같이
+    돌려준다 — 화면에서 원문에 형광펜을 칠하려면 canonical 이름("거리 순")이
+    아니라 원문에 실제로 있는 문구("가장 가까운")가 필요하기 때문이다.
+    """
+    found = []
+    for canonical, patterns in value_map.items():
+        for p in patterns:
+            if p in text:
+                found.append((canonical, p))
+                break
+    return found
+
+
 def _detect_conflicts(content: str, existing: list[dict]) -> list[Finding]:
     out: list[Finding] = []
     for axis, value_map in _CONFLICT_AXES:
-        mine = _axis_values(content, value_map)
+        mine = _axis_matches(content, value_map)
         if not mine:
             continue
+        mine_canonicals = {canonical for canonical, _ in mine}
+        mine_canonical, mine_span = mine[0]
         for other in existing:
             req_key = other.get("reqKey") or ""
             theirs = _axis_values(other.get("content") or "", value_map)
-            if not theirs or set(mine) == set(theirs):
+            if not theirs or mine_canonicals == set(theirs):
                 continue
             out.append(Finding(
                 T_CONFLICT,
-                req_key,
+                # 상대 요구사항의 ID(req_key)가 아니라 "이 요구사항" 안에서 실제로
+                # 매치된 문구를 넣는다 — 그래야 화면이 원문에 형광펜을 칠할 수 있다.
+                # (예전엔 여기 req_key를 넣어서, 이 요구사항의 원문에는 당연히 없는
+                # 문자열이라 매번 "원문에서 위치를 찾지 못함"으로 표시되는 버그가 있었다.)
+                mine_span,
                 f"{req_key}는 \"{theirs[0]}\"으로 {axis}을 정하는데, "
-                f"이 요구사항은 \"{mine[0]}\"이라 배치될 수 있음",
+                f"이 요구사항은 \"{mine_canonical}\"이라 배치될 수 있음",
                 f"{axis}을 하나로 통일 — 문장 수정만으론 해결되지 않으므로 고객 협의 필요",
                 conflict_req_key=req_key,
             ))
