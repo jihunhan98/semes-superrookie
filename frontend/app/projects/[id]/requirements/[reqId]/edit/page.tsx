@@ -243,102 +243,104 @@ export default function RequirementEditPage() {
                 <div className="wtitle">
                   AI 검토 결과를 보고 본문 수정
                   <span className="wsub">
-                    위 카드는 상세 화면과 같은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 아래
-                    본문 칸에서만 합니다.
+                    왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.
                   </span>
                 </div>
 
-                {/* 위: AI 검토 결과 — 요구사항 상세 화면과 같은 형식(읽기 전용, 하이라이트). */}
-                <div className="wcard readonly">
-                  <div className="wch">
-                    🤖 AI 검토 결과
-                    <span className="rt">
-                      <span
-                        className="lbl"
-                        style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
-                      >
-                        읽기 전용
+                <div className="w2col">
+                  {/* 왼쪽: AI 검토 결과 — 변경분만 분석. 적용 버튼 없음. */}
+                  <div className="wcard readonly">
+                    <div className="wch">
+                      🤖 AI 검토 결과
+                      <span className="rt">
+                        <span
+                          className="lbl"
+                          style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
+                        >
+                          읽기 전용
+                        </span>
+                        <span className="cnt diff" style={{ marginLeft: 8 }}>
+                          변경분만 분석
+                        </span>
                       </span>
-                      <span className="cnt diff" style={{ marginLeft: 8 }}>
-                        변경분만 분석
-                      </span>
-                    </span>
-                  </div>
-                  <div className="wcb">
-                    {!analyzed ? (
-                      <>
-                        <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
-                          아래 본문을 고치고 <b>AI 검토 실행</b>을 누르면, 확정본 대비{" "}
-                          <b>바뀐 부분과 수정 사유만</b> 검토합니다. 이미 합의된 나머지 문장은
-                          건드리지 않습니다.
-                        </p>
-                        <button className="btn prim" onClick={onAnalyze} disabled={analyzing}>
-                          {analyzing ? "분석 중…" : "AI 검토 실행"}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
-                        <AiFindings
-                          content={draft}
-                          findings={req.findings}
-                          contentLabel="최종 본문 (변경분만 검토)"
-                          empty="바뀐 부분에서 새로 검출된 문제가 없습니다."
-                        />
-                        <div className="wnote">
-                          {req.findings.length === 0
-                            ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
-                            : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
-                        </div>
+                    </div>
+                    <div className="wcb">
+                      {!analyzed ? (
+                        <>
+                          <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
+                            오른쪽 본문을 고치고 <b>AI 검토 실행</b>을 누르면, 확정본 대비{" "}
+                            <b>바뀐 부분과 수정 사유만</b> 검토합니다. 이미 합의된 나머지 문장은
+                            건드리지 않습니다.
+                          </p>
+                          <button className="btn prim" onClick={onAnalyze} disabled={analyzing}>
+                            {analyzing ? "분석 중…" : "AI 검토 실행"}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
+                          <AiFindings
+                            content={draft}
+                            findings={req.findings}
+                            contentLabel="최종 본문 (변경분만 검토)"
+                            empty="바뀐 부분에서 새로 검출된 문제가 없습니다."
+                          />
+                          <div className="wnote">
+                            {req.findings.length === 0
+                              ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
+                              : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
+                          </div>
+                        </>
+                      )}
+                      {analyzed && (
                         <div className="prefill-act">
                           <button className="btn sm" onClick={onAnalyze} disabled={analyzing}>
                             {analyzing ? "분석 중…" : "↻ 다시 분석"}
                           </button>
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* 아래: 최종 본문 — 여기서만 편집. AI 카드와 나란히 두지 않고 아래로
-                    뺀 이유는 편집이 참고 자료 보기와 뒤섞이지 않게 하려는 것. */}
-                <div className="wcard" style={{ marginTop: 16 }}>
-                  <div className="wch">
-                    ✏️ 최종 본문
-                    <span className="rt">
-                      <span className="lbl blue" style={{ padding: "1px 9px" }}>
-                        여기서만 편집
+                  {/* 오른쪽: 최종 본문 — 여기서만 편집 */}
+                  <div className="wcard">
+                    <div className="wch">
+                      ✏️ 최종 본문
+                      <span className="rt">
+                        <span className="lbl blue" style={{ padding: "1px 9px" }}>
+                          여기서만 편집
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                  <div className="wcb">
-                    {analyzed ? (
-                      <div className="prefill">
-                        ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나,
-                        아래 텍스트를 직접 고치세요.
+                    </div>
+                    <div className="wcb">
+                      {analyzed ? (
+                        <div className="prefill">
+                          ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나,
+                          아래 텍스트를 직접 고치세요.
+                        </div>
+                      ) : (
+                        <div
+                          className="prefill"
+                          style={{
+                            background: "var(--surface-muted)",
+                            borderColor: "var(--line)",
+                            color: "var(--muted)",
+                          }}
+                        >
+                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 고칠 부분을 수정한 뒤 왼쪽에서
+                          AI 검토를 실행하세요.
+                        </div>
+                      )}
+                      <textarea
+                        className="reqta"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                      />
+                      <div className="prefill-act">
+                        <button className="btn sm" onClick={() => setDraft(baseContent)} disabled={!dirty}>
+                          ↩ 확정본(v{baseVersion})으로 되돌리기
+                        </button>
                       </div>
-                    ) : (
-                      <div
-                        className="prefill"
-                        style={{
-                          background: "var(--surface-muted)",
-                          borderColor: "var(--line)",
-                          color: "var(--muted)",
-                        }}
-                      >
-                        지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 고칠 부분을 수정한 뒤 위에서
-                        AI 검토를 실행하세요.
-                      </div>
-                    )}
-                    <textarea
-                      className="reqta"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                    />
-                    <div className="prefill-act">
-                      <button className="btn sm" onClick={() => setDraft(baseContent)} disabled={!dirty}>
-                        ↩ 확정본(v{baseVersion})으로 되돌리기
-                      </button>
                     </div>
                   </div>
                 </div>

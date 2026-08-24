@@ -1,9 +1,9 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/page": "app/page.js",
-  "/projects/[id]/page": "app/projects/[id]/page.js",
   "/login/page": "app/login/page.js",
+  "/projects/[id]/page": "app/projects/[id]/page.js",
+  "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/projects/[id]/requirements/[reqId]/edit/page": "app/projects/[id]/requirements/[reqId]/edit/page.js",
   "/projects/[id]/requirements/[reqId]/page": "app/projects/[id]/requirements/[reqId]/page.js",
   "/projects/[id]/requirements/[reqId]/review/page": "app/projects/[id]/requirements/[reqId]/review/page.js",
