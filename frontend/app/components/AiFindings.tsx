@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Finding } from "../lib/api";
 
 /** 상충은 문장을 고쳐서 해결되는 게 아니라 다른 요구사항과의 문제라 색을 구분한다. */
@@ -57,15 +57,18 @@ function Highlighted({
   content,
   findings,
   marks,
+  dismissed,
   active,
   onActive,
 }: {
   content: string;
   findings: Finding[];
   marks: Mark[];
+  dismissed: Set<number>;
   active: number | null;
   onActive: (idx: number | null) => void;
 }) {
+  marks = marks.filter((m) => !dismissed.has(m.idx));
   const parts: ReactNode[] = [];
   let cursor = 0;
 
@@ -113,7 +116,14 @@ export default function AiFindings({
   empty: ReactNode;
 }) {
   const [active, setActive] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // 다시 분석해서 findings 가 통째로 새로 오면 예전 숨김 상태는 의미가 없다 —
+  // 인덱스가 다른 검출을 가리킬 수 있으므로 초기화한다.
+  useEffect(() => {
+    setDismissed(new Set());
+  }, [findings]);
 
   const { marks, located } = useMemo(() => locate(content, findings), [content, findings]);
 
@@ -121,6 +131,17 @@ export default function AiFindings({
     setActive(idx);
     cardRefs.current[idx]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
+
+  function dismiss(idx: number) {
+    setDismissed((prev) => new Set(prev).add(idx));
+    if (active === idx) setActive(null);
+  }
+
+  const visible = findings.filter((_, i) => !dismissed.has(i));
+  let lastVisibleIdx = -1;
+  findings.forEach((_, i) => {
+    if (!dismissed.has(i)) lastVisibleIdx = i;
+  });
 
   return (
     <>
@@ -133,16 +154,30 @@ export default function AiFindings({
           content={content}
           findings={findings}
           marks={marks}
+          dismissed={dismissed}
           active={active}
           onActive={(idx) => (idx === null ? setActive(null) : focusFinding(idx))}
         />
       </div>
 
+      {dismissed.size > 0 && (
+        <div className="fdismissed">
+          {dismissed.size}건 숨김
+          <button className="btn sm" onClick={() => setDismissed(new Set())}>
+            ↺ 모두 다시 보기
+          </button>
+        </div>
+      )}
+
       {findings.length === 0 ? (
         <div className="fempty">{empty}</div>
+      ) : visible.length === 0 ? (
+        <div className="fempty">전부 숨겼습니다. 위 &ldquo;모두 다시 보기&rdquo;로 되돌릴 수 있습니다.</div>
       ) : (
         findings.map((f, i) => {
+          if (dismissed.has(i)) return null;
           const conflict = isConflict(f.findingType);
+          const isLastVisible = i === lastVisibleIdx;
           return (
             <div
               key={i}
@@ -150,10 +185,22 @@ export default function AiFindings({
                 cardRefs.current[i] = el;
               }}
               className={`find${active === i ? " on" : ""}${conflict ? " cfc" : ""}`}
-              style={i === findings.length - 1 ? { marginBottom: 0 } : undefined}
+              style={isLastVisible ? { marginBottom: 0 } : undefined}
               onMouseEnter={() => setActive(i)}
               onMouseLeave={() => setActive(null)}
             >
+              <button
+                type="button"
+                className="fdismiss"
+                title="이 제안 숨기기"
+                aria-label="이 제안 숨기기"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismiss(i);
+                }}
+              >
+                ✕
+              </button>
               <div className="ft">
                 <span className={`fno ${conflict ? "cf" : "amb"}`}>{i + 1}</span>
                 <span className={`ftype2 ${conflict ? "cf" : "amb"}`}>{f.findingType}</span>
