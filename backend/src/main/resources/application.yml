@@ -15,9 +15,9 @@ spring:
 server:
   port: 8080
 
-# 프론트(Next.js) 개발 서버 오리진
 app:
-  cors-origin: http://localhost:3000
+  # CORS 허용 오리진은 CorsConfig 에서 패턴("*")으로 전부 허용한다 — 프론트를
+  # localhost 로 열든 LAN IP 로 열든 여기서 따로 맞출 필요가 없다.
   ai:
     # 요구사항 검토 AI 서버(ai-model, FastAPI). 미가동이어도 등록은 되며 검출 0건으로 처리된다.
     base-url: http://localhost:8001

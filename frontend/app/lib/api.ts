@@ -1,5 +1,23 @@
 // 백엔드(Spring Boot) 주소. 세션/토큰 없음 — 로그인 결과 user만 받아 사용.
-export const BACKEND = process.env.NEXT_PUBLIC_BACKEND ?? "http://localhost:8080";
+//
+// "localhost"를 그대로 박아두면 안 된다 — 그건 "이 브라우저가 실행되는 컴퓨터
+// 자신"을 가리키지, "프론트를 서빙한 컴퓨터"를 가리키지 않는다. 그래서 다른
+// 컴퓨터에서 <내 IP>:3000으로 접속하면, 그 브라우저는 로그인 요청을
+// localhost(=그 컴퓨터 자신)로 보내려다 실패한다 — 네트워크를 나가보지도
+// 못하고 그 자리에서 막힌다.
+//
+// 대신 브라우저 주소창의 호스트를 그대로 따라간다 — 프론트와 백엔드가 항상
+// 같은 컴퓨터에서 뜬다는 이 프로젝트의 배포 방식에서는, 프론트에 접속한
+// 주소가 곧 백엔드 주소이기도 하기 때문이다. 이러면 localhost로 열든
+// LAN IP로 열든 따로 설정할 필요 없이 항상 맞는 주소를 쓴다.
+function defaultBackend(): string {
+  if (typeof window !== "undefined") {
+    return `http://${window.location.hostname}:8080`;
+  }
+  return "http://localhost:8080"; // 서버 사이드 렌더링 시점 — 실제 요청엔 안 쓰인다.
+}
+
+export const BACKEND = process.env.NEXT_PUBLIC_BACKEND ?? defaultBackend();
 
 export type User = {
   id: number;
