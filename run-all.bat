@@ -4,14 +4,16 @@ setlocal
 cd /d "%~dp0"
 
 rem ============================================================
-rem  ReqOps 전체 실행 — AI 서버 / 백엔드 / 프론트를 각각 새 창에 띄운다.
-rem  창을 따로 여는 이유: 세 서버 로그가 한 창에 섞이면 어느 쪽 에러인지
+rem  ReqOps 실행 — AI 서버 / 프론트를 각각 새 창에 띄운다.
+rem  창을 따로 여는 이유: 로그가 한 창에 섞이면 어느 쪽 에러인지
 rem  구분이 안 되기 때문. 끄려면 stop-all.bat 을 실행.
 rem
 rem  이 스크립트는 "있는 것만 띄운다". 환경마다 준비 상태가 달라서
-rem  (mvn 이 없거나, node_modules 대신 빌드 산출물만 있거나) 하나가
-rem  없다고 전부 멈추면 오히려 불편하기 때문. 못 띄운 건 이유와 함께
-rem  맨 아래에 모아서 알려준다.
+rem  (node_modules 대신 빌드 산출물만 있거나) 하나가 없다고 전부 멈추면
+rem  오히려 불편하기 때문. 못 띄운 건 이유와 함께 맨 아래에 모아서 알려준다.
+rem
+rem  백엔드(Spring Boot)는 여기서 띄우지 않는다 — 따로 IDE/터미널에서 직접
+rem  실행한다. 이 배치는 AI 서버와 프론트만 담당한다.
 rem
 rem  cd /d "%~dp0" 로 이미 저장소 루트에 와 있으므로, start 안에서는
 rem  상대경로만 쓴다. cmd /k "..." 안에 따옴표를 또 넣으면 경로에 공백이
@@ -35,66 +37,19 @@ if exist "ai-model\.venv\Scripts\python.exe" set "PYEXE=.venv\Scripts\python.exe
 if not defined PYEXE if exist "ai-model\venv\Scripts\python.exe" set "PYEXE=venv\Scripts\python.exe"
 
 if defined PYEXE (
-  echo  [1/3] AI 서버 실행           http://localhost:8001/docs
+  echo  [1/2] AI 서버 실행           http://localhost:8001/docs
   start "ReqOps - AI 서버 (8001)" cmd /k "chcp 65001 >nul && cd /d ai-model && %PYEXE% -m uvicorn main:app --port 8001"
   rem 백엔드가 요구사항 등록 때 AI 서버를 부르므로 이쪽이 먼저 떠 있는 게 낫다.
   timeout /t 3 /nobreak >nul
 ) else (
-  echo  [1/3] AI 서버 건너뜀         가상환경 없음
+  echo  [1/2] AI 서버 건너뜀         가상환경 없음
   set "SKIPPED=1"
   set "MSG_AI=1"
 )
 
-rem ── 2. 백엔드 (Spring Boot · 8080) ───────────────────────────
-rem  mvn 이 PATH 에 없는 환경이 흔하다(IDE 안에 내장된 Maven 만 있는 경우).
-rem  찾는 순서는 "확실한 것 먼저":
-rem    1) PATH 의 mvn            - 바로 됨
-rem    2) MAVEN_HOME / M2_HOME   - 설치는 돼 있는데 PATH 에만 없는 경우
-rem    3) mvnw.cmd (래퍼)        - Maven 없어도 되지만 첫 실행 때 내려받는다
-rem    4) 이미 만들어 둔 jar     - 네트워크 불필요. 단, 소스 수정분은 반영 안 됨
-rem  다 없으면 IDE 에서 직접 실행하라고 안내만 하고 나머지는 그대로 띄운다.
+echo  ^> 백엔드^(8080^)는 이 배치가 아니라 직접 실행하세요.
 
-set "BACKCMD="
-set "BACKNOTE="
-
-where mvn >nul 2>&1
-if not errorlevel 1 set "BACKCMD=mvn spring-boot:run"
-
-rem 전체 경로를 명령에 박으면 cmd /k "..." 안에서 따옴표가 중첩돼 깨지므로,
-rem PATH 앞에 붙여서 이름만으로 부를 수 있게 한다(자식 창이 이 PATH 를 물려받는다).
-if not defined BACKCMD if defined MAVEN_HOME if exist "%MAVEN_HOME%\bin\mvn.cmd" (
-  set "PATH=%MAVEN_HOME%\bin;%PATH%"
-  set "BACKCMD=mvn spring-boot:run"
-)
-if not defined BACKCMD if defined M2_HOME if exist "%M2_HOME%\bin\mvn.cmd" (
-  set "PATH=%M2_HOME%\bin;%PATH%"
-  set "BACKCMD=mvn spring-boot:run"
-)
-if not defined BACKCMD if exist "backend\mvnw.cmd" (
-  set "BACKCMD=mvnw.cmd spring-boot:run"
-  set "BACKNOTE=래퍼 - 첫 실행은 Maven 내려받느라 오래 걸립니다"
-)
-if not defined BACKCMD (
-  for %%j in (backend\target\*.jar) do if not defined BACKCMD (
-    set "BACKCMD=java -jar target\%%~nxj"
-    set "BACKNOTE=기존 jar - 최근 소스 수정은 반영되지 않았을 수 있습니다"
-  )
-)
-
-if defined BACKCMD (
-  echo  [2/3] 백엔드 실행            http://localhost:8080
-  if defined BACKNOTE echo        ^> %BACKNOTE%
-  start "ReqOps - 백엔드 (8080)" cmd /k "chcp 65001 >nul && cd /d backend && %BACKCMD%"
-  rem 백엔드는 Oracle 연결까지 있어서 기동이 오래 걸린다. 로그를 흐름대로
-  rem 보려고 프론트 띄우기 전에 잠깐 기다린다.
-  timeout /t 5 /nobreak >nul
-) else (
-  echo  [2/3] 백엔드 건너뜀          Maven 을 못 찾음 — IDE 에서 실행하세요
-  set "SKIPPED=1"
-  set "MSG_BACK=1"
-)
-
-rem ── 3. 프론트 (Next.js · 3000) ───────────────────────────────
+rem ── 2. 프론트 (Next.js · 3000) ───────────────────────────────
 rem  node_modules 가 있으면 개발 서버(코드 수정 즉시 반영), 없으면
 rem  커밋된 빌드 산출물로 띄운다. 산출물은 npm install 없이도 돌아간다.
 
@@ -123,11 +78,9 @@ echo  ===========================================
 echo   각 창에서 로그를 확인하세요.
 echo.
 echo    AI 서버   http://localhost:8001/docs
-echo    백엔드    http://localhost:8080
 echo    프론트    http://localhost:3000/login
 echo.
-echo   백엔드는 기동에 20~40초 걸립니다.
-echo   "Started ReqopsApplication" 로그가 뜨면 준비 완료입니다.
+echo   백엔드^(8080^)는 직접 실행하세요. 프론트가 API 를 8080 으로 부릅니다.
 echo.
 echo   종료하려면 stop-all.bat 을 실행하세요.
 echo  ===========================================
@@ -143,14 +96,6 @@ if defined SKIPPED (
     echo      .venv\Scripts\activate
     echo      pip install -r requirements.txt
     echo    ^(AI 서버가 없어도 요구사항 등록은 됩니다 - 규칙 기반으로만 검토됩니다.^)
-  )
-  if defined MSG_BACK (
-    echo.
-    echo  백엔드 - Maven 을 못 찾았습니다. 지금은 IDE 에서 ReqopsApplication 을
-    echo    실행하시면 되고, 아래 중 하나를 해두면 다음부터는 이 배치가 띄웁니다.
-    echo      1^) backend\mvnw.cmd 실행  - Maven 설치 없이 자동으로 받아옵니다
-    echo      2^) MAVEN_HOME 환경변수를 Maven 설치 폴더로 지정
-    echo      3^) IDE 의 Maven 패널에서 package 를 한 번 실행  ^(target\*.jar 생성^)
   )
   if defined MSG_FRONT (
     echo.
