@@ -882,25 +882,25 @@
               <div class="wstep">
                 <div class="wnum">2</div>
                 <div class="wbody">
-                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.</span></div>
+                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 지금 확정된 <b>v1.0.1 원문</b>(읽기 전용)이고, 오른쪽에서 고친 뒤 AI 검토를 실행하면 오른쪽에 결과가 나타납니다.</span></div>
                   <div class="w2col">
                     <div class="wcard readonly">
-                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span></span></div>
+                      <div class="wch">📄 v1.0.1 본문 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span></span></div>
+                      <div class="wcb">
+                        <div class="editbox2" style="margin-bottom:12px">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.</div>
+                        <span class="btn prim">AI 검토 실행</span>
+                        <p style="font-size:12.5px;color:var(--fgm);margin:10px 0 0">오른쪽 본문을 고치고 위 버튼을 누르면, 확정본 대비 <b>바뀐 부분과 수정 사유만</b> 검토합니다.</p>
+                      </div>
+                    </div>
+                    <div class="wcard">
+                      <div class="wch">🤖 AI 결과 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span><span class="cnt" style="margin-left:6px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span></span></div>
                       <div class="wcb">
                         <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:12px">
                           <div class="ft"><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
                           <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
                         </div>
-                        <div class="fieldlab">제안된 문장</div>
-                        <div class="aisuggest">…최대 1건만 허용한다. <b>생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</b></div>
                         <div class="wnote">이번에 바뀐 부분만 분석 · 새로운 이슈 없음</div>
-                        <div class="prefill-act"><span class="btn sm">↻ 다시 분석</span></div>
-                      </div>
-                    </div>
-                    <div class="wcard">
-                      <div class="wch">✏️ 최종 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span></span></div>
-                      <div class="wcb">
-                        <div class="prefill">⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나, 아래 텍스트를 직접 고치세요.</div>
+                        <div class="prefill">⬇ 아래 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나 직접 고치세요.</div>
                         <div class="editbox2 editing">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다.<ins> 생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC(배터리 잔량) 높은 순으로 정한다.</ins><span class="caret2"></span></div>
                         <div class="prefill-act"><span class="btn sm">↩ 확정본(v1.0.1)으로 되돌리기</span></div>
                       </div>

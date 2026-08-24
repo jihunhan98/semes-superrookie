@@ -243,15 +243,16 @@ export default function RequirementEditPage() {
                 <div className="wtitle">
                   AI 검토 결과를 보고 본문 수정
                   <span className="wsub">
-                    왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.
+                    왼쪽은 지금 확정된 <b>v{baseVersion} 원문</b>(읽기 전용)이고, 오른쪽에서 고친 뒤
+                    AI 검토를 실행하면 오른쪽에 결과가 나타납니다.
                   </span>
                 </div>
 
                 <div className="w2col">
-                  {/* 왼쪽: AI 검토 결과 — 변경분만 분석. 적용 버튼 없음. */}
+                  {/* 왼쪽: v1.0.0 본문 — 지금 확정된 원문 그대로. 편집 중에도 비교 기준으로 고정. */}
                   <div className="wcard readonly">
                     <div className="wch">
-                      🤖 AI 검토 결과
+                      📄 v{baseVersion} 본문
                       <span className="rt">
                         <span
                           className="lbl"
@@ -259,23 +260,52 @@ export default function RequirementEditPage() {
                         >
                           읽기 전용
                         </span>
-                        <span className="cnt diff" style={{ marginLeft: 8 }}>
-                          변경분만 분석
+                      </span>
+                    </div>
+                    <div className="wcb">
+                      <div className="srcbox" style={{ marginBottom: 12 }}>
+                        <div className="sh">확정본 v{baseVersion}</div>
+                        <div className="srctext">{baseContent}</div>
+                      </div>
+                      <button className="btn prim" onClick={onAnalyze} disabled={analyzing}>
+                        {analyzing ? "분석 중…" : analyzed ? "↻ 다시 분석" : "AI 검토 실행"}
+                      </button>
+                      <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "10px 0 0" }}>
+                        오른쪽 본문을 고치고 위 버튼을 누르면, 확정본 대비 <b>바뀐 부분과 수정
+                        사유만</b> 검토합니다. 이미 합의된 나머지 문장은 건드리지 않습니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 오른쪽: AI 결과 + 편집 — 여기서만 편집. 분석 전엔 빈 편집칸, 분석 후엔
+                      AI 결과(하이라이트·검출)가 위에 뜨고 그 아래에서 계속 고친다. */}
+                  <div className="wcard">
+                    <div className="wch">
+                      🤖 AI 결과
+                      <span className="rt">
+                        <span className="lbl blue" style={{ padding: "1px 9px" }}>
+                          여기서만 편집
                         </span>
+                        {analyzed && (
+                          <span className="cnt diff" style={{ marginLeft: 6 }}>
+                            변경분만 분석
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="wcb">
                       {!analyzed ? (
-                        <>
-                          <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
-                            오른쪽 본문을 고치고 <b>AI 검토 실행</b>을 누르면, 확정본 대비{" "}
-                            <b>바뀐 부분과 수정 사유만</b> 검토합니다. 이미 합의된 나머지 문장은
-                            건드리지 않습니다.
-                          </p>
-                          <button className="btn prim" onClick={onAnalyze} disabled={analyzing}>
-                            {analyzing ? "분석 중…" : "AI 검토 실행"}
-                          </button>
-                        </>
+                        <div
+                          className="prefill"
+                          style={{
+                            background: "var(--surface-muted)",
+                            borderColor: "var(--line)",
+                            color: "var(--muted)",
+                          }}
+                        >
+                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 아래에서 고친 뒤 왼쪽의
+                          AI 검토를 실행하면 여기에 결과가 나타납니다.
+                        </div>
                       ) : (
                         <>
                           {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
@@ -290,46 +320,11 @@ export default function RequirementEditPage() {
                               ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
                               : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
                           </div>
+                          <div className="prefill">
+                            ⬇ 아래 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로
+                            확정하거나 직접 고치세요.
+                          </div>
                         </>
-                      )}
-                      {analyzed && (
-                        <div className="prefill-act">
-                          <button className="btn sm" onClick={onAnalyze} disabled={analyzing}>
-                            {analyzing ? "분석 중…" : "↻ 다시 분석"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 오른쪽: 최종 본문 — 여기서만 편집 */}
-                  <div className="wcard">
-                    <div className="wch">
-                      ✏️ 최종 본문
-                      <span className="rt">
-                        <span className="lbl blue" style={{ padding: "1px 9px" }}>
-                          여기서만 편집
-                        </span>
-                      </span>
-                    </div>
-                    <div className="wcb">
-                      {analyzed ? (
-                        <div className="prefill">
-                          ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나,
-                          아래 텍스트를 직접 고치세요.
-                        </div>
-                      ) : (
-                        <div
-                          className="prefill"
-                          style={{
-                            background: "var(--surface-muted)",
-                            borderColor: "var(--line)",
-                            color: "var(--muted)",
-                          }}
-                        >
-                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 고칠 부분을 수정한 뒤 왼쪽에서
-                          AI 검토를 실행하세요.
-                        </div>
                       )}
                       <textarea
                         className="reqta"
