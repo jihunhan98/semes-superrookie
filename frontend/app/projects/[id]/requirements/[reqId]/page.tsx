@@ -96,15 +96,12 @@ export default function RequirementDetailPage() {
               {req.stateLabel}
             </span>
             {req.version && <span className="tagv">🏷 v{req.version}</span>}
-            {/* 이 페이지는 읽기 전용 — 실제 편집(확정 포함)은 전부 이 버튼 너머에서 한다.
-                확정 전이면 최초 확정 화면(화면 4), 확정 후에는 확정본 수정 화면(화면 5). */}
+            {/* 이 페이지는 읽기 전용 — 실제 편집(확정 포함)은 전부 이 버튼 너머(수정 화면)에서
+                한다. 확정 전/후 구분 없이 같은 화면 하나로 처리한다 — 등록 자체가 이미
+                최초 확정의 시작이고, 그 뒤로는 전부 "수정"이기 때문. */}
             <Link
               className="btn prim"
-              href={
-                req.version
-                  ? `/projects/${project.id}/requirements/${req.id}/edit`
-                  : `/projects/${project.id}/requirements/${req.id}/review`
-              }
+              href={`/projects/${project.id}/requirements/${req.id}/edit`}
               style={{ marginLeft: "auto" }}
             >
               수정하기
@@ -121,9 +118,9 @@ export default function RequirementDetailPage() {
           </div>
 
           {/* 이 화면은 읽기 전용이다 — 다시 분석 같은 동작도 여기 두지 않는다.
-              본문을 고치거나 AI를 다시 돌리는 건 위 "수정하기"로 들어간 화면
-              (최초 확정/확정본 수정)에서만 한다. AI 검토 결과 카드 안에서
-              본문(등록 원문 또는 확정본)을 하이라이트와 함께 그대로 보여주기만 한다. */}
+              본문을 고치거나 AI를 다시 돌리는 건 위 "수정하기"로 들어간 수정 화면에서만
+              한다. AI 검토 결과 카드 안에서 본문(등록 원문 또는 확정본)을 하이라이트와
+              함께 그대로 보여주기만 한다. */}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1400 }}>
             <div className="wch">
               🤖 AI 검토 결과

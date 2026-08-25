@@ -161,27 +161,15 @@ public class RequirementService {
                 r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS));
     }
 
-    /** AI 재분석 — 화면의 "↻ 다시 분석". 기존 검출을 지우고 다시 저장한다. */
-    @Transactional
-    public DetailResponse reanalyze(Long projectId, Long requirementId, Long userId) {
-        requireMember(projectId, userId);
-        Requirement r = findInProject(projectId, requirementId);
-
-        findingRepository.deleteByRequirementId(requirementId);
-        aiDraftRepository.deleteAll(aiDraftRepository.findByRequirementId(requirementId));
-
-        AiAnalyzeDto.Response ai = aiClient.analyzeFull(r.getContent(), existingOf(projectId, requirementId));
-        saveAiResult(requirementId, ai, r.getContent());
-
-        return detail(projectId, requirementId, userId);
-    }
-
     /**
-     * 확정본 수정 시 AI 검토 — 확정본 대비 <b>바뀐 부분과 사유만</b> 본다.
+     * 요구사항 수정 화면의 AI 검토 — 현재 저장된 본문(등록 원문 또는 확정본) 대비
+     * <b>바뀐 부분과 수정 사유만</b> 본다. 최초 확정도 이 경로를 그대로 탄다 —
+     * 등록 원문 자체가 이미 "다시 확정에 쓸 기준 본문"이기 때문에, 굳이 전체를
+     * 다시 훑는 별도 경로를 두지 않는다.
      *
-     * <p>최초 확정(본문 전체)과 달리, 이미 고객과 합의된 나머지 문장은 다시 건드리지
-     * 않는다. 결과는 재분석과 마찬가지로 기존 검출을 지우고 새로 저장한다 — 화면이
-     * 언제나 "가장 최근 검토 결과"만 보여주도록.
+     * <p>이미 확정된 요구사항이면, 고객과 합의된 나머지 문장은 다시 건드리지 않는다.
+     * 결과는 매번 기존 검출을 지우고 새로 저장한다 — 화면이 언제나 "가장 최근 검토
+     * 결과"만 보여주도록.
      *
      * <p>본문 자체는 아직 저장하지 않는다. 확정 단계에서 최종 문장을 받아 반영한다.
      */
@@ -250,8 +238,9 @@ public class RequirementService {
         }
 
         String version = nextVersionOf(requirementId);
-        // 최초 확정은 바꿀 원본이 없어 사유를 받지 않는다 — 이력 제목을 서버가 넣는다.
-        // 확정본 수정은 화면에서 받은 변경 사유가 그대로 이력 제목이 된다.
+        // 화면에서 받은 수정 사유가 그대로 이력 제목이 된다. title 이 비어 오는 경우는
+        // 화면상으론 없지만(수정 사유가 필수라 항상 채워짐), API 를 직접 호출하는 경우를
+        // 대비해 방어적으로 기본값을 넣어둔다.
         String title = blankToNull(req.title()) == null ? "최초 확정" : req.title().trim();
 
         r.confirm(req.content(), version);

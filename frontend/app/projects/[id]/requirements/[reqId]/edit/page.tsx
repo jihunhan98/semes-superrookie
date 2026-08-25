@@ -11,6 +11,7 @@ import {
   diffAnalyzeRequirement,
   getProject,
   getRequirement,
+  holdRequirement,
   recordConsensus,
   type ProjectDetail,
   type RequirementDetail,
@@ -18,7 +19,7 @@ import {
 import { getCurrentUser } from "../../../../../lib/session";
 
 /**
- * 어떻게 검토됐는지 배지. 상세·최초 확정 화면과 동일한 세 상태.
+ * 어떻게 검토됐는지 배지. 상세 화면과 동일한 세 상태.
  */
 const ENGINE_LABEL: Record<string, string> = {
   "llm-api": "사내 LLM",
@@ -70,14 +71,16 @@ export default function RequirementEditPage() {
   // 증빙 파일 — 디자인만. 아직 서버로 올리지 않고 화면에만 표시한다.
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // 4단계 — 변경 사유(버전 이력 제목) + 확정
+  // 4단계 — 변경 사유(버전 이력 제목) + 확정 / 보류
   const [commitTitle, setCommitTitle] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [holding, setHolding] = useState(false);
   // 에러는 단계별로 따로 둔다 — 하나로 합치면 "변경 사유를 입력하세요" 같은 4단계
   // 오류가 2단계 AI 검토 버튼 옆에도 같이 뜨는 식으로 엉뚱한 곳에 나타난다.
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [consensusError, setConsensusError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [holdError, setHoldError] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -94,8 +97,6 @@ export default function RequirementEditPage() {
         setBaseContent(r.content);
         setBaseVersion(r.version);
         setDraft(r.content);
-        // 확정된 적 없는 요구사항은 수정이 아니라 최초 확정으로 가야 한다.
-        if (!r.version) router.replace(`/projects/${projectId}/requirements/${requirementId}/review`);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
@@ -116,7 +117,7 @@ export default function RequirementEditPage() {
         reason: reason.trim(),
       });
       setReq(updated);
-      // 제안이 반영된 문장으로 본문을 채운다 — 화면 4와 같은 방식.
+      // 제안이 반영된 문장으로 본문을 채운다.
       setDraft(updated.aiDraftContent);
       // 변경 사유 기본값으로 수정 사유를 넣어준다. 그대로 써도 되고 고쳐도 된다.
       if (!commitTitle.trim()) setCommitTitle(reason.trim());
@@ -185,6 +186,20 @@ export default function RequirementEditPage() {
     }
   }
 
+  async function onHold() {
+    const user = getCurrentUser();
+    if (!user) return;
+    setHolding(true);
+    setHoldError(null);
+    try {
+      await holdRequirement(projectId, requirementId, user.id);
+      router.push(`/projects/${projectId}/requirements/${requirementId}`);
+    } catch (err) {
+      setHoldError(err instanceof Error ? err.message : "보류 처리에 실패했습니다.");
+      setHolding(false);
+    }
+  }
+
   if (error) {
     return (
       <div className="appshell">
@@ -232,11 +247,14 @@ export default function RequirementEditPage() {
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, fontFamily: "var(--mono)" }}>
               {req.reqKey}
             </h1>
-            <span className="lbl blue" style={{ padding: "2px 11px" }}>
+            <span
+              className="lbl"
+              style={{ padding: "2px 11px", background: "var(--surface-muted)", color: "var(--muted)" }}
+            >
               {req.stateLabel}
             </span>
             <span className="tagv">
-              🏷 v{baseVersion} → v{req.nextVersion}
+              {baseVersion ? `🏷 v${baseVersion} → v${req.nextVersion}` : `🏷 확정 시 v${req.nextVersion}`}
             </span>
           </div>
 
@@ -267,8 +285,7 @@ export default function RequirementEditPage() {
             </div>
 
             {/* ── 2단계 : AI 검토 결과를 보고 본문 수정 ───────────────
-                최초 확정 화면(화면 4)의 1단계와 완전히 같은 구조 — 왼쪽은 항상
-                떠 있는 읽기 전용 결과 카드(+ 다시 분석 버튼), 오른쪽은 편집만. */}
+                왼쪽은 항상 떠 있는 읽기 전용 결과 카드(+ 다시 분석 버튼), 오른쪽은 편집만. */}
             <div className="wstep">
               <div className="wnum">2</div>
               <div className="wbody">
@@ -280,7 +297,7 @@ export default function RequirementEditPage() {
                 </div>
 
                 <div className="w2col">
-                  {/* 왼쪽: AI 검토 결과 — 변경분만 분석. 적용 버튼 없음. */}
+                  {/* 왼쪽: AI 검토 결과 — 읽기 전용. 적용 버튼 없음. */}
                   <div className="wcard readonly">
                     <div className="wch">
                       🤖 AI 검토 결과
@@ -302,9 +319,6 @@ export default function RequirementEditPage() {
                         >
                           {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
                         </span>
-                        <span className="cnt diff" style={{ marginLeft: 6 }}>
-                          변경분만 분석
-                        </span>
                         <span className="cnt" style={{ marginLeft: 8 }}>
                           {req.findings.length}건
                         </span>
@@ -323,13 +337,12 @@ export default function RequirementEditPage() {
                       <AiFindings
                         content={draft}
                         findings={req.findings}
-                        contentLabel="최종 본문 (변경분만 검토)"
-                        empty="바뀐 부분에서 새로 검출된 문제가 없습니다. 본문을 고친 뒤 “다시 분석”을 눌러보세요."
+                        contentLabel="최종 본문"
+                        empty="검출된 불명확·상충이 없습니다."
                       />
                       <div className="wnote">
-                        {req.findings.length === 0
-                          ? "이번에 바뀐 부분만 분석 · 새로운 이슈 없음"
-                          : "이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음"}
+                        본문을 고친 뒤 &ldquo;다시 분석&rdquo;을 누르면 바뀐 부분과 위 수정 사유만
+                        다시 검토합니다 — 이미 합의된 나머지 문장은 다시 보지 않습니다.
                       </div>
                       {analyzeError && (
                         <p className="lmsg err" style={{ marginTop: 10, marginBottom: 0 }}>
@@ -364,8 +377,8 @@ export default function RequirementEditPage() {
                             color: "var(--muted)",
                           }}
                         >
-                          지금은 <b>확정본(v{baseVersion}) 그대로</b>입니다. 고칠 부분을 수정한 뒤 왼쪽에서
-                          AI 검토를 실행하세요.
+                          지금은 <b>{baseVersion ? `확정본(v${baseVersion}) 그대로` : "등록 원문 그대로"}</b>
+                          입니다. 고칠 부분을 수정한 뒤 왼쪽에서 AI 검토를 실행하세요.
                         </div>
                       )}
                       <textarea
@@ -375,7 +388,7 @@ export default function RequirementEditPage() {
                       />
                       <div className="prefill-act">
                         <button className="btn sm" onClick={() => setDraft(baseContent)} disabled={!dirty}>
-                          ↩ 확정본(v{baseVersion})으로 되돌리기
+                          ↩ {baseVersion ? `확정본(v${baseVersion})` : "등록 원문"}으로 되돌리기
                         </button>
                       </div>
                     </div>
@@ -568,21 +581,33 @@ export default function RequirementEditPage() {
                         {confirmError}
                       </p>
                     )}
+                    {holdError && (
+                      <p className="lmsg err" style={{ marginBottom: 0 }}>
+                        {holdError}
+                      </p>
+                    )}
                     <div className="wfoot">
-                      <button className="btn prim" onClick={onConfirm} disabled={!canConfirm || confirming}>
+                      <button
+                        className="btn prim"
+                        onClick={onConfirm}
+                        disabled={!canConfirm || confirming || holding}
+                      >
                         {confirming ? "확정 중…" : `확정 저장 → v${req.nextVersion}`}
+                      </button>
+                      <button className="btn" onClick={onHold} disabled={confirming || holding}>
+                        {holding ? "처리 중…" : "보류"}
                       </button>
                       <button
                         className="btn"
                         onClick={() => router.push(`/projects/${projectId}/requirements/${requirementId}`)}
-                        disabled={confirming}
+                        disabled={confirming || holding}
                       >
                         취소
                       </button>
                       <span className="note">
                         {canConfirm
                           ? "작성자·시각·사유와 함께 버전 이력에 남습니다."
-                          : "3단계 합의 기록과 변경 사유가 있어야 확정할 수 있습니다."}
+                          : "3단계 합의 기록과 변경 사유가 있어야 확정할 수 있습니다. 아직 고객 응답을 기다려야 한다면 보류를 눌러도 됩니다."}
                       </span>
                     </div>
                   </div>

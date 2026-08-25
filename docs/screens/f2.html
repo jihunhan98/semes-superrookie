@@ -451,29 +451,15 @@
         <div class="fvline"></div>
         <a class="fnode" href="#scr-list">📋 목록에 노출<span class="cap">접수 상태로 표시 · 프로젝트 멤버 전원 열람 가능</span></a>
         <div class="fvline"></div>
-        <a class="fnode" href="#scr-detail">📄 상세 화면 진입<span class="cap">AI 참고 의견은 이미 준비되어 있음 · 확정 전="검토하고 확정하기", 확정 후=읽기 전용/"수정하기"</span></a>
+        <a class="fnode" href="#scr-detail">📄 상세 화면 진입<span class="cap">AI 참고 의견은 이미 준비되어 있음 · 항상 "수정하기" 버튼 하나</span></a>
         <div class="fvline"></div>
-        <div class="fdecision">🔀 최초 확정인가, 확정본 수정인가 <span style="display:block;font-weight:500;font-size:11px;margin-top:3px">성격이 달라 화면이 분리됨 — 아래 비교표 참고</span></div>
-        <div class="fbranchgrp">
-          <div class="fvline" style="height:18px"></div>
-          <div class="fbrow">
-            <div class="fcol"><a class="fnode purple" href="#scr-confirm">🅰 최초 확정 <span class="cap">화면 4 · <b>수정 사유 없음</b> · AI가 본문 전체 검토 → 고객 합의 → <b>v1.0.0</b></span></a></div>
-            <div class="fcol"><a class="fnode purple" href="#scr-edit">🅱 확정본 수정 <span class="cap">화면 5 · <b>수정 사유 필수</b> · AI가 바뀐 부분만 검토 → 고객 합의 → <b>v1.0.x</b></span></a></div>
-          </div>
-        </div>
+        <a class="fnode purple" href="#scr-edit">✏️ 수정 화면 진입 <span class="cap">화면 4 · 최초 확정이든 재확정이든 <b>같은 화면 하나</b> — 수정 사유 → AI 검토(바뀐 부분만) → 고객 합의 → 확정/보류</span></a>
         <div class="fvline"></div>
-        <div class="fgate">🤝 고객 합의 기록 <span class="cap" style="color:#6e40c9">두 경우 공통 · 합의 방법·담당자·일자 필수 · 합의 전엔 확정 저장 버튼이 비활성화됨 · 합의가 안 되면 대기, 합의되면 이어서 진행</span></div>
+        <div class="fgate">🤝 고객 합의 기록 <span class="cap" style="color:#6e40c9">합의 방법·담당자·일자 필수 · 합의 전엔 확정 저장 버튼이 비활성화됨 · 합의가 안 되면 <b>보류</b>로 남기고 나중에 이어서 진행</span></div>
         <div class="fvline"></div>
-        <div class="fdecision">🔀 "확정 저장" 결과</div>
-        <div class="fbranchgrp">
-          <div class="fvline" style="height:18px"></div>
-          <div class="fbrow">
-            <div class="fcol"><a class="fnode good" href="#scr-confirm">✅ 확정 <span class="mono">v1.0.0</span><span class="cap">산출물 도출(기능 3)의 입력이 되는 시점</span></a></div>
-            <div class="fcol"><a class="fnode" href="#scr-edit">🔁 재확정 <span class="mono">v1.0.x</span><span class="cap">변경 중이었다가 재확정 시 버전 상승(PATCH/MINOR/MAJOR)</span></a></div>
-          </div>
-        </div>
+        <a class="fnode good" href="#scr-edit">🏷 확정 저장 <span class="cap">최초면 <span class="mono">v1.0.0</span>, 재확정이면 <span class="mono">v1.0.x</span>(PATCH/MINOR/MAJOR) — 최초 확정 시점부터 산출물 도출(기능 3)의 입력이 됨</span></a>
         <div class="fvline"></div>
-        <a class="fnode" href="#scr-versions">📜 버전 이력에 기록<span class="cap">화면 6 · 확정·수정마다 커밋처럼 쌓임</span></a>
+        <a class="fnode" href="#scr-versions">📜 버전 이력에 기록<span class="cap">화면 5 · 확정·수정마다 커밋처럼 쌓임</span></a>
       </div>
     </div>
   </header>
@@ -603,7 +589,7 @@
       <span class="chipspec"><b>전용 페이지</b> 다이얼로그가 아니라 별도 URL로 이동</span>
       <span class="chipspec"><b>순수 입력</b> AI 관련 요소를 화면에 전부 뺐다 — 요구사항 ID·요청자 소속·요청자 이름·내용만 입력</span>
       <span class="chipspec"><b>"등록하기" = 로딩</b> 클릭 즉시 완료되지 않는다 — 저장과 AI 초기 검토(본문 전체)가 함께 끝날 때까지 로딩 화면을 보여주고, 그동안 폼은 비활성화됨</span>
-      <span class="chipspec"><b>완료 시점</b> 로딩이 끝나면 접수 상태로 등록 완료 + AI 참고 의견이 이미 준비된 상태 — 상세 화면(화면 3)에서 바로 확인 가능, 확정은 "검토하고 확정하기"(화면 4)에서</span>
+      <span class="chipspec"><b>완료 시점</b> 로딩이 끝나면 접수 상태로 등록 완료 + AI 참고 의견이 이미 준비된 상태 — 상세 화면(화면 3)에서 바로 확인 가능, 확정은 "수정하기"(화면 4)에서</span>
       <span class="chipspec api">POST /api/projects/{id}/requirements (동기 응답 — AI 분석 완료 후 반환)</span>
     </div>
   </section>
@@ -685,167 +671,53 @@
       <span class="chipspec"><b>탭 2개로 축소</b> 본문·산출물·추적성을 한 페이지로 합치고, <b>버전 이력</b>만 별도 탭으로 남김</span>
       <span class="chipspec"><b>읽기 전용</b> 확정된 본문을 편집 표시 없이 그대로 보여줌 — 여기서는 고칠 수 없음 (비고 필드는 제거)</span>
       <span class="chipspec"><b>확정 정보</b> 요청자·등록일·최종 확정 일시/확정자·확정 사유(마지막 커밋 메시지)를 함께 표시</span>
-      <span class="chipspec"><b>상태에 따라 버튼이 달라짐</b> 확정 상태면 "수정하기"(→ 화면 5) · 접수·검토 중이면 "검토하고 확정하기"(→ 화면 4)가 표시된다</span>
+      <span class="chipspec"><b>버튼은 언제나 하나</b> 확정 전이든 후든 "수정하기"(→ 화면 4) — 등록 자체가 이미 확정 대상 본문을 만드는 일이라, 그 뒤로는 전부 같은 수정 화면을 탄다</span>
       <span class="chipspec api">GET /api/projects/{id}/requirements/{reqId}</span>
     </div>
   </section>
 
   <div class="flowbox" style="margin-top:40px">
-    <p class="flowtitle">🔀 AI 검토가 일어나는 두 가지 경우 — 성격이 다르므로 화면도 분리한다</p>
-    <p class="flowsub">같은 "AI 검토"라도 <b>왜 검토하는지</b>가 다르다. 최초 확정은 <b>처음 쓴 문장이 명확한지</b>를 보는 것이고, 수정은 <b>이미 합의된 문장을 왜·어떻게 바꾸는지</b>를 보는 것이다. 그래서 최초 확정에는 <b>수정 사유가 없고</b>, AI가 보는 범위도 다르다.</p>
+    <p class="flowtitle">🔀 최초 확정과 재확정, 왜 같은 화면인가</p>
+    <p class="flowsub">"새 요구사항을 등록한다"는 행위 자체가 이미 <b>확정 대상이 될 본문</b>을 만드는 일이다. 그 뒤로 확정까지 하는 일은 매번 "지금 있는 본문(등록 원문이든 확정본이든)을 왜·어떻게 바꾸는가"로 성격이 같다. 그래서 최초 확정을 별도 화면·별도 규칙(사유 없음·본문 전체 검토)으로 떼어두지 않고, <b>수정 사유 → AI 검토(바뀐 부분만) → 고객 합의 → 확정/보류</b> 절차 하나로 통일했다 — 아래는 같은 화면(화면 4)이 어떻게 다르게 채워지는지 두 시점을 나란히 보여준다.</p>
     <div class="twoflow">
       <div class="tfcol">
-        <div class="tfhead a">A. 최초 확정 <span>접수 → 확정 v1.0.0 · <a href="#scr-confirm">화면 4</a></span></div>
-        <div class="tfwhy">등록된 문장 자체가 명확한지 처음 검증하는 것</div>
+        <div class="tfhead a">A. 최초 확정 <span>접수 → 확정 v1.0.0 · <a href="#scr-edit">화면 4</a></span></div>
+        <div class="tfwhy">기준 본문 = 등록 원문 · 헤더는 "확정 시 v1.0.0"</div>
         <div class="flowchart">
-          <a class="fnode start" href="#scr-detail">📄 상세 화면<span class="cap">상태 = 접수 · "검토하고 확정하기"</span></a>
+          <a class="fnode start" href="#scr-detail">📄 상세 화면<span class="cap">상태 = 접수 · "수정하기"</span></a>
           <div class="fvline"></div>
-          <a class="fnode purple" href="#scr-confirm">🤖 AI 참고 의견<span class="cap"><b>본문 전체</b>를 대상으로 분석 · 등록 시 이미 자동 분석되어 바로 표시</span></a>
+          <a class="fnode" href="#scr-edit">✏️ 수정 사유 입력<span class="cap">등록 원문을 왜 다듬는지 — 고객 요청이든 직접 판단이든</span></a>
           <div class="fvline"></div>
-          <a class="fnode" href="#scr-confirm">📝 최종 본문 확정<span class="cap">제안이 이미 반영된 텍스트를 그대로 쓰거나 직접 편집</span></a>
+          <a class="fnode purple" href="#scr-edit">🤖 AI 참고 의견<span class="cap">등록 원문 대비 <b>바뀐 부분 + 사유</b>를 대상으로 분석</span></a>
           <div class="fvline"></div>
           <div class="fgate" style="max-width:none">🤝 고객 합의</div>
           <div class="fvline"></div>
-          <a class="fnode good" href="#scr-confirm">🏷 확정 <span class="mono">v1.0.0</span><span class="cap"><b>수정 사유 입력 없음</b> — 이력 제목은 "최초 확정"으로 자동 기록</span></a>
+          <a class="fnode good" href="#scr-edit">🏷 확정 <span class="mono">v1.0.0</span></a>
         </div>
       </div>
       <div class="tfcol">
-        <div class="tfhead b">B. 확정본 수정 <span>확정 → 재확정 v1.0.x · <a href="#scr-edit">화면 5</a></span></div>
-        <div class="tfwhy">이미 합의된 문장을 바꾸는 것 — 왜 바꾸는지가 핵심</div>
+        <div class="tfhead b">B. 재확정 <span>확정 → 재확정 v1.0.x · <a href="#scr-edit">화면 4</a></span></div>
+        <div class="tfwhy">기준 본문 = 확정본 · 헤더는 "v1.0.1 → v1.0.2"</div>
         <div class="flowchart">
           <a class="fnode start" href="#scr-detail">📄 상세 화면<span class="cap">상태 = 확정 · "수정하기"</span></a>
           <div class="fvline"></div>
-          <a class="fnode" href="#scr-edit">✏️ <b>수정 사유 입력</b><span class="cap">고객 요청이든 직접 판단이든 — 이 단계가 A에는 없다</span></a>
+          <a class="fnode" href="#scr-edit">✏️ 수정 사유 입력<span class="cap">확정본을 왜 바꾸는지 — 고객 요청이든 직접 판단이든</span></a>
           <div class="fvline"></div>
-          <a class="fnode purple" href="#scr-edit">🤖 AI 참고 의견<span class="cap"><b>바뀐 부분 + 사유</b>만 대상으로 분석 · 확정본 전체를 다시 보지 않음</span></a>
-          <div class="fvline"></div>
-          <a class="fnode" href="#scr-edit">📝 최종 본문 확정<span class="cap">현재 확정본과 나란히 비교하며 편집</span></a>
+          <a class="fnode purple" href="#scr-edit">🤖 AI 참고 의견<span class="cap">확정본 대비 <b>바뀐 부분 + 사유</b>만 대상으로 분석 · 이미 합의된 나머지는 다시 안 봄</span></a>
           <div class="fvline"></div>
           <div class="fgate" style="max-width:none">🤝 고객 합의</div>
           <div class="fvline"></div>
-          <a class="fnode good" href="#scr-edit">🏷 재확정 <span class="mono">v1.0.x</span><span class="cap">수정 사유가 그대로 <b>버전 이력의 제목</b>이 된다</span></a>
+          <a class="fnode good" href="#scr-edit">🏷 재확정 <span class="mono">v1.0.x</span></a>
         </div>
       </div>
     </div>
-    <div class="tfnote">공통: 두 경우 모두 <b>AI 의견은 참고용</b>이며, <b>고객 합의 기록 없이는 확정할 수 없다</b>. 고객과의 협의 자체는 시스템 밖(메일·전화·미팅)에서 진행하고, 이 화면은 협의 <b>결과</b>만 기록한다.</div>
+    <div class="tfnote">공통: 두 경우 모두 <b>AI 의견은 참고용</b>이며, <b>고객 합의 기록 없이는 확정할 수 없다</b>. 수정 사유는 그대로 <b>버전 이력의 제목</b>이 된다. 고객과의 협의 자체는 시스템 밖(메일·전화·미팅)에서 진행하고, 이 화면은 협의 <b>결과</b>만 기록한다.</div>
   </div>
 
-  <!-- S2b2 최초 검토·확정 (접수 → 확정 v1.0.0 · 수정 사유 없음) -->
-  <section class="scr" id="scr-confirm">
-    <p class="kicker">화면 4 · 최초 검토·확정 · 상세 화면의 "검토하고 확정하기" 클릭 시 진입</p>
-    <div class="scr-head"><span class="route">/projects/{id}/requirements/req-am-03/review</span><h2>최초 검토·확정 — 처음 확정하는 경우 (수정 사유 없음)</h2><span class="st newx">신규</span></div>
-    <div class="stage"><div class="canvas">
-      <div class="gh">
-        <div class="hdr">
-          <span class="burger">☰</span><a class="mk">RE</a>
-          <span class="brand">요구사항 엔지니어링<span class="slash">/</span><span class="proj">VCS · 태스크 할당</span></span>
-          <span class="sp"></span><div class="search">🔍 요구사항 검색<span class="sl">/</span></div>
-          <div class="ico">🔔</div><div class="avmenu"><div class="av">한</div></div>
-        </div>
-        <div class="body">
-          <aside class="side">
-            <div class="pj"><span class="pi">VC</span><span class="pn">VCS · 태스크 할당<small>SEMES · 프로젝트</small></span></div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366z"/></svg>홈</a>
-            <a class="nav on"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z"/></svg>요구사항</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z"/></svg>산출물</a>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z"/></svg>추적성</a>
-            <div class="nl">프로젝트</div>
-            <a class="nav"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2"/><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2Z"/></svg>설정</a>
-          </aside>
-          <div class="main">
-            <div class="crumb"><b>요구사항</b> / req-am-03 / 최초 확정</div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 class="pt" style="margin:0">AMR 매칭 규칙</h1><span class="lbl" style="padding:2px 11px;background:var(--cvi);color:var(--fgm)">접수</span><span class="tagv">🏷 확정 시 v1.0.0</span></div>
-
-            <div class="wizard">
-              <div class="wstep">
-                <div class="wnum">1</div>
-                <div class="wbody">
-                  <div class="wtitle">AI 검토 결과를 보고 본문 확정 <span class="wsub">등록 시 이미 <b>본문 전체</b>를 자동 분석했습니다. 왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.</span></div>
-                  <div class="w2col">
-                    <div class="wcard readonly">
-                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px">2건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
-                      <div class="wcb">
-                        <!-- 원문 + 형광펜 — 지적된 구절이 원문 어디인지 번호로 바로 보여준다. -->
-                        <div class="srcbox">
-                          <div class="sh">등록 원문 <span class="shhint">형광펜 = AI가 지적한 구절 · 번호를 아래 카드와 맞춰 보세요</span></div>
-                          <div class="srctext">AMR 매칭 시 <mark class="hl amb">가용한 AMR<span class="no">1</span></mark> 중 <mark class="hl cf">가장 가까운<span class="no">2</span></mark> AMR을 선택한다.</div>
-                        </div>
-                        <div class="find">
-                          <div class="ft"><span class="fno amb">1</span><span class="ftype2 amb">정량 기준 부재</span><span class="fspan2">"가용한 AMR"</span></div>
-                          <div class="frs2">무엇을 '가용'으로 볼지 판정 기준이 없어 해석이 갈릴 수 있음</div>
-                          <div class="aisuggest">✎ 제안: <b>가용한 AMR</b> = IDLE 상태이며 SoC 최소값 이상</div>
-                        </div>
-                        <div class="find" style="margin-bottom:0">
-                          <div class="ft"><span class="fno cf">2</span><span class="ftype2 cf">기존 요구사항과 상충</span><span class="fspan2">"가장 가까운" · req-ta-01</span></div>
-                          <div class="frs2">req-ta-01은 "요청 순"으로 우선순위를 정하는데, 이 요구사항은 "거리 순"이라 배치될 수 있음</div>
-                          <div class="fconf">⚠ 문장 수정만으론 해결 안 됨 — 고객 협의에서 함께 정리 필요<span class="apply">req-ta-01 보기 →</span></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="wcard">
-                      <div class="wch">✏️ 확정될 본문 <span class="rt"><span class="lbl blue" style="padding:1px 9px">여기서만 편집</span></span></div>
-                      <div class="wcb">
-                        <div class="prefill">⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나, 아래 텍스트를 직접 고치세요.</div>
-                        <div class="editbox2 editing">AMR 매칭 시 <ins>IDLE 상태이며 SoC 최소값 이상인</ins> AMR 중 <ins>맵 경로상 맨해튼 거리 최단 경로에 있는</ins> AMR을 선택한다.<span class="caret2"></span></div>
-                        <div class="prefill-act"><span class="btn sm">↩ 등록 원문으로 되돌리기</span><span class="pf-orig">등록 원문: "AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다."</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="wstep">
-                <div class="wnum ok">2</div>
-                <div class="wbody">
-                  <div class="wtitle">고객 합의 <span class="wsub">이 문장으로 확정해도 되는지 고객과 협의한 <b>결과</b>를 기록합니다 — 이 기록 없이는 확정할 수 없습니다.</span></div>
-                  <div class="wcard" style="border-color:#8250df66">
-                    <div class="wcb consensus">
-                      <div class="crow">
-                        <span><b>방법</b> 대면 미팅</span>
-                        <span><b>고객측 담당자</b> 삼성전자 EDS 김민석 책임</span>
-                        <span><b>합의일</b> 2026-08-16</span>
-                        <span style="margin-left:auto;color:var(--green);font-weight:700">✓ 합의 완료</span>
-                      </div>
-                      <div class="ctext">가용/최단거리 판정 기준을 위 문장대로 확정하기로 합의. req-ta-01 우선순위 상충은 별도 건으로 후속 협의하기로 함.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="wstep">
-                <div class="wnum">3</div>
-                <div class="wbody">
-                  <div class="wtitle">확정 <span class="wsub">최초 확정이므로 <b>수정 사유를 입력하지 않습니다</b> — 버전 이력 제목은 "최초 확정"으로 자동 기록됩니다.</span></div>
-                  <div class="wcard"><div class="wcb">
-                    <div class="wfoot" style="margin-top:0">
-                      <span class="btn prim">확정 저장 → v1.0.0</span>
-                      <span class="btn">보류</span>
-                      <span class="btn">취소</span>
-                      <span class="note">2단계 합의 기록이 없으면 비활성화됩니다 · 확정 후에는 이 화면 대신 <b style="color:var(--fg)">수정 화면(화면 5)</b>으로 들어갑니다</span>
-                    </div>
-                  </div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div></div>
-    <div class="specrow">
-      <span class="chipspec"><b>이 화면이 따로 있는 이유</b> 최초 확정은 "처음 쓴 문장이 명확한가"를 보는 것이라, "이미 합의된 문장을 왜 바꾸는가"를 다루는 수정(화면 5)과 성격이 다르다</span>
-      <span class="chipspec"><b>수정 사유 없음</b> 바꿀 원본이 없으므로 사유 입력 단계 자체가 없다 — 버전 이력 제목은 "최초 확정"으로 자동 기록</span>
-      <span class="chipspec"><b>AI 검토 범위</b> <b>본문 전체</b>가 대상 (수정 화면은 바뀐 부분만)</span>
-      <span class="chipspec"><b>AI 카드는 읽기 전용</b> AI 쪽에는 버튼이 없다 — 제안은 <b>확정될 본문에 이미 반영된 상태</b>로 채워져 나오고, 사용자는 그 텍스트를 그대로 쓰거나 직접 고치거나 "되돌리기"로 등록 원문으로 되돌린다</span>
-      <span class="chipspec"><b>진입 조건</b> 상태가 접수·검토 중일 때만 — 확정된 뒤에는 상세 화면에 "수정하기"가 대신 표시된다</span>
-      <span class="chipspec"><b>고객 합의 필수</b> AI 의견이 합리적이어도 그것만으로 확정 불가 · 합의 안 되면 <b>보류</b>로 남기고 나중에 이어서 확정</span>
-      <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ v1.0.0)</span>
-    </div>
-  </section>
-
-  <!-- S2c 요구사항 수정 (확정본 변경 · 변경분만 AI 검토) -->
+  <!-- S2c 요구사항 확정·수정 (최초 확정과 재확정을 같은 화면으로 · 변경분만 AI 검토) -->
   <section class="scr" id="scr-edit">
-    <p class="kicker">화면 5 · 요구사항 수정 · 상세 화면의 "수정하기" 클릭 시 진입</p>
-    <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/edit</span><h2>요구사항 수정 — 이미 확정된 것을 바꾸는 경우 (수정 사유 필수)</h2><span class="st newx">신규</span></div>
+    <p class="kicker">화면 4 · 요구사항 확정·수정 · 상세 화면의 "수정하기" 클릭 시 진입</p>
+    <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/edit</span><h2>요구사항 확정·수정 — 최초 확정과 재확정을 같은 화면으로</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
         <div class="hdr">
@@ -882,21 +754,21 @@
               <div class="wstep">
                 <div class="wnum">2</div>
                 <div class="wbody">
-                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다. 최초 확정 화면(화면 4)의 1단계와 같은 구조 — "다시 분석"이 항상 떠 있다.</span></div>
+                  <div class="wtitle">AI 검토 결과를 보고 본문 수정 <span class="wsub">왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다. "다시 분석"이 항상 떠 있다.</span></div>
                   <div class="w2col">
                     <div class="wcard readonly">
-                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px;background:var(--purple-s);color:var(--purple)">변경분만 분석</span><span class="cnt" style="margin-left:6px">1건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
+                      <div class="wch">🤖 AI 검토 결과 <span class="rt"><span class="lbl" style="padding:1px 9px;background:var(--cvi);color:var(--fgm)">읽기 전용</span><span class="cnt" style="margin-left:8px">1건</span><span class="btn sm" style="margin-left:8px">↻ 다시 분석</span></span></div>
                       <div class="wcb">
                         <!-- 검출 구절은 바뀐 뒤 문장(오른쪽 최종 본문) 기준이라 그 문장에 형광펜을 칠한다. -->
                         <div class="srcbox">
-                          <div class="sh">최종 본문 (변경분만 검토) <span class="shhint">형광펜 = AI가 지적한 구절</span></div>
+                          <div class="sh">최종 본문 <span class="shhint">형광펜 = AI가 지적한 구절</span></div>
                           <div class="srctext">외부 시스템(newAMOS)으로부터 인터페이스 명세서 v1.2 형식의 이벤트 메시지를 수신받아 신규 태스크를 생성한다. 동일 자재 ID에 대해 최대 1건만 허용한다. <mark class="hl amb">생성된 태스크의 처리 우선순위는 req-ta-01과 동일하게 SoC 높은 순으로 정한다<span class="no">1</span></mark>.</div>
                         </div>
                         <div class="find" style="border-color:#3fb95055;background:#dafbe11a;margin-bottom:0">
                           <div class="ft"><span class="fno amb">1</span><span class="ftype2" style="background:var(--green-s);color:var(--green)">상충 해소 가능</span><span class="fspan2">req-ta-01과 우선순위 기준 일치</span></div>
                           <div class="frs2">이전에 검출됐던 req-ta-01과의 우선순위 상충이, 사유에 적힌 요청대로 우선순위를 통일하면 해소될 것으로 보입니다.</div>
                         </div>
-                        <div class="wnote">이번에 바뀐 부분만 분석 · 확정본 전체는 다시 보지 않음</div>
+                        <div class="wnote">본문을 고친 뒤 "다시 분석"을 누르면 바뀐 부분과 위 수정 사유만 다시 검토합니다 — 이미 합의된 나머지 문장은 다시 보지 않습니다.</div>
                       </div>
                     </div>
                     <div class="wcard">
@@ -937,8 +809,9 @@
                     <div class="commitin">req-ta-01과 우선순위 기준 통일 (고객 요청 반영, 합의 완료)<span class="aihint">✨ AI 제안 · 편집 가능</span></div>
                     <div class="wfoot">
                       <span class="btn prim">확정 저장 → v1.0.2</span>
+                      <span class="btn">보류</span>
                       <span class="btn">취소</span>
-                      <span class="note">3단계 합의 기록이 없으면 비활성화됩니다 · 작성자·시각·사유와 함께 <b style="color:var(--fg)">버전 이력</b>에 남습니다</span>
+                      <span class="note">3단계 합의 기록이 없으면 비활성화됩니다 · 작성자·시각·사유와 함께 <b style="color:var(--fg)">버전 이력</b>에 남습니다. 고객 응답을 더 기다려야 하면 <b>보류</b>로 남길 수 있습니다</span>
                     </div>
                   </div></div>
                 </div>
@@ -949,20 +822,20 @@
       </div>
     </div></div>
     <div class="specrow">
-      <span class="chipspec"><b>화면 4와의 차이</b> 이미 확정된 문장을 바꾸는 경우 — <b>수정 사유가 필수</b>이고, AI가 보는 범위도 전체가 아니라 <b>바뀐 부분</b>이다</span>
-      <span class="chipspec"><b>진입 조건</b> 상태가 확정일 때만 — 상세 화면(화면 3)의 "수정하기"에서 온다</span>
-      <span class="chipspec"><b>수정 사유</b> 고객 요청이든 직접 판단한 이유든 자유 서술 — AI 검토가 이 내용을 함께 참고하고, 그대로 <b>버전 이력의 제목</b>이 된다</span>
-      <span class="chipspec"><b>변경분만 AI 검토</b> 확정본 전체가 아니라 이번에 수정된 부분 + 사유만 분석 · 이미 합의된 나머지는 다시 건드리지 않음</span>
-      <span class="chipspec"><b>AI 카드는 읽기 전용</b> "다시 분석" 외에 다른 버튼은 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>최종 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 확정본으로 돌릴지만 결정</span>
-      <span class="chipspec"><b>고객 합의 필수</b> 합의 방법·고객측 담당자·합의일·합의 내용을 기록해야 "확정 저장"이 활성화됨 · 합의가 안 되면 <b>고객 합의 대기</b>로 남고 나중에 이어서 확정</span>
+      <span class="chipspec"><b>최초 확정과 재확정, 같은 화면</b> 접수 상태(등록 원문 기준)든 확정 상태(확정본 기준)든 이 화면 하나를 쓴다 — 헤더의 버전 표시(🏷 확정 시 v1.0.0 / v1.0.1 → v1.0.2)만 다르다</span>
+      <span class="chipspec"><b>진입 조건</b> 상세 화면(화면 3)의 "수정하기"에서 온다 — 상태와 무관하게 버튼은 항상 하나</span>
+      <span class="chipspec"><b>수정 사유는 항상 필수</b> 최초 확정도 예외 없음 — 등록 원문이든 확정본이든 "지금 있는 본문을 왜 바꾸는지"를 적는다. AI 검토가 이 내용을 함께 참고하고, 그대로 <b>버전 이력의 제목</b>이 된다</span>
+      <span class="chipspec"><b>변경분만 AI 검토</b> 현재 본문 전체가 아니라 이번에 수정된 부분 + 사유만 분석 · 이미 확정된 것이면 합의된 나머지는 다시 건드리지 않음</span>
+      <span class="chipspec"><b>AI 카드는 읽기 전용</b> "다시 분석" 외에 다른 버튼은 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>최종 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 기준 본문으로 돌릴지만 결정</span>
+      <span class="chipspec"><b>고객 합의 필수</b> 합의 방법·고객측 담당자·합의일·합의 내용을 기록해야 "확정 저장"이 활성화됨 · 합의가 안 되면 <b>보류</b>로 남기고 나중에 이어서 확정</span>
       <span class="chipspec"><b>증빙 파일 첨부</b> 합의 내용 아래에서 회신 메일 캡처·회의록 등을 첨부할 수 있다 — 지금은 화면 디자인만이고 실제 업로드·저장은 다음 단계에서 붙인다</span>
-      <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/diff-analyze · POST /api/projects/{id}/requirements/{reqId}/confirm (→ new version)</span>
+      <span class="chipspec api">POST /api/projects/{id}/requirements/{reqId}/diff-analyze · POST .../consensus · POST .../confirm · POST .../hold</span>
     </div>
   </section>
 
   <!-- S3 버전 이력 -->
   <section class="scr" id="scr-versions">
-    <p class="kicker">화면 6 · 버전 이력(탭)</p>
+    <p class="kicker">화면 5 · 버전 이력(탭)</p>
     <div class="scr-head"><span class="route">/projects/{id}/requirements/req-tf-01/versions</span><h2>버전 이력 — 커밋처럼 쌓인다</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
@@ -1059,7 +932,7 @@
 
   <!-- S4 요구사항 항목 설정 -->
   <section class="scr" id="scr-fields">
-    <p class="kicker">화면 7 · 요구사항 항목 설정 · 목록의 "⚙ 항목 설정"에서 진입</p>
+    <p class="kicker">화면 6 · 요구사항 항목 설정 · 목록의 "⚙ 항목 설정"에서 진입</p>
     <div class="scr-head"><span class="route">/projects/{id}/requirements/fields</span><h2>요구사항 항목 설정 — 프로젝트마다 다른 고객 요구서 양식에 맞추기</h2><span class="st newx">신규</span></div>
     <div class="stage"><div class="canvas">
       <div class="gh">
@@ -1130,7 +1003,7 @@
     </div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 2 — 요구사항 목록 · 요구사항 등록 · 요구사항 상세 · <b>최초 검토·확정(사유 없음)</b> · <b>요구사항 수정(사유 필수)</b> · 버전 이력 · 요구사항 항목 설정, 총 7화면. 최초 확정과 확정본 수정은 검토 목적·AI 검토 범위·사유 필요 여부가 달라 화면을 분리했다. 로그인·프로젝트 선택·프로젝트 홈은 <b>기능 1</b>에서 이미 구현됨.
+  <p class="foot"><b>범위.</b> 기능 2 — 요구사항 목록 · 요구사항 등록 · 요구사항 상세 · <b>요구사항 확정·수정(수정 사유 항상 필수)</b> · 버전 이력 · 요구사항 항목 설정, 총 6화면. 최초 확정과 확정본 수정은 같은 화면 하나로 처리한다 — 등록 자체가 이미 확정 대상 본문을 만드는 일이라, 그 뒤로는 매번 "지금 있는 본문을 왜·어떻게 바꾸는가"로 성격이 같기 때문. 로그인·프로젝트 선택·프로젝트 홈은 <b>기능 1</b>에서 이미 구현됨.
     &nbsp;<b>상태값.</b> 접수 → 검토 중 → 고객 합의 대기 → 확정 → (수정) 변경 중 → 재확정 · 보류.
     &nbsp;<b>다음.</b> 확정된 요구사항 → <b>기능 3(산출물 도출)</b>.</p>
 </div>

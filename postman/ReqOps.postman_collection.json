@@ -406,21 +406,7 @@
           "response": []
         },
         {
-          "name": "AI 재분석",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{baseUrl}}/api/projects/{{projectId}}/requirements/{{requirementId}}/analyze?userId={{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "projects", "{{projectId}}", "requirements", "{{requirementId}}", "analyze"],
-              "query": [{ "key": "userId", "value": "{{userId}}" }]
-            },
-            "description": "화면의 '↻ 다시 분석'. 기존 findings를 지우고 다시 채운다. 등록 시 AI 서버가 죽어 있어 aiEngine이 unavailable이었거나, LLM만 못 붙어 rule이었다면 이 API로 다시 시도한다."
-          },
-          "response": []
-        },
-        {
-          "name": "확정본 수정 - AI 검토 (변경분만)",
+          "name": "수정 화면 - AI 검토 (변경분만)",
           "request": {
             "method": "POST",
             "header": [
@@ -435,7 +421,7 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다. 처리 우선순위는 req-ta-01과 동일하게 SoC 높은 순으로 정한다.\",\n  \"reason\": \"req-ta-01과 우선순위 기준이 달라 충돌합니다. 두 요구사항 모두 SoC 높은 순으로 통일해주세요. — 삼성전자 EDS 김민석 책임\"\n}"
             },
-            "description": "이미 확정된 요구사항을 고칠 때 쓴다. 확정본 대비 바뀐 부분과 사유만 AI가 본다 — 이미 합의된 나머지 문장은 다시 건드리지 않는다.\n- baseContent(확정본)는 보내지 않는다. 서버가 DB에서 가져온다.\n- 응답의 scope 가 diff 면 변경분만 본 것이다.\n- 실행하면 상태가 '변경중'으로 바뀐다. 버전은 재확정 전까지 그대로."
+            "description": "요구사항 수정 화면의 AI 검토 — 최초 확정과 재확정 모두 이 API를 쓴다. 현재 본문(등록 원문 또는 확정본) 대비 바뀐 부분과 사유만 AI가 본다 — 이미 확정된 것이면 합의된 나머지 문장은 다시 건드리지 않는다.\n- baseContent(현재 본문)는 보내지 않는다. 서버가 DB에서 가져온다.\n- 응답의 scope 가 diff 면 변경분만 본 것이다.\n- 이미 확정(CONFIRMED)된 요구사항이면 실행 시 상태가 '변경중'으로 바뀐다. 아직 확정 전이면 상태는 그대로다. 버전은 재확정 전까지 그대로."
           },
           "response": []
         },
@@ -475,7 +461,7 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다.\"\n}"
             },
-            "description": "'고객 합의 기록'을 먼저 실행해야 성공한다. 안 하면 409.\n- title 을 생략하면 서버가 '최초 확정'으로 넣는다(최초 확정은 바꿀 원본이 없어 수정 사유를 받지 않으므로).\n- 성공하면 content 가 확정본으로 덮어써지고 version 이 1.0.0 이 된다. 그전 문장은 응답의 versions[] 에 남는다."
+            "description": "'고객 합의 기록'을 먼저 실행해야 성공한다. 안 하면 409.\n- title 은 화면에서 입력한 수정 사유가 그대로 들어온다(화면상 필수). 생략하면 서버가 방어적으로 '최초 확정'을 기본값으로 넣는다.\n- 성공하면 content 가 확정본으로 덮어써지고 version 이 1.0.0 이 된다. 그전 문장은 응답의 versions[] 에 남는다."
           },
           "response": []
         },
@@ -599,7 +585,7 @@
               "mode": "raw",
               "raw": "{\n  \"content\": \"AMR 매칭 시 가용한 AMR 중 직선거리가 가장 짧은 AMR을 선택한다. 단, SoC 20% 미만이면 제외하고 3초 이내에 재할당한다.\",\n  \"baseContent\": \"AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다. 단, 배터리가 부족하면 제외하고 빠르게 재할당한다.\",\n  \"reason\": \"고객사 요청 — 정량 기준 명시\"\n}"
             },
-            "description": "baseContent가 있으면 scope=\"diff\" — 확정본 대비 바뀐 부분만 본다. 백엔드는 아직 이 경로를 쓰지 않는다(확정본 수정 미구현)."
+            "description": "baseContent가 있으면 scope=\"diff\" — 기준 본문 대비 바뀐 부분만 본다. 백엔드는 이 경로를 요구사항 수정 화면의 '/diff-analyze'에서 그대로 쓴다."
           },
           "response": []
         }

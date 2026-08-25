@@ -54,14 +54,6 @@ public class RequirementController {
         return requirementService.detail(projectId, requirementId, userId);
     }
 
-    /** AI 재분석 — 화면의 "↻ 다시 분석". */
-    @PostMapping("/{requirementId}/analyze")
-    public DetailResponse reanalyze(@PathVariable Long projectId,
-                                    @PathVariable Long requirementId,
-                                    @RequestParam Long userId) {
-        return requirementService.reanalyze(projectId, requirementId, userId);
-    }
-
     /**
      * 확정본 수정 시 AI 검토 — 확정본 대비 <b>바뀐 부분과 사유만</b> 본다.
      *

@@ -35,10 +35,9 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | GET | `/api/projects/{projectId}/requirements` | 목록(플랫 · 분류 그룹 없음) | `userId`*num (query) | `200` [{id, reqKey, content, state, stateLabel, version, assigneeId, assigneeName, findingCount, updatedAt}] |
 | GET | `/api/projects/{projectId}/requirements/assignees` | 담당자 필터 후보(프로젝트 멤버 전원) | `userId`*num (query) | `200` [{userId, name}] |
 | GET | `/api/projects/{projectId}/requirements/{reqId}` | 상세 — AI 검토 결과와 draft 포함 | `userId`*num (query) | `200` 상세 응답(아래)<br>`404` 없음 |
-| POST | `/api/projects/{projectId}/requirements/{reqId}/analyze` | AI 재분석("↻ 다시 분석") — 기존 검출을 지우고 다시 저장 | `userId`*num (query) | `200` 상세 응답(아래) |
-| POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | **확정본 수정 시 AI 검토** — 확정본 대비 바뀐 부분과 사유만 본다. 확정본은 서버가 DB에서 가져오므로 보내지 않는다 | `userId`*num · `content`*str · `reason`*str | `200` 상세 응답(아래) |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/diff-analyze` | **수정 화면 AI 검토("↻ 다시 분석")** — 현재 본문(등록 원문 또는 확정본) 대비 바뀐 부분과 수정 사유만 본다. 최초 확정도 이 API를 그대로 쓴다. 기준 본문은 서버가 DB에서 가져오므로 보내지 않는다 | `userId`*num · `content`*str · `reason`*str | `200` 상세 응답(아래) |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/consensus` | **고객 합의 기록** — 확정의 전제 조건. 합의할 때마다 새로 쌓이고 확정은 마지막 기록을 근거로 삼는다 | `userId`*num · `method`*str · `customerContact`*str · `agreedOn`*str(yyyy-MM-dd) · `note`str · `agreedContent`*str | `200` 상세 응답(아래)<br>`400` 합의일 형식 오류 |
-| POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | **확정** → 버전 부여(최초 v1.0.0). 본문을 확정본으로 덮어쓰고 이력에 한 줄 남긴다 | `userId`*num · `content`*str · `title`str(생략 시 "최초 확정") | `200` 상세 응답(아래)<br>`409` 합의 기록 없음 |
+| POST | `/api/projects/{projectId}/requirements/{reqId}/confirm` | **확정** → 버전 부여(최초 v1.0.0, 이후 v1.0.x). 본문을 확정본으로 덮어쓰고 이력에 한 줄 남긴다 | `userId`*num · `content`*str · `title`*str(화면상 수정 사유를 그대로 넣음, 필수) | `200` 상세 응답(아래)<br>`409` 합의 기록 없음 |
 | GET | `/api/projects/{projectId}/requirements/{reqId}/compare` | **버전 비교** — 줄 단위 diff 를 split 뷰용으로 짝지어 반환. base/head 생략 시 "직전 ↔ 최신" | `userId`*num · `base`str · `head`str (query) | `200` {baseVersion, headVersion, headTitle, added, removed, rows[]}<br>`404` 없는 버전 |
 | POST | `/api/projects/{projectId}/requirements/{reqId}/hold` | **보류** — 고객 협의가 더 필요할 때. 나중에 이어서 확정 가능 | `userId`*num (query) | `200` 상세 응답(아래) |
 
@@ -126,8 +125,8 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 | GET | `/health` | 사내 LLM API 주소 설정 여부 | — | `200` {status, llmApiConfigured, llmApiModel} |
 | GET | `/types` | 검출 유형 목록 | — | `200` {types[]} |
 
-- `baseContent`가 있으면 `scope: "diff"` — 바뀐 부분과 사유만 검토한다(확정본 수정).
-- 없으면 `scope: "full"` — 본문 전체를 검토한다(최초 확정).
+- `baseContent`가 있으면 `scope: "diff"` — 바뀐 부분과 사유만 검토한다(수정 화면의 AI 검토).
+- 없으면 `scope: "full"` — 본문 전체를 검토한다(요구사항 등록 시 자동 검토).
 
 **판정 방식** — 규칙 기반 검출이 항상 먼저 실행되고, 그 위에 사내 LLM API를 한 번 더
 호출해 보충한다.

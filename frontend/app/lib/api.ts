@@ -245,7 +245,7 @@ export type ConsensusInput = {
   /** yyyy-MM-dd */
   agreedOn: string;
   note: string;
-  /** 이 합의로 확정하기로 한 본문 — 화면의 "확정될 본문" 값. */
+  /** 이 합의로 확정하기로 한 본문 — 화면의 "최종 본문" 값. */
   agreedContent: string;
 };
 
@@ -287,20 +287,11 @@ export function getRequirement(
   );
 }
 
-export function reanalyzeRequirement(
-  projectId: number,
-  requirementId: number,
-  userId: number,
-): Promise<RequirementDetail> {
-  return postJson<RequirementDetail>(
-    `/api/projects/${projectId}/requirements/${requirementId}/analyze?userId=${userId}`,
-  );
-}
-
 /**
- * 확정본 수정 시 AI 검토 — 확정본 대비 바뀐 부분과 사유만 본다.
+ * 요구사항 수정 화면의 AI 검토 — 현재 본문(등록 원문 또는 확정본) 대비 바뀐 부분과
+ * 수정 사유만 본다. 최초 확정도 이 API를 그대로 쓴다.
  *
- * 확정본(baseContent)은 서버가 DB에서 가져오므로 보내지 않는다.
+ * 기준 본문은 서버가 DB에서 가져오므로 보내지 않는다.
  */
 export function diffAnalyzeRequirement(
   projectId: number,
