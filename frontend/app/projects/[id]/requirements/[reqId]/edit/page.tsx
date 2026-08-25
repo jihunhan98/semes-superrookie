@@ -104,10 +104,6 @@ export default function RequirementEditPage() {
   async function onAnalyze() {
     const user = getCurrentUser();
     if (!user) return;
-    if (!aiPrompt.trim()) {
-      setAnalyzeError("위 1단계에 먼저 입력하세요.");
-      return;
-    }
     setAnalyzing(true);
     setAnalyzeError(null);
     try {
@@ -261,11 +257,13 @@ export default function RequirementEditPage() {
           <div className="wizard">
             {/* ── 1단계 : AI에게 물어보기 ──────────────────────────── */}
             <div className="wstep">
-              <div className={`wnum${aiPrompt.trim() ? " ok" : ""}`}>1</div>
+              <div className="wnum">1</div>
               <div className="wbody">
                 <div className="wtitle">
                   AI에게 물어보기
-                  <span className="wsub">본문과 함께 AI한테 전달돼요.</span>
+                  <span className="wsub">
+                    본문과 함께 AI한테 전달돼요. <b>선택 입력</b> — 비워두면 바뀐 부분만 보고 검토해요.
+                  </span>
                 </div>
                 <div className="wcard">
                   <div className="wcb">
@@ -274,7 +272,7 @@ export default function RequirementEditPage() {
                       style={{ minHeight: 72 }}
                       value={aiPrompt}
                       onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="req-ta-01이랑 우선순위 기준이 다른데, SoC 높은 순으로 통일해도 괜찮을까?"
+                      placeholder="고객 측에서 배터리 20% 미만이면 재할당하라고 요청했어. 구체적인 조건은 네가 적당히 채워줘."
                     />
                   </div>
                 </div>

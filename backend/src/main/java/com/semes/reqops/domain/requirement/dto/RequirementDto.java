@@ -126,18 +126,18 @@ public final class RequirementDto {
     ) {}
 
     /**
-     * 확정본 수정 시 AI 검토 요청 — 확정본 대비 <b>바뀐 부분과 사유만</b> 본다.
+     * 수정 화면의 AI 검토 요청 — 현재 본문 대비 <b>바뀐 부분</b>만 본다.
      *
-     * <p>이미 고객과 합의된 나머지 문장을 다시 건드리지 않으려는 것. 최초 확정
-     * (본문 전체 검토)과 성격이 달라 엔드포인트를 나눴다.
+     * <p>이미 고객과 합의된 나머지 문장을 다시 건드리지 않으려는 것.
      *
-     * @param content 수정 중인 본문. 확정본(baseContent)은 서버가 DB에서 가져온다.
-     * @param reason  수정 사유 — AI가 이 내용을 함께 참고한다.
+     * @param content 수정 중인 본문. 기준 본문(baseContent)은 서버가 DB에서 가져온다.
+     * @param reason  화면 1단계 "AI에게 물어보기" — 선택 입력. AI가 참고할 질문이나
+     *                맥락이 있으면 함께 전달하고, 비어 있으면 본문 변경분만으로 검토한다.
      */
     public record DiffAnalyzeRequest(
             @NotNull Long userId,
             @NotBlank String content,
-            @NotBlank String reason
+            String reason
     ) {}
 
     /**

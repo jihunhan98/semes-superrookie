@@ -744,9 +744,9 @@
               <div class="wstep">
                 <div class="wnum">1</div>
                 <div class="wbody">
-                  <div class="wtitle">AI에게 물어보기 <span class="wsub">본문과 함께 AI한테 전달돼요.</span></div>
+                  <div class="wtitle">AI에게 물어보기 <span class="wsub">본문과 함께 AI한테 전달돼요. <b>선택 입력</b> — 비워두면 바뀐 부분만 보고 검토해요.</span></div>
                   <div class="wcard"><div class="wcb">
-                    <textarea class="reqta" readonly style="min-height:38px">req-ta-01이랑 우선순위 기준이 다른데, SoC 높은 순으로 통일해도 괜찮을까?</textarea>
+                    <textarea class="reqta" readonly style="min-height:38px">고객 측에서 배터리 20% 미만이면 재할당하라고 요청했어. 구체적인 조건은 네가 적당히 채워줘.</textarea>
                   </div></div>
                 </div>
               </div>
@@ -823,7 +823,7 @@
     <div class="specrow">
       <span class="chipspec"><b>최초 확정과 재확정, 같은 화면</b> 접수 상태(등록 원문 기준)든 확정 상태(확정본 기준)든 이 화면 하나를 쓴다 — 헤더의 버전 표시(🏷 확정 시 v1.0.0 / v1.0.1 → v1.0.2)만 다르다</span>
       <span class="chipspec"><b>진입 조건</b> 상세 화면(화면 3)의 "수정하기"에서 온다 — 상태와 무관하게 버튼은 항상 하나</span>
-      <span class="chipspec"><b>1단계는 AI 프롬프트</b> "수정 사유"가 아니라 AI에게 묻고 싶은 것을 적는 칸 — 본문과 함께 AI 검토에 전달된다. 버전 이력의 제목과는 무관하다</span>
+      <span class="chipspec"><b>1단계는 선택 입력</b> "수정 사유"가 아니라 AI에게 묻고 싶은 것을 적는 칸 — 채우면 본문과 함께 AI 검토에 전달되고, 비우면 바뀐 부분만으로 검토한다. 버전 이력의 제목과는 무관하다</span>
       <span class="chipspec"><b>변경분만 AI 검토</b> 현재 본문 전체가 아니라 이번에 수정된 부분 + 1단계 입력 내용만 분석 · 이미 확정된 것이면 합의된 나머지는 다시 건드리지 않음</span>
       <span class="chipspec"><b>버전 이력 제목은 3·4단계에서</b> 확정에 실제로 필요한 근거는 고객 합의 내용(3단계)과 그걸 기본값으로 채운 변경 사유 확인(4단계)에 남는다</span>
       <span class="chipspec"><b>AI 카드는 읽기 전용</b> "다시 분석" 외에 다른 버튼은 없다 — 검토 결과를 보여주기만 하고, 제안은 <b>최종 본문에 이미 반영된 상태</b>로 채워져 나온다. 사용자는 그 텍스트를 그대로 쓸지, 고칠지, "되돌리기"로 기준 본문으로 돌릴지만 결정</span>
