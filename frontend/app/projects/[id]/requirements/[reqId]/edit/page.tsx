@@ -57,8 +57,8 @@ export default function RequirementEditPage() {
   /** 들어온 시점의 확정 버전 — 헤더의 "v1.0.1 → v1.0.2" 표시에 쓴다. */
   const [baseVersion, setBaseVersion] = useState<string | null>(null);
 
-  // 1단계 — 수정 사유(필수)
-  const [reason, setReason] = useState("");
+  // 1단계 — AI에게 물어보기(본문과 함께 전달됨)
+  const [aiPrompt, setAiPrompt] = useState("");
   // 2단계 — 최종 본문 + AI 검토
   const [draft, setDraft] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -104,8 +104,8 @@ export default function RequirementEditPage() {
   async function onAnalyze() {
     const user = getCurrentUser();
     if (!user) return;
-    if (!reason.trim()) {
-      setAnalyzeError("수정 사유를 먼저 입력하세요 — AI가 이 내용을 함께 참고합니다. (위 1단계)");
+    if (!aiPrompt.trim()) {
+      setAnalyzeError("위 1단계에 먼저 입력하세요.");
       return;
     }
     setAnalyzing(true);
@@ -114,13 +114,11 @@ export default function RequirementEditPage() {
       const updated = await diffAnalyzeRequirement(projectId, requirementId, {
         userId: user.id,
         content: draft,
-        reason: reason.trim(),
+        reason: aiPrompt.trim(),
       });
       setReq(updated);
       // 제안이 반영된 문장으로 본문을 채운다.
       setDraft(updated.aiDraftContent);
-      // 변경 사유 기본값으로 수정 사유를 넣어준다. 그대로 써도 되고 고쳐도 된다.
-      if (!commitTitle.trim()) setCommitTitle(reason.trim());
     } catch (err) {
       setAnalyzeError(err instanceof Error ? err.message : "AI 검토에 실패했습니다.");
     } finally {
@@ -157,6 +155,8 @@ export default function RequirementEditPage() {
         agreedContent: draft,
       });
       setReq(updated);
+      // 변경 사유 기본값으로 합의 내용을 넣어준다. 그대로 써도 되고 고쳐도 된다.
+      if (!commitTitle.trim() && note.trim()) setCommitTitle(note.trim());
     } catch (err) {
       setConsensusError(err instanceof Error ? err.message : "합의 기록에 실패했습니다.");
     } finally {
@@ -259,25 +259,22 @@ export default function RequirementEditPage() {
           </div>
 
           <div className="wizard">
-            {/* ── 1단계 : 수정 사유 ────────────────────────────────── */}
+            {/* ── 1단계 : AI에게 물어보기 ──────────────────────────── */}
             <div className="wstep">
-              <div className={`wnum${reason.trim() ? " ok" : ""}`}>1</div>
+              <div className={`wnum${aiPrompt.trim() ? " ok" : ""}`}>1</div>
               <div className="wbody">
                 <div className="wtitle">
-                  수정 사유
-                  <span className="wsub">
-                    왜 바꾸는지 — 고객 요청이든 직접 판단이든 자유롭게. <b>AI가 이 내용을 함께
-                    참고합니다.</b>
-                  </span>
+                  AI에게 물어보기
+                  <span className="wsub">본문과 함께 AI한테 전달돼요.</span>
                 </div>
                 <div className="wcard">
                   <div className="wcb">
                     <textarea
                       className="reqta"
                       style={{ minHeight: 72 }}
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      placeholder="req-ta-01과 우선순위 기준이 달라 충돌합니다. 두 요구사항 모두 SoC(배터리 잔량) 높은 순으로 통일해주세요. — 삼성전자 EDS 김민석 책임"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="req-ta-01이랑 우선순위 기준이 다른데, SoC 높은 순으로 통일해도 괜찮을까?"
                     />
                   </div>
                 </div>
@@ -340,10 +337,7 @@ export default function RequirementEditPage() {
                         contentLabel="최종 본문"
                         empty="검출된 불명확·상충이 없습니다."
                       />
-                      <div className="wnote">
-                        본문을 고친 뒤 &ldquo;다시 분석&rdquo;을 누르면 바뀐 부분과 위 수정 사유만
-                        다시 검토합니다 — 이미 합의된 나머지 문장은 다시 보지 않습니다.
-                      </div>
+                      <div className="wnote">본문을 고친 뒤 &ldquo;다시 분석&rdquo;을 누르면 바뀐 부분만 다시 봅니다.</div>
                       {analyzeError && (
                         <p className="lmsg err" style={{ marginTop: 10, marginBottom: 0 }}>
                           {analyzeError}
@@ -364,10 +358,7 @@ export default function RequirementEditPage() {
                     </div>
                     <div className="wcb">
                       {dirty ? (
-                        <div className="prefill">
-                          ⬇ 위 <b>AI 제안이 이미 반영된 상태</b>로 채워져 있습니다. 그대로 확정하거나,
-                          아래 텍스트를 직접 고치세요.
-                        </div>
+                        <div className="prefill">⬇ AI 제안이 반영됐어요. 그대로 두거나 고치세요.</div>
                       ) : (
                         <div
                           className="prefill"
@@ -377,8 +368,7 @@ export default function RequirementEditPage() {
                             color: "var(--muted)",
                           }}
                         >
-                          지금은 <b>{baseVersion ? `확정본(v${baseVersion}) 그대로` : "등록 원문 그대로"}</b>
-                          입니다. 고칠 부분을 수정한 뒤 왼쪽에서 AI 검토를 실행하세요.
+                          {baseVersion ? `확정본(v${baseVersion})` : "등록 원문"} 그대로예요.
                         </div>
                       )}
                       <textarea
@@ -403,9 +393,7 @@ export default function RequirementEditPage() {
               <div className="wbody">
                 <div className="wtitle">
                   고객 합의
-                  <span className="wsub">
-                    고객과 협의한 <b>결과</b>를 기록합니다 — 이 기록 없이는 확정할 수 없습니다.
-                  </span>
+                  <span className="wsub">협의 결과를 기록합니다.</span>
                 </div>
 
                 <div className="wcard" style={{ borderColor: "var(--purple)" }}>
@@ -515,8 +503,7 @@ export default function RequirementEditPage() {
                             📎 파일 첨부
                           </button>
                           <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 10 }}>
-                            회신 메일 캡처·회의록 등 합의 근거를 첨부하세요 — 지금은 화면에만
-                            표시되고 저장되지 않습니다.
+                            회신 메일 캡처·회의록 등. 아직 저장은 안 돼요.
                           </span>
                           {files.length > 0 && (
                             <ul className="filelist">
@@ -547,9 +534,6 @@ export default function RequirementEditPage() {
                           <button className="btn prim" onClick={onSaveConsensus} disabled={savingConsensus}>
                             {savingConsensus ? "저장 중…" : "합의 기록 저장"}
                           </button>
-                          <span className="note">
-                            위 2단계의 <b>최종 본문</b>이 합의 대상으로 함께 기록됩니다.
-                          </span>
                         </div>
                       </>
                     )}
@@ -574,7 +558,7 @@ export default function RequirementEditPage() {
                         onChange={(e) => setCommitTitle(e.target.value)}
                         placeholder="req-ta-01과 우선순위 기준 통일 (고객 요청 반영, 합의 완료)"
                       />
-                      <span className="aihint">✨ 수정 사유에서 채움 · 편집 가능</span>
+                      <span className="aihint">✨ 합의 내용에서 채움 · 편집 가능</span>
                     </div>
                     {confirmError && (
                       <p className="lmsg err" style={{ marginBottom: 0 }}>
@@ -604,11 +588,6 @@ export default function RequirementEditPage() {
                       >
                         취소
                       </button>
-                      <span className="note">
-                        {canConfirm
-                          ? "작성자·시각·사유와 함께 버전 이력에 남습니다."
-                          : "3단계 합의 기록과 변경 사유가 있어야 확정할 수 있습니다. 아직 고객 응답을 기다려야 한다면 보류를 눌러도 됩니다."}
-                      </span>
                     </div>
                   </div>
                 </div>
