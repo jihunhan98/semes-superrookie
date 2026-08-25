@@ -159,18 +159,58 @@
   .aiban b{color:var(--purple);}
   .ovbox{border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.5px;line-height:1.65;}
   .ovbox .r{display:grid;grid-template-columns:64px 1fr;gap:10px;} .ovbox .r+.r{margin-top:7px;} .ovbox .k{color:var(--faint);font-weight:700;}
+
+  /* 설계 노트 — AI 자동 추출 파이프라인 */
+  .notebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px 28px;}
+  .notebox h3{margin:0 0 6px;font-size:17px;font-weight:850;}
+  .notebox .sub{margin:0 0 20px;font-size:13.5px;color:var(--sub);max-width:90ch;}
+  .pipeline{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  .pstep{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 15px;position:relative;}
+  .pstep .pn{width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;font-size:11.5px;font-weight:800;display:grid;place-items:center;margin-bottom:8px;}
+  .pstep h4{margin:0 0 4px;font-size:13px;font-weight:800;}
+  .pstep p{margin:0;font-size:12px;color:var(--sub);line-height:1.55;}
+  .pstep .arr{position:absolute;right:-15px;top:38px;color:var(--faint);font-size:16px;}
+  @media(max-width:900px){.pstep .arr{display:none;}}
+  .schemawrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px;}
+  @media(max-width:900px){.schemawrap{grid-template-columns:1fr;}}
+  .schemabox{background:#0d1117;border-radius:10px;padding:15px 17px;overflow:auto;}
+  .schemabox pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#c9d1d9;white-space:pre;}
+  .schemabox .k{color:#79c0ff;} .schemabox .s{color:#a5d6ff;} .schemabox .c{color:#8b949e;} .schemabox .b{color:#ff7b72;}
+  .legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;}
+  .legend .li{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--sub);}
+
+  /* Class / Sequence 다이어그램 목업 (화면 7) */
+  .diaghd{display:flex;align-items:center;gap:8px;margin:0 0 10px;}
+  .diaghd .dtag{font-size:10.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--faint);background:var(--line2);border-radius:4px;padding:2px 8px;}
+  .clsrow{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:6px 2px 12px;}
+  .clsbox{flex:0 0 auto;min-width:168px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;}
+  .clsbox .cname{background:var(--bg);font-weight:800;font-size:12.5px;padding:8px 12px;border-bottom:1px solid var(--line);}
+  .clsbox .cname.chg{background:#fff7d6;color:#946f00;}
+  .clsbox .cfield{font-family:var(--mono);font-size:11px;color:var(--sub);padding:5px 12px;border-bottom:1px dashed var(--line2);}
+  .clsbox .cfield:last-child{border-bottom:0;}
+  .clsarrow{flex:0 0 auto;align-self:center;color:var(--faint);font-size:13px;padding:0 10px;white-space:nowrap;text-align:center;}
+  .clsarrow .lbl{display:block;font-size:10px;margin-top:2px;}
+  .seqcols{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .seqcol{border:1px solid var(--line);border-radius:8px;padding:13px 15px;background:var(--surface);}
+  .seqcol h5{margin:0 0 10px;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:8px;}
+  .seqcol.asis h5{color:var(--sub);} .seqcol.tobe h5{color:var(--accent);}
+  .seqstep{display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:12px;line-height:1.6;padding:3px 0;color:var(--ink);}
+  .seqstep .n{color:var(--faint);font-family:var(--mono);}
+  .seqstep .who{font-weight:700;color:var(--purple);}
+  .seqstep.new{background:#e9f2ff;border-radius:5px;padding:3px 6px;margin:1px -6px;}
 </style>
 </head>
 <body>
 <div class="top"><div class="topin">
   <span class="brand"><span class="mk">◆</span>UI 설계 · 기능 3 · Jira 스타일</span>
   <h1 class="page">요구사항 엔지니어링 — 기능 3 (산출물 도출)</h1>
-  <p class="lede">확정된 <b>요구사항(에픽)</b>을 선택하면, AI가 <b>개발 티켓(스토리) N개</b>와 티켓마다 딸린 <b>산출물 4종</b>(SWVOC·기능·비기능·Detail Design)을 <b>한 번에 초안으로 생성</b>한다.
+  <p class="lede">확정된 <b>요구사항(에픽)</b>을 선택하면, AI가 <b>개발 이슈(스토리) N개</b>와 이슈마다 딸린 <b>산출물 4종</b>(SWVOC·기능 요구사항·비기능 요구사항·Detail Design)을 <b>한 번에 초안으로 생성</b>한다.
+    본문 양식은 전부 <b>사내 고정 양식</b>을 그대로 따른다 — 개발 이슈는 &lt;요구사항 접수&gt;·&lt;요구사항 개발&gt;·&lt;변경점 설계&gt; 3범주, 산출물은 각각 정해진 항목이 있다.
     이후 각 항목은 <b>AI가 채운 곳</b>과 <b>사람이 채워야 하는 곳</b>이 구분되어, 사람은 검토·보완·확정만 하면 된다.</p>
   <div class="hier">
     <div class="hstep"><div class="hb" style="background:#8777d9">⚡</div><h4>에픽 = 요구사항</h4><p>확정된 요구사항 1건. (예: <b>req-ta-01</b>)</p><span class="arr">→</span></div>
-    <div class="hstep"><div class="hb" style="background:#4bade8">🔖</div><h4>스토리 = 개발 티켓</h4><p>구현 단위로 분할한 <b>N개</b> 티켓.</p><span class="arr">→</span></div>
-    <div class="hstep"><div class="hb" style="background:#4688ec">🧩</div><h4>하위 작업 = 산출물 4종</h4><p>티켓마다 <b>SWVOC·기능·비기능·Detail Design</b>.</p></div>
+    <div class="hstep"><div class="hb" style="background:#4bade8">🔖</div><h4>스토리 = 개발 이슈</h4><p>사내 고정 양식(접수·개발·변경점 설계)으로 쪼갠 <b>N개</b> 이슈.</p><span class="arr">→</span></div>
+    <div class="hstep"><div class="hb" style="background:#4688ec">🧩</div><h4>하위 작업 = 산출물 4종</h4><p>이슈마다 <b>SWVOC·기능·비기능·Detail Design</b>.</p></div>
   </div>
 </div></div>
 
@@ -178,8 +218,8 @@
 
   <!-- ============ 화면 1 : AI 일괄 도출 ============ -->
   <section class="scr">
-    <div class="kicker"><span class="n">1</span><span class="kt">AI 일괄 도출 — 요구사항 하나로 티켓과 산출물 전부 초안 생성</span></div>
-    <div class="scr-head"><span class="route">/requirements/req-ta-01/derive</span><h2>「도출」 한 번에 개발 티켓 3 + 산출물 12를 AI 초안으로</h2></div>
+    <div class="kicker"><span class="n">1</span><span class="kt">AI 일괄 도출 — 요구사항 하나로 이슈와 산출물 전부 초안 생성</span></div>
+    <div class="scr-head"><span class="route">/requirements/req-ta-01/derive</span><h2>「도출」 한 번에 개발 이슈 3 + 산출물 12를 AI 초안으로</h2></div>
     <div class="stage"><div class="canvas">
       <div class="jira">
         <div class="jtop">
@@ -201,13 +241,13 @@
 
             <div class="derivebanner">
               <span class="ico">🤖</span>
-              <div><div class="tt"><b>AI 도출 완료.</b> 요구사항 1건에서 개발 티켓과 산출물 전체를 초안으로 생성했습니다.</div>
+              <div><div class="tt"><b>AI 도출 완료.</b> 요구사항 1건에서 개발 이슈과 산출물 전체를 초안으로 생성했습니다.</div>
                 <div class="ds">모두 <b>「검토 대기」</b> 상태입니다. 사람은 내용을 확인·보완한 뒤 확정합니다. · 방금 전 · 한지훈</div></div>
               <span class="cta"><button class="jbtn ai">↻ 재도출</button><button class="jbtn">전체 열기</button></span>
             </div>
             <div class="countrow">
               <div class="cstat"><div class="num">1</div><div class="lb">요구사항(에픽)</div></div>
-              <div class="cstat p"><div class="num">3</div><div class="lb">개발 티켓(스토리) · AI 초안</div></div>
+              <div class="cstat p"><div class="num">3</div><div class="lb">개발 이슈(스토리) · AI 초안</div></div>
               <div class="cstat p"><div class="num">12</div><div class="lb">산출물(하위 작업) · AI 초안</div></div>
               <div class="cstat"><div class="num">6</div><div class="lb">사람 보완 필요 항목</div></div>
             </div>
@@ -215,19 +255,19 @@
             <div class="tree">
               <div class="tnode ep"><span class="it-epic">⚡</span>요구사항 <span class="jkey">req-ta-01</span> 태스크 할당 기준<span class="rt"><span class="lz done">확정 v1.0.0</span></span></div>
               <div class="branch">
-                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-77</span> 가용 AMR 매칭<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 이슈 <span class="jkey">AMVCS30-77</span> 가용 AMR 매칭<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
                 <div class="branch2">
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC — 할당 기준 요청 원문<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">⚙</span>기능 요구사항 — 가용 AMR 매칭<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">🛡</span>비기능 요구사항 — 매칭 성능·가용성<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">📐</span>Detail Design — 매칭 시퀀스<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
                 </div>
-                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-78</span> 알람 발생 시 재할당<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 이슈 <span class="jkey">AMVCS30-78</span> 알람 발생 시 재할당<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
                 <div class="branch2">
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC<span class="rt"><span class="aitag">🤖 AI 초안</span></span></div>
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">⚙</span>기능 요구사항 · <span class="it-sub">🛡</span>비기능 · <span class="it-sub">📐</span>Detail Design<span class="rt"><span class="aitag">🤖 AI 초안 ×3</span></span></div>
                 </div>
-                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 티켓 <span class="jkey">AMVCS30-79</span> 우선순위 기반 정렬<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
+                <div class="tnode tk"><span class="conn"></span><span class="it-story">🔖</span>개발 이슈 <span class="jkey">AMVCS30-79</span> 우선순위 기반 정렬<span class="rt"><span class="aitag">🤖 AI 초안</span><span class="lz prog">검토 대기</span></span></div>
                 <div class="branch2">
                   <div class="tnode sb"><span class="conn"></span><span class="it-sub">🗣</span>SWVOC · <span class="it-sub">⚙</span>기능 · <span class="it-sub">🛡</span>비기능 · <span class="it-sub">📐</span>Detail Design<span class="rt"><span class="aitag">🤖 AI 초안 ×4</span></span></div>
                 </div>
@@ -237,13 +277,84 @@
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>동작</b> 「도출」 클릭 → 요구사항 1건 → 티켓 N + 산출물 4N 전부 AI 초안 생성</span><span class="chipspec"><b>연결성</b> 에픽 → 스토리 → 하위 작업 트리로 연결 유지</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
+    <div class="specrow"><span class="chipspec"><b>동작</b> 「도출」 클릭 → 요구사항 1건 → 이슈 N + 산출물 4N 전부 AI 초안 생성</span><span class="chipspec"><b>연결성</b> 에픽 → 스토리 → 하위 작업 트리로 연결 유지</span><span class="chipspec api">POST /requirements/{id}/artifacts/derive</span></div>
   </section>
 
-  <!-- ============ 화면 2 : 요구사항 ↔ 개발 티켓 연결성 ============ -->
+  <!-- ============ 설계 노트 : AI 자동 추출 파이프라인 ============ -->
   <section class="scr">
-    <div class="kicker"><span class="n">2</span><span class="kt">요구사항 ↔ 개발 티켓 연결성 — 에픽 상세에서 자식 티켓 추적</span></div>
-    <div class="scr-head"><span class="route">/browse/req-ta-01</span><h2>어느 요구사항이 어떤 개발 티켓으로 이어졌는지</h2></div>
+    <div class="kicker"><span class="n">·</span><span class="kt">설계 노트 — 산출물 4종을 어떻게 자동으로 뽑아내는가</span></div>
+    <div class="notebox">
+      <h3>왜 한 번의 호출로 안 끝나는가</h3>
+      <p class="sub">"요구사항 하나 → 이슈 N개 → 이슈마다 산출물 4종"은 <b>2단계 호출</b>로 나눈다. 이슈를 몇 개로 쪼갤지부터 정해야 그 다음에 이슈별 본문·산출물을 채울 수 있기 때문 — 한 번에 다 시키면 이슈 경계가 흐릿해진다(스토리 하나에 서로 다른 기능이 섞여 버림).</p>
+      <div class="pipeline">
+        <div class="pstep"><div class="pn">1</div><h4>입력 수집</h4><p>확정된 요구사항 본문(v1.0.0 이상)과 프로젝트 내 관련 모듈·기존 이슈 목록을 컨텍스트로 모은다.</p><span class="arr">→</span></div>
+        <div class="pstep"><div class="pn">2</div><h4>이슈 분할 (1차 호출)</h4><p>"구현 단위로 몇 개의 개발 이슈로 나눌지"만 판단 — 이슈 제목 N개 + 각 이슈가 커버하는 요구사항 부분(인용).</p><span class="arr">→</span></div>
+        <div class="pstep"><div class="pn">3</div><h4>이슈 본문 생성 (2차 호출·이슈마다)</h4><p>&lt;요구사항 접수&gt;·&lt;개발&gt;·&lt;변경점 설계&gt; 3범주를 사내 고정 양식 JSON으로 채운다.</p><span class="arr">→</span></div>
+        <div class="pstep"><div class="pn">4</div><h4>산출물 4종 생성 (3차 호출·이슈마다)</h4><p>SWVOC·기능·비기능·Detail Design을 한 이슈당 JSON 하나로 같이 생성한다.</p><span class="arr">→</span></div>
+        <div class="pstep"><div class="pn">5</div><h4>사람 검토</h4><p>🖊 배지 붙은 항목만 사람이 채우고, 🤖 항목은 확인 후 확정만 하면 된다.</p></div>
+      </div>
+
+      <div class="fldlbl" style="margin-top:4px">응답 스키마 — 이슈 본문 / 산출물 4종</div>
+      <div class="schemawrap">
+        <div class="schemabox"><pre><span class="c">// 2차 호출 — 개발 이슈 본문</span>
+{
+  <span class="k">"title"</span>: <span class="s">string</span>,               <span class="c">// 🤖 AI</span>
+  <span class="k">"reception"</span>: {                 <span class="c">// 요구사항 접수</span>
+    <span class="k">"phenomenon"</span>: <span class="s">string</span>,      <span class="b">// 🖊 사람</span>
+    <span class="k">"improvementRequest"</span>: <span class="s">string</span> <span class="c">// 🤖 AI</span>
+  },
+  <span class="k">"development"</span>: {               <span class="c">// 요구사항 개발</span>
+    <span class="k">"changeScope"</span>: <span class="s">string</span>,     <span class="b">// 🖊 사람</span>
+    <span class="k">"constraints"</span>: <span class="s">string</span>     <span class="c">// 🤖 AI</span>
+  },
+  <span class="k">"changeDesign"</span>: {              <span class="c">// 변경점 설계</span>
+    <span class="k">"before"</span>: <span class="s">string</span> | <span class="s">null</span>, <span class="b">// 🖊 사람(신규 기능이면 AI가 null)</span>
+    <span class="k">"after"</span>: <span class="s">string</span>          <span class="c">// 🤖 AI</span>
+  },
+  <span class="k">"dueDate"</span>: <span class="s">null</span>,             <span class="b">// 🖊 사람이 나중에 지정</span>
+  <span class="k">"createdAt"</span>: <span class="s">"auto"</span>,        <span class="c">// 시스템 자동(이슈 생성 시각)</span>
+  <span class="k">"resolvedAt"</span>: <span class="s">null</span>          <span class="c">// 시스템 자동(확정 처리 시각)</span>
+}</pre></div>
+        <div class="schemabox"><pre><span class="c">// 3차 호출 — 산출물 4종(이슈당 1번)</span>
+{
+  <span class="k">"voc"</span>: {
+    <span class="k">"description"</span>: <span class="s">string</span>,     <span class="c">// 🤖 원문 정리</span>
+    <span class="k">"request"</span>: <span class="s">string</span>,        <span class="c">// 🤖 요청사항</span>
+    <span class="k">"notes"</span>: <span class="s">string</span>          <span class="c">// 🤖 특이사항(초안 · 사람 보완 권장)</span>
+  },
+  <span class="k">"functional"</span>: {                <span class="c">// 기능 요구사항</span>
+    <span class="k">"description"</span>: <span class="s">string</span>, <span class="k">"role"</span>: <span class="s">string</span>, <span class="k">"purpose"</span>: <span class="s">string</span>,
+    <span class="k">"behaviors"</span>: [               <span class="c">// 기본 3행 + 예외 3행 고정</span>
+      {
+        <span class="k">"type"</span>: <span class="s">"기본"</span>|<span class="s">"예외"</span>,
+        <span class="k">"item"</span>: <span class="s">"선행조건"</span>|<span class="s">"시나리오"</span>|<span class="s">"후행조건"</span>,
+        <span class="k">"content"</span>: <span class="s">string</span>
+      }
+    ]
+  },
+  <span class="k">"nonFunctional"</span>: {             <span class="c">// 기능 요구사항 + 제약사항</span>
+    <span class="k">"...functional과 동일"</span>, <span class="k">"constraints"</span>: <span class="s">string</span>
+  },
+  <span class="k">"detailDesign"</span>: {
+    <span class="k">"classDiagram"</span>: <span class="s">"mermaid"</span>,   <span class="c">// 영향 범위 — diagram-as-code</span>
+    <span class="k">"sequenceBefore"</span>: <span class="s">"mermaid"</span>, <span class="c">// AS-IS</span>
+    <span class="k">"sequenceAfter"</span>: <span class="s">"mermaid"</span>,  <span class="c">// TO-BE</span>
+    <span class="k">"description"</span>: <span class="s">string</span>
+  }
+}</pre></div>
+      </div>
+      <div class="legend">
+        <span class="li"><span class="aitag">🤖 AI 도출</span> 확정 요구사항 + 정해진 양식만으로 채울 수 있는 항목</span>
+        <span class="li"><span class="humtag">🖊 사람 작성</span> 현재 코드·시스템 상태를 아는 사람만 채울 수 있는 항목</span>
+      </div>
+      <div class="aiban" style="margin-top:18px">🎨 <b>다이어그램은 그림이 아니라 코드로 받는다.</b> AI가 이미지를 직접 그릴 수 없으므로 Class/Sequence Diagram은 <b>Mermaid 문법 텍스트</b>로 생성하고, 화면(하위 작업 상세)에서 그 텍스트를 실제 다이어그램으로 렌더링한다 — 화면 7 참고.</div>
+    </div>
+  </section>
+
+  <!-- ============ 화면 2 : 요구사항 ↔ 개발 이슈 연결성 ============ -->
+  <section class="scr">
+    <div class="kicker"><span class="n">2</span><span class="kt">요구사항 ↔ 개발 이슈 연결성 — 에픽 상세에서 자식 이슈 추적</span></div>
+    <div class="scr-head"><span class="route">/browse/req-ta-01</span><h2>어느 요구사항이 어떤 개발 이슈으로 이어졌는지</h2></div>
     <div class="stage"><div class="canvas">
       <div class="jira">
         <div class="jtop">
@@ -262,18 +373,18 @@
             <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span>에픽</span><span class="sep">/</span><span class="jkey">req-ta-01</span></div>
             <div class="ihd"><span class="it-epic" style="width:26px;height:26px;font-size:16px;margin-top:4px">⚡</span>
               <div><div class="ek">요구사항 <span class="jkey" style="color:var(--purple)">req-ta-01</span> · v1.0.0 확정</div><h1>태스크 할당 기준 — 가용 AMR 매칭 및 알람 복구 재할당</h1></div></div>
-            <div class="iacts"><button class="jbtn ai">🤖 개발 티켓 재도출</button><button class="jbtn">＋ 하위 이슈</button><button class="jbtn">연결</button></div>
+            <div class="iacts"><button class="jbtn ai">🤖 개발 이슈 재도출</button><button class="jbtn">＋ 하위 이슈</button><button class="jbtn">연결</button></div>
             <div class="jgrid">
               <div>
                 <div class="fldlbl">설명 <span class="aitag">🤖 AI 요약</span></div>
-                <div class="descbox ai">Host로부터 태스크 할당 요청을 받으면 가용한 AMR을 선별해 매칭하고, 매칭 후 알람이 발생하면 다른 AMR로 재할당한다. 아래 <b>3개의 개발 티켓</b>으로 분할되었다.</div>
+                <div class="descbox ai">Host로부터 태스크 할당 요청을 받으면 가용한 AMR을 선별해 매칭하고, 매칭 후 알람이 발생하면 다른 AMR로 재할당한다. 아래 <b>3개의 개발 이슈</b>으로 분할되었다.</div>
                 <div class="childwrap" style="margin-top:22px">
-                  <div class="childhd">🎫 이 요구사항에서 도출된 개발 티켓 · 3<span class="prog">1 / 3 완료 <span class="prbar"><i style="width:33%"></i></span></span></div>
+                  <div class="childhd">🎫 이 요구사항에서 도출된 개발 이슈 · 3<span class="prog">1 / 3 완료 <span class="prbar"><i style="width:33%"></i></span></span></div>
                   <div class="crow"><span class="it-story">🔖</span><span class="cnm">가용 AMR 매칭</span><span class="ckey">AMVCS30-77</span><span class="rt"><span class="mod">jobassign</span><span class="lz prog">진행 중</span></span></div>
                   <div class="crow"><span class="it-story">🔖</span><span class="cnm">알람 발생 시 재할당</span><span class="ckey">AMVCS30-78</span><span class="rt"><span class="mod">jobassign</span><span class="lz todo">해야 할 일</span></span></div>
                   <div class="crow"><span class="it-story">🔖</span><span class="cnm">우선순위 기반 정렬</span><span class="ckey">AMVCS30-79</span><span class="rt"><span class="mod">pathsearch</span><span class="lz done">완료</span></span></div>
                 </div>
-                <p style="font-size:12.5px;color:var(--faint);margin:10px 2px 0">← 각 티켓을 열면 (화면 3) 본문과 산출물 4종이 이 요구사항에 연결된 채로 보인다.</p>
+                <p style="font-size:12.5px;color:var(--faint);margin:10px 2px 0">← 각 이슈를 열면 (화면 3) 본문과 산출물 4종이 이 요구사항에 연결된 채로 보인다.</p>
               </div>
               <div class="jside">
                 <div class="sh">세부 정보 <span class="chev">▾</span></div>
@@ -283,20 +394,20 @@
                 <div class="jsrow"><span class="k">버전</span><span class="v"><span class="vpill">🏷 v1.0.0</span></span></div>
                 <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava">한</span>한지훈</span></div>
                 <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span><span class="mod">pathsearch</span></span></div>
-                <div class="jsrow"><span class="k">하위 티켓</span><span class="v">3개 (1 완료)</span></div>
+                <div class="jsrow"><span class="k">하위 이슈</span><span class="v">3개 (1 완료)</span></div>
               </div>
             </div>
           </div></div>
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>연결성</b> 에픽(요구사항) 화면에서 자식 개발 티켓 목록·진행률 추적</span><span class="chipspec"><b>역추적</b> 티켓 → 상위 요구사항으로 브레드크럼</span><span class="chipspec api">GET /requirements/{id}/issues</span></div>
+    <div class="specrow"><span class="chipspec"><b>연결성</b> 에픽(요구사항) 화면에서 자식 개발 이슈 목록·진행률 추적</span><span class="chipspec"><b>역추적</b> 이슈 → 상위 요구사항으로 브레드크럼</span><span class="chipspec api">GET /requirements/{id}/issues</span></div>
   </section>
 
-  <!-- ============ 화면 3 : 개발 티켓 상세 (AI/사람) ============ -->
-  <section class="scr">
-    <div class="kicker"><span class="n">3</span><span class="kt">개발 티켓 상세 — AI가 채운 곳 · 사람이 채울 곳</span></div>
-    <div class="scr-head"><span class="route">/browse/AMVCS30-77</span><h2>본문 3카테고리 + 하위 작업 4종</h2></div>
+  <!-- ============ 화면 3 : 개발 이슈 상세 (AI/사람) ============ -->
+  <section class="scr" id="scr-issue">
+    <div class="kicker"><span class="n">3</span><span class="kt">개발 이슈 상세 — 사내 고정 양식 · AI가 채운 곳 · 사람이 채울 곳</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-77</span><h2>&lt;접수&gt;·&lt;개발&gt;·&lt;변경점 설계&gt; 3범주 + 산출물 4종</h2></div>
     <div class="stage"><div class="canvas">
       <div class="jira">
         <div class="jtop">
@@ -314,7 +425,7 @@
           <div class="jmain"><div class="jmpad">
             <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span>스토리</span><span class="sep">/</span><span class="jkey">AMVCS30-77</span></div>
             <div class="ihd"><span class="it-story" style="width:26px;height:26px;font-size:15px;margin-top:4px">🔖</span>
-              <div><div class="ek">개발 티켓 · 스토리 · 상위 <span class="jkey" style="color:var(--purple)">req-ta-01</span></div><h1>가용 AMR 매칭</h1></div></div>
+              <div><div class="ek">개발 이슈 · 스토리 · 상위 <span class="jkey" style="color:var(--purple)">req-ta-01</span></div><h1>가용 AMR 매칭</h1></div></div>
             <div class="iacts"><button class="jbtn prim">진행 중 ▾</button><button class="jbtn ai">🤖 본문 재생성</button><button class="jbtn">＋ 하위 작업</button></div>
             <div class="jgrid">
               <div>
@@ -336,11 +447,12 @@
                 <div class="fldlbl" style="margin-top:26px">하위 작업 (산출물 4종)</div>
                 <div class="childwrap">
                   <div class="childhd">🧩 하위 작업 · 4<span class="prog">2 / 4 완료 <span class="prbar"><i style="width:50%"></i></span></span></div>
-                  <div class="crow"><span class="it-sub">🗣</span><span class="cnm">SWVOC — 할당 기준 요청 원문</span><span class="ckey">AMSWV-2163</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz todo">검토 대기</span></span></div>
-                  <div class="crow"><span class="it-sub">⚙</span><span class="cnm">기능 요구사항 — 가용 AMR 매칭</span><span class="ckey">AMVCS30-80</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></div>
-                  <div class="crow"><span class="it-sub">🛡</span><span class="cnm">비기능 요구사항 — 매칭 성능·가용성</span><span class="ckey">AMVCS30-82</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></div>
-                  <div class="crow"><span class="it-sub">📐</span><span class="cnm">Detail Design — 매칭 시퀀스</span><span class="ckey">AMVCS30-81</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz done">확정</span></span></div>
+                  <div class="crow"><a href="#scr-voc" style="display:contents;color:inherit;text-decoration:none"><span class="it-sub">🗣</span><span class="cnm">SWVOC — 할당 기준 요청 원문</span><span class="ckey">AMSWV-2163</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz todo">검토 대기</span></span></a></div>
+                  <div class="crow"><a href="#scr-functional" style="display:contents;color:inherit;text-decoration:none"><span class="it-sub">⚙</span><span class="cnm">기능 요구사항 — 가용 AMR 매칭</span><span class="ckey">AMVCS30-80</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></a></div>
+                  <div class="crow"><a href="#scr-nonfunctional" style="display:contents;color:inherit;text-decoration:none"><span class="it-sub">🛡</span><span class="cnm">비기능 요구사항 — 매칭 성능·가용성</span><span class="ckey">AMVCS30-82</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz prog">검토 대기</span></span></a></div>
+                  <div class="crow"><a href="#scr-detaildesign" style="display:contents;color:inherit;text-decoration:none"><span class="it-sub">📐</span><span class="cnm">Detail Design — 매칭 시퀀스</span><span class="ckey">AMVCS30-81</span><span class="rt"><span class="aitag">🤖 AI</span><span class="lz done">확정</span></span></a></div>
                 </div>
+                <p style="font-size:12.5px;color:var(--faint);margin:10px 2px 0">← 각 행을 클릭하면 산출물 상세(화면 4~7)로 이동한다.</p>
               </div>
               <div class="jside">
                 <div class="sh">세부 정보 <span class="chev">▾</span></div>
@@ -351,19 +463,72 @@
                 <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
                 <div class="jsrow"><span class="k">하위 작업</span><span class="v">4개 (2 완료)</span></div>
                 <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">AI 3</span><span class="humtag">사람 3</span></span></div>
+                <div class="jsrow"><span class="k">기한</span><span class="v">🖊 2026-09-05<span class="humtag" style="margin-left:2px">사람 지정</span></span></div>
+                <div class="jsrow"><span class="k">생성일</span><span class="v">2026-08-21 · 자동</span></div>
+                <div class="jsrow"><span class="k">해결일</span><span class="v" style="color:var(--faint)">미해결 · 자동 기록 예정</span></div>
               </div>
             </div>
           </div></div>
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>본문 3카테고리</b> 요청 접수 · 개발 · 변경점 설계</span><span class="chipspec"><b>AI 도출</b> 개선요청·제약·변경후(To-Be)</span><span class="chipspec"><b>사람 작성</b> 현상기록·변경범위·변경전(As-Is)</span></div>
+    <div class="specrow"><span class="chipspec"><b>본문 3범주</b> 요구사항 접수 · 요구사항 개발 · 변경점 설계 (사내 고정 양식)</span><span class="chipspec"><b>AI 도출</b> 개선요청사항 · 제약사항 · 변경 후(To-Be)</span><span class="chipspec"><b>사람 작성</b> 현상 기록 · 변경 범위 · 변경 전(As-Is)</span><span class="chipspec"><b>날짜</b> 기한은 사람이 지정, 생성일·해결일은 시스템 자동 기록</span></div>
   </section>
 
-  <!-- ============ 화면 4 : 기능 요구사항 9행 (동작유형 그룹) ============ -->
-  <section class="scr">
-    <div class="kicker"><span class="n">4</span><span class="kt">하위 작업 — 기능 요구사항 · 동작 정의(동작 유형 3그룹)</span></div>
-    <div class="scr-head"><span class="route">/browse/AMVCS30-80</span><h2>기본·변형·예외 × 선행·후행·시나리오</h2></div>
+  <!-- ============ 화면 4 : 하위 작업 — SWVOC ============ -->
+  <section class="scr" id="scr-voc">
+    <div class="kicker"><span class="n">4</span><span class="kt">하위 작업 — SWVOC · 고객 요청 원문 정리</span></div>
+    <div class="scr-head"><span class="route">/browse/AMSWV-2163</span><h2>설명 + 요청사항 + 특이사항</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span><span class="sep">/</span><span class="it"><span class="it-sub">🗣</span>하위</span><span class="sep">/</span><span class="jkey">AMSWV-2163</span></div>
+            <div class="ihd"><span class="it-sub" style="width:26px;height:26px;font-size:15px;margin-top:4px;background:#e5493a">🗣</span>
+              <div><div class="ek">하위 작업 · SWVOC</div><h1>할당 기준 요청 원문</h1></div></div>
+            <div class="iacts"><button class="jbtn prim">검토 대기 ▾</button><button class="jbtn ai">🤖 재생성</button><button class="jbtn">✔ 확정</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">설명 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">고객사(삼성전자 EDS)가 확정 요구사항 req-ta-01에서 밝힌 <b>AMR 매칭 기준</b>에 대한 원문 취지를 정리한 내용. 고객이 실제로 무엇을 원했는지 개발자가 문맥 없이도 바로 알 수 있도록, 확정 본문과 합의 기록을 근거로 다시 서술한다.</div>
+
+                <div class="fldlbl" style="margin-top:22px">1. 요청사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">"Host의 태스크 할당 요청 시, 가용 상태(IDLE·배터리 충분·에러 없음)인 AMR 중에서 <b>가장 가까운</b> 것이 아니라 <b>정해진 우선순위 기준(SoC 높은 순)</b>으로 선택해 달라" — 확정 본문 + 고객 합의 내용(2026-08-16, 김민석 책임)에서 그대로 발췌.</div>
+
+                <div class="fldlbl" style="margin-top:22px">2. 특이사항 <span class="aitag">🤖 AI 초안</span> <span style="font-weight:600;color:var(--faint);font-size:11.5px">· 사람 보완 권장</span></div>
+                <div class="descbox ai">req-ta-01(태스크 할당 우선순위)과 판정 기준이 겹쳐 있어 두 요구사항을 <b>같은 기준으로 통일</b>해야 한다는 협의가 있었음 — 다른 개발 이슈(AMVCS30-79)와 함께 검토 필요.</div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-sub" style="background:#e5493a">🗣</span>SWVOC</span></div>
+                <div class="jsrow"><span class="k">상위 작업</span><span class="v"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz todo">검토 대기</span></span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">🤖 AI 도출</span></span></div>
+                <div class="jsrow"><span class="k">근거</span><span class="v"><span class="jkey" style="color:var(--accent)">req-ta-01 확정본 + 합의기록</span></span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>구성</b> 설명 → 1. 요청사항 → 2. 특이사항</span><span class="chipspec"><b>전 항목 AI 도출</b> 확정 본문 + 합의 기록만으로 채워진다 — 사람은 검토·확정만</span><span class="chipspec"><b>특이사항은 초안</b> 다른 요구사항과의 관계처럼 맥락 판단이 섞일 수 있어 사람이 한 번 더 보는 걸 권장</span><span class="chipspec api">GET /artifacts/{id}</span></div>
+  </section>
+
+  <!-- ============ 화면 5 : 기능 요구사항 (동작정의 6행) ============ -->
+  <section class="scr" id="scr-functional">
+    <div class="kicker"><span class="n">5</span><span class="kt">하위 작업 — 기능 요구사항 · 동작 정의(동작 유형 2그룹)</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-80</span><h2>설명 + 개요(역할·목적) + 동작 정의(기본·예외 × 선행조건·시나리오·후행조건)</h2></div>
     <div class="stage"><div class="canvas">
       <div class="jira">
         <div class="jtop">
@@ -385,32 +550,30 @@
             <div class="iacts"><button class="jbtn prim">검토 대기 ▾</button><button class="jbtn ai">🤖 재생성</button><button class="jbtn">✔ 확정</button></div>
             <div class="jgrid">
               <div>
-                <div class="fldlbl">개요 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="fldlbl">설명 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">req-ta-01의 "가용 AMR 매칭" 부분을 개발 관점으로 옮긴 기능. Host의 할당 요청을 받아 조건에 맞는 AMR을 골라 매칭하는 흐름을 정의한다.</div>
+
+                <div class="fldlbl">1. 개요 <span class="aitag">🤖 AI 도출</span></div>
                 <div class="ovbox">
                   <div class="r"><span class="k">역할</span><span>Host의 태스크 할당 요청에 대해 조건을 만족하는 가용 AMR을 선별·매칭한다.</span></div>
                   <div class="r"><span class="k">목적</span><span>할당 지연·오배정을 방지하고 우선순위에 따라 최적의 AMR을 배정한다.</span></div>
                 </div>
-                <div class="fldlbl">동작 정의 <span class="aitag">🤖 AI 도출</span> <span style="font-weight:600;color:var(--faint);font-size:12px">· 동작 유형 3그룹 × (선행·후행·시나리오)</span></div>
+
+                <div class="fldlbl">2. 동작 정의 <span class="aitag">🤖 AI 도출</span> <span style="font-weight:600;color:var(--faint);font-size:12px">· 동작 유형 2그룹(기본·예외) × 항목(선행조건·시나리오·후행조건)</span></div>
                 <table class="j9">
-                  <thead><tr><th style="width:110px">동작 유형</th><th>선행 조건</th><th>후행 조건</th><th>시나리오</th></tr></thead>
+                  <thead><tr><th style="width:110px">동작 유형</th><th style="width:110px">항목</th><th>내용</th></tr></thead>
                   <tbody>
                     <tr><td rowspan="3" class="grp base">기본<span class="sub">정상 흐름</span></td>
-                      <td>가용 AMR ≥ 1대, 요청 유효</td><td>1대 매칭·상태 BUSY 전환</td><td>요청 수신 → 가용 필터 → 우선순위 정렬 → 최상위 매칭 → 회신</td></tr>
-                    <tr><td>동일 우선순위 다수 존재</td><td>대기시간 최장 AMR 선택</td><td>정렬 → 동점 시 FIFO 규칙 적용 → 매칭</td></tr>
-                    <tr><td>요청에 목적지 좌표 포함</td><td>경로 산출 가능 AMR 매칭</td><td>가용 필터 후 pathsearch로 도달성 확인 → 매칭</td></tr>
-                    <tr><td rowspan="3" class="grp var">변형<span class="sub">조건 분기</span></td>
-                      <td>특정 Probe Card 전용 AMR 지정</td><td>지정 유형 AMR만 매칭</td><td>카드 타입 파싱 → 호환 AMR 하위집합 필터 → 매칭</td></tr>
-                    <tr><td>긴급(HIGH) 플래그 요청</td><td>정렬보다 우선 즉시 배정</td><td>큐 선점 → 가용 중 최근접 AMR 즉시 매칭</td></tr>
-                    <tr><td>배터리 임계 근접 AMR 포함</td><td>임계 이상만 후보 유지</td><td>가용 필터 시 배터리 ≥ 30% 조건 추가 → 매칭</td></tr>
+                      <td>선행조건</td><td>가용 AMR ≥ 1대, 요청이 스키마에 맞게 유효함</td></tr>
+                    <tr><td>시나리오</td><td>요청 수신 → 가용 필터(IDLE·SoC 충분·에러 없음) → 우선순위(SoC 높은 순) 정렬 → 최상위 매칭 → 결과 회신</td></tr>
+                    <tr><td>후행조건</td><td>매칭된 AMR 1대의 상태가 BUSY로 전환되고, 요청자에게 매칭 결과가 회신됨</td></tr>
                     <tr><td rowspan="3" class="grp exc">예외<span class="sub">오류·실패</span></td>
-                      <td>가용 AMR 0대</td><td>PENDING 반환·재시도 예약</td><td>필터 결과 공집합 → 대기 등록 → 가용 변화 이벤트 구독</td></tr>
-                    <tr><td>매칭 직후 대상 AMR 알람</td><td>매칭 취소·재할당 트리거</td><td>알람 수신 → 매칭 롤백 → AMVCS30-78 재할당 호출</td></tr>
-                    <tr><td>요청 필수 필드 누락</td><td>400 거절·오류 코드 회신</td><td>스키마 검증 실패 → 매칭 미수행 → 오류 반환</td></tr>
+                      <td>선행조건</td><td>가용 필터를 통과한 AMR이 0대이거나, 요청 필수 필드가 누락됨</td></tr>
+                    <tr><td>시나리오</td><td>가용 0대 → 대기(PENDING) 등록 후 가용 변화 이벤트 구독 / 필드 누락 → 스키마 검증 단계에서 즉시 거절</td></tr>
+                    <tr><td>후행조건</td><td>가용 0대 시 PENDING 상태로 대기 등록됨 · 필드 누락 시 400 오류 코드로 회신되고 매칭은 수행되지 않음</td></tr>
                   </tbody>
                 </table>
-                <div class="fldlbl">제약 사항 <span class="aitag">🤖 AI 도출</span></div>
-                <div class="descbox ai">매칭 응답 <b>200ms</b> 이내 · 동시 요청 시 <b>우선순위 큐</b> 순서 보장 · 상태 전환은 <b>원자적(atomic)</b> 처리로 이중 배정 방지.</div>
-                <div class="aiban">🤖 <b>AI 도출 — 전 항목 자동 작성.</b> 기능 요구사항은 「확정된 요구사항 + 제약」만으로 채울 수 있어, 사람은 <b>검토 후 확정</b>만 하면 됩니다.</div>
+                <div class="aiban">🤖 <b>AI 도출 — 전 항목 자동 작성.</b> 기능 요구사항은 「확정된 요구사항 + 이 개발 이슈의 제약사항」만으로 채울 수 있어, 사람은 <b>검토 후 확정</b>만 하면 됩니다.</div>
               </div>
               <div class="jside">
                 <div class="sh">세부 정보 <span class="chev">▾</span></div>
@@ -427,12 +590,168 @@
         </div>
       </div>
     </div></div>
-    <div class="specrow"><span class="chipspec"><b>표 구조</b> 동작 유형(기본·변형·예외) 그룹 셀 + 선행·후행·시나리오 3열</span><span class="chipspec"><b>작성 주체</b> 전 항목 AI 도출 → 사람은 확정만</span><span class="chipspec api">GET /artifacts/{id}</span></div>
+    <div class="specrow"><span class="chipspec"><b>구성</b> 설명 → 1. 개요(역할·목적) → 2. 동작 정의(표)</span><span class="chipspec"><b>표 구조</b> 동작 유형(기본·예외) 그룹 셀 + 항목(선행조건·시나리오·후행조건) 3행 × 2그룹 = 6행</span><span class="chipspec"><b>작성 주체</b> 전 항목 AI 도출 → 사람은 확정만</span><span class="chipspec api">GET /artifacts/{id}</span></div>
   </section>
 
-  <p class="foot"><b>범위.</b> 기능 3(산출물 도출) — ① AI 일괄 도출 · ② 요구사항↔티켓 연결성 · ③ 개발 티켓 본문(AI/사람) · ④ 기능 요구사항 동작 정의(3그룹) 4화면. 실제 Jira 이슈 계층·화면 구조를 따름.
-    <br><b>작성 주체 원칙.</b> 「고객 요구서 + 정해진 양식」만으로 채울 수 있으면 <b>AI 도출</b>, 현재 시스템 상태·도메인 판단이 필요하면 <b>사람 작성</b>.
-    <br><b>다음.</b> 기능 4(추적성) 화면 + ERD.</p>
+  <!-- ============ 화면 6 : 비기능 요구사항 ============ -->
+  <section class="scr" id="scr-nonfunctional">
+    <div class="kicker"><span class="n">6</span><span class="kt">하위 작업 — 비기능 요구사항 · 기능 요구사항 + 제약사항</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-82</span><h2>구조는 기능 요구사항과 동일 + 제약사항 추가</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span><span class="sep">/</span><span class="it"><span class="it-sub">🛡</span>하위</span><span class="sep">/</span><span class="jkey">AMVCS30-82</span></div>
+            <div class="ihd"><span class="it-sub" style="width:26px;height:26px;font-size:15px;margin-top:4px;background:#22a06b">🛡</span>
+              <div><div class="ek">하위 작업 · 비기능 요구사항</div><h1>매칭 성능·가용성</h1></div></div>
+            <div class="iacts"><button class="jbtn prim">검토 대기 ▾</button><button class="jbtn ai">🤖 재생성</button><button class="jbtn">✔ 확정</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">설명 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">가용 AMR 매칭 기능이 지켜야 할 성능·가용성 품질 속성. req-ta-01의 응답 기준과 이 개발 이슈의 제약사항을 정량 지표로 재정리한다.</div>
+
+                <div class="fldlbl">1. 개요 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="ovbox">
+                  <div class="r"><span class="k">역할</span><span>매칭 응답 속도와 동시 요청 처리 순서를 보장해 서비스 품질을 유지한다.</span></div>
+                  <div class="r"><span class="k">목적</span><span>Host 다건 요청이 몰려도 지연·역전 없이 안정적으로 매칭 결과를 회신한다.</span></div>
+                </div>
+
+                <div class="fldlbl">2. 동작 정의 <span class="aitag">🤖 AI 도출</span> <span style="font-weight:600;color:var(--faint);font-size:12px">· 기능 요구사항과 같은 표 구조</span></div>
+                <table class="j9">
+                  <thead><tr><th style="width:110px">동작 유형</th><th style="width:110px">항목</th><th>내용</th></tr></thead>
+                  <tbody>
+                    <tr><td rowspan="3" class="grp base">기본<span class="sub">정상 흐름</span></td>
+                      <td>선행조건</td><td>초당 요청 수가 설계 한도(TPS) 이내</td></tr>
+                    <tr><td>시나리오</td><td>요청 도착 순서대로 큐잉 → 매칭 로직 처리 → <b>200ms 이내</b> 회신</td></tr>
+                    <tr><td>후행조건</td><td>모든 응답이 200ms 이내로 회신되고, 처리 순서가 도착 순서와 일치함</td></tr>
+                    <tr><td rowspan="3" class="grp exc">예외<span class="sub">오류·실패</span></td>
+                      <td>선행조건</td><td>순간 요청량이 설계 한도(TPS)를 초과함</td></tr>
+                    <tr><td>시나리오</td><td>초과분은 큐에 대기 → 우선순위 규칙에 따라 순차 처리, 임계 초과 시 초과 요청 거절</td></tr>
+                    <tr><td>후행조건</td><td>큐 대기 시간이 SLA(1초)를 넘기지 않고, 초과 거절분은 오류로 명확히 회신됨</td></tr>
+                  </tbody>
+                </table>
+
+                <div class="fldlbl">제약사항 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">매칭 응답 <b>200ms</b> 이내(P99) · 동시 요청 시 <b>우선순위 큐</b> 순서 보장 · 상태 전환은 <b>원자적(atomic)</b> 처리로 이중 배정 방지 · 큐 대기 SLA <b>1초</b> 초과 시 오류 회신.</div>
+                <div class="aiban">🤖 <b>AI 도출 — 전 항목 자동 작성.</b> 기능 요구사항과 같은 근거(확정 요구사항 + 제약사항)로 채워지고, 구조도 동일하다 — 마지막에 <b>제약사항</b> 항목만 더 있다.</div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-sub" style="background:#22a06b">🛡</span>비기능 요구사항</span></div>
+                <div class="jsrow"><span class="k">상위 작업</span><span class="v"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz prog">검토 대기</span></span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">🤖 AI 도출</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">모듈</span><span class="v"><span class="mod">jobassign</span></span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>기능 요구사항과 차이</b> 구조(설명·개요·동작정의)는 동일, 마지막에 <b>제약사항</b>만 추가</span><span class="chipspec"><b>제약사항 출처</b> 개발 이슈의 &lt;요구사항 개발&gt; 제약사항을 정량 지표로 구체화</span><span class="chipspec api">GET /artifacts/{id}</span></div>
+  </section>
+
+  <!-- ============ 화면 7 : Detail Design ============ -->
+  <section class="scr" id="scr-detaildesign">
+    <div class="kicker"><span class="n">7</span><span class="kt">하위 작업 — Detail Design · Class/Sequence Diagram은 다이어그램-as-코드</span></div>
+    <div class="scr-head"><span class="route">/browse/AMVCS30-81</span><h2>Class Diagram(영향 범위) + Sequence Diagram(AS-IS/TO-BE) + 설명</h2></div>
+    <div class="stage"><div class="canvas">
+      <div class="jira">
+        <div class="jtop">
+          <span class="apps">▦</span><span class="logo"><span class="mk">◆</span>ReqOps</span>
+          <span class="tnav"><a>대시보드</a><a class="on">백로그</a><a>보드</a><a>산출물</a></span>
+          <button class="create">＋ 만들기</button><span class="search">🔍 이슈 검색</span><span class="ava">한</span>
+        </div>
+        <div class="jbody">
+          <div class="jnav">
+            <div class="prj"><span class="pi">AM</span><div><div class="pn">AMR VCS</div><div class="ps">소프트웨어 프로젝트</div></div></div>
+            <div class="ni"><span class="ic">📋</span>요약</div><div class="ni"><span class="ic">🗂️</span>타임라인</div>
+            <div class="ni on"><span class="ic">📚</span>백로그</div><div class="ni"><span class="ic">▤</span>보드</div><div class="ni"><span class="ic">📄</span>산출물</div>
+            <div class="sec">요구사항</div><div class="ni"><span class="ic">✅</span>요구사항 검토</div><div class="ni"><span class="ic">🕘</span>버전 이력</div>
+          </div>
+          <div class="jmain"><div class="jmpad">
+            <div class="jcrumb"><span class="it"><span class="it-epic">⚡</span><span class="jkey">req-ta-01</span></span><span class="sep">/</span><span class="it"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span><span class="sep">/</span><span class="it"><span class="it-sub">📐</span>하위</span><span class="sep">/</span><span class="jkey">AMVCS30-81</span></div>
+            <div class="ihd"><span class="it-sub" style="width:26px;height:26px;font-size:15px;margin-top:4px;background:#4688ec">📐</span>
+              <div><div class="ek">하위 작업 · Detail Design</div><h1>매칭 시퀀스</h1></div></div>
+            <div class="iacts"><button class="jbtn prim">확정 ▾</button><button class="jbtn ai">🤖 재생성</button><button class="jbtn">Mermaid 코드 보기</button></div>
+            <div class="jgrid">
+              <div>
+                <div class="fldlbl">Class Diagram — 영향 범위 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="diaghd"><span class="dtag">렌더링 결과</span><span style="font-size:11.5px;color:var(--faint)">AI가 생성한 Mermaid classDiagram 코드를 프론트에서 그린 모습</span></div>
+                <div class="clsrow">
+                  <div class="clsbox"><div class="cname">JobAssignService</div>
+                    <div class="cfield">+ match(req): Result</div>
+                    <div class="cfield">- sortByPriority()</div>
+                  </div>
+                  <div class="clsarrow">uses →<span class="lbl">호출</span></div>
+                  <div class="clsbox"><div class="cname chg">AmrAvailabilityFilter <span style="font-weight:600">(변경)</span></div>
+                    <div class="cfield">+ filter(list): List</div>
+                    <div class="cfield">+ isAvailable(amr): bool</div>
+                  </div>
+                  <div class="clsarrow">uses →<span class="lbl">호출</span></div>
+                  <div class="clsbox"><div class="cname">PriorityQueue</div>
+                    <div class="cfield">+ enqueue(amr)</div>
+                    <div class="cfield">+ pop(): Amr</div>
+                  </div>
+                </div>
+                <div class="descbox" style="margin-top:2px;background:var(--bg);font-family:var(--mono);font-size:11px;color:var(--sub)">classDiagram
+  JobAssignService --&gt; AmrAvailabilityFilter : uses
+  JobAssignService --&gt; PriorityQueue : uses
+  class AmrAvailabilityFilter { +filter(list) +isAvailable(amr) }</div>
+
+                <div class="fldlbl" style="margin-top:24px">Sequence Diagram — 변경 전/후 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="seqcols">
+                  <div class="seqcol asis"><h5>AS-IS</h5>
+                    <div class="seqstep"><span class="n">1</span><span><span class="who">Host</span> → JobAssignService: 할당 요청</span></div>
+                    <div class="seqstep"><span class="n">2</span><span><span class="who">JobAssignService</span> → AmrAvailabilityFilter: 가용 목록 조회</span></div>
+                    <div class="seqstep"><span class="n">3</span><span><span class="who">JobAssignService</span>: <b>거리순</b> 정렬</span></div>
+                    <div class="seqstep"><span class="n">4</span><span><span class="who">JobAssignService</span> → Host: 매칭 결과 회신</span></div>
+                  </div>
+                  <div class="seqcol tobe"><h5>TO-BE</h5>
+                    <div class="seqstep"><span class="n">1</span><span><span class="who">Host</span> → JobAssignService: 할당 요청</span></div>
+                    <div class="seqstep"><span class="n">2</span><span><span class="who">JobAssignService</span> → AmrAvailabilityFilter: 가용 목록 조회</span></div>
+                    <div class="seqstep new"><span class="n">3</span><span><span class="who">JobAssignService</span> → PriorityQueue: <b>SoC 우선순위</b>로 정렬 요청</span></div>
+                    <div class="seqstep new"><span class="n">4</span><span><span class="who">PriorityQueue</span>: 동점 시 대기시간 최장 우선</span></div>
+                    <div class="seqstep"><span class="n">5</span><span><span class="who">JobAssignService</span> → Host: 매칭 결과 회신</span></div>
+                  </div>
+                </div>
+
+                <div class="fldlbl" style="margin-top:22px">설명 <span class="aitag">🤖 AI 도출</span></div>
+                <div class="descbox ai">기존에는 "거리순"으로 정렬했지만, req-ta-01 확정에 따라 <b>PriorityQueue를 거쳐 SoC(배터리 잔량) 높은 순</b>으로 정렬하도록 변경한다. 동점 시 대기시간이 가장 긴 AMR을 우선한다.</div>
+                <div class="aiban">🎨 <b>이미지가 아니라 코드.</b> AI는 위 다이어그램을 <b>Mermaid 문법 텍스트</b>로 생성한다 — 화면은 그 텍스트를 그대로 렌더링한 결과다. "Mermaid 코드 보기" 버튼으로 원본 텍스트를 확인·수정할 수 있다.</div>
+              </div>
+              <div class="jside">
+                <div class="sh">세부 정보 <span class="chev">▾</span></div>
+                <div class="jsrow"><span class="k">유형</span><span class="v"><span class="it-sub" style="background:#4688ec">📐</span>Detail Design</span></div>
+                <div class="jsrow"><span class="k">상위 작업</span><span class="v"><span class="it-story">🔖</span><span class="jkey">AMVCS30-77</span></span></div>
+                <div class="jsrow"><span class="k">상태</span><span class="v"><span class="lz done">확정</span></span></div>
+                <div class="jsrow"><span class="k">작성 주체</span><span class="v"><span class="aitag">🤖 AI 도출</span></span></div>
+                <div class="jsrow"><span class="k">담당자</span><span class="v"><span class="miniava b">이</span>이수민</span></div>
+                <div class="jsrow"><span class="k">영향 클래스</span><span class="v">3개(1개 변경)</span></div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="specrow"><span class="chipspec"><b>구성</b> Class Diagram(영향 범위) → Sequence Diagram(AS-IS/TO-BE) → 설명</span><span class="chipspec"><b>다이어그램-as-코드</b> AI는 Mermaid 문법으로 생성 · 화면이 텍스트를 렌더링</span><span class="chipspec"><b>변경 하이라이트</b> TO-BE에서 바뀐 단계·클래스만 강조 표시</span><span class="chipspec api">GET /artifacts/{id}</span></div>
+  </section>
+
+  <p class="foot"><b>범위.</b> 기능 3(산출물 도출) — ① AI 일괄 도출 · ② 요구사항↔이슈 연결성 · ③ 개발 이슈 본문(AI/사람, 사내 고정 양식) · ④ SWVOC · ⑤ 기능 요구사항(동작정의 6행) · ⑥ 비기능 요구사항(+제약사항) · ⑦ Detail Design(Mermaid) — 총 7화면 + 설계 노트 1개. 실제 Jira 이슈 계층·화면 구조를 따름.
+    <br><b>작성 주체 원칙.</b> 「확정 요구사항 + 정해진 양식」만으로 채울 수 있으면 <b>AI 도출</b>, 현재 시스템 상태·도메인 판단이 필요하면 <b>사람 작성</b>. 도출은 이슈 분할 → 이슈 본문 → 산출물 4종 순으로 3단계 LLM 호출을 거친다(설계 노트 참고).
+    <br><b>다음.</b> 기능 4(추적성) 화면 + ERD, 개발 이슈/산출물 DB 스키마 확정.</p>
 </div>
 <script>
   function fit(){document.querySelectorAll('.stage').forEach(function(st){

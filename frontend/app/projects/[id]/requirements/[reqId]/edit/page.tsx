@@ -122,9 +122,13 @@ export default function RequirementEditPage() {
     }
   }
 
-  /** 증빙 파일 첨부 — 지금은 화면에만 표시. 같은 파일을 다시 고를 수 있게 매번 비운다. */
+  /**
+   * 증빙 파일 첨부 — 지금은 화면에만 표시. 이미지만 허용한다(회신 메일·화면
+   * 캡처, 회의록 사진 등). accept="image/*" 로 대부분 걸러지지만, "모든 파일"로
+   * 우회해 고를 수도 있어 한 번 더 확인한다.
+   */
   function onPickFiles(files: FileList | null) {
-    const picked = Array.from(files ?? []);
+    const picked = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
     setFiles((prev) => [...prev, ...picked]);
   }
 
@@ -475,9 +479,9 @@ export default function RequirementEditPage() {
                           placeholder="위 수정안(우선순위 req-ta-01 기준 통일)에 동의함. 회신 메일로 확인."
                         />
 
-                        {/* 증빙 파일 — 디자인만. 실제 업로드·저장은 나중에 붙인다. */}
+                        {/* 증빙 이미지 — 디자인만. 실제 업로드·저장은 나중에 붙인다. */}
                         <div className="fieldlab">
-                          증빙 파일{" "}
+                          증빙 이미지{" "}
                           <span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 11.5 }}>
                             (선택 · 준비 중)
                           </span>
@@ -486,6 +490,7 @@ export default function RequirementEditPage() {
                           <input
                             ref={fileInputRef}
                             type="file"
+                            accept="image/*"
                             multiple
                             style={{ display: "none" }}
                             onChange={(e) => {
@@ -498,16 +503,16 @@ export default function RequirementEditPage() {
                             className="btn sm"
                             onClick={() => fileInputRef.current?.click()}
                           >
-                            📎 파일 첨부
+                            🖼 이미지 첨부
                           </button>
                           <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 10 }}>
-                            회신 메일 캡처·회의록 등. 아직 저장은 안 돼요.
+                            이미지 파일만 가능해요(PNG, JPG 등). 회신 메일 캡처·회의록 사진 등. 아직 저장은 안 돼요.
                           </span>
                           {files.length > 0 && (
                             <ul className="filelist">
                               {files.map((f, i) => (
                                 <li key={`${f.name}-${i}`}>
-                                  <span className="fname">📄 {f.name}</span>
+                                  <span className="fname">🖼️ {f.name}</span>
                                   <span className="fsize">{formatFileSize(f.size)}</span>
                                   <button
                                     type="button"
