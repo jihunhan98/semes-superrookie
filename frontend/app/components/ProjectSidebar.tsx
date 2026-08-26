@@ -16,14 +16,11 @@ const REQUIREMENTS_ICON = (
   <path d="M2.5 3.5A.75.75 0 0 1 3.25 4h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 4.75Zm0 4A.75.75 0 0 1 3.25 8h9.5a.75.75 0 0 1 0 1.5h-9.5A.75.75 0 0 1 2.5 8.75Zm.75 3.5h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1 0-1.5Z" />
 );
 
+const ARTIFACTS_ICON = (
+  <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z" />
+);
+
 const PLACEHOLDER_NAV_ITEMS = [
-  {
-    key: "artifacts",
-    label: "산출물",
-    icon: (
-      <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z" />
-    ),
-  },
   {
     key: "traceability",
     label: "추적성",
@@ -31,7 +28,7 @@ const PLACEHOLDER_NAV_ITEMS = [
   },
 ] as const;
 
-type NavKey = "home" | "requirements" | (typeof PLACEHOLDER_NAV_ITEMS)[number]["key"] | "settings";
+type NavKey = "home" | "requirements" | "artifacts" | (typeof PLACEHOLDER_NAV_ITEMS)[number]["key"] | "settings";
 
 export default function ProjectSidebar({
   projectId,
@@ -69,6 +66,13 @@ export default function ProjectSidebar({
           {REQUIREMENTS_ICON}
         </svg>
         요구사항
+      </Link>
+
+      <Link href={`/projects/${projectId}/artifacts`} className={`nav${active === "artifacts" ? " on" : ""}`}>
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          {ARTIFACTS_ICON}
+        </svg>
+        산출물
       </Link>
 
       {PLACEHOLDER_NAV_ITEMS.map((item) => (
