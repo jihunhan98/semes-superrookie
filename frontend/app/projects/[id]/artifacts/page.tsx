@@ -4,8 +4,24 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../components/Header";
 import ProjectSidebar from "../../../components/ProjectSidebar";
-import { getProject, listRequirements, type ProjectDetail, type RequirementSummary } from "../../../lib/api";
+import {
+  getProject,
+  listRequirements,
+  type ProjectDetail,
+  type ReqState,
+  type RequirementSummary,
+} from "../../../lib/api";
 import { getCurrentUser } from "../../../lib/session";
+
+/** 요구사항 목록(화면 1)과 같은 상태 점 색. */
+const STATE_COLOR: Record<ReqState, string> = {
+  RECEIVED: "#9aa5b1",
+  IN_REVIEW: "#d4a72c",
+  PENDING_CONSENSUS: "#8250df",
+  CONFIRMED: "#1f883d",
+  REVISING: "#0969da",
+  ON_HOLD: "#cf222e",
+};
 
 export default function ArtifactsPage() {
   const router = useRouter();
@@ -64,8 +80,6 @@ export default function ArtifactsPage() {
     );
   }
 
-  const confirmed = rows.filter((r) => r.state === "CONFIRMED");
-
   return (
     <div className="appshell">
       <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
@@ -73,34 +87,46 @@ export default function ArtifactsPage() {
         {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
         <main className="main">
           <div className="rqtoolbar">
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>산출물 도출</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
+              산출물 도출 <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 16 }}>{rows.length}</span>
+            </h1>
           </div>
-          <p style={{ fontSize: 13, color: "var(--muted)", marginTop: -6, marginBottom: 18 }}>
-            확정된 요구사항에서 개발 이슈와 산출물 4종(SWVOC·기능 요구사항·비기능 요구사항·Detail Design)을
-            초안으로 뽑아냅니다. <b style={{ color: "var(--ink)" }}>지금은 화면 구성 확인용</b>이라 실제 AI
-            분석 없이 예시 결과를 보여줍니다.
-          </p>
 
-          {confirmed.length === 0 ? (
-            <div className="placeholder">
-              확정된 요구사항이 없습니다. 산출물은 <b>확정된 요구사항</b>에서만 도출할 수 있습니다.
-            </div>
+          {rows.length === 0 ? (
+            <div className="placeholder">아직 등록된 요구사항이 없습니다.</div>
           ) : (
-            <div className="artreqlist">
-              {confirmed.map((r) => (
-                <div key={r.id} className="artreqrow">
+            <div className="rqlist">
+              {rows.map((r) => (
+                <div key={r.id} className="rqrow">
+                  <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
                   <span className="rmid">{r.reqKey}</span>
-                  <span className="rtit" style={{ flex: 1 }}>
-                    {r.content}
+                  <span className="rtit">{r.content}</span>
+                  <span className="rt">
+                    {r.version ? (
+                      <span className="tagv">🏷 v{r.version}</span>
+                    ) : (
+                      <span
+                        className="lbl"
+                        style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
+                      >
+                        {r.stateLabel}
+                      </span>
+                    )}
+                    <span className="rasg">{r.assigneeName ?? "—"}</span>
+                    {r.state === "CONFIRMED" ? (
+                      <button
+                        className="btn prim sm"
+                        onClick={() => onDerive(r.id)}
+                        disabled={deriving !== null}
+                      >
+                        {deriving === r.id ? "도출 중…" : "🤖 도출"}
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "var(--faint)", width: 78, textAlign: "right" }}>
+                        확정 후 가능
+                      </span>
+                    )}
                   </span>
-                  <span className="tagv">🏷 v{r.version}</span>
-                  <button
-                    className="btn prim sm"
-                    onClick={() => onDerive(r.id)}
-                    disabled={deriving !== null}
-                  >
-                    {deriving === r.id ? "도출 중…" : "🤖 도출"}
-                  </button>
                 </div>
               ))}
             </div>

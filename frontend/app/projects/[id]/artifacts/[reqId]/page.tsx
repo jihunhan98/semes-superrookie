@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import AiFindings from "../../../../components/AiFindings";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
 import { buildMockIssues } from "../../../../lib/artifactsMock";
@@ -19,7 +20,10 @@ export default function ArtifactsTreePage() {
   const [req, setReq] = useState<RequirementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const [redoing, setRedoing] = useState(false);
+  const [showRedoForm, setShowRedoForm] = useState(false);
+  const [redoPrompt, setRedoPrompt] = useState("");
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -36,6 +40,16 @@ export default function ArtifactsTreePage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
+
+  /** 아직 재도출 로직은 없다 — 로딩만 잠깐 보여주고 프롬프트 입력창을 닫는다. */
+  function onRedo() {
+    setRedoing(true);
+    setTimeout(() => {
+      setRedoing(false);
+      setShowRedoForm(false);
+      setRedoPrompt("");
+    }, 700);
+  }
 
   if (error) {
     return (
@@ -60,8 +74,6 @@ export default function ArtifactsTreePage() {
   }
 
   const issues = buildMockIssues();
-  const artifactCount = issues.length * 4;
-  const doneCount = issues.filter((i) => i.state === "완료").length;
 
   return (
     <div className="appshell">
@@ -79,44 +91,63 @@ export default function ArtifactsTreePage() {
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{req.reqKey} 산출물 도출</h1>
             <span className="tagv">🏷 v{req.version}</span>
           </div>
-          <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 4, marginBottom: 18 }}>{req.content}</p>
 
-          <div className="artbanner">
-            <span className="aico">🤖</span>
-            <div>
-              <div className="att">AI 도출 완료. 개발 이슈 {issues.length}건과 산출물 {artifactCount}건을 초안으로 생성했습니다.</div>
-              <div className="ads">사람은 내용을 확인·보완한 뒤 확정합니다 · 방금 전 · 한지훈</div>
+          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 900 }}>
+            <div className="wch">
+              📄 확정본
+              <span className="rt">
+                <span className="tagv">v{req.version}</span>
+              </span>
             </div>
+            <div className="wcb">
+              <AiFindings
+                content={req.content}
+                findings={req.findings}
+                contentLabel={`확정본 v${req.version}`}
+                empty="검출된 불명확·상충이 없습니다."
+              />
+            </div>
+          </div>
+
+          <div className="artbanner" style={{ marginTop: 16 }}>
+            <span className="aico">🤖</span>
+            <div className="att">개발 이슈 {issues.length}건을 생성했습니다.</div>
             <button
               className="btn sm"
               style={{ marginLeft: "auto" }}
-              onClick={() => setRedoing(true)}
+              onClick={() => setShowRedoForm((v) => !v)}
               disabled={redoing}
             >
-              {redoing ? "재도출 중…" : "↻ 재도출"}
+              ↻ 재도출
             </button>
           </div>
 
-          <div className="artstats">
-            <div className="artstat">
-              <div className="num">1</div>
-              <div className="lb">요구사항</div>
+          {showRedoForm && (
+            <div className="wcard" style={{ marginTop: 10, maxWidth: 900 }}>
+              <div className="wcb">
+                <div className="fieldlab" style={{ marginTop: 0 }}>
+                  AI에게 물어보기 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+                </div>
+                <textarea
+                  className="reqta"
+                  style={{ minHeight: 64 }}
+                  value={redoPrompt}
+                  onChange={(e) => setRedoPrompt(e.target.value)}
+                  placeholder="예: 우선순위 기준을 SoC 대신 배터리 잔량 그대로 써서 다시 나눠줘."
+                />
+                <div className="wfoot">
+                  <button className="btn prim" onClick={onRedo} disabled={redoing}>
+                    {redoing ? "재도출 중…" : "재도출 실행"}
+                  </button>
+                  <button className="btn" onClick={() => setShowRedoForm(false)} disabled={redoing}>
+                    취소
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="artstat">
-              <div className="num">{issues.length}</div>
-              <div className="lb">개발 이슈 · AI 초안</div>
-            </div>
-            <div className="artstat">
-              <div className="num">{artifactCount}</div>
-              <div className="lb">산출물 · AI 초안</div>
-            </div>
-            <div className="artstat">
-              <div className="num">{doneCount}</div>
-              <div className="lb">확정 완료</div>
-            </div>
-          </div>
+          )}
 
-          <div className="arttree">
+          <div className="arttree" style={{ marginTop: 18 }}>
             {issues.map((issue) => (
               <div key={issue.key}>
                 <Link
@@ -141,27 +172,39 @@ export default function ArtifactsTreePage() {
                 <div className="abranch">
                   <Link
                     className="arow"
+                    style={{ borderLeftColor: "var(--red)" }}
                     href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/voc`}
                   >
-                    🗣 SWVOC — {issue.voc.request.slice(0, 24)}…
+                    <span className="aicon">🗣</span>
+                    <span className="atxt">SWVOC — {issue.voc.request.slice(0, 24)}…</span>
+                    <span className="achev">열기 ›</span>
                   </Link>
                   <Link
                     className="arow"
+                    style={{ borderLeftColor: "var(--purple)" }}
                     href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/functional`}
                   >
-                    ⚙ 기능 요구사항 — {issue.title}
+                    <span className="aicon">⚙</span>
+                    <span className="atxt">기능 요구사항 — {issue.title}</span>
+                    <span className="achev">열기 ›</span>
                   </Link>
                   <Link
                     className="arow"
+                    style={{ borderLeftColor: "var(--green)" }}
                     href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/nonfunctional`}
                   >
-                    🛡 비기능 요구사항 — {issue.nonFunctional.role.slice(0, 20)}…
+                    <span className="aicon">🛡</span>
+                    <span className="atxt">비기능 요구사항 — {issue.nonFunctional.role.slice(0, 20)}…</span>
+                    <span className="achev">열기 ›</span>
                   </Link>
                   <Link
                     className="arow"
+                    style={{ borderLeftColor: "var(--accent)" }}
                     href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/detail-design`}
                   >
-                    📐 Detail Design — {issue.title}
+                    <span className="aicon">📐</span>
+                    <span className="atxt">Detail Design — {issue.title}</span>
+                    <span className="achev">열기 ›</span>
                   </Link>
                 </div>
               </div>
