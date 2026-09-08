@@ -1326,6 +1326,37 @@ mark.hl.cf.on {
   background: #ffd7d5;
 }
 
+/* 버전 비교 하이라이트 — 추가(초록)·삭제(빨강, 취소선) 전용 색. change 는 기본(amber)을 그대로 쓴다. */
+mark.hl.add {
+  background: var(--green-soft);
+  border-bottom-color: var(--green);
+}
+
+mark.hl.add .no {
+  background: var(--green);
+}
+
+mark.hl.add.on {
+  box-shadow: 0 0 0 3px var(--green-soft);
+  background: #b6f2c5;
+}
+
+mark.hl.del {
+  background: var(--red-soft);
+  border-bottom-color: var(--red);
+  text-decoration: line-through;
+  text-decoration-color: var(--red);
+}
+
+mark.hl.del .no {
+  background: var(--red);
+}
+
+mark.hl.del.on {
+  box-shadow: 0 0 0 3px var(--red-soft);
+  background: #ffd7d5;
+}
+
 .find .fno {
   min-width: 18px;
   height: 18px;
@@ -1346,6 +1377,15 @@ mark.hl.cf.on {
   background: var(--red);
 }
 
+.find .fno.addc {
+  background: var(--green);
+}
+
+.ftype2.addc {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 .find {
   transition: border-color 0.12s, box-shadow 0.12s;
 }
@@ -1360,6 +1400,12 @@ mark.hl.cf.on {
   border-color: var(--red);
   border-left-color: var(--red);
   box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.find.addc.on {
+  border-color: var(--green);
+  border-left-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
 }
 
 /* 원문에 없는 구절 — LLM 환각일 수 있으니 조용히 숨기지 않고 밝힌다. */
@@ -1377,6 +1423,17 @@ mark.hl.cf.on {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.7;
+}
+
+/* 버전 비교 하이라이트 본문 — 원본이 줄 단위 diff 라 줄마다 블록으로 그린다. */
+.dhtext {
+  white-space: normal;
+}
+
+.dhline {
+  padding: 1px 0;
+  line-height: 1.85;
+  min-height: 1.85em;
 }
 
 /* AI 제안이 이미 반영된 상태임을 알리는 안내 — 적용 버튼은 없다. */
@@ -1779,28 +1836,6 @@ mark.hl.cf.on {
   font-weight: 700;
 }
 
-.difftoggle {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  overflow: hidden;
-}
-
-.difftoggle button {
-  padding: 5px 11px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--surface);
-  border: none;
-  cursor: pointer;
-}
-
-.difftoggle button.on {
-  background: var(--surface-muted);
-  color: var(--ink);
-}
-
 /* ── diff 본체 ────────────────────────────────────────────── */
 
 .diff2 {
@@ -1822,86 +1857,6 @@ mark.hl.cf.on {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.split2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.split2 .sh {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--muted);
-  padding: 6px 14px;
-  background: var(--surface-muted);
-  border-bottom: 1px solid var(--line-muted);
-}
-
-.split2 .sc1 {
-  border-right: 1px solid var(--line);
-  min-width: 0;
-}
-
-.split2 > div {
-  min-width: 0;
-}
-
-.dln {
-  display: flex;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.75;
-}
-
-.dln .no {
-  width: 36px;
-  flex: 0 0 36px;
-  text-align: right;
-  padding: 1px 8px;
-  color: var(--faint);
-  background: var(--surface-muted);
-  border-right: 1px solid var(--line-muted);
-  user-select: none;
-}
-
-.dln .lc {
-  padding: 1px 12px;
-  flex: 1;
-  min-width: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.dln.ctx .lc {
-  color: var(--ink);
-}
-
-/* 추가/삭제 색은 GitHub diff 와 같은 값을 쓴다 — 라이트 고정이라 하드코딩해도 안전. */
-.dln.del {
-  background: #ffebe9;
-}
-.dln.del .lc {
-  color: #82071e;
-}
-.dln.del .no {
-  background: #ffd8d3;
-}
-
-.dln.add {
-  background: #e6ffec;
-}
-.dln.add .lc {
-  color: #0a3622;
-}
-.dln.add .no {
-  background: #ccffd8;
-}
-
-/* 한쪽에만 줄이 있는 경우 반대편을 빈 칸으로 채워 좌우 줄을 맞춘다. */
-.dln.emp {
-  background: #f6f8fa;
-  min-height: 24px;
 }
 
 /* ── 커밋형 이력 목록 ─────────────────────────────────────── */

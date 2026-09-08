@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import AiFindings from "../../../../components/AiFindings";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
 import {
@@ -13,19 +12,6 @@ import {
   type RequirementDetail,
 } from "../../../../lib/api";
 import { getCurrentUser } from "../../../../lib/session";
-
-/**
- * 어떻게 검토됐는지 배지.
- *
- * rule 은 "검토를 못 했다"가 아니라 "규칙 기반으로 검토했다"는 뜻이다 — 규칙 검출은
- * 사내 LLM 유무와 무관하게 항상 돌기 때문. 그래서 unavailable(=AI 서버 자체가 응답
- * 못 함)과 구분해서 표시한다.
- */
-const ENGINE_LABEL: Record<string, string> = {
-  "llm-api": "사내 LLM",
-  rule: "규칙 기반",
-  unavailable: "AI 미응답",
-};
 
 export default function RequirementDetailPage() {
   const router = useRouter();
@@ -118,40 +104,8 @@ export default function RequirementDetailPage() {
           </div>
 
           {/* 이 화면은 읽기 전용이다 — 다시 분석 같은 동작도 여기 두지 않는다.
-              본문을 고치거나 AI를 다시 돌리는 건 위 "수정하기"로 들어간 수정 화면에서만
-              한다. AI 검토 결과 카드 안에서 본문(등록 원문 또는 확정본)을 하이라이트와
-              함께 그대로 보여주기만 한다. */}
-          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1400 }}>
-            <div className="wch">
-              🤖 AI 검토 결과
-              <span className="rt">
-                <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                  읽기 전용
-                </span>
-                <span className="lbl" style={{ padding: "1px 9px", marginLeft: 6, background: "var(--surface-muted)", color: "var(--muted)" }}>
-                  {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
-                </span>
-                <span className="cnt" style={{ marginLeft: 8 }}>
-                  {req.findings.length}건
-                </span>
-              </span>
-            </div>
-            <div className="wcb">
-              {/* 원문을 먼저 보여주고 지적된 구절에 형광펜을 칠한다 — 구절만 적어 두면
-                  사용자가 원문 어디인지 직접 찾아야 해서 불편하다. */}
-              <AiFindings
-                content={req.content}
-                findings={req.findings}
-                contentLabel={req.version ? `확정본 v${req.version}` : "등록 원문"}
-                empty={
-                  req.aiEngine === "unavailable"
-                    ? "AI 서버가 응답하지 않아 검토를 못 했습니다. 위 “수정하기”에서 다시 시도할 수 있습니다."
-                    : "검출된 불명확·상충이 없습니다."
-                }
-              />
-            </div>
-          </div>
-
+              AI 검토는 수정 화면(위 "수정하기")에서만 본다. 여기서는 확정된 요구사항이
+              무엇인지와, 그걸 둘러싼 기본 정보(요청자·담당자·등록일·고객 합의)만 보여준다. */}
           <div className="jf" style={{ maxWidth: 1400, marginTop: 16, borderBottom: "none", gap: 22, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
               <b style={{ color: "var(--muted)", fontWeight: 600 }}>요청자</b>{" "}
@@ -166,15 +120,29 @@ export default function RequirementDetailPage() {
             </span>
           </div>
 
-          {/* 고객 합의 기록 — 확정의 근거. 어느 버전이 이 합의로 확정됐는지(또는 아직
-              확정에 안 쓰였는지)를 같이 보여준다 — "합의는 했는데 이게 언제 확정에
-              반영된 건지" 를 따로 찾아보지 않아도 되게. */}
+          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1400 }}>
+            <div className="wch">
+              📄 {req.version ? `확정본 v${req.version}` : "등록 원문"}
+              <span className="rt">
+                <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
+                  읽기 전용
+                </span>
+              </span>
+            </div>
+            <div className="wcb">
+              <div className="srctext">{req.content}</div>
+            </div>
+          </div>
+
+          {/* 고객 합의 기록 — 어느 버전이 이 합의로 확정됐는지(또는 아직 확정에 안
+              쓰였는지)를 같이 보여준다 — "합의는 했는데 이게 언제 확정에 반영된 건지"
+              를 따로 찾아보지 않아도 되게. */}
           <div className="wcard" style={{ marginTop: 16, maxWidth: 1400, borderColor: "var(--purple)" }}>
             <div className="wch">
               🤝 고객 합의
               {req.consensus && (
                 <span className="rt cdone">
-                  {req.consensus.usedForVersion ? `✓ v${req.consensus.usedForVersion} 확정 근거` : "✓ 합의 완료"}
+                  {req.consensus.usedForVersion ? `✓ v${req.consensus.usedForVersion}` : "✓ 합의 완료"}
                 </span>
               )}
             </div>

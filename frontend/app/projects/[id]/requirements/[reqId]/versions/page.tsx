@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import DiffHighlight from "../../../../../components/DiffHighlight";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import { colorFor } from "../../../../../lib/colors";
@@ -15,8 +16,6 @@ import {
   type RequirementDetail,
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
-
-type DiffMode = "split" | "unified";
 
 /** 버전 종류별 배지 색 — CSS의 .kind.major/.minor/.patch 와 짝을 이룬다. */
 function kindClass(kind: string) {
@@ -37,7 +36,6 @@ export default function RequirementVersionsPage() {
   const [base, setBase] = useState<string>("");
   const [head, setHead] = useState<string>("");
   const [diff, setDiff] = useState<CompareResult | null>(null);
-  const [diffMode, setDiffMode] = useState<DiffMode>("split");
   const [comparing, setComparing] = useState(false);
 
   useEffect(() => {
@@ -184,22 +182,10 @@ export default function RequirementVersionsPage() {
                       ""
                     )}
                   </span>
-                  <span className="difftoggle" style={{ marginLeft: 12 }}>
-                    <button
-                      className={diffMode === "split" ? "on" : ""}
-                      onClick={() => setDiffMode("split")}
-                    >
-                      split
-                    </button>
-                    <button
-                      className={diffMode === "unified" ? "on" : ""}
-                      onClick={() => setDiffMode("unified")}
-                    >
-                      unified
-                    </button>
-                  </span>
                 </div>
 
+                {/* git diff 식 좌우 분할 대신, AI 검토 결과와 같은 방식으로 본문에 형광펜을
+                    칠해 무엇이 바뀌었는지 보여준다 — 눈을 좌우로 옮겨가며 맞춰 보지 않아도 되게. */}
                 {diff && (
                   <div className="diff2">
                     <div className="dfh">
@@ -209,73 +195,17 @@ export default function RequirementVersionsPage() {
                         — {diff.headConfirmedByName ?? "—"} · {diff.headTitle} · {diff.headCreatedAt ?? ""}
                       </span>
                     </div>
-
-                    {diffMode === "split" ? (
-                      <div className="split2">
-                        <div className="sc1">
-                          <div className="sh">
-                            🏷 {diff.baseVersion ? `v${diff.baseVersion} (base)` : "이전 버전 없음"}
-                          </div>
-                          {diff.rows.map((r, i) => (
-                            <div
-                              key={i}
-                              className={`dln ${
-                                r.baseText === null ? "emp" : r.type === "ctx" ? "ctx" : "del"
-                              }`}
-                            >
-                              <span className="no">{r.baseNo ?? ""}</span>
-                              <span className="lc">{r.baseText ?? ""}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div>
-                          <div className="sh">🏷 v{diff.headVersion} (compare)</div>
-                          {diff.rows.map((r, i) => (
-                            <div
-                              key={i}
-                              className={`dln ${
-                                r.headText === null ? "emp" : r.type === "ctx" ? "ctx" : "add"
-                              }`}
-                            >
-                              <span className="no">{r.headNo ?? ""}</span>
-                              <span className="lc">{r.headText ?? ""}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      /* unified — 삭제 줄을 먼저, 추가 줄을 뒤에 한 줄로 이어 붙인다. */
-                      <div>
-                        {diff.rows.flatMap((r, i) => {
-                          if (r.type === "ctx") {
-                            return [
-                              <div key={`c${i}`} className="dln ctx">
-                                <span className="no">{r.headNo ?? r.baseNo ?? ""}</span>
-                                <span className="lc">{r.headText ?? r.baseText ?? ""}</span>
-                              </div>,
-                            ];
-                          }
-                          const out = [];
-                          if (r.baseText !== null) {
-                            out.push(
-                              <div key={`d${i}`} className="dln del">
-                                <span className="no">{r.baseNo ?? ""}</span>
-                                <span className="lc">− {r.baseText}</span>
-                              </div>,
-                            );
-                          }
-                          if (r.headText !== null) {
-                            out.push(
-                              <div key={`a${i}`} className="dln add">
-                                <span className="no">{r.headNo ?? ""}</span>
-                                <span className="lc">＋ {r.headText}</span>
-                              </div>,
-                            );
-                          }
-                          return out;
-                        })}
-                      </div>
-                    )}
+                    <div style={{ padding: "14px 16px" }}>
+                      <DiffHighlight
+                        rows={diff.rows}
+                        headLabel={
+                          diff.baseVersion
+                            ? `v${diff.baseVersion} → v${diff.headVersion}`
+                            : `v${diff.headVersion} (최초 확정)`
+                        }
+                        empty="두 버전 사이에 바뀐 부분이 없습니다."
+                      />
+                    </div>
                   </div>
                 )}
 
