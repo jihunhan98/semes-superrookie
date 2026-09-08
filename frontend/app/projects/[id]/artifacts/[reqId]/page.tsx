@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import AiFindings from "../../../../components/AiFindings";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
 import { mockIssueFor } from "../../../../lib/artifactsMock";
@@ -92,6 +91,9 @@ export default function ArtifactsTreePage() {
             <span className="tagv">🏷 v{req.version}</span>
           </div>
 
+          {/* AI 검토 결과(불명확·상충)는 여기서 다시 보여주지 않는다 — 그건 요구사항을
+              확정·수정할 때 쓰는 참고 자료라 "수정하기" 화면에만 둔다. 여기는 산출물
+              도출의 입력이 된 확정본이 무엇인지만 그대로 보여준다. */}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 900 }}>
             <div className="wch">
               📄 확정본
@@ -100,12 +102,7 @@ export default function ArtifactsTreePage() {
               </span>
             </div>
             <div className="wcb">
-              <AiFindings
-                content={req.content}
-                findings={req.findings}
-                contentLabel={`확정본 v${req.version}`}
-                empty="검출된 불명확·상충이 없습니다."
-              />
+              <div className="srctext">{req.content}</div>
             </div>
           </div>
 
