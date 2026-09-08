@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>기능 3(산출물 도출) — 이슈 나누기 화면 제안</title>
+<style>
+:root{
+  --bg:#f6f8fa; --surface:#ffffff; --surface-2:#eef1f4;
+  --ink:#1f2328; --muted:#59636e; --faint:#818b98; --line:#d1d9e0; --line-2:#e4e8ec;
+  --accent:#0969da; --accent-soft:#ddf4ff;
+  --purple:#8250df; --purple-soft:#fbefff;
+  --red:#cf222e; --red-soft:#ffebe9;
+  --green:#1a7f37; --green-soft:#dafbe1;
+  --amber:#9a6700; --amber-soft:#fff8c5;
+  --shadow:0 1px 2px rgba(31,35,40,.06), 0 8px 24px rgba(31,35,40,.08);
+  --font:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft)}
+
+.wrap{max-width:880px; margin:0 auto; padding:56px 24px 100px}
+
+.eyebrow{
+  font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--purple); margin:0 0 10px;
+}
+h1{
+  font-size:clamp(26px,4vw,34px); font-weight:800; margin:0 0 14px; letter-spacing:-.01em;
+}
+.lede{ font-size:16px; color:var(--muted); max-width:64ch; margin:0 0 8px; }
+.rule-box{
+  margin-top:28px; border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  padding:20px 22px; box-shadow:var(--shadow);
+}
+.rule-box .r{
+  display:flex; gap:14px; align-items:baseline; padding:9px 0;
+  border-bottom:1px dashed var(--line-2); font-size:14.5px;
+}
+.rule-box .r:last-child{border-bottom:none}
+.rule-box .r b{
+  font-family:var(--mono); font-weight:700; color:var(--accent); flex:0 0 auto;
+  font-size:13px; background:var(--accent-soft); padding:2px 9px; border-radius:999px;
+}
+
+h2{ font-size:21px; font-weight:800; margin:64px 0 6px; letter-spacing:-.005em; }
+h2 .num{ font-family:var(--mono); color:var(--faint); font-weight:700; margin-right:10px; font-size:16px; }
+.section-lede{ color:var(--muted); font-size:14.5px; max-width:66ch; margin:0 0 24px; }
+
+/* ---- 관계 다이어그램(정적 HTML/CSS — 폐쇄망에서도 그대로 열리도록 외부 라이브러리 없이) ---- */
+.diagram-card{
+  border:1px solid var(--line); border-radius:14px; background:var(--surface);
+  padding:26px 22px; box-shadow:var(--shadow); overflow-x:auto; margin:24px 0 12px;
+}
+.dg-req{
+  display:inline-flex; align-items:center; gap:8px; margin:0 auto 6px; padding:9px 16px;
+  border:1px solid var(--line); border-radius:9px; background:var(--surface-2);
+  font-size:13px; font-weight:700; font-family:var(--mono);
+}
+.dg-root{ display:flex; flex-direction:column; align-items:center; min-width:640px; }
+.dg-arrows{ display:flex; justify-content:center; gap:120px; width:100%; margin-top:2px; }
+.dg-arrow{ display:flex; flex-direction:column; align-items:center; color:var(--faint); font-size:11px; }
+.dg-arrow .ln{ width:1.5px; height:20px; background:var(--line); }
+.dg-arrow .lb{ margin-top:2px; white-space:nowrap; }
+.dg-issues{ display:flex; gap:24px; margin-top:6px; justify-content:center; flex-wrap:wrap; }
+.dg-issue{ border:1px solid var(--line); border-radius:12px; background:var(--bg); padding:12px; width:230px; }
+.dg-issue .t{ font-size:12.5px; font-weight:700; margin-bottom:9px; font-family:var(--mono); }
+.dg-issue .arts{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.dg-chip{
+  border-radius:7px; padding:6px 8px; font-size:11px; font-weight:700; color:#fff;
+  display:flex; align-items:center; gap:4px;
+}
+.legend{ display:flex; gap:18px; flex-wrap:wrap; margin:18px 0 40px; font-size:13px; color:var(--muted); }
+.legend span{ display:inline-flex; align-items:center; gap:7px; }
+.legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+
+/* ---- 화면 목업 프레임 ---- */
+.screen{
+  border:1px solid var(--line); border-radius:14px; background:var(--surface);
+  box-shadow:var(--shadow); overflow:hidden; margin:20px 0 8px;
+}
+.screen-tab{
+  display:flex; align-items:center; gap:8px; padding:10px 16px;
+  background:var(--surface-2); border-bottom:1px solid var(--line);
+  font-size:12px; color:var(--faint); font-family:var(--mono);
+}
+.screen-tab .dot{ width:8px; height:8px; border-radius:50%; background:var(--line); }
+.screen-body{ padding:22px; overflow-x:auto; }
+
+.crumb{ font-size:12px; color:var(--faint); margin-bottom:10px; }
+.crumb b{ color:var(--muted); font-weight:700; }
+
+.mock-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.mock-h h3{ font-size:17px; margin:0; font-weight:800; }
+.pill{ font-size:11px; font-weight:700; padding:2px 10px; border-radius:999px; background:var(--surface-2); color:var(--muted); }
+
+/* 확정본 하이라이트 — 상세 화면의 "형광펜" 패턴을 그대로 가져온다 */
+.srcbox{ border:1px solid var(--line); border-radius:10px; padding:14px 16px; background:var(--bg); }
+.srcbox .lbl{ font-size:11px; font-weight:700; color:var(--faint); margin-bottom:10px; }
+.srctext{ font-size:14px; line-height:2.1; white-space:pre-wrap; }
+mark.i{ border-radius:4px; padding:1px 3px; cursor:default; position:relative; border-bottom:2px solid var(--m); background:var(--ms); }
+mark.i .tag{
+  display:inline-block; vertical-align:super; margin-left:3px; min-width:15px; height:15px;
+  line-height:15px; text-align:center; font-size:9.5px; font-weight:800; border-radius:999px;
+  background:var(--m); color:#fff; padding:0 3px;
+}
+
+.issue-list{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+.issue-card{
+  display:flex; align-items:flex-start; gap:12px; border:1px solid var(--line); border-radius:10px;
+  padding:12px 14px; background:var(--surface); border-left:4px solid var(--m);
+}
+.issue-card .chk{ width:16px; height:16px; border:1.5px solid var(--line); border-radius:4px; margin-top:2px; flex:0 0 auto; }
+.issue-card .grip{ color:var(--faint); font-size:13px; margin-top:2px; }
+.issue-card .body{ flex:1; min-width:0; }
+.issue-card .ttl{ font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.issue-card .ttl input{
+  border:1px solid transparent; background:transparent; font:inherit; font-weight:700; color:var(--ink);
+  padding:1px 4px; border-radius:5px; max-width:260px;
+}
+.issue-card .quote{ font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.6; border-left:2px solid var(--line-2); padding-left:9px; }
+.issue-card .acts{ display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
+.mbtn{ font-size:11.5px; font-weight:600; color:var(--muted); background:var(--surface-2); border:1px solid var(--line); border-radius:7px; padding:4px 9px; }
+.tagai{ font-size:10.5px; font-weight:700; color:var(--purple); background:var(--purple-soft); border-radius:999px; padding:2px 8px; flex:0 0 auto; }
+
+.addrow{
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  border:1.5px dashed var(--line); border-radius:10px; padding:11px; margin-top:4px;
+  font-size:13px; font-weight:600; color:var(--faint);
+}
+
+.screen-foot{ display:flex; align-items:center; gap:10px; margin-top:20px; padding-top:16px; border-top:1px solid var(--line-2); flex-wrap:wrap; }
+.btn{ font-size:13px; font-weight:700; padding:8px 16px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); }
+.btn.prim{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.foot-note{ margin-left:auto; font-size:12px; color:var(--faint); }
+
+/* 이슈 확정 뒤 산출물 4종 */
+.trip{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:14px; }
+.trip .c{ border:1px solid var(--line); border-left:4px solid var(--m); border-radius:10px; background:var(--surface); padding:14px; }
+.trip .c .k{ font-family:var(--mono); font-size:11px; color:var(--faint); }
+.trip .c .n{ font-size:14px; font-weight:700; margin:3px 0 8px; display:flex; align-items:center; gap:7px; }
+.trip .c .st{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--muted); }
+.lockline{ display:flex; align-items:center; gap:8px; margin-top:14px; padding:10px 12px; border-radius:9px; background:var(--surface-2); font-size:12.5px; color:var(--muted); }
+
+.rules{ display:flex; flex-direction:column; gap:2px; margin-top:8px; }
+.rules .item{ display:grid; grid-template-columns:26px 1fr; gap:12px; padding:14px 4px; border-bottom:1px solid var(--line-2); }
+.rules .item:last-child{ border-bottom:none; }
+.rules .item .ico{ font-size:16px; line-height:1.5; }
+.rules .item b{ font-weight:700; }
+.rules .item p{ margin:3px 0 0; color:var(--muted); font-size:13.5px; }
+
+.callout{ margin-top:18px; border:1px solid var(--accent); background:var(--accent-soft); border-radius:12px; padding:18px 20px; display:flex; gap:14px; }
+.callout .ico{ font-size:20px; }
+.callout h4{ margin:0 0 6px; font-size:14.5px; }
+.callout p{ margin:0 0 8px; font-size:13.5px; color:var(--ink); line-height:1.7; }
+
+footer.pagefoot{ margin-top:70px; padding-top:22px; border-top:1px solid var(--line-2); color:var(--faint); font-size:12px; }
+code{ font-family:var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">ReqOps · 기능 3 — 산출물 도출</div>
+  <h1>요구사항 하나가 이슈로 나뉘고,<br>이슈마다 산출물 4종이 함께 나오는 흐름</h1>
+  <p class="lede">
+    <code>docs/screens/f3.html</code>과 <code>frontend/app/projects/[id]/artifacts</code>에 화면 얼개(목업)가
+    이미 있습니다. 비어 있는 한 칸은 "요구사항을 어떻게 개발 이슈로 나눌지, 그 나누기를 사람이 어떻게 손볼지"이고,
+    이 문서는 거기에 대한 제안입니다.
+  </p>
+
+  <div class="rule-box">
+    <div class="r"><b>1 : N</b> 요구사항 하나 ↔ 개발 이슈 N개 — 나누는 기준은 개발자 재량(요구사항이 커도 이슈 1개, 작아도 여러 개 가능)</div>
+    <div class="r"><b>1 : 4</b> 이슈 하나 ↔ SWVOC · Function Requirements · Non-Functional Requirements · Detail Design, 정확히 하나씩 (DESIGN.md 4.1)</div>
+  </div>
+
+  <h2><span class="num">01</span>전체 관계</h2>
+  <p class="section-lede">요구사항 확정 이후 도출은 두 단계로 갈립니다 — 먼저 사람이 개입하는 "이슈 나누기", 그다음은 이슈별로 자동으로 붙는 산출물 4종.</p>
+
+  <div class="diagram-card">
+    <div class="dg-root">
+      <div class="dg-req">📄 요구사항 REQ-041 · 확정본 v1.2.0</div>
+      <div class="dg-arrows">
+        <div class="dg-arrow"><span class="ln"></span><span class="lb">나누기(사람+AI)</span></div>
+        <div class="dg-arrow"><span class="ln"></span><span class="lb">나누기(사람+AI)</span></div>
+      </div>
+      <div class="dg-issues">
+        <div class="dg-issue">
+          <div class="t">🔖 AMVCS30-77 · 가용 AMR 매칭</div>
+          <div class="arts">
+            <span class="dg-chip" style="background:var(--red)">🗣 SWVOC</span>
+            <span class="dg-chip" style="background:var(--purple)">⚙ Func. Req.</span>
+            <span class="dg-chip" style="background:var(--green)">🛡 NFR</span>
+            <span class="dg-chip" style="background:var(--accent)">📐 Detail Design</span>
+          </div>
+        </div>
+        <div class="dg-issue">
+          <div class="t">🔖 AMVCS30-78 · 알람 발생 시 재할당</div>
+          <div class="arts">
+            <span class="dg-chip" style="background:var(--red)">🗣 SWVOC</span>
+            <span class="dg-chip" style="background:var(--purple)">⚙ Func. Req.</span>
+            <span class="dg-chip" style="background:var(--green)">🛡 NFR</span>
+            <span class="dg-chip" style="background:var(--accent)">📐 Detail Design</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--red)"></i> SWVOC</span>
+    <span><i style="background:var(--purple)"></i> Function Requirements</span>
+    <span><i style="background:var(--green)"></i> Non-Functional Requirements</span>
+    <span><i style="background:var(--accent)"></i> Detail Design</span>
+  </div>
+
+  <h2><span class="num">02</span>Stage 1 — 이슈 나누기 <span class="pill" style="margin-left:2px">신규 화면</span></h2>
+  <p class="section-lede">
+    확정본에 AI가 이슈 경계 후보를 색으로 칠해 제안합니다. 이미 상세 화면의 "형광펜 + 번호" 방식을 그대로 쓰는 이유는,
+    이 앱에서 이미 검증된 언어라 사용자가 다시 배우지 않아도 되기 때문입니다.
+  </p>
+
+  <div class="screen">
+    <div class="screen-tab"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;projects/12/artifacts/41/split</div>
+    <div class="screen-body">
+      <div class="crumb"><b>산출물</b> / REQ-041 / 이슈 나누기</div>
+      <div class="mock-h">
+        <h3>🧩 이슈로 나누기</h3>
+        <span class="tagai">🤖 AI 제안 3분할</span>
+        <span class="pill">확정본 v1.2.0</span>
+      </div>
+
+      <div class="srcbox">
+        <div class="lbl">확정본 v1.2.0 · 형광펜 = AI가 나눈 경계 · 같은 색·번호가 아래 카드와 짝입니다</div>
+        <div class="srctext">Host의 태스크 할당 요청 시, <mark class="i" style="--m:var(--red);--ms:var(--red-soft)">가용 상태(IDLE·SoC 충분·에러 없음)인 AMR 중에서 우선순위 기준(SoC 높은 순)으로 선택한다<span class="tag">1</span></mark>. 매칭 응답은 200ms 이내여야 하며, 동시 요청은 우선순위 큐 순서를 보장한다.
+<mark class="i" style="--m:var(--amber);--ms:var(--amber-soft)">AMR에 알람이 발생하면 진행 중이던 작업을 즉시 회수하여 가용한 다른 AMR에게 재할당한다<span class="tag">2</span></mark>. 재할당 이력은 감사 로그로 남긴다.
+<mark class="i" style="--m:var(--purple);--ms:var(--purple-soft)">우선순위 산정 기준은 이 요구사항과 관련 요구사항(REQ-038) 사이에서 동일하게 적용되어야 한다<span class="tag">3</span></mark>.</div>
+      </div>
+
+      <div class="issue-list">
+        <div class="issue-card" style="--m:var(--red)">
+          <span class="chk"></span><span class="grip">⠿</span>
+          <div class="body">
+            <div class="ttl"><span class="tagai" style="background:var(--red-soft);color:var(--red)">1</span><input value="가용 AMR 매칭"></div>
+            <div class="quote">"가용 상태인 AMR 중에서 우선순위 기준으로 선택한다" 구간</div>
+            <div class="acts">
+              <span class="mbtn">✂ 나누기</span><span class="mbtn">🔗 합치기</span><span class="mbtn">담당자 지정</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-card" style="--m:var(--amber)">
+          <span class="chk"></span><span class="grip">⠿</span>
+          <div class="body">
+            <div class="ttl"><span class="tagai" style="background:var(--amber-soft);color:var(--amber)">2</span><input value="알람 발생 시 재할당"></div>
+            <div class="quote">"알람이 발생하면 … 재할당한다" 구간</div>
+            <div class="acts">
+              <span class="mbtn">✂ 나누기</span><span class="mbtn">🔗 합치기</span><span class="mbtn">담당자 지정</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-card" style="--m:var(--purple)">
+          <span class="chk"></span><span class="grip">⠿</span>
+          <div class="body">
+            <div class="ttl"><span class="tagai" style="background:var(--purple-soft);color:var(--purple)">3</span><input value="우선순위 기준 통일 (REQ-038 연동)"></div>
+            <div class="quote">"관련 요구사항과 동일하게 적용되어야 한다" 구간 — REQ-038과 겹침</div>
+            <div class="acts">
+              <span class="mbtn">✂ 나누기</span><span class="mbtn">🔗 합치기</span><span class="mbtn">담당자 지정</span>
+            </div>
+          </div>
+        </div>
+        <div class="addrow">＋ 이슈 직접 추가 (AI가 놓친 구간이 있을 때)</div>
+      </div>
+
+      <div class="screen-foot">
+        <button class="btn prim">이대로 확정 → 산출물 4종 생성</button>
+        <button class="btn">🤖 AI 다시 나눠줘</button>
+        <span class="foot-note">체크 2개 이상 선택 시 "합치기" 활성화</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules">
+    <div class="item"><span class="ico">🖊</span><div><b>사람이 확정하는 건 "경계"뿐</b><p>AI는 색으로 후보 경계를 제안하고, 사람은 합치기·나누기·제목 수정·직접 추가로 다듬습니다. 문장 자체를 다시 쓰지는 않습니다 — 그건 이미 확정된 본문이라서.</p></div></div>
+    <div class="item"><span class="ico">🔗</span><div><b>합치기는 체크 다중선택, 나누기는 구간 재드래그</b><p>카드 2개 이상 체크 후 "합치기"를 누르면 하나로 합쳐집니다. "나누기"는 해당 카드가 덮는 구간을 형광펜 위에서 다시 긋게 합니다.</p></div></div>
+    <div class="item"><span class="ico">⚠️</span><div><b>겹치는 구간은 허용하되 표시</b><p>3번 카드처럼 다른 요구사항(REQ-038)과 판정 기준이 겹치는 경우가 실제로 있습니다(상세 화면의 상충 검출과 같은 데이터). 겹침은 막지 않고 눈에 띄게만 합니다.</p></div></div>
+  </div>
+
+  <h2><span class="num">03</span>Stage 2 — 이슈 확정 이후, 산출물 4종</h2>
+  <p class="section-lede">이슈가 확정되는 순간 4종 산출물이 한 세트로 함께 생성됩니다. 하나만 있고 나머지가 없는 상태는 없습니다.</p>
+
+  <div class="screen">
+    <div class="screen-tab"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;projects/12/artifacts/41/issues/AMVCS30-77</div>
+    <div class="screen-body">
+      <div class="crumb"><b>산출물</b> / REQ-041 / AMVCS30-77</div>
+      <div class="mock-h"><h3>가용 AMR 매칭</h3><span class="pill">담당자 이수민</span></div>
+      <div class="trip">
+        <div class="c" style="--m:var(--red)"><div class="k">VOC-01</div><div class="n">🗣 SWVOC</div><span class="st">검토 대기</span></div>
+        <div class="c" style="--m:var(--purple)"><div class="k">FUNC-01</div><div class="n">⚙ Function Req.</div><span class="st">검토 대기</span></div>
+        <div class="c" style="--m:var(--green)"><div class="k">NFUNC-01</div><div class="n">🛡 Non-Functional Req.</div><span class="st">검토 대기</span></div>
+        <div class="c" style="--m:var(--accent)"><div class="k">DD-01</div><div class="n">📐 Detail Design</div><span class="st">검토 대기</span></div>
+      </div>
+      <div class="lockline">🔒 네 카드는 항상 같이 움직입니다 — 이슈 제목·범위를 고치고 "재도출"하면 4종이 한 번에 갱신됩니다.</div>
+    </div>
+  </div>
+
+  <h2><span class="num">04</span>기존 화면정의서(f3.html) 대비 달라지는 점</h2>
+  <div class="callout">
+    <span class="ico">📎</span>
+    <div>
+      <h4><code>f3.html</code>은 "도출" 한 번으로 이슈+산출물 4종을 전부 일괄 생성합니다</h4>
+      <p>
+        기존 설계 노트(DESIGN.md 4.1~4.3, f3.html의 "설계 노트" 섹션)는 이슈 분할 → 이슈 본문 → 산출물 4종을
+        <b>3차 호출로 한 번에</b> 끝내고, 사람은 그 결과를 각 티켓 안에서 검토·수정합니다. 이슈 <b>경계 자체</b>를
+        사람이 나누기/합치기로 고치는 화면은 기존 설계에는 없습니다.
+      </p>
+      <p style="margin-bottom:0">
+        이 문서의 Stage 1은 그 사이에 <b>편집 지점을 하나 추가</b>하자는 제안입니다 — 이슈 본문·산출물까지 다 만든 뒤에
+        경계가 잘못됐다는 걸 알면 되돌리기 비용이 크기 때문에, 산출물을 만들기 <i>전에</i> 경계만 먼저 고정합니다.
+        기존 파이프라인의 1차 호출(이슈 분할) 결과를 보여주는 화면이라 새 API가 필요하지 않고, 2·3차 호출(본문·산출물 생성)
+        시점만 "확정" 버튼 뒤로 미루면 됩니다.
+      </p>
+    </div>
+  </div>
+
+  <footer class="pagefoot">
+    ReqOps · 기능 3(산출물 도출) 설계 제안 — 실제 도출 로직·이슈 나누기 화면은 아직 구현 전입니다.
+    산출물 4종(SWVOC·Function Requirements·Non-Functional Requirements·Detail Design)은 DESIGN.md 4.1과 동일하게 맞췄습니다.
+  </footer>
+</div>
+</body>
+</html>
