@@ -110,6 +110,24 @@ class AnalyzeResponse(BaseModel):
     elapsedMs: int
 
 
+class SplitRequest(BaseModel):
+    content: str = Field(..., description="확정된 요구사항 본문")
+    # 사람이 "AI에게 물어보기"에 적은 참고 사항 — 선택.
+    reason: str | None = Field(None, description="분할 시 참고할 추가 지시")
+
+
+class IssueOut(BaseModel):
+    title: str
+    # content 안에 그대로 등장하는 구절이어야 한다 — 화면이 원문에 형광펜을 칠하기 위함.
+    quote: str
+
+
+class SplitResponse(BaseModel):
+    issues: list[IssueOut]
+    engine: str
+    elapsedMs: int
+
+
 @app.get("/health")
 def health() -> dict:
     """사내 LLM API 설정 여부 — 폐쇄망 배포 후 첫 확인용."""
@@ -162,6 +180,41 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         draftContent=draft,
         engine=engine,
         scope=scope,
+        elapsedMs=elapsed,
+    )
+
+
+@app.post("/split", response_model=SplitResponse)
+def split(req: SplitRequest) -> SplitResponse:
+    """확정 요구사항을 개발 이슈 후보 N개로 나눈다 — "이슈 나누기" 화면의 AI 초안.
+
+    규칙 기반(문장 단위)을 항상 먼저 돌려 결과를 보장하고, 사내 LLM이 설정돼
+    있으면 더 나은 분할로 교체를 시도한다. LLM이 만든 인용구가 원문에 없으면
+    (환각) 그 결과 전체를 버리고 규칙 결과로 되돌아간다 — 이슈 몇 개만 반쪽으로
+    섞이면 화면에서 원인을 찾기 더 어렵기 때문.
+    """
+    started = time.monotonic()
+
+    content = req.content or ""
+    rule_issues = rules.split_issues(content)
+    engine = "rule"
+    issues = rule_issues
+
+    if LLM_API_BASE:
+        try:
+            llm_issues = _ask_llm_split(content, req.reason)
+            if llm_issues:
+                issues = llm_issues
+                engine = "llm-api"
+        except Exception as e:
+            log.warning("사내 LLM 분할 호출 실패, 규칙 결과만 사용: %s", e)
+
+    elapsed = int((time.monotonic() - started) * 1000)
+    log.info("split engine=%s issues=%d %dms", engine, len(issues), elapsed)
+
+    return SplitResponse(
+        issues=[IssueOut(**i.to_dict()) for i in issues],
+        engine=engine,
         elapsedMs=elapsed,
     )
 
@@ -248,6 +301,52 @@ def _ask_llm_api(content: str, reason: str | None) -> list[rules.Finding]:
     )
     raw = body["choices"][0]["message"]["content"]
     return _to_findings(raw, content)
+
+
+_SPLIT_SYSTEM_PROMPT = """당신은 반도체 장비 소프트웨어(VCS/AMR) 요구사항을 개발 이슈(Jira 티켓)로
+나누는 전문가다. 주어진 확정 요구사항 본문을 실제 구현 단위로 몇 개의 개발 이슈로
+나눌지 판단하라.
+
+규칙:
+- 이슈 경계는 "서로 다른 기능·모듈로 나눠 개발할 수 있는 지점"을 기준으로 삼는다.
+- 요구사항이 이미 하나의 작은 변경이면 이슈 1개로 둔다. 억지로 쪼개지 않는다.
+- quote는 반드시 원문에 그대로 등장하는 연속된 구절이어야 한다 — 지어내지 않는다.
+- title은 15자 내외로 간결하게.
+
+반드시 아래 JSON 형식으로만 답한다.
+{"issues":[{"title":"이슈 제목","quote":"원문 그대로의 해당 구절"}]}"""
+
+
+def _ask_llm_split(content: str, reason: str | None) -> list[rules.IssueCandidate]:
+    """사내 LLM API로 이슈 분할을 요청한다. 환각 구절은 걸러낸다."""
+    user = f"요구사항: {content}"
+    if reason:
+        user += f"\n참고 지시: {reason}"
+
+    body = _post_json(
+        f"{LLM_API_BASE}/chat/completions",
+        {
+            "model": LLM_API_MODEL,
+            "messages": [
+                {"role": "system", "content": _SPLIT_SYSTEM_PROMPT},
+                {"role": "user", "content": user},
+            ],
+            "temperature": 0,
+        },
+        timeout=LLM_API_TIMEOUT,
+        headers={"Authorization": f"Bearer {LLM_API_KEY}"},
+    )
+    raw = body["choices"][0]["message"]["content"]
+    parsed = _parse_json(raw)
+
+    out: list[rules.IssueCandidate] = []
+    for item in parsed.get("issues") or []:
+        title = (item.get("title") or "").strip()
+        quote = (item.get("quote") or "").strip()
+        if not title or not quote or quote not in content:
+            continue  # 원문에 없는 구절은 환각으로 보고 버린다.
+        out.append(rules.IssueCandidate(title, quote))
+    return out
 
 
 def _to_findings(raw: str, content: str) -> list[rules.Finding]:

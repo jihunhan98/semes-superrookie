@@ -87,4 +87,11 @@ public final class ApiErrors {
             super("합의일은 yyyy-MM-dd 형식이어야 합니다: " + value);
         }
     }
+
+    /** 확정되지 않은 요구사항에서 산출물 도출(이슈 나누기)을 시도함 → 409 */
+    public static class RequirementNotConfirmed extends RuntimeException {
+        public RequirementNotConfirmed() {
+            super("확정된 요구사항만 이슈로 나눌 수 있습니다.");
+        }
+    }
 }

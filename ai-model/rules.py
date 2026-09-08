@@ -217,6 +217,44 @@ def _detect_conflicts(content: str, existing: list[dict]) -> list[Finding]:
     return out
 
 
+@dataclass
+class IssueCandidate:
+    title: str
+    quote: str
+
+    def to_dict(self) -> dict:
+        return {"title": self.title, "quote": self.quote}
+
+
+_SENTENCE_END = re.compile(r"(?<=[.!?다음됨함])\s+(?=[가-힣A-Za-z0-9(])")
+
+
+def split_issues(content: str) -> list[IssueCandidate]:
+    """규칙 기반 이슈 분할 — 문장 단위로 자른다.
+
+    사내 LLM이 없거나 실패해도 "이슈 나누기" 화면이 빈 화면으로 뜨면 안 되므로,
+    항상 결과를 낸다. 문장 경계를 구현 단위 경계로 보는 건 정교하지 않지만,
+    사람이 바로 뒤이어 합치기·나누기로 다듬을 초안으로는 충분하다.
+    """
+    text = (content or "").strip()
+    if not text:
+        return []
+
+    parts = [p.strip() for p in _SENTENCE_END.split(text) if p.strip()]
+    if len(parts) <= 1:
+        return [IssueCandidate(_title_of(text), text)]
+
+    return [IssueCandidate(_title_of(p), p) for p in parts]
+
+
+def _title_of(sentence: str, limit: int = 22) -> str:
+    """문장에서 이슈 제목 후보를 뽑는다 — 앞부분을 자르고, 어미는 대충 정리."""
+    s = sentence.strip().rstrip(".!?")
+    if len(s) <= limit:
+        return s
+    return s[:limit].rstrip() + "…"
+
+
 def build_draft(content: str, findings: list[Finding]) -> str:
     """제안이 반영된 문장을 만든다. 치환 가능한 항목만 실제로 바꾼다."""
     draft = content

@@ -1,9 +1,11 @@
 /**
  * 기능 3(산출물 도출) UI 목업용 정적 데이터.
  *
- * 아직 AI 도출 백엔드가 없다 — 화면 구성만 보기 위한 것이라, 어떤 요구사항을
- * 골라도 항상 같은 예시 이슈 3건을 보여준다. reqKey만 실제 값을 그대로 써서
- * "이 요구사항에서 나온 것"처럼 자연스럽게 이어 보이게 한다.
+ * "이슈 나누기"(요구사항 → 개발 이슈 N건)는 실제 백엔드가 있다(`lib/api.ts`의
+ * `DevIssue`). 하지만 이슈 하나당 붙는 산출물 4종(SWVOC·기능·비기능 요구사항·
+ * Detail Design)은 아직 AI 도출 로직이 없어 — 화면(UI/UX)만 먼저 구성하기로
+ * 했다 — 실제 이슈의 key·title·구절에 고정된 예시 내용을 입혀서 보여준다
+ * ({@link mockIssueFor}).
  */
 
 export type WriterBadge = "ai" | "human";
@@ -55,7 +57,12 @@ export type DetailDesignArtifact = SubArtifact & {
   description: string;
 };
 
-export type DevIssue = {
+/**
+ * 이슈 화면에 보여줄 값 — 실제 이슈(key·title·quote)에 목업 산출물 내용을 입힌 것.
+ * "이슈 나누기"는 실제 기능이지만, 이슈 본문 3범주와 산출물 4종은 아직 화면
+ * 얼개(목업)만 있어 여기서 값을 채운다({@link mockIssueFor} 참고).
+ */
+export type MockIssue = {
   key: string;
   title: string;
   state: "검토 대기" | "진행 중" | "완료";
@@ -73,7 +80,7 @@ export type DevIssue = {
   detailDesign: DetailDesignArtifact;
 };
 
-const FULL_ISSUE: DevIssue = {
+const FULL_ISSUE: MockIssue = {
   key: "ISSUE-01",
   title: "가용 AMR 매칭",
   state: "진행 중",
@@ -167,31 +174,34 @@ const FULL_ISSUE: DevIssue = {
   },
 };
 
-function lightIssue(key: string, title: string, state: DevIssue["state"], seed: number): DevIssue {
+/**
+ * 실제로 확정된 이슈(요구사항 → "이슈 나누기"로 나눈 결과)에 목업 산출물 내용을 입힌다.
+ *
+ * <p>key·title·개선요청사항(quote)만 실제 값이고, 나머지 산출물 4종의 세부 내용은
+ * 아직 AI 도출 로직이 없어 고정된 예시로 채운다 — 산출물은 "UI/UX만" 구성하기로
+ * 한 범위라서다. seed는 화면에서 VOC-01/02… 처럼 이슈마다 다른 산출물 키를
+ * 붙이는 데만 쓴다(1부터 시작).
+ */
+export function mockIssueFor(
+  real: { issueKey: string; title: string; quote: string | null },
+  seed: number,
+): MockIssue {
   return {
     ...FULL_ISSUE,
-    key,
-    title,
-    state,
+    key: real.issueKey,
+    title: real.title,
+    state: "검토 대기",
     dueDate: "2026-09-12",
     createdAt: "2026-08-21",
-    resolvedAt: state === "완료" ? "2026-08-24" : null,
+    resolvedAt: null,
+    reception: {
+      ...FULL_ISSUE.reception,
+      // 이슈 나누기에서 이 이슈가 커버하기로 한 구절 — 실제 값이 있으면 그걸 쓴다.
+      improvementRequest: real.quote?.trim() || FULL_ISSUE.reception.improvementRequest,
+    },
     voc: { ...FULL_ISSUE.voc, key: `VOC-0${seed}` },
-    functional: { ...FULL_ISSUE.functional, key: `FUNC-0${seed}`, state: state === "완료" ? "확정" : "검토 대기" },
-    nonFunctional: { ...FULL_ISSUE.nonFunctional, key: `NFUNC-0${seed}`, state: state === "완료" ? "확정" : "검토 대기" },
-    detailDesign: { ...FULL_ISSUE.detailDesign, key: `DD-0${seed}`, state: state === "완료" ? "확정" : "검토 대기" },
+    functional: { ...FULL_ISSUE.functional, key: `FUNC-0${seed}` },
+    nonFunctional: { ...FULL_ISSUE.nonFunctional, key: `NFUNC-0${seed}` },
+    detailDesign: { ...FULL_ISSUE.detailDesign, key: `DD-0${seed}` },
   };
-}
-
-/** reqKey는 화면에 그대로 표시만 하고, 실제 도출 로직은 아직 없다 — 예시 이슈 3건 고정. */
-export function buildMockIssues(): DevIssue[] {
-  return [
-    { ...FULL_ISSUE, key: "AMVCS30-77" },
-    lightIssue("AMVCS30-78", "알람 발생 시 재할당", "검토 대기", 2),
-    lightIssue("AMVCS30-79", "우선순위 기반 정렬", "완료", 3),
-  ];
-}
-
-export function findMockIssue(issueKey: string): DevIssue | null {
-  return buildMockIssues().find((i) => i.key === issueKey) ?? null;
 }

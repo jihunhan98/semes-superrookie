@@ -2,54 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Finding } from "../lib/api";
+import { locateSpans, type Mark } from "../lib/highlight";
 
 /** 상충은 문장을 고쳐서 해결되는 게 아니라 다른 요구사항과의 문제라 색을 구분한다. */
 function isConflict(findingType: string) {
   return findingType.includes("상충");
 }
 
-type Mark = { start: number; end: number; idx: number };
-
-/**
- * 검출 구절(targetSpan)이 원문의 어디인지 찾는다.
- *
- * <p>AI 는 "어느 구절이 문제인지"를 텍스트로만 알려준다. 그 구절이 원문 몇 번째
- * 글자인지는 알려주지 않기 때문에 화면에서 직접 찾아야 한다. 세 가지를 신경 쓴다.
- *
- * <ul>
- *   <li>같은 구절이 여러 번 나오면 — 아직 표시하지 않은 첫 위치를 쓴다. 그래야
- *       "경우에 한하여"가 두 번 나올 때 두 검출이 각각 다른 곳을 가리킨다.
- *   <li>구절이 겹치면 — 먼저 잡은 쪽을 남긴다. 겹쳐서 칠하면 DOM 이 깨진다.
- *   <li>구절을 못 찾으면 — 표시하지 않고 카드에 "원문에서 못 찾음"을 붙인다.
- *       LLM 이 원문에 없는 구절을 지어냈을 때(환각) 조용히 사라지면 안 되므로.
- * </ul>
- */
+/** 검출 구절(targetSpan)이 원문의 어디인지 찾는다 — 실제 위치 찾기는 lib/highlight 공용 로직. */
 function locate(content: string, findings: Finding[]) {
-  const marks: Mark[] = [];
-  const taken: Array<[number, number]> = [];
-  const located = findings.map(() => false);
-
-  findings.forEach((f, idx) => {
-    const span = (f.targetSpan ?? "").trim();
-    if (!span) return;
-
-    let from = 0;
-    for (;;) {
-      const at = content.indexOf(span, from);
-      if (at < 0) break;
-      const end = at + span.length;
-      if (!taken.some(([s, e]) => at < e && s < end)) {
-        marks.push({ start: at, end, idx });
-        taken.push([at, end]);
-        located[idx] = true;
-        break;
-      }
-      from = at + 1;
-    }
-  });
-
-  marks.sort((a, b) => a.start - b.start);
-  return { marks, located };
+  return locateSpans(content, findings.map((f) => f.targetSpan));
 }
 
 /** 원문을 그대로 보여주되 검출된 구절에 번호를 단 형광펜을 칠한다. */

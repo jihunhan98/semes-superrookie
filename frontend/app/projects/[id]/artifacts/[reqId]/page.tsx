@@ -6,8 +6,15 @@ import { useParams, useRouter } from "next/navigation";
 import AiFindings from "../../../../components/AiFindings";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
-import { buildMockIssues } from "../../../../lib/artifactsMock";
-import { getProject, getRequirement, type ProjectDetail, type RequirementDetail } from "../../../../lib/api";
+import { mockIssueFor } from "../../../../lib/artifactsMock";
+import {
+  getProject,
+  getRequirement,
+  listDevIssues,
+  type DevIssue,
+  type ProjectDetail,
+  type RequirementDetail,
+} from "../../../../lib/api";
 import { getCurrentUser } from "../../../../lib/session";
 
 export default function ArtifactsTreePage() {
@@ -18,12 +25,9 @@ export default function ArtifactsTreePage() {
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [req, setReq] = useState<RequirementDetail | null>(null);
+  const [issues, setIssues] = useState<DevIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const [redoing, setRedoing] = useState(false);
-  const [showRedoForm, setShowRedoForm] = useState(false);
-  const [redoPrompt, setRedoPrompt] = useState("");
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -33,23 +37,18 @@ export default function ArtifactsTreePage() {
     }
     if (!Number.isFinite(projectId) || !Number.isFinite(requirementId)) return;
 
-    Promise.all([getProject(projectId, user.id), getRequirement(projectId, requirementId, user.id)])
-      .then(([p, r]) => {
+    Promise.all([
+      getProject(projectId, user.id),
+      getRequirement(projectId, requirementId, user.id),
+      listDevIssues(projectId, requirementId, user.id),
+    ])
+      .then(([p, r, iss]) => {
         setProject(p);
         setReq(r);
+        setIssues(iss);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
-
-  /** 아직 재도출 로직은 없다 — 로딩만 잠깐 보여주고 프롬프트 입력창을 닫는다. */
-  function onRedo() {
-    setRedoing(true);
-    setTimeout(() => {
-      setRedoing(false);
-      setShowRedoForm(false);
-      setRedoPrompt("");
-    }, 700);
-  }
 
   if (error) {
     return (
@@ -62,7 +61,7 @@ export default function ArtifactsTreePage() {
     );
   }
 
-  if (!project || !req) {
+  if (!project || !req || !issues) {
     return (
       <div className="appshell">
         <Header />
@@ -73,7 +72,8 @@ export default function ArtifactsTreePage() {
     );
   }
 
-  const issues = buildMockIssues();
+  // 산출물 내용 자체는 아직 UI만 있어 목업으로 채운다 — 이슈(key·title·구절)만 실제 값.
+  const mockIssues = issues.map((issue, i) => mockIssueFor(issue, i + 1));
 
   return (
     <div className="appshell">
@@ -109,107 +109,90 @@ export default function ArtifactsTreePage() {
             </div>
           </div>
 
-          <div className="artbanner" style={{ marginTop: 16 }}>
-            <span className="aico">🤖</span>
-            <div className="att">개발 이슈 {issues.length}건을 생성했습니다.</div>
-            <button
-              className="btn sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setShowRedoForm((v) => !v)}
-              disabled={redoing}
-            >
-              ↻ 재도출
-            </button>
-          </div>
-
-          {showRedoForm && (
-            <div className="wcard" style={{ marginTop: 10, maxWidth: 900 }}>
-              <div className="wcb">
-                <div className="fieldlab" style={{ marginTop: 0 }}>
-                  AI에게 물어보기 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+          {issues.length === 0 ? (
+            <div className="wcard" style={{ marginTop: 16, maxWidth: 900, borderColor: "var(--purple)" }}>
+              <div className="wcb" style={{ textAlign: "center", padding: "28px 16px" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
+                  🧩 아직 개발 이슈로 나누지 않았습니다
                 </div>
-                <textarea
-                  className="reqta"
-                  style={{ minHeight: 64 }}
-                  value={redoPrompt}
-                  onChange={(e) => setRedoPrompt(e.target.value)}
-                  placeholder="예: 우선순위 기준을 SoC 대신 배터리 잔량 그대로 써서 다시 나눠줘."
-                />
-                <div className="wfoot">
-                  <button className="btn prim" onClick={onRedo} disabled={redoing}>
-                    {redoing ? "재도출 중…" : "재도출 실행"}
-                  </button>
-                  <button className="btn" onClick={() => setShowRedoForm(false)} disabled={redoing}>
-                    취소
-                  </button>
-                </div>
+                <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>
+                  AI가 이슈 경계를 제안하면, 합치기·나누기·제목 수정으로 다듬은 뒤 확정합니다.
+                  확정한 이슈마다 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design)이 함께 붙습니다.
+                </p>
+                <Link className="btn prim" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
+                  🧩 이슈 나누기 시작
+                </Link>
               </div>
             </div>
-          )}
-
-          <div className="arttree" style={{ marginTop: 18 }}>
-            {issues.map((issue) => (
-              <div key={issue.key}>
+          ) : (
+            <>
+              <div className="artbanner" style={{ marginTop: 16 }}>
+                <span className="aico">🧩</span>
+                <div className="att">개발 이슈 {issues.length}건으로 나눴습니다.</div>
                 <Link
-                  className="irow"
-                  href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}`}
+                  className="btn sm"
+                  style={{ marginLeft: "auto" }}
+                  href={`/projects/${project.id}/artifacts/${requirementId}/split`}
                 >
-                  🔖 개발 이슈 <span className="ikey">{issue.key}</span> {issue.title}
-                  <span style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                    <span className="aitag">🤖 AI 초안</span>
-                    <span
-                      className="lbl"
-                      style={{
-                        padding: "2px 10px",
-                        background: issue.state === "완료" ? "var(--green-soft)" : "var(--surface-muted)",
-                        color: issue.state === "완료" ? "var(--green)" : "var(--muted)",
-                      }}
-                    >
-                      {issue.state}
-                    </span>
-                  </span>
+                  ✎ 이슈 나누기 수정
                 </Link>
-                <div className="abranch">
-                  <Link
-                    className="arow"
-                    style={{ borderLeftColor: "var(--red)" }}
-                    href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/voc`}
-                  >
-                    <span className="aicon">🗣</span>
-                    <span className="atxt">SWVOC — {issue.voc.request.slice(0, 24)}…</span>
-                    <span className="achev">열기 ›</span>
-                  </Link>
-                  <Link
-                    className="arow"
-                    style={{ borderLeftColor: "var(--purple)" }}
-                    href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/functional`}
-                  >
-                    <span className="aicon">⚙</span>
-                    <span className="atxt">기능 요구사항 — {issue.title}</span>
-                    <span className="achev">열기 ›</span>
-                  </Link>
-                  <Link
-                    className="arow"
-                    style={{ borderLeftColor: "var(--green)" }}
-                    href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/nonfunctional`}
-                  >
-                    <span className="aicon">🛡</span>
-                    <span className="atxt">비기능 요구사항 — {issue.nonFunctional.role.slice(0, 20)}…</span>
-                    <span className="achev">열기 ›</span>
-                  </Link>
-                  <Link
-                    className="arow"
-                    style={{ borderLeftColor: "var(--accent)" }}
-                    href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/detail-design`}
-                  >
-                    <span className="aicon">📐</span>
-                    <span className="atxt">Detail Design — {issue.title}</span>
-                    <span className="achev">열기 ›</span>
-                  </Link>
-                </div>
               </div>
-            ))}
-          </div>
+
+              <div className="arttree" style={{ marginTop: 18 }}>
+                {mockIssues.map((issue) => (
+                  <div key={issue.key}>
+                    <Link
+                      className="irow"
+                      href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}`}
+                    >
+                      🔖 개발 이슈 <span className="ikey">{issue.key}</span> {issue.title}
+                      <span style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                        <span className="aitag">🤖 산출물 UI 목업</span>
+                      </span>
+                    </Link>
+                    <div className="abranch">
+                      <Link
+                        className="arow"
+                        style={{ borderLeftColor: "var(--red)" }}
+                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/voc`}
+                      >
+                        <span className="aicon">🗣</span>
+                        <span className="atxt">SWVOC — {issue.voc.request.slice(0, 24)}…</span>
+                        <span className="achev">열기 ›</span>
+                      </Link>
+                      <Link
+                        className="arow"
+                        style={{ borderLeftColor: "var(--purple)" }}
+                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/functional`}
+                      >
+                        <span className="aicon">⚙</span>
+                        <span className="atxt">기능 요구사항 — {issue.title}</span>
+                        <span className="achev">열기 ›</span>
+                      </Link>
+                      <Link
+                        className="arow"
+                        style={{ borderLeftColor: "var(--green)" }}
+                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/nonfunctional`}
+                      >
+                        <span className="aicon">🛡</span>
+                        <span className="atxt">비기능 요구사항 — {issue.nonFunctional.role.slice(0, 20)}…</span>
+                        <span className="achev">열기 ›</span>
+                      </Link>
+                      <Link
+                        className="arow"
+                        style={{ borderLeftColor: "var(--accent)" }}
+                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/detail-design`}
+                      >
+                        <span className="aicon">📐</span>
+                        <span className="atxt">Detail Design — {issue.title}</span>
+                        <span className="achev">열기 ›</span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

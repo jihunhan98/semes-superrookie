@@ -59,4 +59,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleInvalidAgreedDate(ApiErrors.InvalidAgreedDate e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(ApiErrors.RequirementNotConfirmed.class)
+    public ResponseEntity<Map<String, String>> handleRequirementNotConfirmed(ApiErrors.RequirementNotConfirmed e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
 }

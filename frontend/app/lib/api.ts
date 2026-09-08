@@ -358,3 +358,59 @@ export function holdRequirement(
     `/api/projects/${projectId}/requirements/${requirementId}/hold?userId=${userId}`,
   );
 }
+
+// ── 산출물 도출(기능 3) — 이슈 나누기 ──────────────────────────────
+// 요구사항 1건 ↔ 개발 이슈 N건(1:N). 산출물 4종(SWVOC·기능·비기능 요구사항·
+// Detail Design)은 아직 화면 얼개(목업)만 있어 실제 도출 API는 없다 —
+// artifactsMock.ts 가 여기서 받은 실제 이슈(key·title)에 목업 내용을 입힌다.
+
+/** AI가 제안한 이슈 분할 후보 한 건 — 아직 저장 전. */
+export type IssueCandidate = { title: string; quote: string };
+
+export type SplitPreviewResult = { issues: IssueCandidate[]; engine: string };
+
+/** 확정된 개발 이슈 한 건. */
+export type DevIssue = {
+  id: number;
+  issueKey: string;
+  title: string;
+  quote: string | null;
+  displayOrder: number;
+  createdByName: string | null;
+  createdAt: string | null;
+};
+
+/** AI 분할 초안 요청 — 저장하지 않는다. 화면 진입 시·"AI 다시 나눠줘" 클릭 시 호출. */
+export function previewIssueSplit(
+  projectId: number,
+  requirementId: number,
+  input: { userId: number; reason: string },
+): Promise<SplitPreviewResult> {
+  return postJson<SplitPreviewResult>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues/split-preview`,
+    input,
+  );
+}
+
+/** 분할 확정 — 사람이 다듬은 최종 목록으로 기존 이슈를 교체한다. */
+export function confirmIssueSplit(
+  projectId: number,
+  requirementId: number,
+  input: { userId: number; issues: IssueCandidate[] },
+): Promise<DevIssue[]> {
+  return postJson<DevIssue[]>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues`,
+    input,
+  );
+}
+
+/** 이미 나눠 놓은 이슈 목록. */
+export function listDevIssues(
+  projectId: number,
+  requirementId: number,
+  userId: number,
+): Promise<DevIssue[]> {
+  return getJson<DevIssue[]>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues?userId=${userId}`,
+  );
+}

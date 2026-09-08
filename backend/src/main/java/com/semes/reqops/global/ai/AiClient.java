@@ -50,6 +50,36 @@ public class AiClient {
         return call(new AiAnalyzeDto.Request(content, baseContent, reason, existing), content);
     }
 
+    /**
+     * "이슈 나누기" 화면의 AI 초안 — 확정 요구사항을 개발 이슈 후보 N개로 나눈다.
+     *
+     * <p>AI 서버 자체가 응답하지 않아도 화면이 비어 있으면 안 되므로, 실패 시 본문
+     * 전체를 이슈 1개로 보는 결과를 돌려준다(사람이 그 위에서 나누기로 쪼갤 수 있다).
+     */
+    public AiSplitDto.Response splitIssues(String content, String reason) {
+        try {
+            AiSplitDto.Response res = restClient.post()
+                    .uri("/split")
+                    .body(new AiSplitDto.Request(content, reason))
+                    .retrieve()
+                    .body(AiSplitDto.Response.class);
+
+            if (res == null) {
+                return splitUnavailable(content);
+            }
+            log.info("AI 이슈 분할 완료 — engine={} issues={}",
+                    res.engine(), res.issues() == null ? 0 : res.issues().size());
+            return res;
+        } catch (Exception e) {
+            log.warn("AI 서버 호출 실패 — 이슈 1개(전체 본문)로 진행합니다: {}", e.getMessage());
+            return splitUnavailable(content);
+        }
+    }
+
+    private AiSplitDto.Response splitUnavailable(String content) {
+        return new AiSplitDto.Response(List.of(new AiSplitDto.IssueOut("전체 요구사항", content)), "unavailable", 0);
+    }
+
     private AiAnalyzeDto.Response call(AiAnalyzeDto.Request request, String fallbackContent) {
         try {
             AiAnalyzeDto.Response res = restClient.post()

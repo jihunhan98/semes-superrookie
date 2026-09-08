@@ -5,8 +5,15 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../../components/Header";
 import ProjectSidebar from "../../../../../../components/ProjectSidebar";
-import { findMockIssue } from "../../../../../../lib/artifactsMock";
-import { getProject, getRequirement, type ProjectDetail, type RequirementDetail } from "../../../../../../lib/api";
+import { mockIssueFor } from "../../../../../../lib/artifactsMock";
+import {
+  getProject,
+  getRequirement,
+  listDevIssues,
+  type DevIssue,
+  type ProjectDetail,
+  type RequirementDetail,
+} from "../../../../../../lib/api";
 import { getCurrentUser } from "../../../../../../lib/session";
 
 export default function IssueDetailPage() {
@@ -18,6 +25,7 @@ export default function IssueDetailPage() {
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [req, setReq] = useState<RequirementDetail | null>(null);
+  const [issues, setIssues] = useState<DevIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -29,10 +37,15 @@ export default function IssueDetailPage() {
     }
     if (!Number.isFinite(projectId) || !Number.isFinite(requirementId)) return;
 
-    Promise.all([getProject(projectId, user.id), getRequirement(projectId, requirementId, user.id)])
-      .then(([p, r]) => {
+    Promise.all([
+      getProject(projectId, user.id),
+      getRequirement(projectId, requirementId, user.id),
+      listDevIssues(projectId, requirementId, user.id),
+    ])
+      .then(([p, r, iss]) => {
         setProject(p);
         setReq(r);
+        setIssues(iss);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
@@ -48,7 +61,7 @@ export default function IssueDetailPage() {
     );
   }
 
-  if (!project || !req) {
+  if (!project || !req || !issues) {
     return (
       <div className="appshell">
         <Header />
@@ -59,7 +72,8 @@ export default function IssueDetailPage() {
     );
   }
 
-  const issue = findMockIssue(issueKey);
+  const realIdx = issues.findIndex((i) => i.issueKey === issueKey);
+  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx], realIdx + 1);
   if (!issue) {
     return (
       <div className="appshell">

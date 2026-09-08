@@ -5,8 +5,15 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../../../components/Header";
 import ProjectSidebar from "../../../../../../../components/ProjectSidebar";
-import { findMockIssue, type BehaviorRow, type DevIssue } from "../../../../../../../lib/artifactsMock";
-import { getProject, getRequirement, type ProjectDetail, type RequirementDetail } from "../../../../../../../lib/api";
+import { mockIssueFor, type BehaviorRow, type MockIssue } from "../../../../../../../lib/artifactsMock";
+import {
+  getProject,
+  getRequirement,
+  listDevIssues,
+  type DevIssue,
+  type ProjectDetail,
+  type RequirementDetail,
+} from "../../../../../../../lib/api";
 import { getCurrentUser } from "../../../../../../../lib/session";
 
 const TITLES: Record<string, { icon: string; label: string }> = {
@@ -58,7 +65,7 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
   );
 }
 
-function VocBody({ issue }: { issue: DevIssue }) {
+function VocBody({ issue }: { issue: MockIssue }) {
   return (
     <>
       <div className="fieldlab">
@@ -84,7 +91,7 @@ function VocBody({ issue }: { issue: DevIssue }) {
   );
 }
 
-function FunctionalBody({ issue, nonFunctional }: { issue: DevIssue; nonFunctional?: boolean }) {
+function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctional?: boolean }) {
   const art = nonFunctional ? issue.nonFunctional : issue.functional;
   return (
     <>
@@ -128,7 +135,7 @@ function FunctionalBody({ issue, nonFunctional }: { issue: DevIssue; nonFunction
   );
 }
 
-function DetailDesignBody({ issue }: { issue: DevIssue }) {
+function DetailDesignBody({ issue }: { issue: MockIssue }) {
   const dd = issue.detailDesign;
   return (
     <>
@@ -209,6 +216,7 @@ export default function ArtifactDetailPage() {
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [req, setReq] = useState<RequirementDetail | null>(null);
+  const [issues, setIssues] = useState<DevIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -220,10 +228,15 @@ export default function ArtifactDetailPage() {
     }
     if (!Number.isFinite(projectId) || !Number.isFinite(requirementId)) return;
 
-    Promise.all([getProject(projectId, user.id), getRequirement(projectId, requirementId, user.id)])
-      .then(([p, r]) => {
+    Promise.all([
+      getProject(projectId, user.id),
+      getRequirement(projectId, requirementId, user.id),
+      listDevIssues(projectId, requirementId, user.id),
+    ])
+      .then(([p, r, iss]) => {
         setProject(p);
         setReq(r);
+        setIssues(iss);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
@@ -239,7 +252,7 @@ export default function ArtifactDetailPage() {
     );
   }
 
-  if (!project || !req) {
+  if (!project || !req || !issues) {
     return (
       <div className="appshell">
         <Header />
@@ -250,7 +263,8 @@ export default function ArtifactDetailPage() {
     );
   }
 
-  const issue = findMockIssue(issueKey);
+  const realIdx = issues.findIndex((i) => i.issueKey === issueKey);
+  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx], realIdx + 1);
   const meta = TITLES[artifactType];
 
   if (!issue || !meta) {
