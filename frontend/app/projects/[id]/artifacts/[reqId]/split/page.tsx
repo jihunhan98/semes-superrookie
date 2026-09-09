@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import { locateSpans } from "../../../../../lib/highlight";
+import { ISSUE_PALETTE as PALETTE } from "../../../../../lib/issuePalette";
 import {
   confirmIssueSplit,
   getProject,
@@ -23,15 +24,6 @@ const ENGINE_LABEL: Record<string, string> = {
   rule: "규칙 기반",
   unavailable: "AI 미응답 · 전체를 이슈 1개로 시작",
 };
-
-/** 후보마다 다른 색을 순환해서 쓴다 — 몇 개로 나뉠지 미리 알 수 없어서(1개~N개). */
-const PALETTE = [
-  { m: "var(--red)", ms: "var(--red-soft)" },
-  { m: "var(--amber)", ms: "var(--amber-soft)" },
-  { m: "var(--purple)", ms: "var(--purple-soft)" },
-  { m: "var(--green)", ms: "var(--green-soft)" },
-  { m: "var(--accent)", ms: "var(--accent-soft)" },
-];
 
 type Candidate = { clientId: string; title: string; quote: string };
 

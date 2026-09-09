@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import ArtifactPills from "../../../../../../components/ArtifactPills";
 import Header from "../../../../../../components/Header";
 import ProjectSidebar from "../../../../../../components/ProjectSidebar";
 import { mockIssueFor } from "../../../../../../lib/artifactsMock";
@@ -104,77 +105,58 @@ export default function IssueDetailPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{issue.title}</h1>
-            <span
-              className="lbl"
-              style={{ padding: "2px 11px", background: "var(--surface-muted)", color: "var(--muted)" }}
-            >
-              {issue.state}
-            </span>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "4px 0 18px" }}>
             {issue.key} · 담당자 {issue.assigneeName} · 모듈 {issue.module}
           </p>
 
+          {/* 필드마다 AI/사람 배지를 붙이는 대신 한 번만 안내한다 — DESIGN.md 4.2:
+              모든 항목을 AI가 초안으로 채우고, 사람은 그 위에서 검토·수정만 한다. */}
+          <div className="aidraftnote" style={{ maxWidth: 900 }}>
+            <span>🧩</span>
+            <span>
+              <b>전부 AI 초안입니다.</b> 아래 칸에 바로 고쳐 쓰세요 — 현재 시스템 상태처럼 AI가 실제로는
+              모르는 항목(추정 표시된 것)은 특히 확인이 필요합니다. 지금은 틀(양식)만 제공하는 단계라 여기서
+              고친 내용은 아직 저장되지 않습니다.
+            </span>
+          </div>
+
           <div className="wcard" style={{ maxWidth: 900 }}>
             <div className="wcb">
               <div className="catlbl">① 요구사항 접수</div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <b style={{ fontSize: 13 }}>현상 기록</b>
-                <span className="humantag">🖊 사람 작성 필요</span>
+              <div className="fieldlab" style={{ marginTop: 0 }}>
+                현상 기록{issue.reception.phenomenonAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
               </div>
-              <div className="humanbox">🖊 현재 시스템의 동작·문제 상황은 담당자가 관찰해 기록합니다. AI가 알 수 없는 영역이라 빈칸입니다.</div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.reception.phenomenonText} />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 0 8px" }}>
-                <b style={{ fontSize: 13 }}>개선 요청사항</b>
-                <span className="aitag">🤖 AI 도출</span>
-              </div>
-              <div className="wcard readonly">
-                <div className="wcb" style={{ fontSize: 13.5 }}>{issue.reception.improvementRequest}</div>
-              </div>
+              <div className="fieldlab">개선 요청사항</div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.reception.improvementRequest} />
 
               <div className="catlbl">② 요구사항 개발</div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <b style={{ fontSize: 13 }}>변경 범위</b>
-                <span className="humantag">🖊 사람 작성 필요</span>
+              <div className="fieldlab" style={{ marginTop: 0 }}>
+                변경 범위{issue.development.changeScopeAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
               </div>
-              <div className="humanbox">🖊 어떤 모듈·DB까지 손대는지는 현재 코드 구조를 아는 담당자가 지정합니다.</div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.development.changeScopeText} />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 0 8px" }}>
-                <b style={{ fontSize: 13 }}>제약 사항</b>
-                <span className="aitag">🤖 AI 도출</span>
-              </div>
-              <div className="wcard readonly">
-                <div className="wcb" style={{ fontSize: 13.5 }}>{issue.development.constraints}</div>
-              </div>
+              <div className="fieldlab">제약 사항</div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.development.constraints} />
 
               <div className="catlbl">③ 변경점 설계</div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <b style={{ fontSize: 13 }}>변경 전 (As-Is)</b>
-                <span className="humantag">🖊 사람 작성 필요</span>
+              <div className="fieldlab" style={{ marginTop: 0 }}>
+                변경 전 (As-Is){issue.changeDesign.beforeAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
               </div>
-              <div className="humanbox">
-                🖊 {issue.changeDesign.before ?? "기존 로직의 현재 구현은 담당자가 코드를 확인해 기술합니다."}
-              </div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.changeDesign.before} />
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 0 8px" }}>
-                <b style={{ fontSize: 13 }}>변경 후 (To-Be)</b>
-                <span className="aitag">🤖 AI 도출</span>
-              </div>
-              <div className="wcard readonly">
-                <div className="wcb" style={{ fontSize: 13.5 }}>{issue.changeDesign.after}</div>
-              </div>
+              <div className="fieldlab">변경 후 (To-Be)</div>
+              <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.changeDesign.after} />
 
               <div className="catlbl">날짜</div>
               <div style={{ display: "flex", gap: 24, fontSize: 13 }}>
                 <span>
-                  <b style={{ color: "var(--muted)", fontWeight: 600 }}>기한</b>{" "}
-                  <span className="humantag" style={{ marginRight: 6 }}>
-                    🖊
-                  </span>
-                  {issue.dueDate}
+                  <b style={{ color: "var(--muted)", fontWeight: 600 }}>기한</b> {issue.dueDate}
                 </span>
                 <span>
                   <b style={{ color: "var(--muted)", fontWeight: 600 }}>생성일</b> {issue.createdAt} · 자동
@@ -188,53 +170,9 @@ export default function IssueDetailPage() {
           </div>
 
           <div className="fieldlab" style={{ marginTop: 22 }}>
-            하위 작업 (산출물 4종)
+            산출물
           </div>
-          <div className="arttree" style={{ maxWidth: 900 }}>
-            <Link className="irow" style={{ borderLeftColor: "var(--red)" }} href={`${artifactBase}/voc`}>
-              🗣 SWVOC — {issue.voc.key}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <span className="aitag">🤖 AI</span>
-                <span className="lbl" style={{ padding: "2px 10px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                  {issue.voc.state}
-                </span>
-              </span>
-            </Link>
-            <Link className="irow" href={`${artifactBase}/functional`}>
-              ⚙ 기능 요구사항 — {issue.functional.key}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <span className="aitag">🤖 AI</span>
-                <span className="lbl" style={{ padding: "2px 10px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                  {issue.functional.state}
-                </span>
-              </span>
-            </Link>
-            <Link className="irow" style={{ borderLeftColor: "var(--green)" }} href={`${artifactBase}/nonfunctional`}>
-              🛡 비기능 요구사항 — {issue.nonFunctional.key}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <span className="aitag">🤖 AI</span>
-                <span className="lbl" style={{ padding: "2px 10px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                  {issue.nonFunctional.state}
-                </span>
-              </span>
-            </Link>
-            <Link className="irow" style={{ borderLeftColor: "var(--accent)" }} href={`${artifactBase}/detail-design`}>
-              📐 Detail Design — {issue.detailDesign.key}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <span className="aitag">🤖 AI</span>
-                <span
-                  className="lbl"
-                  style={{
-                    padding: "2px 10px",
-                    background: issue.detailDesign.state === "확정" ? "var(--green-soft)" : "var(--surface-muted)",
-                    color: issue.detailDesign.state === "확정" ? "var(--green)" : "var(--muted)",
-                  }}
-                >
-                  {issue.detailDesign.state}
-                </span>
-              </span>
-            </Link>
-          </div>
+          <ArtifactPills base={artifactBase} large />
         </main>
       </div>
     </div>

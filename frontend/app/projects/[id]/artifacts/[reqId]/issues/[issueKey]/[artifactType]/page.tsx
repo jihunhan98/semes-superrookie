@@ -68,25 +68,12 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
 function VocBody({ issue }: { issue: MockIssue }) {
   return (
     <>
-      <div className="fieldlab">
-        설명 <span className="aitag">🤖 AI 도출</span>
-      </div>
-      <div className="wcard readonly">
-        <div className="wcb" style={{ fontSize: 13.5 }}>{issue.voc.description}</div>
-      </div>
-      <div className="fieldlab">
-        1. 요청사항 <span className="aitag">🤖 AI 도출</span>
-      </div>
-      <div className="wcard readonly">
-        <div className="wcb" style={{ fontSize: 13.5 }}>{issue.voc.request}</div>
-      </div>
-      <div className="fieldlab">
-        2. 특이사항 <span className="aitag">🤖 AI 초안</span>{" "}
-        <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 사람 보완 권장</span>
-      </div>
-      <div className="wcard readonly">
-        <div className="wcb" style={{ fontSize: 13.5 }}>{issue.voc.notes}</div>
-      </div>
+      <div className="fieldlab">설명</div>
+      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.description} />
+      <div className="fieldlab">1. 요청사항</div>
+      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.request} />
+      <div className="fieldlab">2. 특이사항</div>
+      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.notes} />
     </>
   );
 }
@@ -95,15 +82,9 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
   const art = nonFunctional ? issue.nonFunctional : issue.functional;
   return (
     <>
-      <div className="fieldlab">
-        설명 <span className="aitag">🤖 AI 도출</span>
-      </div>
-      <div className="wcard readonly">
-        <div className="wcb" style={{ fontSize: 13.5 }}>{art.description}</div>
-      </div>
-      <div className="fieldlab">
-        1. 개요 <span className="aitag">🤖 AI 도출</span>
-      </div>
+      <div className="fieldlab">설명</div>
+      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={art.description} />
+      <div className="fieldlab">1. 개요</div>
       <div className="ovbox">
         <div className="r">
           <span className="k">역할</span>
@@ -115,20 +96,16 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
         </div>
       </div>
       <div className="fieldlab">
-        2. 동작 정의 <span className="aitag">🤖 AI 도출</span>{" "}
-        <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>
+        2. 동작 정의{" "}
+        <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5, textTransform: "none" }}>
           · 동작 유형(기본·예외) × 항목(선행조건·시나리오·후행조건)
         </span>
       </div>
       <BehaviorTable rows={art.behaviors} />
       {nonFunctional && (
         <>
-          <div className="fieldlab">
-            제약사항 <span className="aitag">🤖 AI 도출</span>
-          </div>
-          <div className="wcard readonly">
-            <div className="wcb" style={{ fontSize: 13.5 }}>{issue.nonFunctional.constraints}</div>
-          </div>
+          <div className="fieldlab">제약사항</div>
+          <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.nonFunctional.constraints} />
         </>
       )}
     </>
@@ -139,9 +116,7 @@ function DetailDesignBody({ issue }: { issue: MockIssue }) {
   const dd = issue.detailDesign;
   return (
     <>
-      <div className="fieldlab">
-        Class Diagram — 영향 범위 <span className="aitag">🤖 AI 도출</span>
-      </div>
+      <div className="fieldlab">Class Diagram — 영향 범위</div>
       <p style={{ fontSize: 11.5, color: "var(--faint)", margin: "0 0 8px" }}>
         AI가 생성한 Mermaid classDiagram 코드를 렌더링한 모습(예시)
       </p>
@@ -164,9 +139,7 @@ function DetailDesignBody({ issue }: { issue: MockIssue }) {
         ))}
       </div>
 
-      <div className="fieldlab">
-        Sequence Diagram — 변경 전/후 <span className="aitag">🤖 AI 도출</span>
-      </div>
+      <div className="fieldlab">Sequence Diagram — 변경 전/후</div>
       <div className="seqcols">
         <div className="seqcol asis">
           <h5>AS-IS</h5>
@@ -192,12 +165,8 @@ function DetailDesignBody({ issue }: { issue: MockIssue }) {
         </div>
       </div>
 
-      <div className="fieldlab">
-        설명 <span className="aitag">🤖 AI 도출</span>
-      </div>
-      <div className="wcard readonly">
-        <div className="wcb" style={{ fontSize: 13.5 }}>{dd.description}</div>
-      </div>
+      <div className="fieldlab">설명</div>
+      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={dd.description} />
       <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 14 }}>
         🎨 이미지가 아니라 코드로 받는다 — AI는 위 다이어그램을 <b>Mermaid 문법 텍스트</b>로 생성하고, 화면은 그
         텍스트를 그대로 렌더링한 결과다.
@@ -324,7 +293,15 @@ export default function ArtifactDetailPage() {
             <button className="btn sm">✔ 확정</button>
           </div>
 
-          <div className="wcard" style={{ maxWidth: 900, marginTop: 16 }}>
+          <div className="aidraftnote" style={{ maxWidth: 900, marginTop: 16 }}>
+            <span>🧩</span>
+            <span>
+              <b>전부 AI 초안입니다.</b> 아래 칸에 바로 고쳐 쓰세요 — 지금은 틀(양식)만 제공하는 단계라
+              여기서 고친 내용은 아직 저장되지 않습니다.
+            </span>
+          </div>
+
+          <div className="wcard" style={{ maxWidth: 900 }}>
             <div className="wcb">
               {artifactType === "voc" && <VocBody issue={issue} />}
               {artifactType === "functional" && <FunctionalBody issue={issue} />}

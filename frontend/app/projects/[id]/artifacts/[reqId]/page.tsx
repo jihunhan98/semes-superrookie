@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import ArtifactPills from "../../../../components/ArtifactPills";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
 import { mockIssueFor } from "../../../../lib/artifactsMock";
@@ -14,6 +15,7 @@ import {
   type ProjectDetail,
   type RequirementDetail,
 } from "../../../../lib/api";
+import { issueColor } from "../../../../lib/issuePalette";
 import { getCurrentUser } from "../../../../lib/session";
 
 export default function ArtifactsTreePage() {
@@ -135,58 +137,32 @@ export default function ArtifactsTreePage() {
                 </Link>
               </div>
 
-              <div className="arttree" style={{ marginTop: 18 }}>
-                {mockIssues.map((issue) => (
-                  <div key={issue.key}>
-                    <Link
-                      className="irow"
-                      href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}`}
-                    >
-                      🔖 개발 이슈 <span className="ikey">{issue.key}</span> {issue.title}
-                      <span style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                        <span className="aitag">🤖 산출물 UI 목업</span>
-                      </span>
-                    </Link>
-                    <div className="abranch">
-                      <Link
-                        className="arow"
-                        style={{ borderLeftColor: "var(--red)" }}
-                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/voc`}
-                      >
-                        <span className="aicon">🗣</span>
-                        <span className="atxt">SWVOC — {issue.voc.request.slice(0, 24)}…</span>
-                        <span className="achev">열기 ›</span>
-                      </Link>
-                      <Link
-                        className="arow"
-                        style={{ borderLeftColor: "var(--purple)" }}
-                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/functional`}
-                      >
-                        <span className="aicon">⚙</span>
-                        <span className="atxt">기능 요구사항 — {issue.title}</span>
-                        <span className="achev">열기 ›</span>
-                      </Link>
-                      <Link
-                        className="arow"
-                        style={{ borderLeftColor: "var(--green)" }}
-                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/nonfunctional`}
-                      >
-                        <span className="aicon">🛡</span>
-                        <span className="atxt">비기능 요구사항 — {issue.nonFunctional.role.slice(0, 20)}…</span>
-                        <span className="achev">열기 ›</span>
-                      </Link>
-                      <Link
-                        className="arow"
-                        style={{ borderLeftColor: "var(--accent)" }}
-                        href={`/projects/${project.id}/artifacts/${requirementId}/issues/${issue.key}/detail-design`}
-                      >
-                        <span className="aicon">📐</span>
-                        <span className="atxt">Detail Design — {issue.title}</span>
-                        <span className="achev">열기 ›</span>
-                      </Link>
+              {/* 이슈 하나 = 카드 하나. 왼쪽 색상바는 "이슈 나누기" 화면에서 이 이슈를
+                  표시했던 색을 그대로 이어받는다 — 어느 문장에서 나온 이슈인지 색으로
+                  계속 따라갈 수 있게(순서=split 확정 당시 순번, issuePalette 참고). */}
+              <div className="igrid" style={{ marginTop: 18 }}>
+                {issues.map((real, i) => {
+                  const mock = mockIssues[i];
+                  const color = issueColor(i);
+                  const base = `/projects/${project.id}/artifacts/${requirementId}/issues/${mock.key}`;
+                  return (
+                    <div key={mock.key} className="icard3" style={{ "--m": color.m } as CSSProperties}>
+                      <div className="ic3top">
+                        <div>
+                          <div className="ic3key">{mock.key}</div>
+                          <Link className="ic3ttl" href={base} style={{ color: "inherit", textDecoration: "none" }}>
+                            {mock.title}
+                          </Link>
+                        </div>
+                        <Link className="ic3edit" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
+                          ✎ 나누기 수정
+                        </Link>
+                      </div>
+                      {real.quote && <div className="ic3quote">&ldquo;{real.quote}&rdquo;</div>}
+                      <ArtifactPills base={base} />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}

@@ -2249,105 +2249,150 @@ mark.hl2.on {
   font-weight: 700;
 }
 
-.arttree .irow {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 14px;
+/* ── 이슈 카드 그리드 — 나열형 arttree 대신 이슈당 카드 하나 ──────────
+   왼쪽 색상바는 이슈 나누기 화면에서 이 이슈를 표시했던 색을 그대로
+   이어받는다(lib/issuePalette). */
+.igrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.icard3 {
   border: 1px solid var(--line);
-  border-left: 3px solid var(--purple);
-  border-radius: 8px;
+  border-left: 4px solid var(--m);
+  border-radius: 12px;
   background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 16px 16px 14px;
+}
+
+.icard3 .ic3top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin-bottom: 8px;
-  text-decoration: none;
-  color: inherit;
 }
 
-.arttree .irow:hover {
-  background: var(--surface-muted);
-}
-
-.arttree .ikey {
+.icard3 .ic3key {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--faint);
 }
 
-.arttree .arow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
-  border-radius: 8px;
-  padding: 9px 12px;
-  margin: 0 0 7px 34px;
-  text-decoration: none;
-  cursor: pointer;
+.icard3 .ic3ttl {
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 2px;
 }
 
-.arttree .arow:hover {
-  background: var(--surface-muted);
-  border-color: var(--accent);
-}
-
-.arttree .arow .aicon {
-  flex: 0 0 auto;
-}
-
-.arttree .arow .atxt {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.icard3 .ic3edit {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
-  font-weight: 500;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  text-decoration: none;
 }
 
-.arttree .arow .achev {
-  flex: 0 0 auto;
+.icard3 .ic3edit:hover {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+
+.icard3 .ic3quote {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 6px 0 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 산출물 4종 pill — 종류별 고정색(이슈별 순환색과는 다른 축). */
+.pillrow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11.5px;
   font-weight: 700;
+  border-radius: 999px;
+  padding: 5px 10px;
+  text-decoration: none;
+}
+
+.pill3:hover {
+  filter: brightness(0.96);
+}
+
+.pill3.p1 {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.pill3.p2 {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+
+.pill3.p3 {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.pill3.p4 {
+  background: var(--accent-soft);
   color: var(--accent);
-  opacity: 0;
-  transition: opacity 0.1s;
 }
 
-.arttree .arow:hover .achev {
-  opacity: 1;
+.pillrow.lg .pill3 {
+  font-size: 13px;
+  padding: 8px 14px;
 }
 
-.arttree .abranch {
-  margin-left: 14px;
-  border-left: 2px dashed var(--line);
-  padding-bottom: 2px;
-  padding-left: 0;
+/* AI가 전 항목을 초안으로 채웠다는 안내 — 필드마다 배지를 붙이는 대신 한 번만. */
+.aidraftnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--purple);
+  background: var(--purple-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.6;
 }
 
-.aitag,
-.humantag {
+.aidraftnote b {
+  color: var(--purple);
+}
+
+/* "추정 — 확인 필요" — AI가 현재 시스템 상태를 몰라 추정으로 채운 필드만 붙는다. */
+.aidraftassumed {
+  margin-left: 8px;
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
   border-radius: 999px;
   padding: 2px 9px;
   white-space: nowrap;
-}
-
-.aitag {
-  background: var(--purple-soft);
-  color: var(--purple);
-}
-
-.humantag {
-  background: var(--surface-muted);
-  color: var(--muted);
+  background: var(--amber-soft);
+  color: var(--amber);
 }
 
 .catlbl {
@@ -2364,24 +2409,6 @@ mark.hl2.on {
   border-top: 0;
   padding-top: 0;
   margin-top: 0;
-}
-
-.humanbox {
-  border: 1.5px dashed var(--line);
-  border-radius: 8px;
-  padding: 13px 15px;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 9px,
-    rgba(89, 99, 110, 0.06) 9px,
-    rgba(89, 99, 110, 0.06) 18px
-  );
-  color: var(--faint);
-  font-size: 12.5px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
 }
 
 .ovbox {
