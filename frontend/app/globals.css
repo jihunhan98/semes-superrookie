@@ -2348,19 +2348,6 @@ mark.hl2.on {
   color: var(--purple);
 }
 
-/* "추정 — 확인 필요" — AI가 현재 시스템 상태를 몰라 추정으로 채운 필드만 붙는다. */
-.aidraftassumed {
-  margin-left: 8px;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  border-radius: 999px;
-  padding: 2px 9px;
-  white-space: nowrap;
-  background: var(--amber-soft);
-  color: var(--amber);
-}
-
 /* ── 도움말 팝오버("?") — 이슈를 어떻게 나눴는지 프롬프트를 보여준다 ── */
 .helpwrap {
   position: relative;
@@ -2605,57 +2592,41 @@ mark.hl2.on {
   white-space: nowrap;
 }
 
-.seqcols {
+/* ── Sequence Diagram — Mermaid 코드 + 실제 렌더링 다이어그램 ── */
+
+.seqcols2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-.seqcol {
+.seqblock {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 13px 15px;
   background: var(--surface);
 }
 
-.seqcol h5 {
-  margin: 0 0 10px;
+.seqblockhd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12.5px;
   font-weight: 800;
+  margin-bottom: 10px;
 }
 
-.seqcol.tobe h5 {
-  color: var(--accent);
+.mermaidbox {
+  overflow-x: auto;
 }
 
-.seqstep {
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 8px;
-  font-size: 12px;
-  line-height: 1.6;
-  padding: 3px 0;
-}
-
-.seqstep .n {
-  color: var(--faint);
-  font-family: var(--mono);
-}
-
-.seqstep .who {
-  font-weight: 700;
-  color: var(--purple);
-}
-
-.seqstep.new {
-  background: var(--accent-soft);
-  border-radius: 5px;
-  padding: 3px 6px;
-  margin: 1px -6px;
+.mermaidbox svg {
+  max-width: 100%;
+  height: auto;
 }
 
 @media (max-width: 900px) {
-  .seqcols {
+  .seqcols2 {
     grid-template-columns: 1fr;
   }
 }

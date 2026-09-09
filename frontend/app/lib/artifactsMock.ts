@@ -66,10 +66,9 @@ export type MockIssue = {
   state: "검토 대기" | "진행 중" | "완료";
   assigneeName: string;
   module: string;
-  /** assumed = true 인 필드는 AI가 현재 시스템 상태를 몰라 추정으로 채운 초안 — "추정 확인 필요"로 표시. */
-  reception: { phenomenonText: string; phenomenonAssumed: boolean; improvementRequest: string };
-  development: { changeScopeText: string; changeScopeAssumed: boolean; constraints: string };
-  changeDesign: { before: string; beforeAssumed: boolean; after: string };
+  reception: { phenomenonText: string; improvementRequest: string };
+  development: { changeScopeText: string; constraints: string };
+  changeDesign: { before: string; after: string };
   dueDate: string;
   createdAt: string;
   resolvedAt: string | null;
@@ -88,21 +87,18 @@ const FULL_ISSUE: MockIssue = {
   reception: {
     phenomenonText:
       "다른 매칭 관련 이슈들과 비슷한 패턴으로 볼 때, 현재는 거리 기준 단순 정렬만 하고 있고 별도 우선순위 판정 로직은 없을 것으로 보임.",
-    phenomenonAssumed: true,
     improvementRequest:
       "Host의 태스크 할당 요청 시, 가용 상태(IDLE·SoC 충분·에러 없음)인 AMR 중에서 정해진 우선순위 기준(SoC 높은 순)으로 선택해달라는 요청.",
   },
   development: {
     changeScopeText:
       "jobassign 모듈의 매칭 서비스(JobAssignService)와 정렬 로직이 영향받을 것으로 보임 — 실제 손대는 파일·DB 범위는 코드 확인 후 확정 필요.",
-    changeScopeAssumed: true,
     constraints:
       "매칭 응답 200ms 이내 · 동시 요청 시 우선순위 큐 순서 보장 · 가용 0대면 대기(PENDING) 반환.",
   },
   changeDesign: {
     before:
       "요청 수신 → 가용 AMR 필터 → 거리순 정렬 → 최상위 매칭 → 결과 회신. (다른 이슈의 AS-IS 패턴에서 추정)",
-    beforeAssumed: true,
     after:
       "요청 수신 → 가용 AMR 필터 → 우선순위(SoC 높은 순) 정렬 → 최상위 매칭 → 결과 회신. (요구사항·제약 근거로 AI 초안 설계)",
   },
@@ -207,4 +203,34 @@ export function mockIssueFor(
     nonFunctional: { ...FULL_ISSUE.nonFunctional, key: `NFUNC-0${seed}` },
     detailDesign: { ...FULL_ISSUE.detailDesign, key: `DD-0${seed}` },
   };
+}
+
+/**
+ * Sequence Diagram 단계 목록(who·msg)을 Mermaid `sequenceDiagram` 코드로 바꾼다.
+ *
+ * <p>msg가 "대상: 설명" 형태(대상 이름에 공백 없음)면 who→대상 화살표로, 아니면
+ * who 자신에 대한 note로 그린다 — 기존 화면이 msg를 그렇게 취급해 왔다(who →
+ * msg 로만 붙여 읽던 방식과 동일한 해석).
+ */
+export function toMermaidSequence(steps: SeqStep[]): string {
+  const participants: string[] = [];
+  function ensure(name: string) {
+    if (!participants.includes(name)) participants.push(name);
+  }
+
+  const lines = steps.map((s) => {
+    ensure(s.who);
+    const colonIdx = s.msg.indexOf(":");
+    const target = colonIdx > 0 ? s.msg.slice(0, colonIdx).trim() : "";
+    const isTarget = target.length > 0 && !target.includes(" ");
+
+    if (isTarget) {
+      ensure(target);
+      const desc = s.msg.slice(colonIdx + 1).trim() + (s.changed ? " (변경)" : "");
+      return `    ${s.who}->>${target}: ${desc}`;
+    }
+    return `    Note right of ${s.who}: ${s.msg}${s.changed ? " (변경)" : ""}`;
+  });
+
+  return ["sequenceDiagram", ...participants.map((p) => `    participant ${p}`), ...lines].join("\n");
 }

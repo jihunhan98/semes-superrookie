@@ -110,14 +110,11 @@ export default function IssueDetailPage() {
             {issue.key} · 담당자 {issue.assigneeName} · 모듈 {issue.module}
           </p>
 
-          {/* 필드마다 AI/사람 배지를 붙이는 대신 한 번만 안내한다 — DESIGN.md 4.2:
-              모든 항목을 AI가 초안으로 채우고, 사람은 그 위에서 검토·수정만 한다. */}
+          {/* 필드마다 AI/사람 배지를 붙이는 대신 한 번만 짧게 안내한다. */}
           <div className="aidraftnote" style={{ maxWidth: 900 }}>
             <span>🧩</span>
             <span>
-              <b>전부 AI 초안입니다.</b> 아래 칸에 바로 고쳐 쓰세요 — 현재 시스템 상태처럼 AI가 실제로는
-              모르는 항목(추정 표시된 것)은 특히 확인이 필요합니다. 지금은 틀(양식)만 제공하는 단계라 여기서
-              고친 내용은 아직 저장되지 않습니다.
+              <b>AI 초안입니다.</b> 검토 후 확정해주세요.
             </span>
           </div>
 
@@ -125,9 +122,7 @@ export default function IssueDetailPage() {
             <div className="wcb">
               <div className="catlbl">① 요구사항 접수</div>
 
-              <div className="fieldlab" style={{ marginTop: 0 }}>
-                현상 기록{issue.reception.phenomenonAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
-              </div>
+              <div className="fieldlab" style={{ marginTop: 0 }}>현상 기록</div>
               <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.reception.phenomenonText} />
 
               <div className="fieldlab">개선 요청사항</div>
@@ -135,9 +130,7 @@ export default function IssueDetailPage() {
 
               <div className="catlbl">② 요구사항 개발</div>
 
-              <div className="fieldlab" style={{ marginTop: 0 }}>
-                변경 범위{issue.development.changeScopeAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
-              </div>
+              <div className="fieldlab" style={{ marginTop: 0 }}>변경 범위</div>
               <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.development.changeScopeText} />
 
               <div className="fieldlab">제약 사항</div>
@@ -145,9 +138,7 @@ export default function IssueDetailPage() {
 
               <div className="catlbl">③ 변경점 설계</div>
 
-              <div className="fieldlab" style={{ marginTop: 0 }}>
-                변경 전 (As-Is){issue.changeDesign.beforeAssumed && <span className="aidraftassumed">추정 — 확인 필요</span>}
-              </div>
+              <div className="fieldlab" style={{ marginTop: 0 }}>변경 전 (As-Is)</div>
               <textarea className="reqta" style={{ minHeight: 64 }} defaultValue={issue.changeDesign.before} />
 
               <div className="fieldlab">변경 후 (To-Be)</div>

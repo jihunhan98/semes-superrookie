@@ -1,7 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
   "/login/page": "app/login/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/page": "app/page.js",
   "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page": "app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page.js",
   "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page": "app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page.js",

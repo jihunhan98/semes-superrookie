@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../../../components/Header";
+import MermaidDiagram from "../../../../../../../components/MermaidDiagram";
 import ProjectSidebar from "../../../../../../../components/ProjectSidebar";
-import { mockIssueFor, type BehaviorRow, type MockIssue } from "../../../../../../../lib/artifactsMock";
+import {
+  mockIssueFor,
+  toMermaidSequence,
+  type BehaviorRow,
+  type MockIssue,
+} from "../../../../../../../lib/artifactsMock";
 import {
   getProject,
   getRequirement,
@@ -95,12 +101,7 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
           <span>{art.purpose}</span>
         </div>
       </div>
-      <div className="fieldlab">
-        2. 동작 정의{" "}
-        <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5, textTransform: "none" }}>
-          · 동작 유형(기본·예외) × 항목(선행조건·시나리오·후행조건)
-        </span>
-      </div>
+      <div className="fieldlab">2. 동작 정의</div>
       <BehaviorTable rows={art.behaviors} />
       {nonFunctional && (
         <>
@@ -112,14 +113,27 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
   );
 }
 
+function SeqBlock({ label, steps }: { label: string; steps: MockIssue["detailDesign"]["sequenceBefore"] }) {
+  const code = toMermaidSequence(steps);
+  return (
+    <div className="seqblock">
+      <div className="seqblockhd">
+        {label}
+        <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
+          복사
+        </button>
+      </div>
+      <pre className="promptbox" style={{ margin: "0 0 10px" }}>{code}</pre>
+      <MermaidDiagram code={code} />
+    </div>
+  );
+}
+
 function DetailDesignBody({ issue }: { issue: MockIssue }) {
   const dd = issue.detailDesign;
   return (
     <>
       <div className="fieldlab">Class Diagram — 영향 범위</div>
-      <p style={{ fontSize: 11.5, color: "var(--faint)", margin: "0 0 8px" }}>
-        AI가 생성한 Mermaid classDiagram 코드를 렌더링한 모습(예시)
-      </p>
       <div className="clsrow">
         {dd.classDiagram.map((c, i) => (
           <>
@@ -140,37 +154,13 @@ function DetailDesignBody({ issue }: { issue: MockIssue }) {
       </div>
 
       <div className="fieldlab">Sequence Diagram — 변경 전/후</div>
-      <div className="seqcols">
-        <div className="seqcol asis">
-          <h5>AS-IS</h5>
-          {dd.sequenceBefore.map((s, i) => (
-            <div key={i} className="seqstep">
-              <span className="n">{i + 1}</span>
-              <span>
-                <span className="who">{s.who}</span> → {s.msg}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="seqcol tobe">
-          <h5>TO-BE</h5>
-          {dd.sequenceAfter.map((s, i) => (
-            <div key={i} className={`seqstep${s.changed ? " new" : ""}`}>
-              <span className="n">{i + 1}</span>
-              <span>
-                <span className="who">{s.who}</span> → {s.msg}
-              </span>
-            </div>
-          ))}
-        </div>
+      <div className="seqcols2">
+        <SeqBlock label="AS-IS" steps={dd.sequenceBefore} />
+        <SeqBlock label="TO-BE" steps={dd.sequenceAfter} />
       </div>
 
       <div className="fieldlab">설명</div>
       <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={dd.description} />
-      <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 14 }}>
-        🎨 이미지가 아니라 코드로 받는다 — AI는 위 다이어그램을 <b>Mermaid 문법 텍스트</b>로 생성하고, 화면은 그
-        텍스트를 그대로 렌더링한 결과다.
-      </p>
     </>
   );
 }
@@ -296,8 +286,7 @@ export default function ArtifactDetailPage() {
           <div className="aidraftnote" style={{ maxWidth: 900, marginTop: 16 }}>
             <span>🧩</span>
             <span>
-              <b>전부 AI 초안입니다.</b> 아래 칸에 바로 고쳐 쓰세요 — 지금은 틀(양식)만 제공하는 단계라
-              여기서 고친 내용은 아직 저장되지 않습니다.
+              <b>AI 초안입니다.</b> 검토 후 확정해주세요.
             </span>
           </div>
 
