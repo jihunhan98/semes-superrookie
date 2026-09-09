@@ -151,77 +151,99 @@ export default function ArtifactsTreePage() {
             <span className="tagv">🏷 v{req.version}</span>
           </div>
 
-          {/* AI 검토 결과(불명확·상충)는 여기서 다시 보여주지 않는다 — 그건 요구사항을
-              확정·수정할 때 쓰는 참고 자료라 "수정하기" 화면에만 둔다. 여기는 산출물
-              도출의 입력이 된 확정본이 무엇인지만 그대로 보여준다. */}
-          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 900 }}>
-            <div className="wch">
-              📄 확정본
-              <span className="rt">
-                <span className="tagv">v{req.version}</span>
-              </span>
-            </div>
-            <div className="wcb">
-              <div className="srctext">{req.content}</div>
-            </div>
-          </div>
-
           {issues.length === 0 ? (
-            <div className="wcard" style={{ marginTop: 16, maxWidth: 900, borderColor: "var(--purple)" }}>
-              <div className="wcb" style={{ textAlign: "center", padding: "28px 16px" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
-                  🧩 아직 개발 이슈로 나누지 않았습니다
-                </div>
-                <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>
-                  AI가 이슈 경계를 제안하면, 삭제·추가·제목/구절 수정으로 다듬은 뒤 확정합니다.
-                  확정한 이슈마다 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design)이 함께 붙습니다.
-                </p>
-                <Link className="btn prim" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
-                  🧩 이슈 나누기 시작
-                </Link>
-              </div>
-            </div>
-          ) : (
             <>
-              <div className="artbanner" style={{ marginTop: 16 }}>
-                <span className="aico">🧩</span>
-                <div className="att">
-                  개발 이슈 {issues.length}건으로 나눴습니다. <SplitHelp />
+              {/* AI 검토 결과(불명확·상충)는 여기서 다시 보여주지 않는다 — 그건 요구사항을
+                  확정·수정할 때 쓰는 참고 자료라 "수정하기" 화면에만 둔다. 여기는 산출물
+                  도출의 입력이 된 확정본이 무엇인지만 그대로 보여준다. */}
+              <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 900 }}>
+                <div className="wch">
+                  📄 확정본
+                  <span className="rt">
+                    <span className="tagv">v{req.version}</span>
+                  </span>
                 </div>
-                <Link
-                  className="btn sm"
-                  style={{ marginLeft: "auto" }}
-                  href={`/projects/${project.id}/artifacts/${requirementId}/split`}
-                >
-                  ✎ 이슈 나누기 수정
-                </Link>
+                <div className="wcb">
+                  <div className="srctext">{req.content}</div>
+                </div>
               </div>
 
-              {/* 이슈 하나 = 카드 하나. 왼쪽 색상바는 "이슈 나누기" 화면에서 이 이슈를
-                  표시했던 색을 그대로 이어받는다 — 어느 문장에서 나온 이슈인지 색으로
-                  계속 따라갈 수 있게(순서=split 확정 당시 순번, issuePalette 참고). */}
-              <div className="igrid" style={{ marginTop: 18 }}>
-                {issues.map((real, i) => {
-                  const mock = mockIssues[i];
-                  const color = issueColor(i);
-                  const base = `/projects/${project.id}/artifacts/${requirementId}/issues/${mock.key}`;
-                  return (
-                    <div key={mock.key} className="icard3" style={{ "--m": color.m } as CSSProperties}>
-                      <div className="ic3top">
-                        <div>
-                          <div className="ic3key">{mock.key}</div>
-                          <Link className="ic3ttl" href={base} style={{ color: "inherit", textDecoration: "none" }}>
-                            {mock.title}
-                          </Link>
-                        </div>
-                      </div>
-                      {real.quote && <div className="ic3quote">&ldquo;{real.quote}&rdquo;</div>}
-                      <ArtifactPills base={base} />
-                    </div>
-                  );
-                })}
+              <div className="wcard" style={{ marginTop: 16, maxWidth: 900, borderColor: "var(--purple)" }}>
+                <div className="wcb" style={{ textAlign: "center", padding: "28px 16px" }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
+                    🧩 아직 개발 이슈로 나누지 않았습니다
+                  </div>
+                  <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>
+                    AI가 이슈 경계를 제안하면, 삭제·추가·제목/구절 수정으로 다듬은 뒤 확정합니다.
+                    확정한 이슈마다 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design)이 함께 붙습니다.
+                  </p>
+                  <Link className="btn prim" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
+                    🧩 이슈 나누기 시작
+                  </Link>
+                </div>
               </div>
             </>
+          ) : (
+            // 왼쪽 확정본 → 화살표 → 오른쪽에 나눠진 이슈를 세로로 나열. 밑에 죽
+            // 이어붙이는 것보다 "이게 이렇게 나뉘었다"가 한눈에 들어오게 하려는 것.
+            <div className="splitgrid" style={{ marginTop: 16, maxWidth: 1320 }}>
+              <div className="wcard readonly">
+                <div className="wch">
+                  📄 확정본
+                  <span className="rt">
+                    <span className="tagv">v{req.version}</span>
+                  </span>
+                </div>
+                <div className="wcb">
+                  <div className="srctext">{req.content}</div>
+                </div>
+              </div>
+
+              <div className="splitarrow" aria-hidden="true">
+                ➜
+              </div>
+
+              <div>
+                <div className="artbanner">
+                  <span className="aico">🧩</span>
+                  <div className="att">
+                    개발 이슈 {issues.length}건으로 나눴습니다. <SplitHelp />
+                  </div>
+                  <Link
+                    className="btn sm"
+                    style={{ marginLeft: "auto" }}
+                    href={`/projects/${project.id}/artifacts/${requirementId}/split`}
+                  >
+                    ✎ 이슈 나누기 수정
+                  </Link>
+                </div>
+
+                {/* 이슈 하나 = 카드 하나. 왼쪽 색상바는 "이슈 나누기" 화면에서 이 이슈를
+                    표시했던 색을 그대로 이어받는다 — 어느 문장에서 나온 이슈인지 색으로
+                    계속 따라갈 수 있게(순서=split 확정 당시 순번, issuePalette 참고). */}
+                <div className="igrid">
+                  {issues.map((real, i) => {
+                    const mock = mockIssues[i];
+                    const color = issueColor(i);
+                    const base = `/projects/${project.id}/artifacts/${requirementId}/issues/${mock.key}`;
+                    return (
+                      <div key={mock.key} className="icard3" style={{ "--m": color.m } as CSSProperties}>
+                        <div className="ic3top">
+                          <div>
+                            <div className="ic3key">{mock.key}</div>
+                            <Link className="ic3ttl" href={base} style={{ color: "inherit", textDecoration: "none" }}>
+                              {mock.title}
+                            </Link>
+                          </div>
+                        </div>
+                        {real.quote && <div className="ic3quote">&ldquo;{real.quote}&rdquo;</div>}
+                        <ArtifactPills base={base} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
         </main>
       </div>

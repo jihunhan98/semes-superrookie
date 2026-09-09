@@ -2234,13 +2234,42 @@ mark.hl2.on {
   font-weight: 700;
 }
 
-/* ── 이슈 카드 그리드 — 나열형 arttree 대신 이슈당 카드 하나 ──────────
-   왼쪽 색상바는 이슈 나누기 화면에서 이 이슈를 표시했던 색을 그대로
-   이어받는다(lib/issuePalette). */
-.igrid {
+/* ── 확정본 → 이슈 목록: 왼쪽 확정본, 화살표, 오른쪽에 나눠진 이슈를
+   세로로 나열한다 — 밑에 이어붙이는 것보다 "이게 이렇게 나뉘었다"가
+   한눈에 들어오도록. ── */
+.splitgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 6px;
+}
+
+.splitarrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--purple);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+@media (max-width: 860px) {
+  .splitgrid {
+    grid-template-columns: 1fr;
+  }
+
+  .splitarrow {
+    transform: rotate(90deg);
+    padding: 6px 0;
+  }
+}
+
+/* 이슈 카드 하나씩 세로로 나열 — 왼쪽 색상바는 이슈 나누기 화면에서 이
+   이슈를 표시했던 색을 그대로 이어받는다(lib/issuePalette). */
+.igrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .icard3 {
@@ -2416,7 +2445,9 @@ mark.hl2.on {
   margin-bottom: 6px;
 }
 
-.helpdrop .promptbox {
+/* 도움말 팝오버 밖에서도 쓰는 기본형(예: 시퀀스 다이어그램 Mermaid 코드) — 팝오버
+   안에서만 높이를 제한하고 세로로 스크롤한다. */
+.promptbox {
   background: #0d1117;
   color: #c9d1d9;
   border-radius: 8px;
@@ -2425,6 +2456,11 @@ mark.hl2.on {
   font-size: 11px;
   line-height: 1.6;
   white-space: pre-wrap;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.helpdrop .promptbox {
   max-height: 220px;
   overflow-y: auto;
   margin: 0 0 10px;
@@ -2592,12 +2628,33 @@ mark.hl2.on {
   white-space: nowrap;
 }
 
-/* ── Sequence Diagram — Mermaid 코드 + 실제 렌더링 다이어그램 ── */
+/* ── Detail Design — 설명 아래 Class Diagram / Sequence Diagram을 각각
+   독립된 블록으로 분리한다(서로 다른 다이어그램 종류라 한 카드 안에서
+   이어 보이면 구분이 잘 안 됨). ── */
+.ddsection {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 15px 16px;
+  margin-top: 16px;
+}
+
+.ddsection .fieldlab:first-child {
+  margin-top: 0;
+}
+
+/* ── Sequence Diagram — Mermaid 코드 행 하나, 실제 렌더링 다이어그램 행 하나,
+   각 행이 AS-IS/TO-BE 2열. ── */
 
 .seqcols2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  min-width: 0;
+}
+
+.seqcols2 + .seqcols2 {
+  margin-top: 16px;
 }
 
 .seqblock {
@@ -2605,6 +2662,7 @@ mark.hl2.on {
   border-radius: 10px;
   padding: 13px 15px;
   background: var(--surface);
+  min-width: 0;
 }
 
 .seqblockhd {
@@ -2616,13 +2674,16 @@ mark.hl2.on {
   margin-bottom: 10px;
 }
 
+/* 다이어그램이 카드보다 넓으면 축소하지 않고 가로 스크롤로 본다(글자가
+   찌그러져 잘려 보이던 것 방지). */
 .mermaidbox {
   overflow-x: auto;
 }
 
 .mermaidbox svg {
-  max-width: 100%;
+  max-width: none;
   height: auto;
+  display: block;
 }
 
 @media (max-width: 900px) {

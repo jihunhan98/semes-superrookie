@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../../../components/Header";
@@ -113,54 +113,95 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
   );
 }
 
-function SeqBlock({ label, steps }: { label: string; steps: MockIssue["detailDesign"]["sequenceBefore"] }) {
-  const code = toMermaidSequence(steps);
+/** AS-IS/TO-BE를 나란히 보여주는 한 행 — Mermaid 코드 행과 실제 다이어그램 행에 둘 다 쓴다. */
+function SeqPair({
+  title,
+  copyable,
+  asis,
+  tobe,
+}: {
+  title: string;
+  copyable?: boolean;
+  asis: ReactNode;
+  tobe: ReactNode;
+}) {
   return (
-    <div className="seqblock">
-      <div className="seqblockhd">
-        {label}
-        <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
-          복사
-        </button>
+    <>
+      <div className="fieldlab" style={{ marginTop: 0 }}>{title}</div>
+      <div className="seqcols2">
+        <div className="seqblock">
+          <div className="seqblockhd">
+            AS-IS
+            {copyable && (
+              <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
+                복사
+              </button>
+            )}
+          </div>
+          {asis}
+        </div>
+        <div className="seqblock">
+          <div className="seqblockhd">
+            TO-BE
+            {copyable && (
+              <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
+                복사
+              </button>
+            )}
+          </div>
+          {tobe}
+        </div>
       </div>
-      <pre className="promptbox" style={{ margin: "0 0 10px" }}>{code}</pre>
-      <MermaidDiagram code={code} />
-    </div>
+    </>
   );
 }
 
 function DetailDesignBody({ issue }: { issue: MockIssue }) {
   const dd = issue.detailDesign;
+  const asisCode = toMermaidSequence(dd.sequenceBefore);
+  const tobeCode = toMermaidSequence(dd.sequenceAfter);
   return (
     <>
-      <div className="fieldlab">Class Diagram — 영향 범위</div>
-      <div className="clsrow">
-        {dd.classDiagram.map((c, i) => (
-          <>
-            {i > 0 && <span key={`arrow-${i}`} className="clsarrow">uses →</span>}
-            <div key={c.name} className="clsbox">
-              <div className={`cname${c.changed ? " chg" : ""}`}>
-                {c.name}
-                {c.changed ? " (변경)" : ""}
-              </div>
-              {c.fields.map((f) => (
-                <div key={f} className="cfield">
-                  {f}
-                </div>
-              ))}
-            </div>
-          </>
-        ))}
-      </div>
-
-      <div className="fieldlab">Sequence Diagram — 변경 전/후</div>
-      <div className="seqcols2">
-        <SeqBlock label="AS-IS" steps={dd.sequenceBefore} />
-        <SeqBlock label="TO-BE" steps={dd.sequenceAfter} />
-      </div>
-
-      <div className="fieldlab">설명</div>
+      <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
       <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={dd.description} />
+
+      <div className="ddsection">
+        <div className="fieldlab">Class Diagram — 영향 범위</div>
+        <div className="clsrow">
+          {dd.classDiagram.map((c, i) => (
+            <>
+              {i > 0 && <span key={`arrow-${i}`} className="clsarrow">uses →</span>}
+              <div key={c.name} className="clsbox">
+                <div className={`cname${c.changed ? " chg" : ""}`}>
+                  {c.name}
+                  {c.changed ? " (변경)" : ""}
+                </div>
+                {c.fields.map((f) => (
+                  <div key={f} className="cfield">
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </>
+          ))}
+        </div>
+      </div>
+
+      <div className="ddsection">
+        <SeqPair
+          title="Sequence Diagram — Mermaid 코드"
+          copyable
+          asis={<pre className="promptbox">{asisCode}</pre>}
+          tobe={<pre className="promptbox">{tobeCode}</pre>}
+        />
+        <div style={{ marginTop: 16 }}>
+          <SeqPair
+            title="Sequence Diagram — 렌더링"
+            asis={<MermaidDiagram code={asisCode} />}
+            tobe={<MermaidDiagram code={tobeCode} />}
+          />
+        </div>
+      </div>
     </>
   );
 }
@@ -178,6 +219,7 @@ export default function ArtifactDetailPage() {
   const [issues, setIssues] = useState<DevIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [regenNote, setRegenNote] = useState("");
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -249,6 +291,9 @@ export default function ArtifactDetailPage() {
           ? issue.nonFunctional.state
           : issue.detailDesign.state;
 
+  // Detail Design은 다이어그램 2열(AS-IS·TO-BE)이 들어가 다른 산출물보다 더 넓게 쓴다.
+  const maxW = artifactType === "detail-design" ? 1200 : 900;
+
   return (
     <div className="appshell">
       <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
@@ -278,19 +323,33 @@ export default function ArtifactDetailPage() {
               {state}
             </span>
           </div>
-          <div className="jf" style={{ maxWidth: 900, marginTop: 8, borderBottom: "none", gap: 10 }}>
+          <div className="wcard" style={{ maxWidth: maxW, marginTop: 12 }}>
+            <div className="wcb">
+              <div className="fieldlab" style={{ marginTop: 0 }}>
+                재생성 시 참고할 내용 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+              </div>
+              <textarea
+                className="reqta"
+                style={{ minHeight: 48 }}
+                value={regenNote}
+                onChange={(e) => setRegenNote(e.target.value)}
+                placeholder="예: 예외 시나리오를 좀 더 구체적으로 적어줘."
+              />
+            </div>
+          </div>
+          <div className="jf" style={{ maxWidth: maxW, marginTop: 8, borderBottom: "none", gap: 10 }}>
             <button className="btn sm">🤖 재생성</button>
             <button className="btn sm">✔ 확정</button>
           </div>
 
-          <div className="aidraftnote" style={{ maxWidth: 900, marginTop: 16 }}>
+          <div className="aidraftnote" style={{ maxWidth: maxW, marginTop: 16 }}>
             <span>🧩</span>
             <span>
               <b>AI 초안입니다.</b> 검토 후 확정해주세요.
             </span>
           </div>
 
-          <div className="wcard" style={{ maxWidth: 900 }}>
+          <div className="wcard" style={{ maxWidth: maxW }}>
             <div className="wcb">
               {artifactType === "voc" && <VocBody issue={issue} />}
               {artifactType === "functional" && <FunctionalBody issue={issue} />}
