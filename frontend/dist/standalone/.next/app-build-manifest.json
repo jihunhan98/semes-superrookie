@@ -74,14 +74,6 @@
       "static/chunks/445-dd4e2aba9b89293d.js",
       "static/chunks/app/projects/[id]/artifacts/[reqId]/split/page-db9745b687e5488e.js"
     ],
-    "/projects/[id]/artifacts/page": [
-      "static/chunks/webpack-91b2d14d0f678b80.js",
-      "static/chunks/fd9d1056-4b87d5bb1aa946b3.js",
-      "static/chunks/23-a62026deff354a00.js",
-      "static/chunks/main-app-3a75ddd29e21800a.js",
-      "static/chunks/718-19a9b439c02a55d4.js",
-      "static/chunks/app/projects/[id]/artifacts/page-018fe7a788c95e13.js"
-    ],
     "/projects/[id]/page": [
       "static/chunks/webpack-91b2d14d0f678b80.js",
       "static/chunks/fd9d1056-4b87d5bb1aa946b3.js",
@@ -91,13 +83,13 @@
       "static/chunks/907-741045a2cbbd7a0b.js",
       "static/chunks/app/projects/[id]/page-bd36276965bccd8b.js"
     ],
-    "/projects/[id]/requirements/[reqId]/page": [
+    "/projects/[id]/artifacts/page": [
       "static/chunks/webpack-91b2d14d0f678b80.js",
       "static/chunks/fd9d1056-4b87d5bb1aa946b3.js",
       "static/chunks/23-a62026deff354a00.js",
       "static/chunks/main-app-3a75ddd29e21800a.js",
       "static/chunks/718-19a9b439c02a55d4.js",
-      "static/chunks/app/projects/[id]/requirements/[reqId]/page-51ae3d64c565bf9a.js"
+      "static/chunks/app/projects/[id]/artifacts/page-1126f9848805552d.js"
     ],
     "/projects/[id]/requirements/[reqId]/edit/page": [
       "static/chunks/webpack-91b2d14d0f678b80.js",
@@ -107,6 +99,14 @@
       "static/chunks/718-19a9b439c02a55d4.js",
       "static/chunks/445-dd4e2aba9b89293d.js",
       "static/chunks/app/projects/[id]/requirements/[reqId]/edit/page-d465650e99fc14e8.js"
+    ],
+    "/projects/[id]/requirements/[reqId]/page": [
+      "static/chunks/webpack-91b2d14d0f678b80.js",
+      "static/chunks/fd9d1056-4b87d5bb1aa946b3.js",
+      "static/chunks/23-a62026deff354a00.js",
+      "static/chunks/main-app-3a75ddd29e21800a.js",
+      "static/chunks/718-19a9b439c02a55d4.js",
+      "static/chunks/app/projects/[id]/requirements/[reqId]/page-51ae3d64c565bf9a.js"
     ],
     "/projects/[id]/requirements/[reqId]/versions/page": [
       "static/chunks/webpack-91b2d14d0f678b80.js",

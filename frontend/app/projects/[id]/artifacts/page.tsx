@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../components/Header";
 import ProjectSidebar from "../../../components/ProjectSidebar";
@@ -32,7 +33,6 @@ export default function ArtifactsPage() {
   const [rows, setRows] = useState<RequirementSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [deriving, setDeriving] = useState<number | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -49,14 +49,6 @@ export default function ArtifactsPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, router]);
-
-  /** 아직 도출 로직은 없다 — 로딩만 잠깐 보여주고 산출물 트리(목업)로 이동한다. */
-  function onDerive(reqId: number) {
-    setDeriving(reqId);
-    setTimeout(() => {
-      router.push(`/projects/${projectId}/artifacts/${reqId}`);
-    }, 700);
-  }
 
   if (error) {
     return (
@@ -88,7 +80,7 @@ export default function ArtifactsPage() {
         <main className="main">
           <div className="rqtoolbar">
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
-              산출물 도출 <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 16 }}>{rows.length}</span>
+              산출물 <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 16 }}>{rows.length}</span>
             </h1>
           </div>
 
@@ -96,39 +88,37 @@ export default function ArtifactsPage() {
             <div className="placeholder">아직 등록된 요구사항이 없습니다.</div>
           ) : (
             <div className="rqlist">
-              {rows.map((r) => (
-                <div key={r.id} className="rqrow">
-                  <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
-                  <span className="rmid">{r.reqKey}</span>
-                  <span className="rtit">{r.content}</span>
-                  <span className="rt">
-                    {r.version ? (
+              {rows.map((r) =>
+                r.state === "CONFIRMED" ? (
+                  <Link key={r.id} className="rqrow" href={`/projects/${projectId}/artifacts/${r.id}`}>
+                    <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
+                    <span className="rmid">{r.reqKey}</span>
+                    <span className="rtit">{r.content}</span>
+                    <span className="rt">
                       <span className="tagv">🏷 v{r.version}</span>
-                    ) : (
+                      <span className="rasg">{r.assigneeName ?? "—"}</span>
+                    </span>
+                  </Link>
+                ) : (
+                  <div key={r.id} className="rqrow" style={{ cursor: "default" }}>
+                    <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
+                    <span className="rmid">{r.reqKey}</span>
+                    <span className="rtit">{r.content}</span>
+                    <span className="rt">
                       <span
                         className="lbl"
                         style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
                       >
                         {r.stateLabel}
                       </span>
-                    )}
-                    <span className="rasg">{r.assigneeName ?? "—"}</span>
-                    {r.state === "CONFIRMED" ? (
-                      <button
-                        className="btn prim sm"
-                        onClick={() => onDerive(r.id)}
-                        disabled={deriving !== null}
-                      >
-                        {deriving === r.id ? "도출 중…" : "🤖 도출"}
-                      </button>
-                    ) : (
+                      <span className="rasg">{r.assigneeName ?? "—"}</span>
                       <span style={{ fontSize: 12, color: "var(--faint)", width: 78, textAlign: "right" }}>
                         확정 후 가능
                       </span>
-                    )}
-                  </span>
-                </div>
-              ))}
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
           )}
         </main>
