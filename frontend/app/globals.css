@@ -1434,15 +1434,6 @@ mark.hl2.on {
   box-shadow: 0 0 0 3px var(--ms);
 }
 
-.issue-card .chk {
-  width: 16px;
-  height: 16px;
-  margin-top: 3px;
-  flex: 0 0 auto;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
 .issue-card .ibody {
   flex: 1;
   min-width: 0;
@@ -1507,27 +1498,21 @@ mark.hl2.on {
   background: var(--surface);
 }
 
-.issue-card .acts {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 9px;
-  flex-wrap: wrap;
-}
-
-.issue-card .ix {
+.issue-card .idel {
   margin-left: auto;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: var(--faint);
   cursor: pointer;
   font-size: 13px;
-  padding: 3px 7px;
   border-radius: 999px;
   line-height: 1;
 }
 
-.issue-card .ix:hover {
+.issue-card .idel:hover {
   background: var(--surface-muted);
   color: var(--red);
 }
@@ -2286,25 +2271,6 @@ mark.hl2.on {
   margin-top: 2px;
 }
 
-.icard3 .ic3edit {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  background: var(--surface-muted);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 9px;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  text-decoration: none;
-}
-
-.icard3 .ic3edit:hover {
-  color: var(--ink);
-  border-color: var(--faint);
-}
-
 .icard3 .ic3quote {
   font-size: 12.5px;
   color: var(--muted);
@@ -2393,6 +2359,101 @@ mark.hl2.on {
   white-space: nowrap;
   background: var(--amber-soft);
   color: var(--amber);
+}
+
+/* ── 도움말 팝오버("?") — 이슈를 어떻게 나눴는지 프롬프트를 보여준다 ── */
+.helpwrap {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.helpbtn {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  font-family: inherit;
+}
+
+.helpbtn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.helpdrop {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  z-index: 30;
+  width: 380px;
+  max-width: 84vw;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px 16px 14px;
+  text-align: left;
+}
+
+.helpdrop .helphd {
+  font-size: 13.5px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.helpdrop p {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.helpdrop .helpsub {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.helpdrop .promptbox {
+  background: #0d1117;
+  color: #c9d1d9;
+  border-radius: 8px;
+  padding: 12px 13px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0 0 10px;
+}
+
+.helpdrop .helpfoot {
+  font-size: 11.5px !important;
+  color: var(--faint) !important;
+  margin: 0 !important;
+}
+
+.helpdrop .helpfoot code {
+  font-family: var(--mono);
+  background: var(--surface-muted);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 .catlbl {

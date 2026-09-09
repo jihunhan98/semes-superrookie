@@ -33,17 +33,6 @@ function newClientId() {
   return `c${Date.now()}-${clientIdSeq}`;
 }
 
-/** "나누기" — 공백 기준으로 중간에서 가장 가까운 지점을 잘라 단어를 안 끊는다. */
-function splitAtMiddle(text: string): [string, string] {
-  const trimmed = text.trim();
-  if (trimmed.length < 4) return [trimmed, ""];
-  const mid = Math.floor(trimmed.length / 2);
-  let cut = trimmed.indexOf(" ", mid);
-  if (cut < 0) cut = trimmed.lastIndexOf(" ", mid);
-  if (cut <= 0) cut = mid;
-  return [trimmed.slice(0, cut).trim(), trimmed.slice(cut).trim()];
-}
-
 /** 확정본을 그대로 보여주되, 이슈 후보의 구절마다 다른 색 형광펜을 칠한다. */
 function HighlightedRequirement({
   content,
@@ -98,7 +87,6 @@ export default function IssueSplitPage() {
 
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [engine, setEngine] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [active, setActive] = useState<number | null>(null);
 
   const [aiReason, setAiReason] = useState("");
@@ -148,7 +136,6 @@ export default function IssueSplitPage() {
       });
       setCandidates(preview.issues.map((i) => ({ clientId: newClientId(), title: i.title, quote: i.quote })));
       setEngine(preview.engine);
-      setSelected(new Set());
     } catch (err) {
       setRegenError(err instanceof Error ? err.message : "AI 분할에 실패했습니다.");
     } finally {
@@ -160,57 +147,8 @@ export default function IssueSplitPage() {
     setCandidates((prev) => (prev ? prev.map((c) => (c.clientId === clientId ? { ...c, ...patch } : c)) : prev));
   }
 
-  function toggleSelect(clientId: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(clientId)) next.delete(clientId);
-      else next.add(clientId);
-      return next;
-    });
-  }
-
   function removeCandidate(clientId: string) {
     setCandidates((prev) => (prev ? prev.filter((c) => c.clientId !== clientId) : prev));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.delete(clientId);
-      return next;
-    });
-  }
-
-  /** 체크한 카드 2개 이상을 순서대로 하나로 합친다. */
-  function mergeSelected() {
-    if (!candidates || selected.size < 2) return;
-    const firstIdx = candidates.findIndex((c) => selected.has(c.clientId));
-    const toMerge = candidates.filter((c) => selected.has(c.clientId));
-    const rest = candidates.filter((c) => !selected.has(c.clientId));
-    const insertAt = candidates.slice(0, firstIdx).filter((c) => !selected.has(c.clientId)).length;
-
-    const merged: Candidate = {
-      clientId: newClientId(),
-      title: toMerge[0].title,
-      quote: toMerge.map((c) => c.quote.trim()).filter(Boolean).join(" "),
-    };
-    const next = [...rest];
-    next.splice(insertAt, 0, merged);
-    setCandidates(next);
-    setSelected(new Set());
-  }
-
-  /** 카드 하나를 둘로 쪼갠다 — 구절을 반으로 나누고, 사람이 이어서 다듬는다. */
-  function splitCandidate(clientId: string) {
-    setCandidates((prev) => {
-      if (!prev) return prev;
-      const idx = prev.findIndex((c) => c.clientId === clientId);
-      if (idx < 0) return prev;
-      const target = prev[idx];
-      const [a, b] = splitAtMiddle(target.quote);
-      const left: Candidate = { clientId: newClientId(), title: `${target.title} (1)`, quote: a };
-      const right: Candidate = { clientId: newClientId(), title: `${target.title} (2)`, quote: b };
-      const next = [...prev];
-      next.splice(idx, 1, left, right);
-      return next;
-    });
   }
 
   function addCandidate() {
@@ -304,8 +242,6 @@ export default function IssueSplitPage() {
     );
   }
 
-  const canMerge = selected.size >= 2;
-
   return (
     <div className="appshell">
       <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
@@ -372,7 +308,11 @@ export default function IssueSplitPage() {
             </div>
           </div>
 
-          {/* 이슈 후보 카드 — 사람이 여기서 합치기·나누기·제목/구절 수정으로 다듬는다. */}
+          {/* 이슈 후보 카드 — 나누기·합치기 버튼 대신 삭제·추가만 둔다. 합치려면
+              한쪽 구절을 복사해 다른 쪽에 붙여넣고 남는 카드를 삭제하면 되고,
+              나누려면 "이슈 추가"로 빈 카드를 만든 뒤 원래 카드에서 일부를
+              잘라 옮기면 된다 — 사람이 직접 복사·붙여넣기로 하는 편이 자동
+              나누기/합치기보다 결과를 예측하기 쉽다. */}
           <div className="issue-list" style={{ maxWidth: 1000 }}>
             {candidates.map((c, i) => {
               const color = PALETTE[i % PALETTE.length];
@@ -384,13 +324,6 @@ export default function IssueSplitPage() {
                   onMouseEnter={() => setActive(i)}
                   onMouseLeave={() => setActive(null)}
                 >
-                  <input
-                    type="checkbox"
-                    className="chk"
-                    checked={selected.has(c.clientId)}
-                    onChange={() => toggleSelect(c.clientId)}
-                    title="합치기에 포함"
-                  />
                   <div className="ibody">
                     <div className="ttl">
                       <span className="no2">{i + 1}</span>
@@ -399,6 +332,9 @@ export default function IssueSplitPage() {
                         onChange={(e) => updateCandidate(c.clientId, { title: e.target.value })}
                         placeholder="이슈 제목"
                       />
+                      <button className="idel" onClick={() => removeCandidate(c.clientId)} aria-label="이슈 삭제">
+                        ✕
+                      </button>
                     </div>
                     <textarea
                       className="quotein"
@@ -411,27 +347,12 @@ export default function IssueSplitPage() {
                         원문에서 위치를 찾지 못함
                       </span>
                     )}
-                    <div className="acts">
-                      <button className="btn sm" onClick={() => splitCandidate(c.clientId)}>
-                        ✂ 나누기
-                      </button>
-                      <button
-                        className="btn sm"
-                        onClick={mergeSelected}
-                        disabled={!canMerge || !selected.has(c.clientId)}
-                      >
-                        🔗 합치기{canMerge ? ` (${selected.size})` : ""}
-                      </button>
-                      <button className="ix" onClick={() => removeCandidate(c.clientId)} aria-label="이슈 삭제">
-                        ✕ 삭제
-                      </button>
-                    </div>
                   </div>
                 </div>
               );
             })}
             <button type="button" className="addrow" onClick={addCandidate}>
-              ＋ 이슈 직접 추가 (AI가 놓친 구간이 있을 때)
+              ＋ 이슈 추가 — 나누려면 원래 카드 내용 일부를 잘라 여기로 옮기세요
             </button>
           </div>
 
@@ -442,7 +363,7 @@ export default function IssueSplitPage() {
           )}
           <div className="wfoot" style={{ marginTop: 16, maxWidth: 1000 }}>
             <button className="btn prim" onClick={onConfirm} disabled={confirming}>
-              {confirming ? "확정 중…" : `이대로 확정 → 산출물 4종 생성`}
+              {confirming ? "확정 중…" : "확정"}
             </button>
             <Link className="btn" href={`/projects/${project.id}/artifacts/${requirementId}`}>
               취소

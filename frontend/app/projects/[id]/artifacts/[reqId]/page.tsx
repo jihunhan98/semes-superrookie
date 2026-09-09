@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import ArtifactPills from "../../../../components/ArtifactPills";
@@ -17,6 +17,64 @@ import {
 } from "../../../../lib/api";
 import { issueColor } from "../../../../lib/issuePalette";
 import { getCurrentUser } from "../../../../lib/session";
+
+/**
+ * ai-model/main.py 의 _SPLIT_SYSTEM_PROMPT 를 그대로 옮긴 것 — "어떻게 나누는지"를
+ * 화면에서 보여주기 위한 표시용 사본. 백엔드 프롬프트를 바꾸면 여기도 같이 고친다.
+ */
+const SPLIT_PROMPT = `당신은 반도체 장비 소프트웨어(VCS/AMR) 요구사항을 개발 이슈(Jira 티켓)로
+나누는 전문가다. 주어진 확정 요구사항 본문을 실제 구현 단위로 몇 개의 개발 이슈로
+나눌지 판단하라.
+
+규칙:
+- 이슈 경계는 "서로 다른 기능·모듈로 나눠 개발할 수 있는 지점"을 기준으로 삼는다.
+- 요구사항이 이미 하나의 작은 변경이면 이슈 1개로 둔다. 억지로 쪼개지 않는다.
+- quote는 반드시 원문에 그대로 등장하는 연속된 구절이어야 한다 — 지어내지 않는다.
+- title은 15자 내외로 간결하게.
+
+반드시 아래 JSON 형식으로만 답한다.
+{"issues":[{"title":"이슈 제목","quote":"원문 그대로의 해당 구절"}]}`;
+
+/** "이슈, 이렇게 나눴어요" — 실제 프롬프트를 예쁘게 접어서 보여주는 도움말 팝오버. */
+function SplitHelp() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  return (
+    <span className="helpwrap" ref={ref}>
+      <button
+        type="button"
+        className="helpbtn"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="이슈를 어떻게 나눴는지 보기"
+      >
+        ?
+      </button>
+      {open && (
+        <div className="helpdrop">
+          <div className="helphd">🧩 이슈, 이렇게 나눴어요</div>
+          <p>
+            확정된 요구사항 본문을 사내 LLM에게 보내서 몇 개의 개발 이슈로 나눌지 판단합니다.
+            LLM이 꺼져 있거나 응답하지 못하면, 문장 단위로 자동 분할한 결과를 대신 보여줍니다.
+          </p>
+          <div className="helpsub">AI에게 보낸 프롬프트</div>
+          <pre className="promptbox">{SPLIT_PROMPT}</pre>
+          <p className="helpfoot">
+            "AI에게 물어보기"에 적은 내용은 <code>참고 지시: …</code> 한 줄로 이 프롬프트 뒤에 덧붙습니다.
+          </p>
+        </div>
+      )}
+    </span>
+  );
+}
 
 export default function ArtifactsTreePage() {
   const router = useRouter();
@@ -115,7 +173,7 @@ export default function ArtifactsTreePage() {
                   🧩 아직 개발 이슈로 나누지 않았습니다
                 </div>
                 <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px" }}>
-                  AI가 이슈 경계를 제안하면, 합치기·나누기·제목 수정으로 다듬은 뒤 확정합니다.
+                  AI가 이슈 경계를 제안하면, 삭제·추가·제목/구절 수정으로 다듬은 뒤 확정합니다.
                   확정한 이슈마다 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design)이 함께 붙습니다.
                 </p>
                 <Link className="btn prim" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
@@ -127,7 +185,9 @@ export default function ArtifactsTreePage() {
             <>
               <div className="artbanner" style={{ marginTop: 16 }}>
                 <span className="aico">🧩</span>
-                <div className="att">개발 이슈 {issues.length}건으로 나눴습니다.</div>
+                <div className="att">
+                  개발 이슈 {issues.length}건으로 나눴습니다. <SplitHelp />
+                </div>
                 <Link
                   className="btn sm"
                   style={{ marginLeft: "auto" }}
@@ -154,9 +214,6 @@ export default function ArtifactsTreePage() {
                             {mock.title}
                           </Link>
                         </div>
-                        <Link className="ic3edit" href={`/projects/${project.id}/artifacts/${requirementId}/split`}>
-                          ✎ 나누기 수정
-                        </Link>
                       </div>
                       {real.quote && <div className="ic3quote">&ldquo;{real.quote}&rdquo;</div>}
                       <ArtifactPills base={base} />
