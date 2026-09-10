@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AI 서버(ai-model, FastAPI) 호출 클라이언트.
@@ -78,6 +79,47 @@ public class AiClient {
 
     private AiSplitDto.Response splitUnavailable(String content) {
         return new AiSplitDto.Response(List.of(new AiSplitDto.IssueOut("전체 요구사항", content)), "unavailable", 0);
+    }
+
+    /**
+     * 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) 초안 — 개발 이슈 1건당 1개.
+     *
+     * <p>AI 서버 자체가 응답하지 않아도 산출물 화면이 빈 채로 뜨면 안 되므로, 실패 시
+     * "직접 작성해달라"는 안내만 담긴 최소한의 틀을 유형별로 돌려준다.
+     */
+    public AiArtifactDto.Response generateArtifact(String type, String issueTitle, String issueQuote,
+                                                    String requirementContent, String reason) {
+        try {
+            AiArtifactDto.Response res = restClient.post()
+                    .uri("/artifacts/generate")
+                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason))
+                    .retrieve()
+                    .body(AiArtifactDto.Response.class);
+
+            if (res == null || res.content() == null || res.content().isEmpty()) {
+                return artifactUnavailable(type);
+            }
+            log.info("AI 산출물 초안 완료 — type={} engine={}", type, res.engine());
+            return res;
+        } catch (Exception e) {
+            log.warn("AI 서버 호출 실패 — 산출물 기본 틀로 진행합니다: {}", e.getMessage());
+            return artifactUnavailable(type);
+        }
+    }
+
+    private AiArtifactDto.Response artifactUnavailable(String type) {
+        String notice = "AI 서버에 연결하지 못해 초안을 만들지 못했습니다. 직접 작성해주세요.";
+        Map<String, Object> content = switch (type) {
+            case "voc" -> Map.of("description", notice, "request", "", "notes", "");
+            case "functional" -> Map.of("description", notice, "role", "", "purpose", "", "behaviors", List.of());
+            case "nonfunctional" -> Map.of(
+                    "description", notice, "role", "", "purpose", "", "behaviors", List.of(), "constraints", "");
+            case "detail-design" -> Map.of(
+                    "description", notice,
+                    "classDiagram", List.of(), "sequenceBefore", List.of(), "sequenceAfter", List.of());
+            default -> Map.of("description", notice);
+        };
+        return new AiArtifactDto.Response(content, "unavailable", 0);
     }
 
     private AiAnalyzeDto.Response call(AiAnalyzeDto.Request request, String fallbackContent) {

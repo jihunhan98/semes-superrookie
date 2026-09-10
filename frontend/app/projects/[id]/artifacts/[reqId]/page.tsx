@@ -132,7 +132,7 @@ export default function ArtifactsTreePage() {
   }
 
   // 산출물 내용 자체는 아직 UI만 있어 목업으로 채운다 — 이슈(key·title·구절)만 실제 값.
-  const mockIssues = issues.map((issue, i) => mockIssueFor(issue, i + 1));
+  const mockIssues = issues.map((issue) => mockIssueFor(issue));
 
   return (
     <div className="appshell">

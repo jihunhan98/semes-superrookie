@@ -94,4 +94,18 @@ public final class ApiErrors {
             super("확정된 요구사항만 이슈로 나눌 수 있습니다.");
         }
     }
+
+    /** 개발 이슈를 찾을 수 없음 → 404 */
+    public static class DevIssueNotFound extends RuntimeException {
+        public DevIssueNotFound(String issueKey) {
+            super("개발 이슈를 찾을 수 없습니다: " + issueKey);
+        }
+    }
+
+    /** 산출물 유형이 voc/functional/nonfunctional/detail-design 중 하나가 아님 → 404 */
+    public static class ArtifactTypeNotFound extends RuntimeException {
+        public ArtifactTypeNotFound(String type) {
+            super("알 수 없는 산출물 유형입니다: " + type);
+        }
+    }
 }

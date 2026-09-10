@@ -64,4 +64,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleRequirementNotConfirmed(ApiErrors.RequirementNotConfirmed e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(ApiErrors.DevIssueNotFound.class)
+    public ResponseEntity<Map<String, String>> handleDevIssueNotFound(ApiErrors.DevIssueNotFound e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(ApiErrors.ArtifactTypeNotFound.class)
+    public ResponseEntity<Map<String, String>> handleArtifactTypeNotFound(ApiErrors.ArtifactTypeNotFound e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
 }

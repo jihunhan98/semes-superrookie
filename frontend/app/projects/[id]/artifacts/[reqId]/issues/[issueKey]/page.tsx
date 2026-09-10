@@ -74,7 +74,7 @@ export default function IssueDetailPage() {
   }
 
   const realIdx = issues.findIndex((i) => i.issueKey === issueKey);
-  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx], realIdx + 1);
+  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx]);
   if (!issue) {
     return (
       <div className="appshell">

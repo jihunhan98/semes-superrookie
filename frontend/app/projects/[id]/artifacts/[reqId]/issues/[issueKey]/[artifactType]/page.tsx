@@ -10,12 +10,19 @@ import {
   mockIssueFor,
   toMermaidSequence,
   type BehaviorRow,
-  type MockIssue,
+  type DetailDesignContent,
+  type FunctionalContent,
+  type NonFunctionalContent,
+  type VocContent,
 } from "../../../../../../../lib/artifactsMock";
 import {
+  confirmArtifact,
+  getArtifact,
   getProject,
   getRequirement,
   listDevIssues,
+  regenerateArtifact,
+  type ArtifactTypeSlug,
   type DevIssue,
   type ProjectDetail,
   type RequirementDetail,
@@ -27,6 +34,13 @@ const TITLES: Record<string, { icon: string; label: string }> = {
   functional: { icon: "⚙", label: "기능 요구사항" },
   nonfunctional: { icon: "🛡", label: "비기능 요구사항" },
   "detail-design": { icon: "📐", label: "Detail Design" },
+};
+
+/** /analyze·/split과 같은 배지 의미. */
+const ENGINE_LABEL: Record<string, string> = {
+  "llm-api": "사내 LLM",
+  rule: "규칙 기반",
+  unavailable: "AI 미응답",
 };
 
 function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
@@ -71,42 +85,74 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
   );
 }
 
-function VocBody({ issue }: { issue: MockIssue }) {
+function VocBody({ content, onChange }: { content: VocContent; onChange: (patch: Partial<VocContent>) => void }) {
   return (
     <>
-      <div className="fieldlab">설명</div>
-      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.description} />
+      <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
+      <textarea
+        className="reqta"
+        style={{ minHeight: 56 }}
+        value={content.description}
+        onChange={(e) => onChange({ description: e.target.value })}
+      />
       <div className="fieldlab">1. 요청사항</div>
-      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.request} />
+      <textarea
+        className="reqta"
+        style={{ minHeight: 56 }}
+        value={content.request}
+        onChange={(e) => onChange({ request: e.target.value })}
+      />
       <div className="fieldlab">2. 특이사항</div>
-      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.voc.notes} />
+      <textarea
+        className="reqta"
+        style={{ minHeight: 56 }}
+        value={content.notes}
+        onChange={(e) => onChange({ notes: e.target.value })}
+      />
     </>
   );
 }
 
-function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctional?: boolean }) {
-  const art = nonFunctional ? issue.nonFunctional : issue.functional;
+function FunctionalBody({
+  content,
+  onChange,
+  nonFunctional,
+}: {
+  content: FunctionalContent | NonFunctionalContent;
+  onChange: (patch: Partial<FunctionalContent | NonFunctionalContent>) => void;
+  nonFunctional?: boolean;
+}) {
   return (
     <>
-      <div className="fieldlab">설명</div>
-      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={art.description} />
+      <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
+      <textarea
+        className="reqta"
+        style={{ minHeight: 56 }}
+        value={content.description}
+        onChange={(e) => onChange({ description: e.target.value })}
+      />
       <div className="fieldlab">1. 개요</div>
       <div className="ovbox">
         <div className="r">
           <span className="k">역할</span>
-          <span>{art.role}</span>
+          <span>{content.role}</span>
         </div>
         <div className="r">
           <span className="k">목적</span>
-          <span>{art.purpose}</span>
+          <span>{content.purpose}</span>
         </div>
       </div>
       <div className="fieldlab">2. 동작 정의</div>
-      <BehaviorTable rows={art.behaviors} />
+      <BehaviorTable rows={content.behaviors} />
       {nonFunctional && (
         <>
           <div className="fieldlab">제약사항</div>
-          <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={issue.nonFunctional.constraints} />
+          <textarea
+            className="reqta"
+            style={{ minHeight: 56 }}
+            value={(content as NonFunctionalContent).constraints}
+            onChange={(e) => onChange({ constraints: e.target.value } as Partial<NonFunctionalContent>)}
+          />
         </>
       )}
     </>
@@ -114,61 +160,76 @@ function FunctionalBody({ issue, nonFunctional }: { issue: MockIssue; nonFunctio
 }
 
 /** AS-IS/TO-BE를 나란히 보여주는 한 행 — Mermaid 코드 행과 실제 다이어그램 행에 둘 다 쓴다. */
-function SeqPair({
-  title,
-  copyable,
-  asis,
-  tobe,
-}: {
-  title: string;
-  copyable?: boolean;
-  asis: ReactNode;
-  tobe: ReactNode;
-}) {
+function SeqPair({ title, asis, tobe }: { title: string; asis: ReactNode; tobe: ReactNode }) {
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>{title}</div>
       <div className="seqcols2">
-        <div className="seqblock">
-          <div className="seqblockhd">
-            AS-IS
-            {copyable && (
-              <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
-                복사
-              </button>
-            )}
-          </div>
-          {asis}
-        </div>
-        <div className="seqblock">
-          <div className="seqblockhd">
-            TO-BE
-            {copyable && (
-              <button type="button" className="btn sm" style={{ marginLeft: "auto" }}>
-                복사
-              </button>
-            )}
-          </div>
-          {tobe}
-        </div>
+        <div className="seqblock">{asis}</div>
+        <div className="seqblock">{tobe}</div>
       </div>
     </>
   );
 }
 
-function DetailDesignBody({ issue }: { issue: MockIssue }) {
-  const dd = issue.detailDesign;
-  const asisCode = toMermaidSequence(dd.sequenceBefore);
-  const tobeCode = toMermaidSequence(dd.sequenceAfter);
+function SeqCodeColumn({ label, code }: { label: string; code: string }) {
+  const [copyState, setCopyState] = useState<"idle" | "ok" | "err">("idle");
+
+  async function onCopy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopyState("ok");
+    } catch {
+      setCopyState("err");
+    }
+    setTimeout(() => setCopyState("idle"), 1500);
+  }
+
+  return (
+    <>
+      <div className="seqblockhd">
+        {label}
+        <button type="button" className="btn sm" style={{ marginLeft: "auto" }} onClick={onCopy}>
+          {copyState === "ok" ? "복사됨" : copyState === "err" ? "복사 실패" : "복사"}
+        </button>
+      </div>
+      <pre className="promptbox" style={{ margin: 0 }}>{code}</pre>
+    </>
+  );
+}
+
+function SeqDiagramColumn({ label, code }: { label: string; code: string }) {
+  return (
+    <>
+      <div className="seqblockhd">{label}</div>
+      <MermaidDiagram code={code} copyable />
+    </>
+  );
+}
+
+function DetailDesignBody({
+  content,
+  onChange,
+}: {
+  content: DetailDesignContent;
+  onChange: (patch: Partial<DetailDesignContent>) => void;
+}) {
+  const asisCode = toMermaidSequence(content.sequenceBefore);
+  const tobeCode = toMermaidSequence(content.sequenceAfter);
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
-      <textarea className="reqta" style={{ minHeight: 56 }} defaultValue={dd.description} />
+      <textarea
+        className="reqta"
+        style={{ minHeight: 56 }}
+        value={content.description}
+        onChange={(e) => onChange({ description: e.target.value })}
+      />
 
       <div className="ddsection">
-        <div className="fieldlab">Class Diagram — 영향 범위</div>
+        <div className="fieldlab" style={{ marginTop: 0 }}>Class Diagram — 영향 범위</div>
         <div className="clsrow">
-          {dd.classDiagram.map((c, i) => (
+          {content.classDiagram.map((c, i) => (
             <>
               {i > 0 && <span key={`arrow-${i}`} className="clsarrow">uses →</span>}
               <div key={c.name} className="clsbox">
@@ -190,15 +251,14 @@ function DetailDesignBody({ issue }: { issue: MockIssue }) {
       <div className="ddsection">
         <SeqPair
           title="Sequence Diagram — Mermaid 코드"
-          copyable
-          asis={<pre className="promptbox">{asisCode}</pre>}
-          tobe={<pre className="promptbox">{tobeCode}</pre>}
+          asis={<SeqCodeColumn label="AS-IS" code={asisCode} />}
+          tobe={<SeqCodeColumn label="TO-BE" code={tobeCode} />}
         />
         <div style={{ marginTop: 16 }}>
           <SeqPair
             title="Sequence Diagram — 렌더링"
-            asis={<MermaidDiagram code={asisCode} />}
-            tobe={<MermaidDiagram code={tobeCode} />}
+            asis={<SeqDiagramColumn label="AS-IS" code={asisCode} />}
+            tobe={<SeqDiagramColumn label="TO-BE" code={tobeCode} />}
           />
         </div>
       </div>
@@ -212,14 +272,24 @@ export default function ArtifactDetailPage() {
   const projectId = Number(params.id);
   const requirementId = Number(params.reqId);
   const issueKey = params.issueKey;
-  const artifactType = params.artifactType;
+  const artifactType = params.artifactType as ArtifactTypeSlug;
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [req, setReq] = useState<RequirementDetail | null>(null);
   const [issues, setIssues] = useState<DevIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [content, setContent] = useState<Record<string, unknown> | null>(null);
+  const [artifactState, setArtifactState] = useState<"DRAFT" | "CONFIRMED">("DRAFT");
+  const [engine, setEngine] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [regenNote, setRegenNote] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenError, setRegenError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -241,6 +311,65 @@ export default function ArtifactDetailPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
+
+  // 이슈 목록을 받아 이 산출물이 어느 이슈 소속인지 안 뒤에야 불러올 수 있다.
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user || !issues || !TITLES[artifactType]) return;
+    if (!issues.some((i) => i.issueKey === issueKey)) return;
+
+    getArtifact(projectId, requirementId, issueKey, artifactType, user.id)
+      .then((res) => {
+        setContent(res.content);
+        setArtifactState(res.state);
+        setEngine(res.engine);
+      })
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "산출물을 불러오지 못했습니다."));
+  }, [projectId, requirementId, issueKey, artifactType, issues]);
+
+  function patchContent(patch: Record<string, unknown>) {
+    setContent((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
+  async function onRegenerate() {
+    const user = getCurrentUser();
+    if (!user) return;
+    setRegenerating(true);
+    setRegenError(null);
+    try {
+      const res = await regenerateArtifact(projectId, requirementId, issueKey, artifactType, {
+        userId: user.id,
+        reason: regenNote.trim(),
+      });
+      setContent(res.content);
+      setArtifactState(res.state);
+      setEngine(res.engine);
+    } catch (err) {
+      setRegenError(err instanceof Error ? err.message : "AI 재생성에 실패했습니다.");
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
+  async function onConfirm() {
+    const user = getCurrentUser();
+    if (!user || !content) return;
+    setConfirming(true);
+    setConfirmError(null);
+    try {
+      const res = await confirmArtifact(projectId, requirementId, issueKey, artifactType, {
+        userId: user.id,
+        content,
+      });
+      setContent(res.content);
+      setArtifactState(res.state);
+      setEngine(res.engine);
+    } catch (err) {
+      setConfirmError(err instanceof Error ? err.message : "확정에 실패했습니다.");
+    } finally {
+      setConfirming(false);
+    }
+  }
 
   if (error) {
     return (
@@ -265,7 +394,7 @@ export default function ArtifactDetailPage() {
   }
 
   const realIdx = issues.findIndex((i) => i.issueKey === issueKey);
-  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx], realIdx + 1);
+  const issue = realIdx < 0 ? null : mockIssueFor(issues[realIdx]);
   const meta = TITLES[artifactType];
 
   if (!issue || !meta) {
@@ -281,15 +410,6 @@ export default function ArtifactDetailPage() {
       </div>
     );
   }
-
-  const state =
-    artifactType === "voc"
-      ? issue.voc.state
-      : artifactType === "functional"
-        ? issue.functional.state
-        : artifactType === "nonfunctional"
-          ? issue.nonFunctional.state
-          : issue.detailDesign.state;
 
   // Detail Design은 다이어그램 2열(AS-IS·TO-BE)이 들어가 다른 산출물보다 더 넓게 쓴다.
   const maxW = artifactType === "detail-design" ? 1200 : 900;
@@ -316,47 +436,97 @@ export default function ArtifactDetailPage() {
               className="lbl"
               style={{
                 padding: "2px 11px",
-                background: state === "확정" ? "var(--green-soft)" : "var(--surface-muted)",
-                color: state === "확정" ? "var(--green)" : "var(--muted)",
+                background: artifactState === "CONFIRMED" ? "var(--green-soft)" : "var(--surface-muted)",
+                color: artifactState === "CONFIRMED" ? "var(--green)" : "var(--muted)",
               }}
             >
-              {state}
+              {artifactState === "CONFIRMED" ? "확정" : "검토 대기"}
             </span>
+            {engine && (
+              <span
+                className="lbl"
+                style={{ padding: "2px 11px", background: "var(--surface-muted)", color: "var(--muted)" }}
+              >
+                {ENGINE_LABEL[engine] ?? engine}
+              </span>
+            )}
           </div>
-          <div className="wcard" style={{ maxWidth: maxW, marginTop: 12 }}>
-            <div className="wcb">
-              <div className="fieldlab" style={{ marginTop: 0 }}>
-                재생성 시 참고할 내용 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+
+          {loadError && (
+            <p className="lmsg err" style={{ maxWidth: maxW, marginTop: 16 }}>
+              {loadError}
+            </p>
+          )}
+
+          {!content ? (
+            <div className="placeholder" style={{ maxWidth: maxW, marginTop: 16 }}>
+              🤖 AI가 산출물 초안을 만드는 중…
+            </div>
+          ) : (
+            <>
+              {artifactState === "DRAFT" && (
+                <div className="aidraftnote" style={{ maxWidth: maxW, marginTop: 16 }}>
+                  <span>🧩</span>
+                  <span>
+                    <b>AI 초안입니다.</b> 검토 후 확정해주세요.
+                  </span>
+                </div>
+              )}
+
+              <div className="wcard" style={{ maxWidth: maxW, marginTop: 16 }}>
+                <div className="wcb">
+                  {artifactType === "voc" && (
+                    <VocBody content={content as VocContent} onChange={patchContent} />
+                  )}
+                  {artifactType === "functional" && (
+                    <FunctionalBody content={content as FunctionalContent} onChange={patchContent} />
+                  )}
+                  {artifactType === "nonfunctional" && (
+                    <FunctionalBody content={content as NonFunctionalContent} onChange={patchContent} nonFunctional />
+                  )}
+                  {artifactType === "detail-design" && (
+                    <DetailDesignBody content={content as DetailDesignContent} onChange={patchContent} />
+                  )}
+                </div>
               </div>
-              <textarea
-                className="reqta"
-                style={{ minHeight: 48 }}
-                value={regenNote}
-                onChange={(e) => setRegenNote(e.target.value)}
-                placeholder="예: 예외 시나리오를 좀 더 구체적으로 적어줘."
-              />
-            </div>
-          </div>
-          <div className="jf" style={{ maxWidth: maxW, marginTop: 8, borderBottom: "none", gap: 10 }}>
-            <button className="btn sm">🤖 재생성</button>
-            <button className="btn sm">✔ 확정</button>
-          </div>
 
-          <div className="aidraftnote" style={{ maxWidth: maxW, marginTop: 16 }}>
-            <span>🧩</span>
-            <span>
-              <b>AI 초안입니다.</b> 검토 후 확정해주세요.
-            </span>
-          </div>
+              <div className="wcard" style={{ maxWidth: maxW, marginTop: 16 }}>
+                <div className="wcb">
+                  <div className="fieldlab" style={{ marginTop: 0 }}>
+                    🤖 AI로 재생성 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 참고할 내용을 적고 재생성하세요(선택)</span>
+                  </div>
+                  <textarea
+                    className="reqta"
+                    style={{ minHeight: 48 }}
+                    value={regenNote}
+                    onChange={(e) => setRegenNote(e.target.value)}
+                    placeholder="예: 예외 시나리오를 좀 더 구체적으로 적어줘."
+                  />
+                  <div className="wfoot" style={{ paddingTop: 10 }}>
+                    <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
+                      {regenerating ? "재생성 중…" : "🤖 재생성"}
+                    </button>
+                  </div>
+                  {regenError && (
+                    <p className="lmsg err" style={{ marginTop: 8, marginBottom: 0 }}>
+                      {regenError}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-          <div className="wcard" style={{ maxWidth: maxW }}>
-            <div className="wcb">
-              {artifactType === "voc" && <VocBody issue={issue} />}
-              {artifactType === "functional" && <FunctionalBody issue={issue} />}
-              {artifactType === "nonfunctional" && <FunctionalBody issue={issue} nonFunctional />}
-              {artifactType === "detail-design" && <DetailDesignBody issue={issue} />}
-            </div>
-          </div>
+              {confirmError && (
+                <p className="lmsg err" style={{ maxWidth: maxW, marginTop: 16 }}>
+                  {confirmError}
+                </p>
+              )}
+              <div className="jf" style={{ maxWidth: maxW, marginTop: 16, borderBottom: "none", justifyContent: "flex-end" }}>
+                <button className="btn prim" onClick={onConfirm} disabled={confirming}>
+                  {confirming ? "확정 중…" : "✔ 확정"}
+                </button>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

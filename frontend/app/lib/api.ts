@@ -360,9 +360,7 @@ export function holdRequirement(
 }
 
 // ── 산출물 도출(기능 3) — 이슈 나누기 ──────────────────────────────
-// 요구사항 1건 ↔ 개발 이슈 N건(1:N). 산출물 4종(SWVOC·기능·비기능 요구사항·
-// Detail Design)은 아직 화면 얼개(목업)만 있어 실제 도출 API는 없다 —
-// artifactsMock.ts 가 여기서 받은 실제 이슈(key·title)에 목업 내용을 입힌다.
+// 요구사항 1건 ↔ 개발 이슈 N건(1:N).
 
 /** AI가 제안한 이슈 분할 후보 한 건 — 아직 저장 전. */
 export type IssueCandidate = { title: string; quote: string };
@@ -412,5 +410,64 @@ export function listDevIssues(
 ): Promise<DevIssue[]> {
   return getJson<DevIssue[]>(
     `/api/projects/${projectId}/requirements/${requirementId}/issues?userId=${userId}`,
+  );
+}
+
+// ── 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) ────────────────
+// 개발 이슈 1건당 1개씩. 유형마다 필드가 전혀 달라 content는 그 유형에 맞는
+// 모양의 JSON을 그대로 주고받는다(백엔드도 해석하지 않고 통과시킨다) —
+// artifactsMock.ts의 VocArtifact/FunctionalArtifact/... 필드와 같은 모양.
+
+export type ArtifactTypeSlug = "voc" | "functional" | "nonfunctional" | "detail-design";
+
+export type ArtifactState = "DRAFT" | "CONFIRMED";
+
+/** 산출물 1건 — content는 유형에 따라 다른 모양(VocContent 등)이므로 호출부에서 캐스팅해 쓴다. */
+export type ArtifactDetail = {
+  type: ArtifactTypeSlug;
+  state: ArtifactState;
+  content: Record<string, unknown>;
+  engine: string;
+  updatedAt: string | null;
+};
+
+/** 조회 — 저장된 게 없으면 서버가 그 자리에서 AI 초안을 만들어 저장한 뒤 돌려준다. */
+export function getArtifact(
+  projectId: number,
+  requirementId: number,
+  issueKey: string,
+  type: ArtifactTypeSlug,
+  userId: number,
+): Promise<ArtifactDetail> {
+  return getJson<ArtifactDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues/${issueKey}/artifacts/${type}?userId=${userId}`,
+  );
+}
+
+/** AI로 다시 생성 — "재생성 시 참고할 내용"을 반영해 새 초안으로 덮어쓴다(DRAFT로 되돌아감). */
+export function regenerateArtifact(
+  projectId: number,
+  requirementId: number,
+  issueKey: string,
+  type: ArtifactTypeSlug,
+  input: { userId: number; reason: string },
+): Promise<ArtifactDetail> {
+  return postJson<ArtifactDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues/${issueKey}/artifacts/${type}/regenerate`,
+    input,
+  );
+}
+
+/** 확정 — 화면에서 편집한 최종 내용을 저장한다. */
+export function confirmArtifact(
+  projectId: number,
+  requirementId: number,
+  issueKey: string,
+  type: ArtifactTypeSlug,
+  input: { userId: number; content: Record<string, unknown> },
+): Promise<ArtifactDetail> {
+  return postJson<ArtifactDetail>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues/${issueKey}/artifacts/${type}/confirm`,
+    input,
   );
 }
