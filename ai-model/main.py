@@ -135,6 +135,10 @@ class ArtifactGenerateRequest(BaseModel):
     issueQuote: str | None = None
     requirementContent: str = Field("", description="근거가 된 확정 요구사항 전문 — 도메인 맥락용")
     reason: str | None = Field(None, description="재생성 시 참고할 내용 — 선택")
+    # 같은 프로젝트의 다른 요구사항 — req-1~4가 지금 다루는 req와 유기적으로 엮여
+    # 있을 수 있어(같은 모듈·같은 판정 기준 등) 참고용으로 함께 받는다. /analyze의
+    # 상충 검출용 existing과 같은 값을 그대로 재사용한다(백엔드에서).
+    existing: list[ExistingRequirement] = Field(default_factory=list)
 
 
 class ArtifactGenerateResponse(BaseModel):
@@ -252,7 +256,8 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
 
     if LLM_API_BASE and req.type in _ARTIFACT_PROMPTS:
         try:
-            llm_content = _ask_llm_artifact(req.type, title, quote, req.requirementContent, req.reason)
+            llm_content = _ask_llm_artifact(
+                req.type, title, quote, req.requirementContent, req.reason, req.existing)
             if artifacts.is_valid_shape(req.type, llm_content):
                 content = llm_content
                 engine = "llm-api"
@@ -406,7 +411,11 @@ Probe Card를 옮기는 AMR을 제어하는 시스템)를 개발한다. VCS APP�
 pathsearch(경로 탐색) · operation(운영 제어) · jobassign(작업 할당) ·
 parametermanagement(파라미터 관리) · hostinterface(상위 시스템 연동) ·
 mapupdater(맵 갱신) · watchdog(감시) · nats(메시징).
-개발 이슈 제목·구절에서 관련 모듈을 유추할 수 있으면 그 모듈 이름과 용어를 산출물에 그대로 쓴다."""
+개발 이슈 제목·구절에서 관련 모듈을 유추할 수 있으면 그 모듈 이름과 용어를 산출물에 그대로 쓴다.
+
+사용자 메시지에 "프로젝트 내 다른 요구사항" 목록이 함께 오면, 지금 다루는 이슈와 같은 모듈·같은
+판정 기준(우선순위 규칙 등)을 다루는 게 있는지 살펴보고, 있으면 그 요구사항에서 쓴 용어·클래스·
+서비스 이름과 일관되게 맞춘다(같은 개념을 다른 이름으로 새로 짓지 않는다). 관련 없으면 무시한다."""
 
 _VOC_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 SWVOC(고객 요구사항 정리)를 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -461,9 +470,12 @@ _ARTIFACT_PROMPTS = {
 
 
 def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: str,
-                      reason: str | None) -> dict:
+                      reason: str | None, existing: list[ExistingRequirement] | None = None) -> dict:
     """사내 LLM API로 산출물 1종의 초안을 요청한다."""
     user = f"개발 이슈 제목: {title}\n이 이슈가 커버하는 요구사항 구절: {quote}\n근거 요구사항 전문:\n{requirement_content}"
+    if existing:
+        lines = "\n".join(f"- {e.reqKey}: {e.content}" for e in existing)
+        user += f"\n\n프로젝트 내 다른 요구사항(관련 있으면 용어·설계를 맞추고, 없으면 무시):\n{lines}"
     if reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 

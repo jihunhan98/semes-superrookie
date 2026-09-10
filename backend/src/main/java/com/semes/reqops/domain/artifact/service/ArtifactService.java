@@ -12,6 +12,7 @@ import com.semes.reqops.domain.issue.repository.DevIssueRepository;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
 import com.semes.reqops.domain.requirement.entity.Requirement;
 import com.semes.reqops.domain.requirement.repository.RequirementRepository;
+import com.semes.reqops.global.ai.AiAnalyzeDto;
 import com.semes.reqops.global.ai.AiArtifactDto;
 import com.semes.reqops.global.ai.AiClient;
 import com.semes.reqops.global.exception.ApiErrors;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,7 +71,7 @@ public class ArtifactService {
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId))
                 .getContent();
         AiArtifactDto.Response ai = aiClient.generateArtifact(
-                type.slug(), issue.getTitle(), issue.getQuote(), content, reason);
+                type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId));
         artifact.regenerate(writeJson(ai.content()), ai.engine());
         return toResponse(type, artifact);
     }
@@ -93,9 +95,23 @@ public class ArtifactService {
         Requirement r = requirementRepository.findById(issue.getRequirementId())
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(issue.getRequirementId()));
         AiArtifactDto.Response ai = aiClient.generateArtifact(
-                type.slug(), issue.getTitle(), issue.getQuote(), r.getContent(), reason);
+                type.slug(), issue.getTitle(), issue.getQuote(), r.getContent(), reason,
+                existingOf(r.getProjectId(), r.getId()));
         return artifactRepository.save(
                 new DevIssueArtifact(issue.getId(), type, writeJson(ai.content()), ai.engine(), userId));
+    }
+
+    /**
+     * 같은 프로젝트의 다른 요구사항들 — req-1~4가 지금 다루는 req와 유기적으로 엮여
+     * 있을 수 있어(같은 모듈·같은 판정 기준 등) 산출물 생성 프롬프트에 참고용으로
+     * 함께 넘긴다. RequirementService.existingOf()와 같은 값(상충 검출용 existing을
+     * 그대로 재사용) — 다른 도메인 서비스라 헬퍼만 따로 둔다.
+     */
+    private List<AiAnalyzeDto.Existing> existingOf(Long projectId, Long excludeId) {
+        return requirementRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream()
+                .filter(r -> !r.getId().equals(excludeId))
+                .map(r -> new AiAnalyzeDto.Existing(r.getReqKey(), r.getContent()))
+                .toList();
     }
 
     private ArtifactResponse toResponse(ArtifactType type, DevIssueArtifact artifact) {

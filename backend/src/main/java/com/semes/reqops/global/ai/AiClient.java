@@ -88,11 +88,12 @@ public class AiClient {
      * "직접 작성해달라"는 안내만 담긴 최소한의 틀을 유형별로 돌려준다.
      */
     public AiArtifactDto.Response generateArtifact(String type, String issueTitle, String issueQuote,
-                                                    String requirementContent, String reason) {
+                                                    String requirementContent, String reason,
+                                                    List<AiAnalyzeDto.Existing> existing) {
         try {
             AiArtifactDto.Response res = restClient.post()
                     .uri("/artifacts/generate")
-                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason))
+                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason, existing))
                     .retrieve()
                     .body(AiArtifactDto.Response.class);
 
