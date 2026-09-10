@@ -214,7 +214,7 @@ export default function ArtifactsTreePage() {
                     style={{ marginLeft: "auto" }}
                     href={`/projects/${project.id}/artifacts/${requirementId}/split`}
                   >
-                    ✎ 이슈 나누기 수정
+                    🔍 이슈 나누기 검토
                   </Link>
                 </div>
 
