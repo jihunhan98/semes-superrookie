@@ -9,13 +9,11 @@ import MermaidDiagram from "../../../../../../../components/MermaidDiagram";
 import ProjectSidebar from "../../../../../../../components/ProjectSidebar";
 import {
   mockIssueFor,
-  toMermaidSequence,
   type BehaviorRow,
   type ClassNode,
   type DetailDesignContent,
   type FunctionalContent,
   type NonFunctionalContent,
-  type SeqStep,
   type VocContent,
 } from "../../../../../../../lib/artifactsMock";
 import {
@@ -172,7 +170,16 @@ function SeqPair({ title, asis, tobe }: { title: string; asis: ReactNode; tobe: 
   );
 }
 
-function SeqCodeColumn({ label, code }: { label: string; code: string }) {
+/** Mermaid 코드를 직접 편집하는 칸 — 편집하면 바로 밑 렌더링에도 그대로 반영된다. */
+function SeqCodeColumn({
+  label,
+  code,
+  onChange,
+}: {
+  label: string;
+  code: string;
+  onChange: (code: string) => void;
+}) {
   const [copyState, setCopyState] = useState<"idle" | "ok" | "err">("idle");
 
   async function onCopy() {
@@ -193,16 +200,7 @@ function SeqCodeColumn({ label, code }: { label: string; code: string }) {
           {copyState === "ok" ? "복사됨" : copyState === "err" ? "복사 실패" : "복사"}
         </button>
       </div>
-      <pre className="promptbox" style={{ margin: 0 }}>{code}</pre>
-    </>
-  );
-}
-
-function SeqDiagramColumn({ label, code }: { label: string; code: string }) {
-  return (
-    <>
-      <div className="seqblockhd">{label}</div>
-      <MermaidDiagram code={code} copyable />
+      <AutoGrowTextarea className="promptbox" style={{ margin: 0 }} value={code} onChange={onChange} spellCheck={false} />
     </>
   );
 }
@@ -247,61 +245,6 @@ function ClassDiagramEditor({ nodes, onChange }: { nodes: ClassNode[]; onChange:
   );
 }
 
-/** Sequence Diagram 단계 편집 — AS-IS/TO-BE 한쪽. 여기를 고치면 아래 Mermaid 코드·다이어그램에 바로 반영된다. */
-function SeqStepsEditor({
-  label,
-  steps,
-  onChange,
-}: {
-  label: string;
-  steps: SeqStep[];
-  onChange: (steps: SeqStep[]) => void;
-}) {
-  function update(i: number, patch: Partial<SeqStep>) {
-    onChange(steps.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
-  }
-  function remove(i: number) {
-    onChange(steps.filter((_, idx) => idx !== i));
-  }
-
-  return (
-    <div>
-      <div className="seqblockhd">{label}</div>
-      <div className="issue-list" style={{ marginTop: 0, gap: 8 }}>
-        {steps.map((s, i) => (
-          <div key={i} className="issue-card" style={{ ...NEUTRAL_ROW_COLOR, padding: "8px 10px" }}>
-            <div className="ibody">
-              <div className="ttl">
-                <input
-                  value={s.who}
-                  onChange={(e) => update(i, { who: e.target.value })}
-                  placeholder="주체"
-                  style={{ flex: "0 0 96px" }}
-                />
-                <input
-                  value={s.msg}
-                  onChange={(e) => update(i, { msg: e.target.value })}
-                  placeholder="대상: 설명 (예: Host: 결과 회신)"
-                />
-                <label className="chkchip">
-                  <input type="checkbox" checked={!!s.changed} onChange={(e) => update(i, { changed: e.target.checked })} />
-                  변경
-                </label>
-                <button className="idel" onClick={() => remove(i)} aria-label="단계 삭제">
-                  ✕
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-        <button type="button" className="addrow" onClick={() => onChange([...steps, { who: "", msg: "" }])}>
-          ＋ 단계 추가
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function DetailDesignBody({
   content,
   onChange,
@@ -309,8 +252,6 @@ function DetailDesignBody({
   content: DetailDesignContent;
   onChange: (patch: Partial<DetailDesignContent>) => void;
 }) {
-  const asisCode = toMermaidSequence(content.sequenceBefore);
-  const tobeCode = toMermaidSequence(content.sequenceAfter);
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
@@ -322,24 +263,28 @@ function DetailDesignBody({
       </div>
 
       <div className="ddsection">
-        <div className="fieldlab" style={{ marginTop: 0 }}>Sequence Diagram — 단계 편집</div>
-        <div className="seqcols2">
-          <SeqStepsEditor label="AS-IS" steps={content.sequenceBefore} onChange={(sequenceBefore) => onChange({ sequenceBefore })} />
-          <SeqStepsEditor label="TO-BE" steps={content.sequenceAfter} onChange={(sequenceAfter) => onChange({ sequenceAfter })} />
-        </div>
-      </div>
-
-      <div className="ddsection">
         <SeqPair
           title="Sequence Diagram — Mermaid 코드"
-          asis={<SeqCodeColumn label="AS-IS" code={asisCode} />}
-          tobe={<SeqCodeColumn label="TO-BE" code={tobeCode} />}
+          asis={
+            <SeqCodeColumn
+              label="AS-IS"
+              code={content.sequenceBeforeCode}
+              onChange={(v) => onChange({ sequenceBeforeCode: v })}
+            />
+          }
+          tobe={
+            <SeqCodeColumn
+              label="TO-BE"
+              code={content.sequenceAfterCode}
+              onChange={(v) => onChange({ sequenceAfterCode: v })}
+            />
+          }
         />
         <div style={{ marginTop: 16 }}>
           <SeqPair
             title="Sequence Diagram — 렌더링"
-            asis={<SeqDiagramColumn label="AS-IS" code={asisCode} />}
-            tobe={<SeqDiagramColumn label="TO-BE" code={tobeCode} />}
+            asis={<MermaidDiagram code={content.sequenceBeforeCode} label="AS-IS" copyable />}
+            tobe={<MermaidDiagram code={content.sequenceAfterCode} label="TO-BE" copyable />}
           />
         </div>
       </div>

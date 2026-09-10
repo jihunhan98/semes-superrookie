@@ -117,7 +117,9 @@ public class AiClient {
                     "description", notice, "role", "", "purpose", "", "behaviors", List.of(), "constraints", "");
             case "detail-design" -> Map.of(
                     "description", notice,
-                    "classDiagram", List.of(), "sequenceBefore", List.of(), "sequenceAfter", List.of());
+                    "classDiagram", List.of(),
+                    "sequenceBeforeCode", "sequenceDiagram\n    Note over Host: " + notice,
+                    "sequenceAfterCode", "sequenceDiagram\n    Note over Host: " + notice);
             default -> Map.of("description", notice);
         };
         return new AiArtifactDto.Response(content, "unavailable", 0);

@@ -67,10 +67,19 @@ function downloadBlob(blob: Blob, filename: string) {
  * 사이드 렌더링 시점에 번들에 끼워 넣지 않으려는 것(다이어그램이 없는 화면까지
  * mermaid 를 매번 받을 필요는 없다).
  *
- * <p>{@code copyable}이면 우상단에 복사 버튼을 띄운다 — 클립보드에 이미지 쓰기를
- * 지원하는 브라우저면 PNG로 복사하고, 아니면 파일로 내려받는다.
+ * <p>{@code copyable}이면 복사 버튼을 띄운다 — 클립보드에 이미지 쓰기를 지원하는
+ * 브라우저면 PNG로 복사하고, 아니면 파일로 내려받는다. 버튼은 다이어그램 위에
+ * 떠 있지 않고 {@code label}과 같은 줄(헤더)에 놓여 다이어그램을 가리지 않는다.
  */
-export default function MermaidDiagram({ code, copyable }: { code: string; copyable?: boolean }) {
+export default function MermaidDiagram({
+  code,
+  copyable,
+  label,
+}: {
+  code: string;
+  copyable?: boolean;
+  label?: string;
+}) {
   const rawId = useId();
   const id = `mmd-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -128,16 +137,16 @@ export default function MermaidDiagram({ code, copyable }: { code: string; copya
       : copyState === "error" ? "실패" : "복사";
 
   return (
-    <div style={{ position: "relative" }}>
-      {copyable && svg && (
-        <button
-          type="button"
-          className="btn sm"
-          onClick={handleCopy}
-          style={{ position: "absolute", top: 6, right: 6, zIndex: 1 }}
-        >
-          {copyLabel}
-        </button>
+    <div>
+      {(label || (copyable && svg)) && (
+        <div className="seqblockhd">
+          {label}
+          {copyable && svg && (
+            <button type="button" className="btn sm" style={{ marginLeft: "auto" }} onClick={handleCopy}>
+              {copyLabel}
+            </button>
+          )}
+        </div>
       )}
       {!svg ? (
         <div className="placeholder" style={{ padding: "18px 0" }}>다이어그램 그리는 중…</div>

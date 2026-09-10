@@ -21,12 +21,6 @@ export type ClassNode = {
   changed?: boolean;
 };
 
-export type SeqStep = {
-  who: string;
-  msg: string;
-  changed?: boolean;
-};
-
 export type SubArtifact = {
   key: string;
   state: "검토 대기" | "확정";
@@ -51,8 +45,9 @@ export type NonFunctionalArtifact = FunctionalArtifact & {
 
 export type DetailDesignArtifact = SubArtifact & {
   classDiagram: ClassNode[];
-  sequenceBefore: SeqStep[];
-  sequenceAfter: SeqStep[];
+  /** Mermaid `sequenceDiagram` 코드 그대로 — 사람이 직접 편집한다(구조화된 단계 배열 아님). */
+  sequenceBeforeCode: string;
+  sequenceAfterCode: string;
   description: string;
 };
 
@@ -136,34 +131,4 @@ export function mockIssueFor(
       improvementRequest: real.quote?.trim() || FULL_ISSUE.reception.improvementRequest,
     },
   };
-}
-
-/**
- * Sequence Diagram 단계 목록(who·msg)을 Mermaid `sequenceDiagram` 코드로 바꾼다.
- *
- * <p>msg가 "대상: 설명" 형태(대상 이름에 공백 없음)면 who→대상 화살표로, 아니면
- * who 자신에 대한 note로 그린다 — 기존 화면이 msg를 그렇게 취급해 왔다(who →
- * msg 로만 붙여 읽던 방식과 동일한 해석).
- */
-export function toMermaidSequence(steps: SeqStep[]): string {
-  const participants: string[] = [];
-  function ensure(name: string) {
-    if (!participants.includes(name)) participants.push(name);
-  }
-
-  const lines = steps.map((s) => {
-    ensure(s.who);
-    const colonIdx = s.msg.indexOf(":");
-    const target = colonIdx > 0 ? s.msg.slice(0, colonIdx).trim() : "";
-    const isTarget = target.length > 0 && !target.includes(" ");
-
-    if (isTarget) {
-      ensure(target);
-      const desc = s.msg.slice(colonIdx + 1).trim() + (s.changed ? " (변경)" : "");
-      return `    ${s.who}->>${target}: ${desc}`;
-    }
-    return `    Note right of ${s.who}: ${s.msg}${s.changed ? " (변경)" : ""}`;
-  });
-
-  return ["sequenceDiagram", ...participants.map((p) => `    participant ${p}`), ...lines].join("\n");
 }

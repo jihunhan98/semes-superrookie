@@ -47,20 +47,30 @@ def nonfunctional(title: str, quote: str) -> dict:
 
 
 def detail_design(title: str, quote: str) -> dict:
+    # sequence*Code는 Mermaid sequenceDiagram 코드 문자열 그대로다 — 화면에서 사람이
+    # 직접 편집하는 자유 텍스트라, 구조화된 단계 배열이 아니라 완성된 코드를 낸다.
+    before_code = (
+        "sequenceDiagram\n"
+        "    participant Host\n"
+        "    participant TargetService\n"
+        f"    Host->>TargetService: {title} 요청\n"
+        "    TargetService-->>Host: 처리 결과 회신"
+    )
+    after_code = (
+        "sequenceDiagram\n"
+        "    participant Host\n"
+        "    participant TargetService\n"
+        f"    Host->>TargetService: {title} 요청\n"
+        f"    Note right of TargetService: {quote or title} (변경)\n"
+        "    TargetService-->>Host: 처리 결과 회신"
+    )
     return {
         "description": f"'{title}' 변경 전/후 처리 흐름 — AI 서버 미응답으로 생성된 기본 초안입니다.",
         "classDiagram": [
             {"name": "TargetService", "fields": ["+ handle(req): Result"], "changed": True},
         ],
-        "sequenceBefore": [
-            {"who": "Host", "msg": f"TargetService: {title} 요청"},
-            {"who": "TargetService", "msg": "Host: 처리 결과 회신"},
-        ],
-        "sequenceAfter": [
-            {"who": "Host", "msg": f"TargetService: {title} 요청"},
-            {"who": "TargetService", "msg": f"{quote or title}", "changed": True},
-            {"who": "TargetService", "msg": "Host: 처리 결과 회신"},
-        ],
+        "sequenceBeforeCode": before_code,
+        "sequenceAfterCode": after_code,
     }
 
 
@@ -97,6 +107,8 @@ def is_valid_shape(type_: str, content: object) -> bool:
         return True
 
     if type_ == "detail-design":
-        return all(k in content for k in ("description", "classDiagram", "sequenceBefore", "sequenceAfter"))
+        if not all(k in content for k in ("description", "classDiagram", "sequenceBeforeCode", "sequenceAfterCode")):
+            return False
+        return isinstance(content["sequenceBeforeCode"], str) and isinstance(content["sequenceAfterCode"], str)
 
     return False

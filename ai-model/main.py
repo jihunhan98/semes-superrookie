@@ -458,13 +458,14 @@ _DETAIL_DESIGN_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 
 {_ARTIFACT_DOMAIN_CONTEXT}
 
 Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 설계하라.
-sequenceBefore/sequenceAfter 각 단계의 msg는 "대상이름: 설명" 형식으로 쓰면(대상이름에 공백이
-없어야 함) 화면이 자동으로 who→대상 화살표로 그리고, 콜론이 없으면 who 자신에 대한 note로
-그린다. 이 변경으로 실제로 바뀐 클래스·단계에는 "changed": true를 붙인다.
-반드시 아래 JSON 형식으로만 답한다.
-{{"description":"변경 전/후 처리 흐름을 한두 문장으로","classDiagram":[{{"name":"ClassName","fields":["+ method(): Type"],"changed":true}}],
-"sequenceBefore":[{{"who":"Host","msg":"TargetService: 설명"}}],
-"sequenceAfter":[{{"who":"Host","msg":"TargetService: 설명","changed":true}}]}}"""
+sequenceBeforeCode/sequenceAfterCode는 Mermaid sequenceDiagram 문법의 완성된 코드 문자열이다
+(participant 선언부터 포함해, 사람이 그대로 복사해 mermaid로 렌더링할 수 있어야 한다). 이번에
+바뀐 부분은 "(변경)"을 메시지 텍스트 끝에 붙여 표시한다.
+반드시 아래 JSON 형식으로만 답한다(sequence*Code 안의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다).
+{{"description":"변경 전/후 처리 흐름을 한두 문장으로",
+"classDiagram":[{{"name":"ClassName","fields":["+ method(): Type"],"changed":true}}],
+"sequenceBeforeCode":"sequenceDiagram\\n    participant Host\\n    Host->>TargetService: 설명",
+"sequenceAfterCode":"sequenceDiagram\\n    participant Host\\n    Host->>TargetService: 설명 (변경)"}}"""
 
 _ARTIFACT_PROMPTS = {
     "voc": _VOC_PROMPT,

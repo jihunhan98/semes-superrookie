@@ -172,14 +172,19 @@ mapupdater(맵 갱신) · watchdog(감시) · nats(메시징).
 [도메인 배경 — 위와 동일]
 
 Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 설계하라.
-sequenceBefore/sequenceAfter 각 단계의 msg는 "대상이름: 설명" 형식으로 쓰면(대상이름에 공백이
-없어야 함) 화면이 자동으로 who→대상 화살표로 그리고, 콜론이 없으면 who 자신에 대한 note로
-그린다. 이 변경으로 실제로 바뀐 클래스·단계에는 "changed": true를 붙인다.
-반드시 아래 JSON 형식으로만 답한다.
-{"description":"변경 전/후 처리 흐름을 한두 문장으로","classDiagram":[{"name":"ClassName","fields":["+ method(): Type"],"changed":true}],
-"sequenceBefore":[{"who":"Host","msg":"TargetService: 설명"}],
-"sequenceAfter":[{"who":"Host","msg":"TargetService: 설명","changed":true}]}
+sequenceBeforeCode/sequenceAfterCode는 Mermaid sequenceDiagram 문법의 완성된 코드 문자열이다
+(participant 선언부터 포함해, 사람이 그대로 복사해 mermaid로 렌더링할 수 있어야 한다). 이번에
+바뀐 부분은 "(변경)"을 메시지 텍스트 끝에 붙여 표시한다.
+반드시 아래 JSON 형식으로만 답한다(sequence*Code 안의 개행은 JSON 문자열 규칙대로 \n으로 쓴다).
+{"description":"변경 전/후 처리 흐름을 한두 문장으로",
+"classDiagram":[{"name":"ClassName","fields":["+ method(): Type"],"changed":true}],
+"sequenceBeforeCode":"sequenceDiagram\n    participant Host\n    Host->>TargetService: 설명",
+"sequenceAfterCode":"sequenceDiagram\n    participant Host\n    Host->>TargetService: 설명 (변경)"}
 ```
+
+Sequence Diagram은 더 이상 사람이 단계(who·msg)를 따로 편집하는 화면이 없다 — Mermaid
+코드 자체를 직접 편집한다(화면의 "Mermaid 코드" 칸). AI가 처음 만든 코드를 초안으로 주고,
+사람은 그 코드를 바로 고치거나 AI 재생성으로 다시 받는다.
 
 ### 형식이 어긋난 응답 처리
 
