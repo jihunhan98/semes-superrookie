@@ -405,7 +405,12 @@ def _ask_llm_split(content: str, reason: str | None) -> list[rules.IssueCandidat
 # DESIGN.md 1.1(배경)·5.3(진행상황)에 적어 둔 프로젝트 도메인 지식을 그대로
 # 시스템 프롬프트에 넣는다 — 이 맥락 없이 산출물을 생성하면 모듈명·용어가
 # 프로젝트와 무관하게 뭉뚱그려진 결과가 나오기 쉽다.
-_ARTIFACT_DOMAIN_CONTEXT = """[도메인 배경]
+_ARTIFACT_DOMAIN_CONTEXT = """[출력 언어]
+JSON의 키는 지정된 영문 그대로 두되, 모든 값(설명·역할·목적·내용 등)은 반드시 한국어 문장으로
+쓴다. 영어 단어·문장을 섞어 쓰지 않는다 — 클래스명·서비스명처럼 코드 식별자로 쓰이는 고유명사만
+예외로 영문을 허용한다.
+
+[도메인 배경]
 SEMES는 삼성전자로부터 요구사항 명세서를 받아 VCS(Vehicle Control System — 반도체 검사 장비에서
 Probe Card를 옮기는 AMR을 제어하는 시스템)를 개발한다. VCS APP은 다음 8개 모듈로 나뉜다:
 pathsearch(경로 탐색) · operation(운영 제어) · jobassign(작업 할당) ·

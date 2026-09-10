@@ -2518,6 +2518,70 @@ mark.hl2.on {
   font-weight: 700;
 }
 
+.ovbox textarea.ovinput {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  padding: 2px 6px;
+}
+
+.ovbox textarea.ovinput:hover {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.ovbox textarea.ovinput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 동작 정의 표 안의 편집 칸 — 기본은 일반 텍스트처럼 보이다가 손대면 칸처럼 보인다. */
+.behtable td textarea.behta {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: inherit;
+  padding: 2px 6px;
+}
+
+.behtable td textarea.behta:hover {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.behtable td textarea.behta:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+/* Class Diagram·Sequence 편집 행의 "변경됨" 체크박스. */
+.chkchip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.chkchip input[type="checkbox"] {
+  margin: 0;
+}
+
 .behtable {
   width: 100%;
   border-collapse: collapse;

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import AutoGrowTextarea from "../../../../../../../components/AutoGrowTextarea";
 import Header from "../../../../../../../components/Header";
 import MermaidDiagram from "../../../../../../../components/MermaidDiagram";
 import ProjectSidebar from "../../../../../../../components/ProjectSidebar";
@@ -10,9 +11,11 @@ import {
   mockIssueFor,
   toMermaidSequence,
   type BehaviorRow,
+  type ClassNode,
   type DetailDesignContent,
   type FunctionalContent,
   type NonFunctionalContent,
+  type SeqStep,
   type VocContent,
 } from "../../../../../../../lib/artifactsMock";
 import {
@@ -43,9 +46,19 @@ const ENGINE_LABEL: Record<string, string> = {
   unavailable: "AI 미응답",
 };
 
-function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
-  const base = rows.filter((r) => r.type === "기본");
-  const exc = rows.filter((r) => r.type === "예외");
+/** 편집 리스트 행의 색상 — 이슈별 순환색과는 무관한 중립색이라 항상 같은 값을 쓴다. */
+const NEUTRAL_ROW_COLOR = { "--m": "var(--line)", "--ms": "var(--accent-soft)" } as CSSProperties;
+
+function BehaviorTable({
+  rows,
+  onChangeRow,
+}: {
+  rows: BehaviorRow[];
+  onChangeRow: (originalIndex: number, content: string) => void;
+}) {
+  const indexed = rows.map((r, i) => ({ ...r, i }));
+  const base = indexed.filter((r) => r.type === "기본");
+  const exc = indexed.filter((r) => r.type === "예외");
   return (
     <table className="behtable">
       <thead>
@@ -57,7 +70,7 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
       </thead>
       <tbody>
         {base.map((r, i) => (
-          <tr key={`base-${i}`}>
+          <tr key={`base-${r.i}`}>
             {i === 0 && (
               <td rowSpan={base.length} className="grp base">
                 기본
@@ -65,11 +78,13 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
               </td>
             )}
             <td>{r.item}</td>
-            <td>{r.content}</td>
+            <td>
+              <AutoGrowTextarea className="behta" rows={1} value={r.content} onChange={(v) => onChangeRow(r.i, v)} />
+            </td>
           </tr>
         ))}
         {exc.map((r, i) => (
-          <tr key={`exc-${i}`}>
+          <tr key={`exc-${r.i}`}>
             {i === 0 && (
               <td rowSpan={exc.length} className="grp exc">
                 예외
@@ -77,7 +92,9 @@ function BehaviorTable({ rows }: { rows: BehaviorRow[] }) {
               </td>
             )}
             <td>{r.item}</td>
-            <td>{r.content}</td>
+            <td>
+              <AutoGrowTextarea className="behta" rows={1} value={r.content} onChange={(v) => onChangeRow(r.i, v)} />
+            </td>
           </tr>
         ))}
       </tbody>
@@ -89,26 +106,11 @@ function VocBody({ content, onChange }: { content: VocContent; onChange: (patch:
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
-      <textarea
-        className="reqta"
-        style={{ minHeight: 56 }}
-        value={content.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-      />
+      <AutoGrowTextarea className="reqta" value={content.description} onChange={(v) => onChange({ description: v })} />
       <div className="fieldlab">1. 요청사항</div>
-      <textarea
-        className="reqta"
-        style={{ minHeight: 56 }}
-        value={content.request}
-        onChange={(e) => onChange({ request: e.target.value })}
-      />
+      <AutoGrowTextarea className="reqta" value={content.request} onChange={(v) => onChange({ request: v })} />
       <div className="fieldlab">2. 특이사항</div>
-      <textarea
-        className="reqta"
-        style={{ minHeight: 56 }}
-        value={content.notes}
-        onChange={(e) => onChange({ notes: e.target.value })}
-      />
+      <AutoGrowTextarea className="reqta" value={content.notes} onChange={(v) => onChange({ notes: v })} />
     </>
   );
 }
@@ -122,36 +124,34 @@ function FunctionalBody({
   onChange: (patch: Partial<FunctionalContent | NonFunctionalContent>) => void;
   nonFunctional?: boolean;
 }) {
+  function updateBehavior(i: number, value: string) {
+    onChange({ behaviors: content.behaviors.map((b, idx) => (idx === i ? { ...b, content: value } : b)) });
+  }
+
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
-      <textarea
-        className="reqta"
-        style={{ minHeight: 56 }}
-        value={content.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-      />
+      <AutoGrowTextarea className="reqta" value={content.description} onChange={(v) => onChange({ description: v })} />
       <div className="fieldlab">1. 개요</div>
       <div className="ovbox">
         <div className="r">
           <span className="k">역할</span>
-          <span>{content.role}</span>
+          <AutoGrowTextarea className="ovinput" rows={1} value={content.role} onChange={(v) => onChange({ role: v })} />
         </div>
         <div className="r">
           <span className="k">목적</span>
-          <span>{content.purpose}</span>
+          <AutoGrowTextarea className="ovinput" rows={1} value={content.purpose} onChange={(v) => onChange({ purpose: v })} />
         </div>
       </div>
       <div className="fieldlab">2. 동작 정의</div>
-      <BehaviorTable rows={content.behaviors} />
+      <BehaviorTable rows={content.behaviors} onChangeRow={updateBehavior} />
       {nonFunctional && (
         <>
           <div className="fieldlab">제약사항</div>
-          <textarea
+          <AutoGrowTextarea
             className="reqta"
-            style={{ minHeight: 56 }}
             value={(content as NonFunctionalContent).constraints}
-            onChange={(e) => onChange({ constraints: e.target.value } as Partial<NonFunctionalContent>)}
+            onChange={(v) => onChange({ constraints: v } as Partial<NonFunctionalContent>)}
           />
         </>
       )}
@@ -207,6 +207,101 @@ function SeqDiagramColumn({ label, code }: { label: string; code: string }) {
   );
 }
 
+/** Class Diagram 편집 — 클래스별로 이름·필드 목록·변경 여부를 고치고, 추가·삭제한다. */
+function ClassDiagramEditor({ nodes, onChange }: { nodes: ClassNode[]; onChange: (nodes: ClassNode[]) => void }) {
+  function update(i: number, patch: Partial<ClassNode>) {
+    onChange(nodes.map((n, idx) => (idx === i ? { ...n, ...patch } : n)));
+  }
+  function remove(i: number) {
+    onChange(nodes.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="issue-list" style={{ marginTop: 0 }}>
+      {nodes.map((n, i) => (
+        <div key={i} className="issue-card" style={NEUTRAL_ROW_COLOR}>
+          <div className="ibody">
+            <div className="ttl">
+              <input value={n.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="클래스 이름" />
+              <label className="chkchip">
+                <input type="checkbox" checked={!!n.changed} onChange={(e) => update(i, { changed: e.target.checked })} />
+                변경됨
+              </label>
+              <button className="idel" onClick={() => remove(i)} aria-label="클래스 삭제">
+                ✕
+              </button>
+            </div>
+            <AutoGrowTextarea
+              className="quotein"
+              value={n.fields.join("\n")}
+              onChange={(v) => update(i, { fields: v.split("\n") })}
+              placeholder="필드·메서드 — 한 줄에 하나씩"
+            />
+          </div>
+        </div>
+      ))}
+      <button type="button" className="addrow" onClick={() => onChange([...nodes, { name: "", fields: [] }])}>
+        ＋ 클래스 추가
+      </button>
+    </div>
+  );
+}
+
+/** Sequence Diagram 단계 편집 — AS-IS/TO-BE 한쪽. 여기를 고치면 아래 Mermaid 코드·다이어그램에 바로 반영된다. */
+function SeqStepsEditor({
+  label,
+  steps,
+  onChange,
+}: {
+  label: string;
+  steps: SeqStep[];
+  onChange: (steps: SeqStep[]) => void;
+}) {
+  function update(i: number, patch: Partial<SeqStep>) {
+    onChange(steps.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  }
+  function remove(i: number) {
+    onChange(steps.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div>
+      <div className="seqblockhd">{label}</div>
+      <div className="issue-list" style={{ marginTop: 0, gap: 8 }}>
+        {steps.map((s, i) => (
+          <div key={i} className="issue-card" style={{ ...NEUTRAL_ROW_COLOR, padding: "8px 10px" }}>
+            <div className="ibody">
+              <div className="ttl">
+                <input
+                  value={s.who}
+                  onChange={(e) => update(i, { who: e.target.value })}
+                  placeholder="주체"
+                  style={{ flex: "0 0 96px" }}
+                />
+                <input
+                  value={s.msg}
+                  onChange={(e) => update(i, { msg: e.target.value })}
+                  placeholder="대상: 설명 (예: Host: 결과 회신)"
+                />
+                <label className="chkchip">
+                  <input type="checkbox" checked={!!s.changed} onChange={(e) => update(i, { changed: e.target.checked })} />
+                  변경
+                </label>
+                <button className="idel" onClick={() => remove(i)} aria-label="단계 삭제">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        <button type="button" className="addrow" onClick={() => onChange([...steps, { who: "", msg: "" }])}>
+          ＋ 단계 추가
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DetailDesignBody({
   content,
   onChange,
@@ -219,32 +314,18 @@ function DetailDesignBody({
   return (
     <>
       <div className="fieldlab" style={{ marginTop: 0 }}>설명</div>
-      <textarea
-        className="reqta"
-        style={{ minHeight: 56 }}
-        value={content.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-      />
+      <AutoGrowTextarea className="reqta" value={content.description} onChange={(v) => onChange({ description: v })} />
 
       <div className="ddsection">
         <div className="fieldlab" style={{ marginTop: 0 }}>Class Diagram — 영향 범위</div>
-        <div className="clsrow">
-          {content.classDiagram.map((c, i) => (
-            <>
-              {i > 0 && <span key={`arrow-${i}`} className="clsarrow">uses →</span>}
-              <div key={c.name} className="clsbox">
-                <div className={`cname${c.changed ? " chg" : ""}`}>
-                  {c.name}
-                  {c.changed ? " (변경)" : ""}
-                </div>
-                {c.fields.map((f) => (
-                  <div key={f} className="cfield">
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </>
-          ))}
+        <ClassDiagramEditor nodes={content.classDiagram} onChange={(classDiagram) => onChange({ classDiagram })} />
+      </div>
+
+      <div className="ddsection">
+        <div className="fieldlab" style={{ marginTop: 0 }}>Sequence Diagram — 단계 편집</div>
+        <div className="seqcols2">
+          <SeqStepsEditor label="AS-IS" steps={content.sequenceBefore} onChange={(sequenceBefore) => onChange({ sequenceBefore })} />
+          <SeqStepsEditor label="TO-BE" steps={content.sequenceAfter} onChange={(sequenceAfter) => onChange({ sequenceAfter })} />
         </div>
       </div>
 
@@ -468,7 +549,8 @@ export default function ArtifactDetailPage() {
                 <div className="aidraftnote" style={{ maxWidth: maxW, marginTop: 16 }}>
                   <span>🧩</span>
                   <span>
-                    <b>AI 초안입니다.</b> 검토 후 확정해주세요.
+                    <b>AI 초안입니다.</b> 검토 후 확정해주세요. 아래 필드는 직접 고쳐도 되고, 밑에서 AI에게 다시
+                    만들어 달라고 해도 됩니다.
                   </span>
                 </div>
               )}
@@ -495,11 +577,11 @@ export default function ArtifactDetailPage() {
                   <div className="fieldlab" style={{ marginTop: 0 }}>
                     🤖 AI로 재생성 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 참고할 내용을 적고 재생성하세요(선택)</span>
                   </div>
-                  <textarea
+                  <AutoGrowTextarea
                     className="reqta"
                     style={{ minHeight: 48 }}
                     value={regenNote}
-                    onChange={(e) => setRegenNote(e.target.value)}
+                    onChange={setRegenNote}
                     placeholder="예: 예외 시나리오를 좀 더 구체적으로 적어줘."
                   />
                   <div className="wfoot" style={{ paddingTop: 10 }}>
