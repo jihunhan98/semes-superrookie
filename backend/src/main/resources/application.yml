@@ -22,4 +22,13 @@ app:
     # 요구사항 검토 AI 서버(ai-model, FastAPI). 미가동이어도 등록은 되며 검출 0건으로 처리된다.
     base-url: http://localhost:8001
     # AI 응답 대기 시간. 등록 요청이 이 시간만큼 걸릴 수 있어(로딩 화면) 넉넉히 잡는다.
-    timeout-ms: 30000
+    #
+    # ai-model 자신도 사내 LLM API를 호출할 때 자체 타임아웃(LLM_API_TIMEOUT, 기본
+    # 30초)을 쓴다. 사내 LLM이 그 타임아웃을 다 채우고서야 규칙 기반으로 대체하면
+    # ai-model 자신의 응답은 "30초 + 처리 시간"만큼 걸리는데, 여기 timeout-ms가
+    # 그것과 같거나 더 작으면 백엔드가 ai-model보다 먼저 포기해버린다 — 그 결과
+    # ai-model은 정상적으로 rule 결과를 돌려줬는데도 백엔드 로그엔 "AI 서버 호출
+    # 실패 ... content type [application/octet-stream]"(응답을 다 못 받고 소켓이
+    # 끊긴 상태)로 찍힌다. 그래서 반드시 ai-model의 LLM_API_TIMEOUT(기본 30초)보다
+    # 여유 있게 크게 잡아야 한다.
+    timeout-ms: 45000
