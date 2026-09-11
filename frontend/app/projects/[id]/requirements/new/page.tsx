@@ -59,7 +59,9 @@ export default function RequirementNewPage() {
         requesterDept: requesterDept.trim(),
         requesterName: requesterName.trim(),
       });
-      router.push(`/projects/${projectId}/requirements/${created.id}`);
+      // 등록 직후는 상세 화면(확정본 열람용)이 아니라 검토 화면으로 바로 보낸다 —
+      // 등록과 동시에 이미 끝나 있는 AI 초기 검토 결과를 한 번 더 클릭 없이 바로 보여주려는 것.
+      router.push(`/projects/${projectId}/requirements/${created.id}/edit`);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "등록에 실패했습니다.");
       setSaving(false);
