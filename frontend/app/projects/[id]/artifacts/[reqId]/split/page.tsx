@@ -291,7 +291,7 @@ export default function IssueSplitPage() {
           </div>
 
           {/* AI에게 물어보기 — 확정본 수정 화면 1단계와 같은 자리. 선택 입력. */}
-          <div className="wcard" style={{ marginTop: 16, maxWidth: 1320 }}>
+          <div className="wcard" style={{ marginTop: 16, maxWidth: 1000 }}>
             <div className="wcb">
               <div className="fieldlab" style={{ marginTop: 0 }}>
                 AI에게 물어보기 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
@@ -316,89 +316,81 @@ export default function IssueSplitPage() {
             </div>
           </div>
 
-          {/* 확정본(왼쪽) → 화살표 → 이슈 후보(오른쪽). 밑으로 죽 이어붙이던 걸
-              좌우로 바꿔서, 원문의 어느 구절이 어느 이슈가 됐는지 한눈에 맞춰
-              보기 쉽게 한다 — 후보 구절마다 다른 색 형광펜 ↔ 같은 색 카드. */}
-          <div className="splitgrid" style={{ marginTop: 16, maxWidth: 1320 }}>
-            <div className="wcard readonly">
-              <div className="wch">
-                📄 확정본 v{req.version}
-                {candidates.length > 0 && (
-                  <span className="rt" style={{ fontSize: 11.5, fontWeight: 500, color: "var(--faint)" }}>
-                    형광펜 = 이슈 경계 · 번호를 오른쪽 카드와 맞춰 보세요
-                  </span>
-                )}
-              </div>
-              <div className="wcb">
-                <HighlightedRequirement content={req.content} candidates={candidates} active={active} onActive={setActive} />
-              </div>
+          {/* 확정본 — 후보 구절마다 다른 색 형광펜. 아래 카드와 번호로 짝지어 본다. */}
+          <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1000 }}>
+            <div className="wch">
+              📄 확정본 v{req.version}
+              {candidates.length > 0 && (
+                <span className="rt" style={{ fontSize: 11.5, fontWeight: 500, color: "var(--faint)" }}>
+                  형광펜 = 이슈 경계 · 번호를 아래 카드와 맞춰 보세요
+                </span>
+              )}
             </div>
-
-            <div className="splitarrow" aria-hidden="true">
-              ➜
-            </div>
-
-            {/* 이슈 후보 카드 — 나누기·합치기 버튼 대신 삭제·추가만 둔다. 합치려면
-                한쪽 구절을 복사해 다른 쪽에 붙여넣고 남는 카드를 삭제하면 되고,
-                나누려면 "이슈 추가"로 빈 카드를 만든 뒤 원래 카드에서 일부를
-                잘라 옮기면 된다 — 사람이 직접 복사·붙여넣기로 하는 편이 자동
-                나누기/합치기보다 결과를 예측하기 쉽다. */}
-            <div className="issue-list">
-              {candidates.map((c, i) => {
-                const color = PALETTE[i % PALETTE.length];
-                return (
-                  <div
-                    key={c.clientId}
-                    className={`issue-card${active === i ? " on" : ""}`}
-                    style={{ "--m": color.m, "--ms": color.ms } as CSSProperties}
-                    onMouseEnter={() => setActive(i)}
-                    onMouseLeave={() => setActive(null)}
-                  >
-                    <div className="ibody">
-                      <div className="ttl">
-                        <span className="no2">{i + 1}</span>
-                        <input
-                          value={c.title}
-                          onChange={(e) => updateCandidate(c.clientId, { title: e.target.value })}
-                          placeholder="이슈 제목"
-                        />
-                        <button className="idel" onClick={() => removeCandidate(c.clientId)} aria-label="이슈 삭제">
-                          ✕
-                        </button>
-                      </div>
-                      <textarea
-                        className="quotein"
-                        value={c.quote}
-                        onChange={(e) => updateCandidate(c.clientId, { quote: e.target.value })}
-                        placeholder="이 이슈가 커버하는 요구사항 구절 — 직접 써도 됩니다"
-                      />
-                      {c.quote.trim() && !located[i] && (
-                        <span className="nospan" style={{ marginTop: 6, display: "inline-block" }}>
-                          원문에서 위치를 찾지 못함
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              <button type="button" className="addrow" onClick={addCandidate}>
-                ＋ 이슈 추가 — 나누려면 원래 카드 내용 일부를 잘라 여기로 옮기세요
-              </button>
+            <div className="wcb">
+              <HighlightedRequirement content={req.content} candidates={candidates} active={active} onActive={setActive} />
             </div>
           </div>
 
+          {/* 이슈 후보 카드 — 나누기·합치기 버튼 대신 삭제·추가만 둔다. 합치려면
+              한쪽 구절을 복사해 다른 쪽에 붙여넣고 남는 카드를 삭제하면 되고,
+              나누려면 "이슈 추가"로 빈 카드를 만든 뒤 원래 카드에서 일부를
+              잘라 옮기면 된다 — 사람이 직접 복사·붙여넣기로 하는 편이 자동
+              나누기/합치기보다 결과를 예측하기 쉽다. */}
+          <div className="issue-list" style={{ maxWidth: 1000 }}>
+            {candidates.map((c, i) => {
+              const color = PALETTE[i % PALETTE.length];
+              return (
+                <div
+                  key={c.clientId}
+                  className={`issue-card${active === i ? " on" : ""}`}
+                  style={{ "--m": color.m, "--ms": color.ms } as CSSProperties}
+                  onMouseEnter={() => setActive(i)}
+                  onMouseLeave={() => setActive(null)}
+                >
+                  <div className="ibody">
+                    <div className="ttl">
+                      <span className="no2">{i + 1}</span>
+                      <input
+                        value={c.title}
+                        onChange={(e) => updateCandidate(c.clientId, { title: e.target.value })}
+                        placeholder="이슈 제목"
+                      />
+                      <button className="idel" onClick={() => removeCandidate(c.clientId)} aria-label="이슈 삭제">
+                        ✕
+                      </button>
+                    </div>
+                    <textarea
+                      className="quotein"
+                      value={c.quote}
+                      onChange={(e) => updateCandidate(c.clientId, { quote: e.target.value })}
+                      placeholder="이 이슈가 커버하는 요구사항 구절 — 직접 써도 됩니다"
+                    />
+                    {c.quote.trim() && !located[i] && (
+                      <span className="nospan" style={{ marginTop: 6, display: "inline-block" }}>
+                        원문에서 위치를 찾지 못함
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <button type="button" className="addrow" onClick={addCandidate}>
+              ＋ 이슈 추가 — 나누려면 원래 카드 내용 일부를 잘라 여기로 옮기세요
+            </button>
+          </div>
+
           {confirmError && (
-            <p className="lmsg err" style={{ marginTop: 16, maxWidth: 1320 }}>
+            <p className="lmsg err" style={{ marginTop: 16, maxWidth: 1000 }}>
               {confirmError}
             </p>
           )}
           {generateProgress && (
-            <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 16, marginBottom: 0, maxWidth: 1320 }}>
+            <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 16, marginBottom: 0, maxWidth: 1000 }}>
               🤖 이슈 {generateProgress.total / ARTIFACT_TYPES.length}건의 산출물 초안을 미리 만드는 중…{" "}
               {generateProgress.done}/{generateProgress.total}
             </p>
           )}
-          <div className="wfoot" style={{ marginTop: generateProgress ? 8 : 16, maxWidth: 1320 }}>
+          <div className="wfoot" style={{ marginTop: generateProgress ? 8 : 16, maxWidth: 1000 }}>
             <button className="btn prim" onClick={onConfirm} disabled={confirming}>
               {generateProgress
                 ? `산출물 만드는 중… (${generateProgress.done}/${generateProgress.total})`
