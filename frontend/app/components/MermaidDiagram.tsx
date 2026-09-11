@@ -96,10 +96,19 @@ export default function MermaidDiagram({
       const mermaid = mod.default;
       mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "strict" });
       try {
+        // 문법 검사만 먼저 한다 — parse()는 DOM을 건드리지 않아서, 코드가 잘못됐을 때
+        // render()가 (실패 도중) 우리 카드 밖 document.body에 남겨두는 임시/에러
+        // 노드가 아예 생기지 않는다(페이지 엉뚱한 곳에 오류가 떠 있던 원인).
+        await mermaid.parse(code);
         const { svg: rendered } = await mermaid.render(id, code);
         if (!cancelled) setSvg(rendered);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "다이어그램을 그리지 못했습니다.");
+        // render()가 실패해도 document.body에 오류 SVG를 "d" + id 라는 id로 직접
+        // 끼워 넣어 버린다(우리 카드 밖, 우리가 관리하지 않는 위치 — 페이지 엉뚱한
+        // 곳에 오류가 떠 있던 원인). parse()로 미리 걸러서 render()가 거의 호출되지
+        // 않게 했지만, 혹시 몰라 방어적으로도 정리한다.
+        document.getElementById(`d${id}`)?.remove();
       }
     });
 
