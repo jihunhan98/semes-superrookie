@@ -1,12 +1,17 @@
 :root {
-  --bg: #f6f8fa;
+  /* 중성색(배경·글자·테두리)은 Tasks 스타일 리뉴얼 기준(무채색 중심)으로
+     맞춘다 — 의미가 있는 상태·오류·강조색(green/red/purple/amber/accent)은
+     그대로 둔다. var()로 참조하는 곳이 대부분이라 이 값만 바꿔도 전체
+     화면에 새 톤이 퍼진다. */
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-muted: #f6f8fa;
-  --ink: #1f2328;
-  --muted: #59636e;
-  --faint: #818b98;
-  --line: #d1d9e0;
-  --line-muted: #d8dee4;
+  --surface-muted: #fafafa;
+  --ink: #18181b;
+  --muted: #71717a;
+  --faint: #a1a1aa;
+  --line: #e4e4e7;
+  --line-muted: #ececed;
+  --radius: 6px;
   --accent: #0969da;
   --accent-soft: #ddf4ff;
   --green: #1a7f37;
@@ -193,8 +198,9 @@ a {
 .appshell .hdr {
   flex: 0 0 62px;
   height: 62px;
-  background: #24292f;
-  color: #fff;
+  background: var(--surface);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -204,7 +210,7 @@ a {
 .appshell .hdr .burger {
   background: none;
   border: none;
-  color: #c9d1d9;
+  color: var(--muted);
   font-size: 18px;
   cursor: pointer;
   padding: 4px;
@@ -212,15 +218,15 @@ a {
 }
 
 .appshell .hdr .burger:hover {
-  color: #fff;
+  color: var(--ink);
 }
 
 .appshell .hdr .mk {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: #fff;
-  color: #24292f;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--surface);
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -242,11 +248,11 @@ a {
 .appshell .hdr .search {
   width: 320px;
   max-width: 40vw;
-  background: #161b22;
-  border: 1px solid #444c56;
-  border-radius: 8px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   padding: 7px 12px;
-  color: #8b949e;
+  color: var(--muted);
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -256,11 +262,11 @@ a {
 .appshell .hdr .ico {
   width: 32px;
   height: 32px;
-  border: 1px solid #444c56;
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   display: grid;
   place-items: center;
-  color: #c9d1d9;
+  color: var(--muted);
   flex: 0 0 32px;
 }
 
@@ -273,8 +279,8 @@ a {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #388bfd;
-  color: #fff;
+  background: var(--ink);
+  color: var(--surface);
   border: none;
   display: grid;
   place-items: center;
@@ -346,7 +352,7 @@ a {
   align-items: center;
   gap: 12px;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 14px;
   font-weight: 500;
   color: var(--ink);
@@ -414,13 +420,13 @@ a {
 /* ── 헤더 브레드크럼(프로젝트 컨텍스트) ── */
 
 .appshell .hdr .brand .slash {
-  color: #8b949e;
+  color: var(--faint);
   margin: 0 7px;
   font-weight: 400;
 }
 
 .appshell .hdr .brand .proj {
-  color: #c9d1d9;
+  color: var(--muted);
   font-weight: 600;
 }
 
@@ -432,7 +438,7 @@ a {
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   margin-bottom: 10px;
   text-decoration: none;
   cursor: pointer;
@@ -445,7 +451,7 @@ a {
 .appshell .side .pj .pi {
   width: 26px;
   height: 26px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--accent-soft);
   color: var(--accent);
   display: grid;
@@ -467,13 +473,48 @@ a {
   font-size: 11px;
 }
 
+/* ── 공통 레이아웃 — 모바일 ─────────────────────────────────────
+   지금까지는 사이드바가 폭 260px 고정 flex item이라 좁은 화면에서 본문을
+   그대로 짓눌렀다(사이드바 폭만큼 밀려 본문이 손바닥만해짐). 모바일에서는
+   사이드바를 본문 위에 겹치는 패널로 띄우고, 헤더의 장식 요소(브랜드 문구·
+   검색 박스)는 숨긴다. 터치 영역도 44px 이상으로 키운다. */
+@media (max-width: 760px) {
+  .appshell .hdr {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .appshell .hdr .brand,
+  .appshell .hdr .search {
+    display: none;
+  }
+
+  .appshell .side {
+    position: fixed;
+    top: 62px;
+    left: 0;
+    bottom: 0;
+    z-index: 15;
+    width: min(82vw, 300px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn,
+  .seg button,
+  .mf-chip,
+  .pager .pnav button,
+  .pager .psize select {
+    min-height: 44px;
+  }
+}
+
 /* ── 버튼 ── */
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
@@ -490,9 +531,13 @@ a {
 }
 
 .btn.prim {
-  background: var(--green-emphasis);
-  border-color: rgba(31, 35, 40, 0.15);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.btn.prim:hover {
+  background: #303035;
 }
 
 .btn.sm {
@@ -739,19 +784,25 @@ a {
   margin-bottom: 16px;
 }
 
+/* 검색·상태·담당자 필터·추가 버튼을 한 줄에 모은 도구 모음(Tasks 스타일).
+   좁은 화면에서는 자연스럽게 줄바꿈된다. */
 .rqbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.rqbar .spacer {
+  flex: 1;
 }
 
 .seg {
   display: inline-flex;
   background: var(--surface-muted);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--radius);
   padding: 3px;
 }
 
@@ -763,21 +814,21 @@ a {
   color: var(--muted);
   background: none;
   border: none;
-  border-radius: 7px;
+  border-radius: calc(var(--radius) - 1px);
   cursor: pointer;
 }
 
 .seg button.on {
   background: var(--surface);
   color: var(--ink);
-  box-shadow: 0 1px 2px rgba(31, 35, 40, 0.12);
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.12);
 }
 
 .srch {
   flex: 1;
   min-width: 200px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface);
   padding: 8px 12px;
   font-size: 13.5px;
@@ -787,16 +838,17 @@ a {
 
 .srch:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--surface-muted);
 }
 
-/* 담당자 필터 — 아바타가 아니라 이름 칩. 체크 표시로 선택 여부가 명확하다. */
+/* 담당자 필터 — 아바타가 아니라 이름 칩. 체크 표시로 선택 여부가 명확하다.
+   .rqbar 안에 한 덩어리로 들어가고, 자리가 부족하면 통째로 다음 줄로
+   넘어간다. */
 .memfilter {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 2px 0 14px;
   flex-wrap: wrap;
 }
 
@@ -813,7 +865,7 @@ a {
   gap: 7px;
   border: 1px solid var(--line);
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 6px 13px;
   font-size: 13px;
   font-weight: 600;
@@ -847,15 +899,176 @@ a {
   color: #fff;
 }
 
-.memfilter .mf-note {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin-left: 6px;
+/* ── 요구사항 목록 — Tasks 스타일 표 ──────────────────────────
+   기존 .rqlist/.rqrow(카드형 목록)는 산출물 목록(artifacts/page.tsx)이
+   그대로 쓰고 있어서 손대지 않고, 요구사항 목록만 실제 <table>로 바꾼다. */
+.reqtable-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: auto;
 }
 
-.memfilter .mf-note b {
-  color: var(--accent);
+.reqtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.reqtable th {
+  height: 44px;
+  padding: 0 14px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.reqtable td {
+  height: 52px;
+  padding: 0 14px;
+  border-top: 1px solid var(--line-muted);
+  font-size: 14px;
+}
+
+.reqtable tbody tr {
+  cursor: pointer;
+}
+
+.reqtable tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+.reqtable .sorthead {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.reqtable .sorthead:hover {
+  color: var(--ink);
+}
+
+.reqtable .rid {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  width: 110px;
+}
+
+.reqtable .rcontent {
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.reqtable .rstate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  color: var(--ink);
+}
+
+.reqtable .rstate .sdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+}
+
+.reqtable .rfinding {
+  font-size: 11.5px;
+  color: var(--amber);
   font-weight: 700;
+  margin-left: 4px;
+}
+
+.reqtable .rmuted {
+  color: var(--faint);
+}
+
+.reqtable .rempty {
+  height: 180px;
+  text-align: center;
+  color: var(--muted);
+  white-space: normal;
+}
+
+/* 페이지네이션 — 표 바로 아래, 총 개수·페이지당 행 수·이전/다음. */
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.pager .prange {
+  margin-right: auto;
+}
+
+.pager .psize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.pager .psize select {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  height: 30px;
+}
+
+.pager .pnav {
+  display: flex;
+  gap: 6px;
+}
+
+.pager .pnav button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+
+.pager .pnav button:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.pager .pnav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pager .plabel {
+  min-width: 82px;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* 목록 — 분류 그룹 없이 플랫. ID가 크고 이름이 작다. */
