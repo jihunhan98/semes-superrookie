@@ -94,13 +94,16 @@ export default function RequirementDetailPage() {
             </Link>
           </div>
 
-          {/* 본문 ↔ 버전 이력 탭 */}
+          {/* 본문 ↔ 버전 이력 ↔ 산출물 탭 — 산출물 도출로 자연스럽게 넘어갈 수 있게
+              여기서부터 바로 링크해준다(전에는 사이드바의 "산출물"만 있었는데, 그건
+              이 요구사항 전용이 아니라 프로젝트 전체 산출물 목록으로 감). */}
           <div className="rtabs">
             <a className="on">본문</a>
             <Link href={`/projects/${project.id}/requirements/${req.id}/versions`}>
               버전 이력
               <span className="ct">{req.versions.length}</span>
             </Link>
+            <Link href={`/projects/${project.id}/artifacts/${req.id}`}>산출물</Link>
           </div>
 
           {/* 이 화면은 읽기 전용이다 — 다시 분석 같은 동작도 여기 두지 않는다.

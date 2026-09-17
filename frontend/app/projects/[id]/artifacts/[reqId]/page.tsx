@@ -151,6 +151,13 @@ export default function ArtifactsTreePage() {
             <span className="tagv">🏷 v{req.version}</span>
           </div>
 
+          {/* 본문 ↔ 버전 이력 ↔ 산출물 탭 — 요구사항 쪽 화면과 같은 탭이라 오가기 쉽다. */}
+          <div className="rtabs">
+            <Link href={`/projects/${project.id}/requirements/${requirementId}`}>본문</Link>
+            <Link href={`/projects/${project.id}/requirements/${requirementId}/versions`}>버전 이력</Link>
+            <a className="on">산출물</a>
+          </div>
+
           {issues.length === 0 ? (
             <>
               {/* AI 검토 결과(불명확·상충)는 여기서 다시 보여주지 않는다 — 그건 요구사항을
@@ -227,17 +234,30 @@ export default function ArtifactsTreePage() {
                     const color = issueColor(i);
                     const base = `/projects/${project.id}/artifacts/${requirementId}/issues/${mock.key}`;
                     return (
-                      <div key={mock.key} className="icard3" style={{ "--m": color.m } as CSSProperties}>
+                      // 카드 전체가 클릭 영역이다(예전엔 제목 글자만 링크였다) — 산출물
+                      // pill들은 각자 다른 곳으로 가야 해서 클릭 시 이 카드 자체의 이동을
+                      // 막도록 별도로 감싼다.
+                      <div
+                        key={mock.key}
+                        className="icard3"
+                        style={{ "--m": color.m } as CSSProperties}
+                        onClick={() => router.push(base)}
+                        role="link"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") router.push(base);
+                        }}
+                      >
                         <div className="ic3top">
                           <div>
                             <div className="ic3key">{mock.key}</div>
-                            <Link className="ic3ttl" href={base} style={{ color: "inherit", textDecoration: "none" }}>
-                              {mock.title}
-                            </Link>
+                            <span className="ic3ttl">{mock.title}</span>
                           </div>
                         </div>
                         {real.quote && <div className="ic3quote">&ldquo;{real.quote}&rdquo;</div>}
-                        <ArtifactPills base={base} />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <ArtifactPills base={base} />
+                        </div>
                       </div>
                     );
                   })}

@@ -239,11 +239,6 @@ export default function RequirementListPage() {
                 ))}
               </div>
             )}
-
-            <span className="spacer" />
-            <Link className="btn prim" href={`/projects/${project.id}/requirements/new`}>
-              ＋ 새 요구사항
-            </Link>
           </div>
 
           <div className="reqtable-wrap">
@@ -355,6 +350,12 @@ export default function RequirementListPage() {
               </button>
             </div>
           </div>
+
+          {/* 목록 툴바에 있던 "+ 새 요구사항" 텍스트 버튼 대신, 화면 우측 하단에 항상
+              떠 있는 초록 + 버튼으로 추가한다 — 스크롤·페이지 이동 중에도 바로 누를 수 있게. */}
+          <Link className="fab" href={`/projects/${project.id}/requirements/new`} aria-label="새 요구사항 추가">
+            +
+          </Link>
         </main>
       </div>
     </div>

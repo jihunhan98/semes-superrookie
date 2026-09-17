@@ -550,6 +550,38 @@ a {
   cursor: default;
 }
 
+/* 우측 하단 floating add 버튼 — 목록 툴바 안의 텍스트 버튼 대신 스크롤 중에도
+   항상 같은 자리에 떠 있다. 주요 생성 동작이라 초록(성공/확정 계열) 색을 쓴다. */
+.fab {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--green-emphasis);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+  cursor: pointer;
+}
+
+.fab:hover {
+  background: var(--green);
+}
+
+@media (max-width: 760px) {
+  .fab {
+    right: 20px;
+    bottom: 20px;
+  }
+}
+
 /* ── 프로젝트 목록 (화면 3) ── */
 
 .toolbar {
@@ -792,10 +824,6 @@ a {
   gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
-}
-
-.rqbar .spacer {
-  flex: 1;
 }
 
 .seg {
@@ -2492,6 +2520,16 @@ mark.hl2.on {
   background: var(--surface);
   box-shadow: var(--shadow);
   padding: 16px 16px 14px;
+  cursor: pointer;
+}
+
+.icard3:hover {
+  border-color: var(--faint);
+}
+
+.icard3:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .icard3 .ic3top {

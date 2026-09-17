@@ -128,13 +128,14 @@ export default function RequirementVersionsPage() {
             {req.version && <span className="tagv">🏷 v{req.version}</span>}
           </div>
 
-          {/* 본문 ↔ 버전 이력 탭 */}
+          {/* 본문 ↔ 버전 이력 ↔ 산출물 탭 */}
           <div className="rtabs">
             <Link href={`/projects/${project.id}/requirements/${req.id}`}>본문</Link>
             <a className="on">
               버전 이력
               <span className="ct">{versions.length}</span>
             </a>
+            <Link href={`/projects/${project.id}/artifacts/${req.id}`}>산출물</Link>
           </div>
 
           <div className="vwrap">
@@ -185,7 +186,10 @@ export default function RequirementVersionsPage() {
                 </div>
 
                 {/* git diff 식 좌우 분할 대신, AI 검토 결과와 같은 방식으로 본문에 형광펜을
-                    칠해 무엇이 바뀌었는지 보여준다 — 눈을 좌우로 옮겨가며 맞춰 보지 않아도 되게. */}
+                    칠해 무엇이 바뀌었는지 보여준다 — 눈을 좌우로 옮겨가며 맞춰 보지 않아도 되게.
+                    다만 base가 없는(=최초 확정 그 자체를 보는) 경우는 "전부 추가됨"으로
+                    표시할 대상이 없다 — 없던 데서 새로 생긴 것이니 형광펜·번호 카드 없이
+                    원문 그대로만 보여준다. */}
                 {diff && (
                   <div className="diff2">
                     <div className="dfh">
@@ -196,15 +200,23 @@ export default function RequirementVersionsPage() {
                       </span>
                     </div>
                     <div style={{ padding: "14px 16px" }}>
-                      <DiffHighlight
-                        rows={diff.rows}
-                        headLabel={
-                          diff.baseVersion
-                            ? `v${diff.baseVersion} → v${diff.headVersion}`
-                            : `v${diff.headVersion} (최초 확정)`
-                        }
-                        empty="두 버전 사이에 바뀐 부분이 없습니다."
-                      />
+                      {diff.baseVersion ? (
+                        <DiffHighlight
+                          rows={diff.rows}
+                          headLabel={`v${diff.baseVersion} → v${diff.headVersion}`}
+                          empty="두 버전 사이에 바뀐 부분이 없습니다."
+                        />
+                      ) : (
+                        <div className="srcbox">
+                          <div className="sh">
+                            v{diff.headVersion} (최초 확정)
+                            <span className="shhint">비교할 이전 버전이 없어 원문 그대로 보여줍니다</span>
+                          </div>
+                          <div className="srctext">
+                            {diff.rows.map((r) => r.headText ?? "").join("\n")}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
