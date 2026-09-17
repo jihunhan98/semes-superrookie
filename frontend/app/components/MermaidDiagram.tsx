@@ -167,23 +167,26 @@ export default function MermaidDiagram({
 
   return (
     <div>
-      {(label || (copyable && svg) || svg) && (
+      {(label || svg) && (
         <div className="seqblockhd">
           {label}
           {svg && (
-            <button
-              type="button"
-              className="btn sm"
-              style={{ marginLeft: label ? undefined : "auto" }}
-              onClick={() => setExpanded(true)}
-            >
-              🔍 크게 보기
-            </button>
-          )}
-          {copyable && svg && (
-            <button type="button" className="btn sm" style={{ marginLeft: label ? "auto" : undefined }} onClick={handleCopy}>
-              {copyLabel}
-            </button>
+            <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
+              {copyable && (
+                <button type="button" className="btn sm" onClick={handleCopy}>
+                  {copyLabel}
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn sm"
+                onClick={() => setExpanded(true)}
+                aria-label="크게 보기"
+                title="크게 보기"
+              >
+                🔍
+              </button>
+            </div>
           )}
         </div>
       )}

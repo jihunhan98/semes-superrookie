@@ -31,6 +31,13 @@
       "static/chunks/3718-ae0d5c421c7ee10c.js",
       "static/chunks/app/login/page-a0dbe8d4ec814441.js"
     ],
+    "/page": [
+      "static/chunks/webpack-3ffeadaab843a131.js",
+      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
+      "static/chunks/7023-f97e351e69050442.js",
+      "static/chunks/main-app-4e4b731e1213032b.js",
+      "static/chunks/app/page-0c552ccde7ecbfe1.js"
+    ],
     "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
       "static/chunks/fd9d1056-4d1bc38b65df8701.js",
@@ -38,14 +45,7 @@
       "static/chunks/main-app-4e4b731e1213032b.js",
       "static/chunks/3718-ae0d5c421c7ee10c.js",
       "static/chunks/85-5381a6551322eca1.js",
-      "static/chunks/app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page-9f1e3b89b3d7daa5.js"
-    ],
-    "/page": [
-      "static/chunks/webpack-3ffeadaab843a131.js",
-      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
-      "static/chunks/7023-f97e351e69050442.js",
-      "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/chunks/app/page-0c552ccde7ecbfe1.js"
+      "static/chunks/app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page-0948b3a261a993b3.js"
     ],
     "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
@@ -91,14 +91,6 @@
       "static/chunks/4907-b6d5d54c5d8e2e9f.js",
       "static/chunks/app/projects/[id]/page-f0499c346420134f.js"
     ],
-    "/projects/[id]/requirements/[reqId]/page": [
-      "static/chunks/webpack-3ffeadaab843a131.js",
-      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
-      "static/chunks/7023-f97e351e69050442.js",
-      "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/chunks/3718-ae0d5c421c7ee10c.js",
-      "static/chunks/app/projects/[id]/requirements/[reqId]/page-835503a9b651d7ae.js"
-    ],
     "/projects/[id]/requirements/[reqId]/edit/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
       "static/chunks/fd9d1056-4d1bc38b65df8701.js",
@@ -107,6 +99,14 @@
       "static/chunks/3718-ae0d5c421c7ee10c.js",
       "static/chunks/5445-84f6ad4cf5aa8367.js",
       "static/chunks/app/projects/[id]/requirements/[reqId]/edit/page-ee91cb7566936416.js"
+    ],
+    "/projects/[id]/requirements/[reqId]/page": [
+      "static/chunks/webpack-3ffeadaab843a131.js",
+      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
+      "static/chunks/7023-f97e351e69050442.js",
+      "static/chunks/main-app-4e4b731e1213032b.js",
+      "static/chunks/3718-ae0d5c421c7ee10c.js",
+      "static/chunks/app/projects/[id]/requirements/[reqId]/page-835503a9b651d7ae.js"
     ],
     "/projects/[id]/requirements/[reqId]/versions/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
@@ -141,14 +141,6 @@
       "static/chunks/4907-b6d5d54c5d8e2e9f.js",
       "static/chunks/app/projects/[id]/settings/page-9194ab77ce94517b.js"
     ],
-    "/projects/new/page": [
-      "static/chunks/webpack-3ffeadaab843a131.js",
-      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
-      "static/chunks/7023-f97e351e69050442.js",
-      "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/chunks/3718-ae0d5c421c7ee10c.js",
-      "static/chunks/app/projects/new/page-b728705ba51c6872.js"
-    ],
     "/projects/open/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
       "static/chunks/fd9d1056-4d1bc38b65df8701.js",
@@ -156,6 +148,14 @@
       "static/chunks/main-app-4e4b731e1213032b.js",
       "static/chunks/3718-ae0d5c421c7ee10c.js",
       "static/chunks/app/projects/open/page-1aec491b95a5cb26.js"
+    ],
+    "/projects/new/page": [
+      "static/chunks/webpack-3ffeadaab843a131.js",
+      "static/chunks/fd9d1056-4d1bc38b65df8701.js",
+      "static/chunks/7023-f97e351e69050442.js",
+      "static/chunks/main-app-4e4b731e1213032b.js",
+      "static/chunks/3718-ae0d5c421c7ee10c.js",
+      "static/chunks/app/projects/new/page-b728705ba51c6872.js"
     ],
     "/signup/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",

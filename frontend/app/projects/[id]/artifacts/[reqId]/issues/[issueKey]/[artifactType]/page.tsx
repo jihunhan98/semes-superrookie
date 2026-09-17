@@ -366,9 +366,15 @@ export default function ArtifactDetailPage() {
 
   async function onRegenerate() {
     const user = getCurrentUser();
-    if (!user) return;
+    if (!user || !content) return;
+    // 재생성을 요청하면 화면에 이전 초안이 그대로 남아 있지 않게 지우고, 아래
+    // placeholder로 "생성 중" 상태를 보여준다. 실패하면 지웠던 내용을 되돌린다.
+    const prevContent = content;
+    const prevState = artifactState;
+    const prevEngine = engine;
     setRegenerating(true);
     setRegenError(null);
+    setContent(null);
     try {
       const res = await regenerateArtifact(projectId, requirementId, issueKey, artifactType, {
         userId: user.id,
@@ -378,6 +384,9 @@ export default function ArtifactDetailPage() {
       setArtifactState(res.state);
       setEngine(res.engine);
     } catch (err) {
+      setContent(prevContent);
+      setArtifactState(prevState);
+      setEngine(prevEngine);
       setRegenError(err instanceof Error ? err.message : "AI 재생성에 실패했습니다.");
     } finally {
       setRegenerating(false);
@@ -492,8 +501,18 @@ export default function ArtifactDetailPage() {
           )}
 
           {!content ? (
-            <div className="placeholder" style={{ maxWidth: maxW, marginTop: 16 }}>
-              🤖 AI가 산출물 초안을 만드는 중…
+            <div className="loadbar" style={{ maxWidth: maxW, marginTop: 16 }}>
+              <div className="spinner" />
+              <div>
+                <div className="load-t">
+                  {regenerating ? "요청하신 대로 AI가 다시 만드는 중…" : "AI가 산출물 초안을 만드는 중…"}
+                </div>
+                <div className="load-sub">
+                  {regenerating
+                    ? "요청하신 내용을 반영해 다시 만들고 있습니다. 완료되면 아래에 새 초안이 표시됩니다."
+                    : "완료되면 아래에 초안이 표시됩니다. 검토 후 확정하거나 다시 만들어 달라고 할 수 있습니다."}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -536,7 +555,7 @@ export default function ArtifactDetailPage() {
                     onChange={setRegenNote}
                     placeholder="예: 예외 시나리오를 좀 더 구체적으로 적어줘."
                   />
-                  <div className="wfoot" style={{ paddingTop: 10 }}>
+                  <div className="wfoot" style={{ paddingTop: 10, justifyContent: "flex-end" }}>
                     <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
                       {regenerating ? "재생성 중…" : "🤖 재생성"}
                     </button>
