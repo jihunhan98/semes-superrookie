@@ -200,7 +200,14 @@ function SeqCodeColumn({
           {copyState === "ok" ? "복사됨" : copyState === "err" ? "복사 실패" : "복사"}
         </button>
       </div>
-      <AutoGrowTextarea className="promptbox" style={{ margin: 0 }} value={code} onChange={onChange} spellCheck={false} />
+      <AutoGrowTextarea
+        className="promptbox"
+        style={{ margin: 0 }}
+        maxHeight={280}
+        value={code}
+        onChange={onChange}
+        spellCheck={false}
+      />
     </>
   );
 }

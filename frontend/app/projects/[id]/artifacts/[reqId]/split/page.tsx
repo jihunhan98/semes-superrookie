@@ -9,12 +9,10 @@ import { locateSpans } from "../../../../../lib/highlight";
 import { ISSUE_PALETTE as PALETTE } from "../../../../../lib/issuePalette";
 import {
   confirmIssueSplit,
-  getArtifact,
   getProject,
   getRequirement,
   listDevIssues,
   previewIssueSplit,
-  type ArtifactTypeSlug,
   type ProjectDetail,
   type RequirementDetail,
 } from "../../../../../lib/api";
@@ -26,9 +24,6 @@ const ENGINE_LABEL: Record<string, string> = {
   rule: "규칙 기반",
   unavailable: "AI 미응답 · 전체를 이슈 1개로 시작",
 };
-
-/** 이슈 확정 직후 산출물을 한 번에 미리 만들어 둘 때 도는 유형 4가지. */
-const ARTIFACT_TYPES: ArtifactTypeSlug[] = ["voc", "functional", "nonfunctional", "detail-design"];
 
 type Candidate = { clientId: string; title: string; quote: string };
 
@@ -99,7 +94,6 @@ export default function IssueSplitPage() {
   const [regenError, setRegenError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [generateProgress, setGenerateProgress] = useState<{ done: number; total: number } | null>(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -179,28 +173,13 @@ export default function IssueSplitPage() {
     setConfirming(true);
     setConfirmError(null);
     try {
-      const savedIssues = await confirmIssueSplit(projectId, requirementId, { userId: user.id, issues });
-
-      // 확정하자마자 산출물 4종을 미리 만들어 둔다 — getArtifact는 저장된 게
-      // 없으면 그 자리에서 AI 초안을 만들어 저장하므로, 여기서 한 번씩 불러
-      // 두면 artifacts/[reqId]에서 카드를 눌렀을 때 다시 기다릴 필요가 없다.
-      const total = savedIssues.length * ARTIFACT_TYPES.length;
-      setGenerateProgress({ done: 0, total });
-      await Promise.all(
-        savedIssues.flatMap((iss) =>
-          ARTIFACT_TYPES.map((t) =>
-            getArtifact(projectId, requirementId, iss.issueKey, t, user.id)
-              .catch(() => undefined) // 하나 실패해도 나머지는 계속 — 다음에 열람할 때 다시 시도된다.
-              .finally(() => setGenerateProgress((p) => (p ? { ...p, done: p.done + 1 } : p))),
-          ),
-        ),
-      );
-
+      // 산출물 4종은 서버가 확정 직후 백그라운드에서 미리 만들어 둔다(여기서
+      // 기다리지 않는다) — 그래서 이 호출이 끝나면 곧장 넘어간다.
+      await confirmIssueSplit(projectId, requirementId, { userId: user.id, issues });
       router.push(`/projects/${projectId}/artifacts/${requirementId}`);
     } catch (err) {
       setConfirmError(err instanceof Error ? err.message : "이슈 확정에 실패했습니다.");
       setConfirming(false);
-      setGenerateProgress(null);
     }
   }
 
@@ -384,19 +363,9 @@ export default function IssueSplitPage() {
               {confirmError}
             </p>
           )}
-          {generateProgress && (
-            <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 16, marginBottom: 0, maxWidth: 1000 }}>
-              🤖 이슈 {generateProgress.total / ARTIFACT_TYPES.length}건의 산출물 초안을 미리 만드는 중…{" "}
-              {generateProgress.done}/{generateProgress.total}
-            </p>
-          )}
-          <div className="wfoot" style={{ marginTop: generateProgress ? 8 : 16, maxWidth: 1000 }}>
+          <div className="wfoot" style={{ marginTop: 16, maxWidth: 1000 }}>
             <button className="btn prim" onClick={onConfirm} disabled={confirming}>
-              {generateProgress
-                ? `산출물 만드는 중… (${generateProgress.done}/${generateProgress.total})`
-                : confirming
-                  ? "확정 중…"
-                  : "확정"}
+              {confirming ? "확정 중…" : "확정"}
             </button>
             <Link
               className="btn"

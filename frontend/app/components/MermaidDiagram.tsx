@@ -86,6 +86,26 @@ export default function MermaidDiagram({
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [expanded, setExpanded] = useState(false);
+
+  // 확대 보기가 떠 있는 동안은 뒤 페이지가 스크롤되지 않게 한다.
+  useEffect(() => {
+    if (!expanded) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpanded(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [expanded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,11 +167,21 @@ export default function MermaidDiagram({
 
   return (
     <div>
-      {(label || (copyable && svg)) && (
+      {(label || (copyable && svg) || svg) && (
         <div className="seqblockhd">
           {label}
+          {svg && (
+            <button
+              type="button"
+              className="btn sm"
+              style={{ marginLeft: label ? undefined : "auto" }}
+              onClick={() => setExpanded(true)}
+            >
+              🔍 크게 보기
+            </button>
+          )}
           {copyable && svg && (
-            <button type="button" className="btn sm" style={{ marginLeft: "auto" }} onClick={handleCopy}>
+            <button type="button" className="btn sm" style={{ marginLeft: label ? "auto" : undefined }} onClick={handleCopy}>
               {copyLabel}
             </button>
           )}
@@ -160,8 +190,32 @@ export default function MermaidDiagram({
       {!svg ? (
         <div className="placeholder" style={{ padding: "18px 0" }}>다이어그램 그리는 중…</div>
       ) : (
-        // eslint-disable-next-line react/no-danger
-        <div ref={containerRef} className="mermaidbox" dangerouslySetInnerHTML={{ __html: svg }} />
+        <>
+          {/* eslint-disable-next-line react/no-danger */}
+          <div
+            ref={containerRef}
+            className="mermaidbox"
+            style={{ cursor: "zoom-in" }}
+            onClick={() => setExpanded(true)}
+            dangerouslySetInnerHTML={{ __html: svg }}
+          />
+          {expanded && (
+            <div className="mmdlightbox" onClick={() => setExpanded(false)}>
+              <div className="mmdlightbox-panel" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  className="mmdlightbox-close"
+                  onClick={() => setExpanded(false)}
+                  aria-label="닫기"
+                >
+                  ✕
+                </button>
+                {/* eslint-disable-next-line react/no-danger */}
+                <div className="mmdlightbox-body" dangerouslySetInnerHTML={{ __html: svg }} />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

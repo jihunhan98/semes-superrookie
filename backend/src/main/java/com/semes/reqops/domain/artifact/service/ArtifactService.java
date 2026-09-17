@@ -17,6 +17,8 @@ import com.semes.reqops.global.ai.AiArtifactDto;
 import com.semes.reqops.global.ai.AiClient;
 import com.semes.reqops.global.exception.ApiErrors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ import java.util.Map;
  * 화면은 별도 진입 단계가 없어 조회 자체가 최초 생성을 겸한다). 이후 조회는 저장된
  * 값을 그대로 돌려주고, 재생성·확정으로만 바뀐다.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ArtifactService {
@@ -87,6 +90,28 @@ public class ArtifactService {
                 .orElseGet(() -> createDraft(issue, type, null, req.userId()));
         artifact.confirm(writeJson(req.content()), req.userId());
         return toResponse(type, artifact);
+    }
+
+    /**
+     * 이슈 나누기를 확정한 직후, 산출물 4종을 미리 만들어 둔다 — 호출한 쪽은
+     * 기다리지 않는다({@code @Async}라서 이 메서드는 스레드풀에 작업만 던져놓고
+     * 곧장 리턴된다). 이슈가 여러 개면 순식간에 수십 건이 쌓이는데, 그걸 한꺼번에
+     * 다 쏘면 AI 서버·DB 커넥션 풀이 막혀 다른 요청까지 전부 느려진다 — 그래서
+     * {@code aiTaskExecutor}(동시 3개, {@link com.semes.reqops.global.config.AsyncConfig})
+     * 로만 처리해 나머지는 큐에서 순서대로 돈다.
+     *
+     * <p>실패해도 예외를 위로 던지지 않는다 — 로그만 남기고 넘어간다. 어차피 이건
+     * "미리" 만들어 두는 것뿐이라, 실패한 것은 나중에 그 산출물을 실제로 열람할
+     * 때 {@link #get}이 똑같은 방식으로 다시 시도한다.
+     */
+    @Async("aiTaskExecutor")
+    public void warmDraftAsync(Long projectId, Long requirementId, String issueKey, String typeSlug, Long userId) {
+        try {
+            get(projectId, requirementId, issueKey, typeSlug, userId);
+        } catch (Exception e) {
+            log.warn("산출물 미리 생성 실패(나중에 열람 시 다시 시도됨) — issue={} type={}: {}",
+                    issueKey, typeSlug, e.getMessage());
+        }
     }
 
     // ── 내부 구현 ────────────────────────────────────────────────
