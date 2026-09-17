@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./styles/tokens.css";
 
 export const metadata: Metadata = {
   title: "요구사항 엔지니어링",

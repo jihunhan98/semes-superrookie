@@ -1,0 +1,36 @@
+/* Tasks-inspired tokens. Scoped for progressive migration of existing screens. */
+.ui-refresh {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f4f4f5;
+  --ink: #18181b;
+  --muted: #62626b;
+  --faint: #71717a;
+  --line: #e4e4e7;
+  --line-muted: #ededf0;
+  --accent: #18181b;
+  --accent-soft: #f4f4f5;
+  --ui-radius: 6px;
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-focus: #52525b;
+  --shadow: 0 4px 16px rgb(0 0 0 / 6%);
+  color: var(--ink);
+  background: var(--bg);
+}
+.ui-refresh :where(button, input, select, a):focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 3px;
+}
+.ui-refresh :where(button, a, select) { touch-action: manipulation; }
+@media (prefers-reduced-motion: reduce) {
+  .ui-refresh *, .ui-refresh *::before, .ui-refresh *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
