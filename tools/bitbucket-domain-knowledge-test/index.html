@@ -2,190 +2,214 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>Bitbucket Server 연결 테스트</title>
+<title>Bitbucket 도메인 지식 인덱싱 테스트</title>
 <style>
-  :root{--line:#d1d9e0;--muted:#59636e;--ink:#1f2328;--bg:#f6f8fa;--accent:#0969da;--ok:#1a7f37;--err:#cf222e}
+  :root{--line:#e4e4e7;--muted:#71717a;--ink:#18181b;--bg:#fafafa;--accent:#0969da;--ok:#1a7f37;--err:#cf222e;--radius:6px}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"Segoe UI","Malgun Gothic",sans-serif;padding:32px}
-  .wrap{max-width:880px;margin:0 auto}
+  .wrap{max-width:980px;margin:0 auto}
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:var(--muted);font-size:13px;margin:0 0 24px}
   .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:16px}
-  .row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-  .field{flex:1;min-width:180px}
-  .field.small{flex:0 0 140px}
+  .row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end}
+  .field{flex:1;min-width:200px}
+  .field.small{flex:0 0 160px}
   label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
-  input{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;background:#fff}
-  input:focus{outline:none;border-color:var(--accent)}
-  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+  input,select{width:100%;border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;font:inherit;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .hint.err{color:var(--err);font-weight:600}
+  .hint.ok{color:var(--ok);font-weight:600}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  button{border:1px solid var(--line);background:#fff;border-radius:var(--radius);padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
   button:hover{background:var(--bg)}
   button:disabled{opacity:.5;cursor:default}
-  .result{margin-top:10px}
-  .result h3{font-size:12.5px;color:var(--muted);margin:0 0 6px;font-weight:700}
-  pre{background:#0d1117;color:#c9d1d9;border-radius:8px;padding:12px 14px;overflow:auto;max-height:360px;font-size:12.5px;white-space:pre-wrap;word-break:break-word}
-  .ok{color:var(--ok);font-weight:700}
-  .err{color:var(--err);font-weight:700;white-space:pre-wrap}
-  .chiplist{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer;background:#fff}
-  .chip:hover{background:var(--bg)}
-  .filerow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 2px;font-size:12.5px;cursor:pointer}
-  .filerow:hover{background:var(--bg)}
-  .filerow .type{color:var(--muted)}
+  button.prim{background:var(--ink);border-color:var(--ink);color:#fff}
+  button.prim:hover{background:#303035}
+  .progress{font-size:12.5px;color:var(--muted);margin-top:10px}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.path{font-family:ui-monospace,monospace;font-size:12px;white-space:nowrap}
+  td.chunks{text-align:center;color:var(--muted);width:50px}
+  .tag{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:11px;margin:0 4px 4px 0}
+  .rowerr{color:var(--err)}
+  details{margin-top:4px}
+  summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+  summary:hover{color:var(--ink)}
+  .diagramwrap{overflow:auto;margin-top:12px;text-align:center}
+  .diagramwrap img{max-width:100%}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Bitbucket Server 연결 테스트</h1>
+  <h1>Bitbucket 도메인 지식 인덱싱 테스트</h1>
   <p class="sub">
-    도메인 지식 추출 기능을 만들기 전에, 이 사내망에서 Bitbucket Server REST API로
-    브랜치·파일을 실제로 가져올 수 있는지만 먼저 확인하는 용도입니다.
+    레포 URL 하나와 토큰만 넣으면 브랜치를 고르고, 그 브랜치의 소스 파일들을 훑으며
+    사내 LLM에 "이 코드가 다루는 업무 개념·클래스 역할을 요약해줘"를 보내는 루프를
+    실제로 돌려봅니다. 결과는 DB가 아니라 이 페이지가 떠 있는 동안만 메모리에 쌓입니다.
   </p>
 
   <div class="card">
     <div class="row">
       <div class="field">
-        <label>Base URL</label>
-        <input id="baseUrl" value="http://bit-stms.semes.com:17990" placeholder="http://bit-stms.semes.com:17990">
-      </div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>프로젝트 키 (Project Key)</label>
-        <input id="projectKey" placeholder="예: VCS">
-      </div>
-      <div class="field">
-        <label>레포 슬러그 (Repository Slug)</label>
-        <input id="repoSlug" placeholder="예: amr-controller">
-      </div>
-      <div class="field small">
-        <label>브랜치 (선택)</label>
-        <input id="branch" placeholder="비우면 기본 브랜치">
+        <label>레포 URL</label>
+        <input id="repoUrl" placeholder="http://bit-stms.semes.com:17990/projects/VCS/repos/amr-controller">
+        <div class="hint" id="parseHint">URL을 넣으면 프로젝트 키·레포 슬러그를 자동으로 읽어옵니다.</div>
       </div>
     </div>
     <div class="row">
       <div class="field">
         <label>Personal Access Token</label>
-        <input id="token" type="password" placeholder="Bitbucket 개인 설정 → HTTP access tokens에서 발급">
+        <input id="token" type="password" placeholder="Bitbucket 개인 설정 → HTTP access tokens">
+      </div>
+      <div class="field small">
+        <button id="btnBranches">브랜치 가져오기</button>
       </div>
     </div>
-    <div class="actions">
-      <button id="btnBranches">1. 브랜치 목록 가져오기</button>
-      <button id="btnBrowse">2. 루트 디렉터리 목록 보기</button>
+    <div class="row" id="branchRow" hidden>
+      <div class="field small">
+        <label>브랜치</label>
+        <select id="branch"></select>
+      </div>
+      <div class="field small">
+        <label>확장자(쉼표 구분)</label>
+        <input id="extensions" value="java,py,ts,tsx,js,jsx,xml,sql,yml,yaml">
+      </div>
+      <div class="field small">
+        <label>최대 파일 수</label>
+        <input id="maxFiles" value="25" type="number" min="1" max="500">
+      </div>
+      <div class="field small">
+        <button id="btnIndex" class="prim">인덱싱 시작</button>
+      </div>
     </div>
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="card" id="resultCard" hidden>
+    <table>
+      <thead>
+        <tr><th>파일 경로</th><th style="width:50px">청크</th><th>요약</th><th style="width:220px">태그</th></tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
   </div>
 
   <div class="card">
-    <div class="row">
-      <div class="field">
-        <label>파일 경로 (레포 루트 기준)</label>
-        <input id="filePath" placeholder="예: src/main/java/com/semes/amr/BatteryMonitor.java">
-      </div>
-    </div>
-    <div class="actions">
-      <button id="btnFile">3. 이 경로의 파일 내용 가져오기</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="result" id="resultBranches" hidden>
-      <h3>브랜치 목록</h3>
-      <div class="chiplist" id="branchChips"></div>
-    </div>
-    <div class="result" id="resultBrowse" hidden>
-      <h3>루트 디렉터리</h3>
-      <div id="browseList"></div>
-    </div>
-    <div class="result" id="resultFile" hidden>
-      <h3>파일 내용</h3>
-      <div id="fileMeta"></div>
-      <pre id="fileContent"></pre>
-    </div>
-    <div class="result" id="resultError" hidden>
-      <h3>오류</h3>
-      <div class="err" id="errorText"></div>
-    </div>
+    <details>
+      <summary>이 루프가 실제로 사내 LLM에 어떻게 보내는지 (입력+출력 합계 약 3만자 한도 기준)</summary>
+      <p class="hint" style="margin-top:8px">
+        한 번에 보낼 수 있는 글자 수(입력+출력 합계)가 제한돼 있어서, 파일이 그 예산보다
+        크면 줄 단위로 잘라 조각마다 짧게 요약(map)한 뒤, 그 부분 요약들을 다시 한 번
+        합쳐(reduce) 파일 전체 요약으로 정리합니다.
+      </p>
+      <div class="diagramwrap"><img src="/diagram-chunking.svg" alt="청크 분할 시퀀스 다이어그램"></div>
+    </details>
   </div>
 </div>
 
 <script>
-function common() {
-  return {
-    baseUrl: document.getElementById('baseUrl').value.trim(),
-    projectKey: document.getElementById('projectKey').value.trim(),
-    repoSlug: document.getElementById('repoSlug').value.trim(),
-    token: document.getElementById('token').value.trim(),
-    branch: document.getElementById('branch').value.trim(),
-  };
+function parseRepoUrl(url) {
+  const m = url.trim().match(/^(https?:\/\/[^\/]+)\/projects?\/([^\/]+)\/repos\/([^\/]+)/i);
+  if (!m) return null;
+  return { baseUrl: m[1], projectKey: m[2], repoSlug: m[3] };
 }
 
-function showError(msg) {
-  document.getElementById('resultError').hidden = false;
-  document.getElementById('errorText').textContent = msg;
-}
+let parsed = null;
 
-function clearError() {
-  document.getElementById('resultError').hidden = true;
-}
+document.getElementById('repoUrl').addEventListener('input', () => {
+  const hint = document.getElementById('parseHint');
+  parsed = parseRepoUrl(document.getElementById('repoUrl').value);
+  if (!document.getElementById('repoUrl').value.trim()) {
+    hint.className = 'hint';
+    hint.textContent = 'URL을 넣으면 프로젝트 키·레포 슬러그를 자동으로 읽어옵니다.';
+  } else if (parsed) {
+    hint.className = 'hint ok';
+    hint.textContent = `인식됨 — 프로젝트: ${parsed.projectKey} · 레포: ${parsed.repoSlug} · 서버: ${parsed.baseUrl}`;
+  } else {
+    hint.className = 'hint err';
+    hint.textContent = '.../projects/{프로젝트키}/repos/{레포슬러그} 형식의 URL이 아닙니다.';
+  }
+});
 
-async function callApi(path, extra) {
-  clearError();
-  const body = Object.assign(common(), extra || {});
-  const res = await fetch(path, {
+document.getElementById('btnBranches').onclick = async () => {
+  if (!parsed) {
+    document.getElementById('parseHint').className = 'hint err';
+    document.getElementById('parseHint').textContent = '레포 URL을 먼저 올바르게 입력하세요.';
+    return;
+  }
+  const token = document.getElementById('token').value.trim();
+  const res = await fetch('/api/branches', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...parsed, token }),
   });
   const data = await res.json();
   if (!data.ok) {
-    showError(data.error || '알 수 없는 오류');
-    return null;
+    document.getElementById('progress').innerHTML = `<span class="rowerr">${data.error}</span>`;
+    return;
   }
-  return data;
-}
-
-document.getElementById('btnBranches').onclick = async () => {
-  const data = await callApi('/api/branches');
-  if (!data) return;
-  document.getElementById('resultBranches').hidden = false;
-  const wrap = document.getElementById('branchChips');
-  wrap.innerHTML = '';
-  data.branches.forEach((name) => {
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = name;
-    chip.onclick = () => { document.getElementById('branch').value = name; };
-    wrap.appendChild(chip);
-  });
-  if (data.branches.length === 0) wrap.textContent = '브랜치가 없습니다.';
+  const sel = document.getElementById('branch');
+  sel.innerHTML = data.branches.map((b) => `<option value="${b}">${b}</option>`).join('');
+  document.getElementById('branchRow').hidden = false;
+  document.getElementById('progress').textContent = `브랜치 ${data.branches.length}개 확인됨.`;
 };
 
-document.getElementById('btnBrowse').onclick = async () => {
-  const data = await callApi('/api/browse', { path: '' });
-  if (!data) return;
-  document.getElementById('resultBrowse').hidden = false;
-  const wrap = document.getElementById('browseList');
-  wrap.innerHTML = '';
-  data.entries.forEach((entry) => {
-    const row = document.createElement('div');
-    row.className = 'filerow';
-    row.innerHTML = `<span>${entry.path}</span><span class="type">${entry.type}</span>`;
-    if (entry.type === 'FILE') {
-      row.onclick = () => { document.getElementById('filePath').value = entry.path; };
+document.getElementById('btnIndex').onclick = async () => {
+  const token = document.getElementById('token').value.trim();
+  const branch = document.getElementById('branch').value;
+  const extensions = document.getElementById('extensions').value.split(',').map((s) => s.trim()).filter(Boolean);
+  const maxFiles = Number(document.getElementById('maxFiles').value) || 25;
+
+  const btn = document.getElementById('btnIndex');
+  btn.disabled = true;
+  const resultCard = document.getElementById('resultCard');
+  const body = document.getElementById('resultBody');
+  const progress = document.getElementById('progress');
+  resultCard.hidden = false;
+  body.innerHTML = '';
+  progress.textContent = '파일 목록을 가져오는 중…';
+
+  const res = await fetch('/api/index-stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...parsed, token, branch, extensions, maxFiles }),
+  });
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const msg = JSON.parse(line);
+      if (msg.type === 'file_list') {
+        progress.textContent = `파일 ${msg.count}개 발견 · 인덱싱 중…`;
+      } else if (msg.type === 'result') {
+        progress.textContent = `${msg.index} / ${msg.total} 완료`;
+        const tr = document.createElement('tr');
+        const tags = (msg.tags || []).map((t) => `<span class="tag">${t}</span>`).join('');
+        tr.innerHTML = `
+          <td class="path">${msg.path}</td>
+          <td class="chunks">${msg.chunks}</td>
+          <td class="${msg.error ? 'rowerr' : ''}">${msg.summary}</td>
+          <td>${tags}</td>`;
+        body.appendChild(tr);
+      } else if (msg.type === 'done') {
+        progress.textContent = `완료 — 총 ${msg.total}개 파일.`;
+        btn.disabled = false;
+      } else if (msg.type === 'error') {
+        progress.innerHTML = `<span class="rowerr">${msg.error}</span>`;
+        btn.disabled = false;
+      }
     }
-    wrap.appendChild(row);
-  });
-  if (data.entries.length === 0) wrap.textContent = '파일이 없습니다.';
-};
-
-document.getElementById('btnFile').onclick = async () => {
-  const path = document.getElementById('filePath').value.trim();
-  const data = await callApi('/api/file', { path });
-  if (!data) return;
-  document.getElementById('resultFile').hidden = false;
-  document.getElementById('fileMeta').innerHTML =
-    `<span class="ok">성공</span> · ${data.bytes} bytes`;
-  document.getElementById('fileContent').textContent = data.content;
+  }
 };
 </script>
 </body>
