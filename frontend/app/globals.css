@@ -2653,6 +2653,8 @@ mark.hl2.on {
 /* 도움말 팝오버 밖에서도 쓰는 기본형(예: 시퀀스 다이어그램 Mermaid 코드) — 팝오버
    안에서만 높이를 제한하고 세로로 스크롤한다. */
 .promptbox {
+  width: 100%;
+  box-sizing: border-box;
   background: #0d1117;
   color: #c9d1d9;
   border-radius: 8px;

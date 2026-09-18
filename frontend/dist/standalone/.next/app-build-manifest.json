@@ -12,8 +12,16 @@
       "static/chunks/fd9d1056-f39505524f665a8e.js",
       "static/chunks/7023-e825e02fe3f05d49.js",
       "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/css/11ce8e6e6e18051b.css",
+      "static/css/10dbcd4351c5682c.css",
       "static/chunks/app/layout-26de3e3a75724cce.js"
+    ],
+    "/dashboard/page": [
+      "static/chunks/webpack-3ffeadaab843a131.js",
+      "static/chunks/fd9d1056-f39505524f665a8e.js",
+      "static/chunks/7023-e825e02fe3f05d49.js",
+      "static/chunks/main-app-4e4b731e1213032b.js",
+      "static/chunks/3718-a8c1b1b1154c6eca.js",
+      "static/chunks/app/dashboard/page-ae58f86b980da97c.js"
     ],
     "/login/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
@@ -39,23 +47,6 @@
       "static/chunks/85-5ede9d604b48b45e.js",
       "static/chunks/app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/[artifactType]/page-f5bf15846b79d756.js"
     ],
-    "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page": [
-      "static/chunks/webpack-3ffeadaab843a131.js",
-      "static/chunks/fd9d1056-f39505524f665a8e.js",
-      "static/chunks/7023-e825e02fe3f05d49.js",
-      "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/chunks/3718-a8c1b1b1154c6eca.js",
-      "static/chunks/85-5ede9d604b48b45e.js",
-      "static/chunks/app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page-34f46425e636e8ad.js"
-    ],
-    "/dashboard/page": [
-      "static/chunks/webpack-3ffeadaab843a131.js",
-      "static/chunks/fd9d1056-f39505524f665a8e.js",
-      "static/chunks/7023-e825e02fe3f05d49.js",
-      "static/chunks/main-app-4e4b731e1213032b.js",
-      "static/chunks/3718-a8c1b1b1154c6eca.js",
-      "static/chunks/app/dashboard/page-ae58f86b980da97c.js"
-    ],
     "/projects/[id]/artifacts/[reqId]/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
       "static/chunks/fd9d1056-f39505524f665a8e.js",
@@ -64,6 +55,15 @@
       "static/chunks/3718-a8c1b1b1154c6eca.js",
       "static/chunks/85-5ede9d604b48b45e.js",
       "static/chunks/app/projects/[id]/artifacts/[reqId]/page-98c2a5953a362655.js"
+    ],
+    "/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page": [
+      "static/chunks/webpack-3ffeadaab843a131.js",
+      "static/chunks/fd9d1056-f39505524f665a8e.js",
+      "static/chunks/7023-e825e02fe3f05d49.js",
+      "static/chunks/main-app-4e4b731e1213032b.js",
+      "static/chunks/3718-a8c1b1b1154c6eca.js",
+      "static/chunks/85-5ede9d604b48b45e.js",
+      "static/chunks/app/projects/[id]/artifacts/[reqId]/issues/[issueKey]/page-34f46425e636e8ad.js"
     ],
     "/projects/[id]/artifacts/[reqId]/split/page": [
       "static/chunks/webpack-3ffeadaab843a131.js",
