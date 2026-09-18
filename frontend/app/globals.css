@@ -2194,78 +2194,12 @@ mark.hl2.on {
   max-width: 1400px;
 }
 
-/* ── 버전 비교 바 ─────────────────────────────────────────── */
-
-.cmpbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--surface-muted);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 11px 14px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.cmpbar .lbl0 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.cmpsel {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.cmpsel select {
-  border: none;
-  outline: none;
-  background: transparent;
-  font: inherit;
-  font-family: var(--mono);
-  font-weight: 700;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.cmparr {
-  color: var(--muted);
-  font-size: 16px;
-}
-
-.cmpstat {
-  margin-left: auto;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.cmpstat .add {
-  color: var(--green);
-  font-weight: 700;
-}
-
-.cmpstat .del {
-  color: var(--red);
-  font-weight: 700;
-}
-
 /* ── diff 본체 ────────────────────────────────────────────── */
 
 .diff2 {
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 18px;
   background: var(--surface);
 }
 
@@ -2282,7 +2216,11 @@ mark.hl2.on {
   flex-wrap: wrap;
 }
 
-/* ── 커밋형 이력 목록 ─────────────────────────────────────── */
+/* ── 버전 이력 통합 타임라인 ──────────────────────────────────
+   예전엔 "base/compare 드롭다운으로 고르는 비교 바"와 "커밋 목록"이 따로
+   떨어져 있어서 특정 버전이 뭘 바꿨는지 보려면 조작이 두 번 필요했다.
+   이제 버전마다 바로 밑에서 직전 버전과의 diff를 펼쳐 볼 수 있다 — 기본
+   비교 대상은 항상 "바로 직전 버전"이라 따로 고를 필요가 없다. */
 
 .vday {
   font-size: 13px;
@@ -2291,88 +2229,104 @@ mark.hl2.on {
   margin: 0 0 12px 8px;
 }
 
-.commits {
+.vtimeline {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface);
-  overflow: hidden;
+  padding: 4px 20px 8px;
 }
 
-.cm {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--line-muted);
+.vrow {
+  position: relative;
+  padding: 16px 0 16px 26px;
+  border-left: 2px solid var(--line);
 }
 
-.cm:last-child {
-  border-bottom: none;
+.vrow:last-child {
+  border-left-color: transparent;
+  padding-bottom: 4px;
 }
 
-.av2 {
-  width: 26px;
-  height: 26px;
+.vdot {
+  position: absolute;
+  left: -8px;
+  top: 20px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 11px;
-  color: #fff;
-  flex: 0 0 26px;
+  background: var(--ink);
+  border: 3px solid var(--surface);
 }
 
-.cm .cmain {
-  min-width: 0;
-  flex: 1;
+.vdot.draft {
+  background: var(--faint);
 }
 
-.cm .ctitle {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.cm .cmeta {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin-top: 3px;
+.vhead {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.cm .cmeta b {
+.vhead .vtag {
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.vwho {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.vwho b {
   color: var(--ink);
   font-weight: 600;
 }
 
-.cm .cright {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.cm .verpill {
+.vstat {
+  margin-left: auto;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 3px 11px;
-  border-radius: 999px;
 }
 
-.cm .verpill.cur {
-  background: var(--accent);
-  color: #fff;
+.vstat .add {
+  color: var(--green);
 }
 
-.cm .verpill.old {
-  background: var(--surface-muted);
-  color: var(--muted);
+.vstat .del {
+  color: var(--red);
 }
 
-.cm .kind {
+.vreason {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.vexpand {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.vexpand:hover {
+  text-decoration: underline;
+}
+
+.kind {
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;

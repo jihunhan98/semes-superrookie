@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import DiffHighlight from "../../../../../components/DiffHighlight";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
-import { colorFor } from "../../../../../lib/colors";
 import {
   compareVersions,
   getProject,
@@ -33,10 +32,10 @@ export default function RequirementVersionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [base, setBase] = useState<string>("");
-  const [head, setHead] = useState<string>("");
-  const [diff, setDiff] = useState<CompareResult | null>(null);
-  const [comparing, setComparing] = useState(false);
+  // 버전마다 "직전 버전 → 이 버전" diff를 미리 다 받아둔다 — +N/-N 통계를 펼치기 전에도
+  // 바로 보여주려는 것. 실제 형광펜 diff 본문은 펼쳤을 때만 렌더링한다(이미 받아둔 값 재사용).
+  const [diffs, setDiffs] = useState<Record<string, CompareResult>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -50,31 +49,28 @@ export default function RequirementVersionsPage() {
       .then(([p, r]) => {
         setProject(p);
         setReq(r);
-        // 기본 비교 대상: 직전 버전 ↔ 최신 버전. versions 는 최신순으로 온다.
-        if (r.versions.length > 0) {
-          setHead(r.versions[0].version);
-          setBase(r.versions.length > 1 ? r.versions[1].version : "");
-        }
+        if (r.versions.length === 0) return;
+        // versions는 최신순 — i번째는 (i+1)번째(직전 버전)와 비교, 가장 오래된 건 base 없음(최초 확정).
+        Promise.all(
+          r.versions.map((v, i) =>
+            compareVersions(projectId, requirementId, user.id, r.versions[i + 1]?.version ?? null, v.version),
+          ),
+        )
+          .then((results) => {
+            const map: Record<string, CompareResult> = {};
+            results.forEach((d) => {
+              map[d.headVersion] = d;
+            });
+            setDiffs(map);
+          })
+          .catch((err) => setError(err instanceof Error ? err.message : "버전 비교에 실패했습니다."));
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
 
-  const loadDiff = useCallback(async () => {
-    const user = getCurrentUser();
-    if (!user || !head) return;
-    setComparing(true);
-    try {
-      setDiff(await compareVersions(projectId, requirementId, user.id, base || null, head));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "버전 비교에 실패했습니다.");
-    } finally {
-      setComparing(false);
-    }
-  }, [projectId, requirementId, base, head]);
-
-  useEffect(() => {
-    if (head) void loadDiff();
-  }, [head, base, loadDiff]);
+  function toggleExpand(version: string) {
+    setExpanded((prev) => ({ ...prev, [version]: !prev[version] }));
+  }
 
   if (error) {
     return (
@@ -99,7 +95,6 @@ export default function RequirementVersionsPage() {
   }
 
   const versions = req.versions;
-  const latest = versions[0]?.version;
 
   return (
     <div className="appshell">
@@ -145,120 +140,67 @@ export default function RequirementVersionsPage() {
               </div>
             ) : (
               <>
-                {/* 비교 바 — base ↔ compare 를 골라 무엇이 바뀌었는지 본다. */}
-                <div className="cmpbar">
-                  <span className="lbl0">버전 비교</span>
-                  <span className="cmpsel">
-                    base
-                    <select value={base} onChange={(e) => setBase(e.target.value)}>
-                      <option value="">(없음 · 최초)</option>
-                      {versions.map((v) => (
-                        <option key={v.id} value={v.version}>
-                          v{v.version}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                  <span className="cmparr">→</span>
-                  <span className="cmpsel">
-                    compare
-                    <select value={head} onChange={(e) => setHead(e.target.value)}>
-                      {versions.map((v) => (
-                        <option key={v.id} value={v.version}>
-                          v{v.version}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                  <span className="cmpstat">
-                    {comparing ? (
-                      "비교 중…"
-                    ) : diff ? (
-                      <>
-                        <span className="add">＋{diff.added}</span>{" "}
-                        <span className="del">−{diff.removed}</span> ·{" "}
-                        {diff.added + diff.removed === 0 ? "변경 없음" : "본문 변경"}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </span>
-                </div>
+                <div className="vday">📌 버전마다 바로 밑에서 직전 버전과 무엇이 달라졌는지 펼쳐 봅니다</div>
 
-                {/* git diff 식 좌우 분할 대신, AI 검토 결과와 같은 방식으로 본문에 형광펜을
-                    칠해 무엇이 바뀌었는지 보여준다 — 눈을 좌우로 옮겨가며 맞춰 보지 않아도 되게.
-                    다만 base가 없는(=최초 확정 그 자체를 보는) 경우는 "전부 추가됨"으로
-                    표시할 대상이 없다 — 없던 데서 새로 생긴 것이니 형광펜·번호 카드 없이
-                    원문 그대로만 보여준다. */}
-                {diff && (
-                  <div className="diff2">
-                    <div className="dfh">
-                      📄 요구사항 본문 ·{" "}
-                      <b style={{ fontFamily: "var(--mono)" }}>{req.reqKey}</b>
-                      <span style={{ color: "var(--muted)", fontWeight: 500 }}>
-                        — {diff.headConfirmedByName ?? "—"} · {diff.headTitle} · {diff.headCreatedAt ?? ""}
-                      </span>
-                    </div>
-                    <div style={{ padding: "14px 16px" }}>
-                      {diff.baseVersion ? (
-                        <DiffHighlight
-                          rows={diff.rows}
-                          headLabel={`v${diff.baseVersion} → v${diff.headVersion}`}
-                          empty="두 버전 사이에 바뀐 부분이 없습니다."
-                        />
-                      ) : (
-                        <div className="srcbox">
-                          <div className="sh">
-                            v{diff.headVersion} (최초 확정)
-                            <span className="shhint">비교할 이전 버전이 없어 원문 그대로 보여줍니다</span>
-                          </div>
-                          <div className="srctext">
-                            {diff.rows.map((r) => r.headText ?? "").join("\n")}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* 커밋처럼 쌓인 확정 이력 */}
-                <div className="vday">📌 버전 이력 · 확정·수정할 때마다 커밋처럼 쌓입니다</div>
-                <div className="commits">
-                  {versions.map((v) => {
+                <div className="vtimeline">
+                  {versions.map((v, i) => {
                     const who = v.confirmedByName ?? "—";
+                    const d = diffs[v.version];
+                    const isOpen = !!expanded[v.version];
+                    const prevVersion = versions[i + 1]?.version;
                     return (
-                      <div className="cm" key={v.id}>
-                        <span className="av2" style={{ background: colorFor(who) }}>
-                          {who.slice(0, 1)}
-                        </span>
-                        <div className="cmain">
-                          <div className="ctitle">{v.title}</div>
-                          <div className="cmeta">
-                            <b>{who}</b>님이 확정 · {v.createdAt ?? ""}
-                          </div>
-                        </div>
-                        <div className="cright">
+                      <div className="vrow" key={v.id}>
+                        <span className="vdot" />
+                        <div className="vhead">
+                          <span className="vtag">v{v.version}</span>
                           <span className={`kind ${kindClass(v.kind)}`}>{v.kind}</span>
-                          <span className={`verpill ${v.version === latest ? "cur" : "old"}`}>
-                            v{v.version}
+                          <span className="vwho">
+                            <b>{who}</b>님이 확정 · {v.createdAt ?? ""}
                           </span>
+                          {d && (
+                            <span className="vstat">
+                              <span className="add">+{d.added}</span> <span className="del">−{d.removed}</span>
+                            </span>
+                          )}
                         </div>
+                        <div className="vreason">&ldquo;{v.title}&rdquo;</div>
+                        <button type="button" className="vexpand" onClick={() => toggleExpand(v.version)}>
+                          {isOpen ? "▴" : "▾"} {prevVersion ? `v${prevVersion} → v${v.version}` : `v${v.version}`} 비교
+                          보기
+                        </button>
+                        {isOpen && d && (
+                          <div className="diff2" style={{ marginTop: 10 }}>
+                            <div className="dfh">
+                              📄 본문 비교 ·{" "}
+                              {d.baseVersion ? `v${d.baseVersion} → v${d.headVersion}` : `v${d.headVersion} (최초 확정)`}
+                            </div>
+                            <div style={{ padding: "12px 14px" }}>
+                              {d.baseVersion ? (
+                                <DiffHighlight
+                                  rows={d.rows}
+                                  headLabel={`v${d.baseVersion} → v${d.headVersion}`}
+                                  empty="두 버전 사이에 바뀐 부분이 없습니다."
+                                />
+                              ) : (
+                                <div className="srctext">{d.rows.map((r) => r.headText ?? "").join("\n")}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+
                   {/* 확정 전 원문 — 버전은 아니지만 어디서 출발했는지 보이게 남긴다. */}
-                  <div className="cm" style={{ opacity: 0.72 }}>
-                    <span className="av2" style={{ background: "var(--faint)" }}>
-                      ·
-                    </span>
-                    <div className="cmain">
-                      <div className="ctitle">요구사항 등록 원문 접수</div>
-                      <div className="cmeta">
-                        {req.requesterName ?? "요청자"} · {req.createdAt ?? ""} · 확정 전 원문
-                      </div>
+                  <div className="vrow" style={{ opacity: 0.72 }}>
+                    <span className="vdot draft" />
+                    <div className="vhead">
+                      <span className="vwho" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
+                        요구사항 등록 원문 접수
+                      </span>
                     </div>
-                    <div className="cright">
-                      <span className="verpill old">draft</span>
+                    <div className="vreason" style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                      {req.requesterName ?? "요청자"} · {req.createdAt ?? ""} · 확정 전 원문
                     </div>
                   </div>
                 </div>
