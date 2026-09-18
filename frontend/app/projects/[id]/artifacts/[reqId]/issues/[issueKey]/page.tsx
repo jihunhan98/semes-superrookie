@@ -97,6 +97,13 @@ export default function IssueDetailPage() {
       <div className="body">
         {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
         <main className="main">
+          <Link
+            className="btn sm"
+            href={`/projects/${project.id}/artifacts/${requirementId}`}
+            style={{ marginBottom: 10 }}
+          >
+            ← 뒤로
+          </Link>
           <div className="crumb">
             <Link href={`/projects/${project.id}/artifacts`}>
               <b>산출물</b>
