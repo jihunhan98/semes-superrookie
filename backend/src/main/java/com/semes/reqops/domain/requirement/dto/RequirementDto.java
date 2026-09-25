@@ -117,7 +117,8 @@ public final class RequirementDto {
     public record ConfirmRequest(
             @NotNull Long userId,
             @NotBlank String content,
-            @Size(max = 200) String title
+            @Size(max = 200) String title,
+            Long consensusId
     ) {}
 
     /** 보류 — 고객 협의가 더 필요해 확정을 미룬다. */

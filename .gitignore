@@ -3,6 +3,7 @@
 Thumbs.db
 .vscode/
 .idea/
+.idea.*/
 *.swp
 
 # ===== Claude Code (local-only settings) =====
@@ -83,3 +84,4 @@ backend/target/
 # 되살린다 — frontend/.next(로컬 개발 캐시)는 여전히 무시된다.
 !frontend/dist/
 !frontend/dist/**
+frontend/dist/**/.DS_Store

@@ -108,4 +108,24 @@ public final class ApiErrors {
             super("알 수 없는 산출물 유형입니다: " + type);
         }
     }
+
+    public static class DevelopmentIssueNotFound extends RuntimeException {
+        public DevelopmentIssueNotFound(Long id) { super("개발 이슈를 찾을 수 없습니다: " + id); }
+    }
+
+    public static class InvalidScenarioType extends RuntimeException {
+        public InvalidScenarioType(String type) { super("시나리오 유형이 올바르지 않습니다: " + type); }
+    }
+
+    public static class IssueNotFixed extends RuntimeException {
+        public IssueNotFixed() { super("개발 이슈를 먼저 확정해야 산출물을 저장할 수 있습니다."); }
+    }
+
+    public static class Conflict extends RuntimeException {
+        public Conflict(String message) { super(message); }
+    }
+
+    public static class BadRequest extends RuntimeException {
+        public BadRequest(String message) { super(message); }
+    }
 }

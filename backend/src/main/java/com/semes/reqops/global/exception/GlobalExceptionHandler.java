@@ -74,4 +74,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleArtifactTypeNotFound(ApiErrors.ArtifactTypeNotFound e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(ApiErrors.DevelopmentIssueNotFound.class)
+    public ResponseEntity<Map<String, String>> handleDevelopmentIssueNotFound(ApiErrors.DevelopmentIssueNotFound e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler({ApiErrors.IssueNotFixed.class, ApiErrors.Conflict.class})
+    public ResponseEntity<Map<String, String>> handleConflict(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler({ApiErrors.InvalidScenarioType.class, ApiErrors.BadRequest.class, IllegalArgumentException.class})
+    public ResponseEntity<Map<String, String>> handleBadRequest(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+    }
 }

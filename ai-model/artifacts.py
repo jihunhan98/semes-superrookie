@@ -89,6 +89,26 @@ def generate_rule(type_: str, title: str, quote: str | None) -> dict:
     return fn(title or "", quote or "")
 
 
+def generate_v2(type_: str, title: str, quote: str | None) -> dict:
+    """Canonical schema v2. Unknown business values stay null instead of being invented."""
+    quote = quote or None
+    extras: dict = {}
+    if type_ == "voc":
+        return {"requester": None, "requestContent": quote, "specialNotes": None, "legacyExtras": extras}
+    if type_ in ("functional", "nonfunctional"):
+        scenarios = [
+            {"type": kind, "precondition": None, "scenario": quote if kind == "BASIC" else None,
+             "postcondition": None, "applicability": "UNKNOWN", "reason": None}
+            for kind in ("BASIC", "VARIANT", "EXCEPTION")
+        ]
+        return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
+    if type_ == "detail-design":
+        return {"description": quote, "classDiagram": None, "sequenceDiagramAsIs": None,
+                "sequenceDiagramToBe": None, "asIsApplicability": "UNKNOWN", "asIsReason": None,
+                "legacyExtras": extras}
+    return {}
+
+
 def is_valid_shape(type_: str, content: object) -> bool:
     """LLM 응답이 화면이 기대하는 필드를 갖췄는지만 얕게 검사한다(내용의 질은 보지 않음)."""
     if not isinstance(content, dict):
@@ -111,4 +131,18 @@ def is_valid_shape(type_: str, content: object) -> bool:
             return False
         return isinstance(content["sequenceBeforeCode"], str) and isinstance(content["sequenceAfterCode"], str)
 
+    return False
+
+
+def is_valid_v2_shape(type_: str, content: object) -> bool:
+    if not isinstance(content, dict):
+        return False
+    if type_ == "voc":
+        return all(k in content for k in ("requester", "requestContent", "specialNotes", "legacyExtras"))
+    if type_ in ("functional", "nonfunctional"):
+        rows = content.get("scenarios")
+        return (all(k in content for k in ("overview", "constraintsNote", "scenarios", "legacyExtras"))
+                and isinstance(rows, list) and {r.get("type") for r in rows if isinstance(r, dict)} == {"BASIC", "VARIANT", "EXCEPTION"})
+    if type_ == "detail-design":
+        return all(k in content for k in ("description", "classDiagram", "sequenceDiagramAsIs", "sequenceDiagramToBe", "asIsApplicability", "asIsReason", "legacyExtras"))
     return False

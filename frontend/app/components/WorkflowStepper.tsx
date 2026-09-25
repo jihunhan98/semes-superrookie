@@ -1,0 +1,1 @@
+export default function WorkflowStepper({step}:{step:1|2|3|4}){const labels=["등록","검출 수정·요구사항 확정","이슈·산출물 도출","검토·전체 확정"];return <ol className="workflow-steps" aria-label="요구사항 처리 단계">{labels.map((label,i)=><li key={label} className={i+1===step?"current":i+1<step?"done":""} aria-current={i+1===step?"step":undefined}><span>{i+1}</span>{label}</li>)}</ol>}

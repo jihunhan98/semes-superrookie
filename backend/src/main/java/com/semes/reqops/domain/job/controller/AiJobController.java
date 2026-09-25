@@ -1,0 +1,3 @@
+package com.semes.reqops.domain.job.controller;
+import com.semes.reqops.domain.job.entity.AiJob; import com.semes.reqops.domain.job.service.AiJobService; import lombok.RequiredArgsConstructor; import org.springframework.web.bind.annotation.*; import java.util.Map;
+@RestController @RequiredArgsConstructor @RequestMapping("/api/v2/jobs") public class AiJobController {private final AiJobService service;@GetMapping("/{id}") public Map<String,Object> get(@PathVariable Long id){AiJob j=service.get(id);return Map.of("id",j.getId(),"kind",j.getKind(),"status",j.getStatus().name(),"total",j.getTotalCount(),"succeeded",j.getSucceededCount(),"failed",j.getFailedCount(),"pending",j.getTotalCount()-j.getSucceededCount()-j.getFailedCount());}}

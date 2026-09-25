@@ -7,6 +7,8 @@ import com.semes.reqops.domain.artifact.dto.ArtifactDto.RegenerateRequest;
 import com.semes.reqops.domain.artifact.entity.ArtifactType;
 import com.semes.reqops.domain.artifact.entity.DevIssueArtifact;
 import com.semes.reqops.domain.artifact.repository.DevIssueArtifactRepository;
+import com.semes.reqops.domain.artifact.repository.ArtifactRevisionRepository;
+import com.semes.reqops.domain.artifact.entity.ArtifactRevision;
 import com.semes.reqops.domain.issue.entity.DevIssue;
 import com.semes.reqops.domain.issue.repository.DevIssueRepository;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
@@ -25,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 
 /**
  * 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) 상세 — 개발 이슈 1건당 1개씩.
@@ -47,15 +52,17 @@ public class ArtifactService {
     private final MembershipRepository membershipRepository;
     private final AiClient aiClient;
     private final ObjectMapper objectMapper;
+    private final ArtifactRevisionRepository revisionRepository;
+    private final ArtifactContentValidator validator;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ArtifactResponse get(Long projectId, Long requirementId, String issueKey, String typeSlug, Long userId) {
         requireMember(projectId, userId);
         DevIssue issue = findIssue(projectId, requirementId, issueKey);
         ArtifactType type = ArtifactType.fromSlug(typeSlug);
 
         DevIssueArtifact artifact = artifactRepository.findByDevIssueIdAndArtifactType(issue.getId(), type)
-                .orElseGet(() -> createDraft(issue, type, null, userId));
+                .orElseThrow(() -> new ApiErrors.Conflict("산출물 초안이 아직 준비되지 않았습니다."));
         return toResponse(type, artifact);
     }
 
@@ -76,6 +83,8 @@ public class ArtifactService {
         AiArtifactDto.Response ai = aiClient.generateArtifact(
                 type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId));
         artifact.regenerate(writeJson(ai.content()), ai.engine());
+        artifactRepository.save(artifact);
+        saveRevision(artifact, blankToNull(req.reason()), req.userId());
         return toResponse(type, artifact);
     }
 
@@ -88,7 +97,10 @@ public class ArtifactService {
 
         DevIssueArtifact artifact = artifactRepository.findByDevIssueIdAndArtifactType(issue.getId(), type)
                 .orElseGet(() -> createDraft(issue, type, null, req.userId()));
+        validator.validateConfirmed(type, req.content());
         artifact.confirm(writeJson(req.content()), req.userId());
+        artifactRepository.save(artifact);
+        saveRevision(artifact, "사용자 확정", req.userId());
         return toResponse(type, artifact);
     }
 
@@ -107,7 +119,7 @@ public class ArtifactService {
     @Async("aiTaskExecutor")
     public void warmDraftAsync(Long projectId, Long requirementId, String issueKey, String typeSlug, Long userId) {
         try {
-            get(projectId, requirementId, issueKey, typeSlug, userId);
+            regenerate(projectId, requirementId, issueKey, typeSlug, new RegenerateRequest(userId, null));
         } catch (Exception e) {
             log.warn("산출물 미리 생성 실패(나중에 열람 시 다시 시도됨) — issue={} type={}: {}",
                     issueKey, typeSlug, e.getMessage());
@@ -125,6 +137,28 @@ public class ArtifactService {
         return artifactRepository.save(
                 new DevIssueArtifact(issue.getId(), type, writeJson(ai.content()), ai.engine(), userId));
     }
+
+    @Transactional
+    public void ensurePlaceholders(Long issueId, Long userId) {
+        for (ArtifactType type : ArtifactType.values()) {
+            artifactRepository.findByDevIssueIdAndArtifactType(issueId, type).orElseGet(() ->
+                    artifactRepository.save(new DevIssueArtifact(issueId, type, writeJson(emptyV2(type)), "unavailable", userId)));
+        }
+    }
+
+    private Map<String,Object> emptyV2(ArtifactType type) {
+        Map<String,Object> extras = new java.util.LinkedHashMap<>();
+        if (type == ArtifactType.VOC) return map("requester",null,"requestContent",null,"specialNotes",null,"legacyExtras",extras);
+        if (type == ArtifactType.FUNCTIONAL || type == ArtifactType.NONFUNCTIONAL) {
+            List<Map<String,Object>> rows = List.of(scenario("BASIC"),scenario("VARIANT"),scenario("EXCEPTION"));
+            return map("overview",null,"constraintsNote",null,"scenarios",rows,"legacyExtras",extras);
+        }
+        return map("description",null,"classDiagram",null,"sequenceDiagramAsIs",null,"sequenceDiagramToBe",null,"asIsApplicability","UNKNOWN","asIsReason",null,"legacyExtras",extras);
+    }
+    private Map<String,Object> scenario(String type){return map("type",type,"precondition",null,"scenario",null,"postcondition",null,"applicability","UNKNOWN","reason",null);}
+    private Map<String,Object> map(Object... values){Map<String,Object> out=new java.util.LinkedHashMap<>();for(int i=0;i<values.length;i+=2)out.put((String)values[i],values[i+1]);return out;}
+    private void saveRevision(DevIssueArtifact artifact,String reason,Long actor){String json=artifact.getContentJson();revisionRepository.save(new ArtifactRevision(artifact.getId(),revisionRepository.countByArtifactId(artifact.getId())+1,artifact.getState(),json,hash(json),reason,actor));}
+    private String hash(String value){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
 
     /**
      * 같은 프로젝트의 다른 요구사항들 — req-1~4가 지금 다루는 req와 유기적으로 엮여

@@ -20,15 +20,7 @@ const ARTIFACTS_ICON = (
   <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z" />
 );
 
-const PLACEHOLDER_NAV_ITEMS = [
-  {
-    key: "traceability",
-    label: "추적성",
-    icon: <path d="M5.5 3.25a2.25 2.25 0 1 1 3 2.122v4.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 5.5 3.25Z" />,
-  },
-] as const;
-
-type NavKey = "home" | "requirements" | "artifacts" | (typeof PLACEHOLDER_NAV_ITEMS)[number]["key"] | "settings";
+type NavKey = "home" | "requirements" | "artifacts" | "settings";
 
 export default function ProjectSidebar({
   projectId,
@@ -74,15 +66,6 @@ export default function ProjectSidebar({
         </svg>
         산출물
       </Link>
-
-      {PLACEHOLDER_NAV_ITEMS.map((item) => (
-        <a key={item.key} className={`nav${active === item.key ? " on" : ""}`} href="#" aria-disabled>
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            {item.icon}
-          </svg>
-          {item.label}
-        </a>
-      ))}
 
       <div className="nl">프로젝트</div>
       <Link href={`/projects/${projectId}/settings`} className={`nav${active === "settings" ? " on" : ""}`}>

@@ -19,9 +19,23 @@ public class Requirement {
     @Column(name = "req_key", nullable = false, length = 50)
     private String reqKey;
 
+    @Column(nullable = false, length = 200)
+    private String title;
+
     @Lob
     @Column(nullable = false)
     private String content;
+
+    @Lob
+    @Column(name = "original_content")
+    private String originalContent;
+
+    @Column(name = "original_source", nullable = false, length = 20)
+    private String originalSource;
+
+    @Version
+    @Column(name = "row_version", nullable = false)
+    private long rowVersion;
 
     @Column(name = "requester_dept", length = 100)
     private String requesterDept;
@@ -56,7 +70,10 @@ public class Requirement {
                        String requesterDept, String requesterName, Long createdBy) {
         this.projectId = projectId;
         this.reqKey = reqKey;
+        this.title = reqKey;
         this.content = content;
+        this.originalContent = content;
+        this.originalSource = "REGISTERED";
         this.requesterDept = requesterDept;
         this.requesterName = requesterName;
         this.createdBy = createdBy;
@@ -121,7 +138,11 @@ public class Requirement {
     public Long getId() { return id; }
     public Long getProjectId() { return projectId; }
     public String getReqKey() { return reqKey; }
+    public String getTitle() { return title; }
     public String getContent() { return content; }
+    public String getOriginalContent() { return originalContent; }
+    public String getOriginalSource() { return originalSource; }
+    public long getRowVersion() { return rowVersion; }
     public String getRequesterDept() { return requesterDept; }
     public String getRequesterName() { return requesterName; }
     public ReqState getState() { return state; }

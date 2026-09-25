@@ -1,14 +1,14 @@
 spring:
   datasource:
     # 사내 Oracle 서버(SID 방식). 주소·계정은 환경에 맞게 수정.
-    url: jdbc:oracle:thin:@21.1.1.250:1521:orcl
-    username: REQOPS
-    password: semes
+    url: ${DB_URL:jdbc:oracle:thin:@localhost:1521/XEPDB1}
+    username: ${DB_USERNAME:REQOPS}
+    password: ${DB_PASSWORD:}
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
     hibernate:
       ddl-auto: none          # 스키마/테이블은 db/init.sql로 직접 관리
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate.format_sql: true
 
@@ -20,7 +20,7 @@ app:
   # localhost 로 열든 LAN IP 로 열든 여기서 따로 맞출 필요가 없다.
   ai:
     # 요구사항 검토 AI 서버(ai-model, FastAPI). 미가동이어도 등록은 되며 검출 0건으로 처리된다.
-    base-url: http://localhost:8001
+    base-url: ${AI_BASE_URL:http://localhost:8001}
     # AI 응답 대기 시간. 등록 요청이 이 시간만큼 걸릴 수 있어(로딩 화면) 넉넉히 잡는다.
     #
     # ai-model 자신도 사내 LLM API를 호출할 때 자체 타임아웃(LLM_API_TIMEOUT, 기본
@@ -31,4 +31,7 @@ app:
     # 실패 ... content type [application/octet-stream]"(응답을 다 못 받고 소켓이
     # 끊긴 상태)로 찍힌다. 그래서 반드시 ai-model의 LLM_API_TIMEOUT(기본 30초)보다
     # 여유 있게 크게 잡아야 한다.
-    timeout-ms: 45000
+    timeout-ms: ${AI_TIMEOUT_MS:120000}
+    worker-delay-ms: ${AI_WORKER_DELAY_MS:1000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}

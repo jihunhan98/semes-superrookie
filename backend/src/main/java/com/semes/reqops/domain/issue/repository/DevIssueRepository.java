@@ -13,6 +13,8 @@ public interface DevIssueRepository extends JpaRepository<DevIssue, Long> {
 
     List<DevIssue> findByRequirementIdOrderByDisplayOrderAsc(Long requirementId);
 
+    List<DevIssue> findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(Long requirementId, String issueState);
+
     Optional<DevIssue> findByRequirementIdAndIssueKey(Long requirementId, String issueKey);
 
     /**

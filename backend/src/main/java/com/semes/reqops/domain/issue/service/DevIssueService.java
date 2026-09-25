@@ -17,19 +17,21 @@ import com.semes.reqops.domain.user.repository.UserRepository;
 import com.semes.reqops.global.ai.AiClient;
 import com.semes.reqops.global.ai.AiSplitDto;
 import com.semes.reqops.global.exception.ApiErrors;
+import com.semes.reqops.domain.workflow.entity.WorkBundle;
+import com.semes.reqops.domain.workflow.repository.WorkBundleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * "이슈 나누기" — 확정 요구사항 1건을 개발 이슈 N건으로 나눈다(1:N).
  *
  * <p>산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design)은 아직 화면 얼개(목업)만
- * 있고 이 서비스가 만들지 않는다 — {@code frontend/app/lib/artifactsMock.ts} 가
- * 이 서비스가 내려준 실제 이슈(키·제목)에 목업 내용을 입혀 보여준다.
+ * 산출물은 canonical {@code DEV_ISSUE_ARTIFACTS}에 고정 schema v2로 저장한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,6 +44,7 @@ public class DevIssueService {
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final AiClient aiClient;
+    private final WorkBundleRepository bundleRepository;
 
     /** 화면이 열릴 때·"AI 다시 나눠줘"를 눌렀을 때 — 아무것도 저장하지 않는다. */
     @Transactional(readOnly = true)
@@ -66,7 +69,10 @@ public class DevIssueService {
         requireMember(projectId, req.userId());
         findConfirmed(projectId, requirementId);
 
-        devIssueRepository.deleteByRequirementId(requirementId);
+        List<DevIssue> previous = devIssueRepository
+                .findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId, "RETIRED");
+        previous.forEach(DevIssue::retire);
+        devIssueRepository.saveAll(previous);
 
         String reqKey = requirementRepository.findById(requirementId)
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId))
@@ -75,14 +81,20 @@ public class DevIssueService {
         List<IssueInput> inputs = req.issues();
         for (int i = 0; i < inputs.size(); i++) {
             IssueInput in = inputs.get(i);
-            devIssueRepository.save(new DevIssue(
+            DevIssue issue = new DevIssue(
                     requirementId,
-                    reqKey + "-" + (i + 1),
+                    "I-" + UUID.randomUUID().toString().substring(0, 12),
                     in.title().trim(),
                     blankToNull(in.quote()),
                     i,
-                    req.userId()));
+                    req.userId());
+            bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
+                    .ifPresent(bundle -> issue.assignBundle(bundle.getId()));
+            devIssueRepository.save(issue);
         }
+
+        bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
+                .ifPresent(bundle -> { bundle.issuesReady(); bundleRepository.save(bundle); });
 
         return list(projectId, requirementId, req.userId());
     }
@@ -93,7 +105,7 @@ public class DevIssueService {
         requireMember(projectId, userId);
         findInProject(projectId, requirementId);
 
-        return devIssueRepository.findByRequirementIdOrderByDisplayOrderAsc(requirementId).stream()
+        return devIssueRepository.findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId, "RETIRED").stream()
                 .map(this::toResponse)
                 .toList();
     }

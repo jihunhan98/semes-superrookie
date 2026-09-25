@@ -320,7 +320,7 @@ export function recordConsensus(
 export function confirmRequirement(
   projectId: number,
   requirementId: number,
-  input: { userId: number; content: string; title?: string },
+  input: { userId: number; content: string; title?: string; consensusId?: number },
 ): Promise<RequirementDetail> {
   return postJson<RequirementDetail>(
     `/api/projects/${projectId}/requirements/${requirementId}/confirm`,
@@ -416,7 +416,7 @@ export function listDevIssues(
 // ── 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) ────────────────
 // 개발 이슈 1건당 1개씩. 유형마다 필드가 전혀 달라 content는 그 유형에 맞는
 // 모양의 JSON을 그대로 주고받는다(백엔드도 해석하지 않고 통과시킨다) —
-// artifactsMock.ts의 VocArtifact/FunctionalArtifact/... 필드와 같은 모양.
+// content는 서버의 schemaVersion=2 고정 양식을 사용한다.
 
 export type ArtifactTypeSlug = "voc" | "functional" | "nonfunctional" | "detail-design";
 

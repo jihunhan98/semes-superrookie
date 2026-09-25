@@ -44,6 +44,16 @@ public class DevIssue {
     @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
+    @Column(name = "bundle_id") private Long bundleId;
+    @Lob @Column private String symptom;
+    @Lob @Column(name = "improvement_req") private String improvementReq;
+    @Lob @Column(name = "change_scope") private String changeScope;
+    @Lob @Column(name = "constraints_note") private String constraintsNote;
+    @Lob @Column(name = "before_state") private String beforeState;
+    @Lob @Column(name = "after_state") private String afterState;
+    @Column(name = "issue_state", nullable = false, length = 20) private String issueState = "DRAFT";
+    @Version @Column(name = "row_version", nullable = false) private long rowVersion;
+
     @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
@@ -66,6 +76,22 @@ public class DevIssue {
     @PrePersist
     void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.issueState == null) this.issueState = "DRAFT";
+    }
+
+    public void retire() { this.issueState = "RETIRED"; }
+    public void assignBundle(Long bundleId) { this.bundleId = bundleId; }
+
+    public void updateBody(String title, String quote, String symptom, String improvementReq,
+                           String changeScope, String constraintsNote, String beforeState, String afterState) {
+        this.title = title;
+        this.quote = quote;
+        this.symptom = symptom;
+        this.improvementReq = improvementReq;
+        this.changeScope = changeScope;
+        this.constraintsNote = constraintsNote;
+        this.beforeState = beforeState;
+        this.afterState = afterState;
     }
 
     public Long getId() { return id; }
@@ -76,4 +102,13 @@ public class DevIssue {
     public int getDisplayOrder() { return displayOrder; }
     public Long getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getBundleId() { return bundleId; }
+    public String getSymptom() { return symptom; }
+    public String getImprovementReq() { return improvementReq; }
+    public String getChangeScope() { return changeScope; }
+    public String getConstraintsNote() { return constraintsNote; }
+    public String getBeforeState() { return beforeState; }
+    public String getAfterState() { return afterState; }
+    public String getIssueState() { return issueState; }
+    public long getRowVersion() { return rowVersion; }
 }

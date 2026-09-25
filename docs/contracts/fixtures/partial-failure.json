@@ -1,0 +1,1 @@
+{"schemaVersion":2,"issue":{"title":"AMR 선택","symptom":null,"improvementReq":null,"changeScope":null,"constraintsNote":null,"beforeState":null,"afterState":null},"outputs":[{"type":"DETAIL_DESIGN","status":"FAILED","content":null,"errors":["SCHEMA_INVALID"]}],"engine":"rule"}

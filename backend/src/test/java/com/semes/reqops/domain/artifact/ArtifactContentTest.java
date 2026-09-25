@@ -1,0 +1,6 @@
+package com.semes.reqops.domain.artifact;
+import com.semes.reqops.domain.artifact.entity.ArtifactType; import com.semes.reqops.domain.artifact.service.ArtifactContentValidator; import com.semes.reqops.global.exception.ApiErrors; import org.junit.jupiter.api.Test; import java.util.*; import static org.junit.jupiter.api.Assertions.*;
+class ArtifactContentTest {private final ArtifactContentValidator validator=new ArtifactContentValidator();
+ @Test void acceptsExactlyThreeScenarioKinds(){Map<String,Object> doc=new LinkedHashMap<>();doc.put("overview",null);doc.put("constraintsNote",null);doc.put("legacyExtras",Map.of());doc.put("scenarios",List.of(row("BASIC"),row("VARIANT"),row("EXCEPTION")));assertDoesNotThrow(()->validator.validateDraft(ArtifactType.FUNCTIONAL,doc));}
+ @Test void rejectsMissingVariant(){Map<String,Object> doc=new LinkedHashMap<>();doc.put("overview",null);doc.put("constraintsNote",null);doc.put("legacyExtras",Map.of());doc.put("scenarios",List.of(row("BASIC"),row("EXCEPTION"),row("EXCEPTION")));assertThrows(ApiErrors.BadRequest.class,()->validator.validateDraft(ArtifactType.NONFUNCTIONAL,doc));}
+ private Map<String,Object> row(String type){return Map.of("type",type,"applicability","UNKNOWN");}}

@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: ${ORACLE_TEST_URL}
+    username: ${ORACLE_TEST_USER}
+    password: ${ORACLE_TEST_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none

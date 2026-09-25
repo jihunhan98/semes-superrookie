@@ -1,0 +1,3 @@
+import test from "node:test"; import assert from "node:assert/strict"; import { existsSync } from "node:fs"; import { fileURLToPath } from "node:url"; import { resolve,dirname } from "node:path";
+const root=resolve(dirname(fileURLToPath(import.meta.url)),"../..");
+test("canonical derive, review and artifact routes exist",()=>{for(const path of ["app/projects/[id]/requirements/[reqId]/issues/page.tsx","app/projects/[id]/requirements/[reqId]/review/page.tsx","app/projects/[id]/requirements/[reqId]/issues/[issueId]/artifacts/[artifactType]/page.tsx"])assert.equal(existsSync(resolve(root,path)),true,path);});

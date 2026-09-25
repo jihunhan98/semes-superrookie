@@ -27,6 +27,9 @@ echo  ===========================================
 echo.
 
 set "SKIPPED="
+if exist "backend\.env" for /f "usebackq tokens=1,* delims==" %%A in ("backend\.env") do if not "%%A"=="" set "%%A=%%B"
+set "WITH_BACKEND="
+if /i "%~1"=="--with-backend" set "WITH_BACKEND=1"
 
 rem ── 1. AI 서버 (FastAPI · 8001) ──────────────────────────────
 rem  venv 의 python.exe 를 직접 부른다 — activate 를 거치지 않아도 되고,
@@ -37,7 +40,7 @@ if exist "ai-model\.venv\Scripts\python.exe" set "PYEXE=.venv\Scripts\python.exe
 if not defined PYEXE if exist "ai-model\venv\Scripts\python.exe" set "PYEXE=venv\Scripts\python.exe"
 
 if defined PYEXE (
-  echo  [1/2] AI 서버 실행           http://localhost:8001/docs
+  echo  [1/3] AI 서버 실행           http://localhost:8001/docs
   start "ReqOps - AI 서버 (8001)" cmd /k "chcp 65001 >nul && cd /d ai-model && %PYEXE% -m uvicorn main:app --port 8001"
   rem 백엔드가 요구사항 등록 때 AI 서버를 부르므로 이쪽이 먼저 떠 있는 게 낫다.
   timeout /t 3 /nobreak >nul
@@ -47,7 +50,12 @@ if defined PYEXE (
   set "MSG_AI=1"
 )
 
-echo  ^> 백엔드^(8080^)는 이 배치가 아니라 직접 실행하세요.
+if defined WITH_BACKEND (
+  echo  [2/3] 백엔드 실행            http://localhost:8080
+  start "ReqOps - 백엔드 (8080)" cmd /k "chcp 65001 ^>nul ^&^& cd /d backend ^&^& mvnw.cmd spring-boot:run"
+) else (
+  echo  [2/3] 백엔드 건너뜀          필요하면 --with-backend 사용
+)
 
 rem ── 2. 프론트 (Next.js · 3000) ───────────────────────────────
 rem  node_modules 가 있으면 개발 서버(코드 수정 즉시 반영), 없으면
@@ -80,7 +88,7 @@ echo.
 echo    AI 서버   http://localhost:8001/docs
 echo    프론트    http://localhost:3000/login
 echo.
-echo   백엔드^(8080^)는 직접 실행하세요. 프론트가 API 를 8080 으로 부릅니다.
+echo    백엔드    http://localhost:8080  ^(--with-backend 또는 별도 실행^)
 echo.
 echo   종료하려면 stop-all.bat 을 실행하세요.
 echo  ===========================================

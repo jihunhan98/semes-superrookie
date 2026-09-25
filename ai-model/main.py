@@ -32,6 +32,8 @@ from pydantic import BaseModel, Field
 
 import artifacts
 import rules
+from config import Settings
+from providers import GeminiProvider, InternalProvider, RuleProvider
 
 log = logging.getLogger("ai-model")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -70,6 +72,13 @@ LLM_API_BASE = os.getenv("LLM_API_BASE", "").strip()
 LLM_API_MODEL = os.getenv("LLM_API_MODEL", "gpt-4")  # 서버가 서빙하는 모델명에 맞춘다
 LLM_API_KEY = os.getenv("LLM_API_KEY", "EMPTY")      # 사내 서비스는 인증 없이 EMPTY
 LLM_API_TIMEOUT = float(os.getenv("LLM_API_TIMEOUT", "30"))
+SETTINGS = Settings()
+SETTINGS.validate()
+PROVIDER = ({
+    "rule": lambda: RuleProvider(),
+    "internal": lambda: InternalProvider(SETTINGS.internal_base, SETTINGS.internal_model, SETTINGS.internal_key, SETTINGS.timeout),
+    "gemini": lambda: GeminiProvider(SETTINGS.gemini_key, SETTINGS.gemini_model, SETTINGS.timeout),
+}[SETTINGS.provider])()
 
 # 개발 중 로딩 UI를 확인하기 위한 인위적 지연(초). 폐쇄망 실서버에서는 0.
 ANALYZE_DELAY = float(os.getenv("ANALYZE_DELAY", "0"))
@@ -146,14 +155,32 @@ class ArtifactGenerateResponse(BaseModel):
     engine: str
     elapsedMs: int
 
+class ArtifactBatchRequest(BaseModel):
+    issueTitle: str
+    issueQuote: str | None = None
+    requirementContent: str
+    requestedTypes: list[str] = Field(default_factory=lambda: ["VOC", "FUNCTIONAL", "NONFUNCTIONAL", "DETAIL_DESIGN"])
+
+class ArtifactOutput(BaseModel):
+    type: str
+    status: str
+    content: dict | None
+    errors: list[str] = Field(default_factory=list)
+
+class ArtifactBatchResponse(BaseModel):
+    schemaVersion: int = 2
+    issue: dict
+    outputs: list[ArtifactOutput]
+    engine: str
+
 
 @app.get("/health")
 def health() -> dict:
     """사내 LLM API 설정 여부 — 폐쇄망 배포 후 첫 확인용."""
     return {
         "status": "ok",
-        "llmApiConfigured": bool(LLM_API_BASE),
-        "llmApiModel": LLM_API_MODEL,
+        "provider": PROVIDER.name,
+        "providerConfigured": PROVIDER.enabled,
     }
 
 
@@ -180,11 +207,11 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     # 여기서 unavailable 을 쓰면 화면에 "AI 미응답 N건" 같은 앞뒤 안 맞는 표시가 나온다.
     # unavailable 은 AI 서버 자체가 응답하지 못한 경우에만 백엔드가 채운다.
     engine = "rule"
-    if LLM_API_BASE:
+    if PROVIDER.enabled:
         try:
             extra = _ask_llm_api(target, req.reason)
             findings = _merge(findings, extra)
-            engine = "llm-api"
+            engine = PROVIDER.name
         except Exception as e:  # LLM 실패는 치명적이지 않다 — 규칙 결과로 계속 간다.
             log.warning("사내 LLM 호출 실패, 규칙 결과만 사용: %s", e)
 
@@ -219,12 +246,12 @@ def split(req: SplitRequest) -> SplitResponse:
     engine = "rule"
     issues = rule_issues
 
-    if LLM_API_BASE:
+    if PROVIDER.enabled:
         try:
             llm_issues = _ask_llm_split(content, req.reason)
             if llm_issues:
                 issues = llm_issues
-                engine = "llm-api"
+                engine = PROVIDER.name
         except Exception as e:
             log.warning("사내 LLM 분할 호출 실패, 규칙 결과만 사용: %s", e)
 
@@ -251,16 +278,16 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
 
     title = req.issueTitle or ""
     quote = req.issueQuote or ""
-    content = artifacts.generate_rule(req.type, title, quote)
+    content = artifacts.generate_v2(req.type, title, quote)
     engine = "rule"
 
-    if LLM_API_BASE and req.type in _ARTIFACT_PROMPTS:
+    if PROVIDER.enabled and req.type in _ARTIFACT_PROMPTS:
         try:
             llm_content = _ask_llm_artifact(
                 req.type, title, quote, req.requirementContent, req.reason, req.existing)
-            if artifacts.is_valid_shape(req.type, llm_content):
+            if artifacts.is_valid_v2_shape(req.type, llm_content):
                 content = llm_content
-                engine = "llm-api"
+                engine = PROVIDER.name
         except Exception as e:
             log.warning("사내 LLM 산출물 생성 실패, 규칙 결과만 사용: %s", e)
 
@@ -268,6 +295,20 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
     log.info("artifacts.generate type=%s engine=%s %dms", req.type, engine, elapsed)
 
     return ArtifactGenerateResponse(content=content, engine=engine, elapsedMs=elapsed)
+
+@app.post("/v2/artifacts/batch", response_model=ArtifactBatchResponse)
+def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
+    allowed = {"VOC": "voc", "FUNCTIONAL": "functional", "NONFUNCTIONAL": "nonfunctional", "DETAIL_DESIGN": "detail-design"}
+    outputs: list[ArtifactOutput] = []
+    for requested in req.requestedTypes:
+        if requested not in allowed:
+            outputs.append(ArtifactOutput(type=requested, status="FAILED", content=None, errors=["UNSUPPORTED_TYPE"]))
+            continue
+        outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED",
+            content=artifacts.generate_v2(allowed[requested], req.issueTitle, req.issueQuote)))
+    issue = {"title": req.issueTitle, "symptom": None, "improvementReq": req.issueQuote,
+             "changeScope": None, "constraintsNote": None, "beforeState": None, "afterState": None}
+    return ArtifactBatchResponse(issue=issue, outputs=outputs, engine=PROVIDER.name)
 
 
 # ── 내부 구현 ────────────────────────────────────────────────────
@@ -337,20 +378,7 @@ def _ask_llm_api(content: str, reason: str | None) -> list[rules.Finding]:
     OpenAI 라이브러리의 client.chat.completions.create(...) 와 같은 HTTP 요청을
     표준 라이브러리로 보낸다 — 폐쇄망에 openai 패키지를 반입하지 않으려고.
     """
-    body = _post_json(
-        f"{LLM_API_BASE}/chat/completions",
-        {
-            "model": LLM_API_MODEL,
-            "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _user_msg(content, reason)},
-            ],
-            "temperature": 0,
-        },
-        timeout=LLM_API_TIMEOUT,
-        headers={"Authorization": f"Bearer {LLM_API_KEY}"},
-    )
-    raw = body["choices"][0]["message"]["content"]
+    raw = PROVIDER.generate(_SYSTEM_PROMPT, _user_msg(content, reason))
     return _to_findings(raw, content)
 
 
@@ -374,20 +402,7 @@ def _ask_llm_split(content: str, reason: str | None) -> list[rules.IssueCandidat
     if reason:
         user += f"\n참고 지시: {reason}"
 
-    body = _post_json(
-        f"{LLM_API_BASE}/chat/completions",
-        {
-            "model": LLM_API_MODEL,
-            "messages": [
-                {"role": "system", "content": _SPLIT_SYSTEM_PROMPT},
-                {"role": "user", "content": user},
-            ],
-            "temperature": 0,
-        },
-        timeout=LLM_API_TIMEOUT,
-        headers={"Authorization": f"Bearer {LLM_API_KEY}"},
-    )
-    raw = body["choices"][0]["message"]["content"]
+    raw = PROVIDER.generate(_SPLIT_SYSTEM_PROMPT, user)
     parsed = _parse_json(raw)
 
     out: list[rules.IssueCandidate] = []
@@ -410,17 +425,9 @@ JSON의 키는 지정된 영문 그대로 두되, 모든 값(설명·역할·목
 쓴다. 영어 단어·문장을 섞어 쓰지 않는다 — 클래스명·서비스명처럼 코드 식별자로 쓰이는 고유명사만
 예외로 영문을 허용한다.
 
-[도메인 배경]
-SEMES는 삼성전자로부터 요구사항 명세서를 받아 VCS(Vehicle Control System — 반도체 검사 장비에서
-Probe Card를 옮기는 AMR을 제어하는 시스템)를 개발한다. VCS APP은 다음 8개 모듈로 나뉜다:
-pathsearch(경로 탐색) · operation(운영 제어) · jobassign(작업 할당) ·
-parametermanagement(파라미터 관리) · hostinterface(상위 시스템 연동) ·
-mapupdater(맵 갱신) · watchdog(감시) · nats(메시징).
-개발 이슈 제목·구절에서 관련 모듈을 유추할 수 있으면 그 모듈 이름과 용어를 산출물에 그대로 쓴다.
-
-사용자 메시지에 "프로젝트 내 다른 요구사항" 목록이 함께 오면, 지금 다루는 이슈와 같은 모듈·같은
-판정 기준(우선순위 규칙 등)을 다루는 게 있는지 살펴보고, 있으면 그 요구사항에서 쓴 용어·클래스·
-서비스 이름과 일관되게 맞춘다(같은 개념을 다른 이름으로 새로 짓지 않는다). 관련 없으면 무시한다."""
+[근거 정책]
+확정 요구사항과 출처가 함께 전달된 프로젝트 지식에 있는 사실만 사용한다. 자료에 없는 모듈명,
+수치, 정책, 클래스명은 추정하지 말고 null로 둔다. 다른 요구사항이 관련 있을 때만 용어를 맞춘다."""
 
 _VOC_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 SWVOC(고객 요구사항 정리)를 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -452,7 +459,7 @@ _NONFUNCTIONAL_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 
 "behaviors":[{{"type":"기본","item":"선행조건","content":"..."}},{{"type":"기본","item":"시나리오","content":"..."}},
 {{"type":"기본","item":"후행조건","content":"..."}},{{"type":"예외","item":"선행조건","content":"..."}},
 {{"type":"예외","item":"시나리오","content":"..."}},{{"type":"예외","item":"후행조건","content":"..."}}],
-"constraints":"정량적 성능·가용성 기준(예: 응답 200ms 이내)"}}"""
+"constraints":null}}"""
 
 _DETAIL_DESIGN_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 Detail Design(상세 설계)을 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -485,20 +492,7 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
     if reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 
-    body = _post_json(
-        f"{LLM_API_BASE}/chat/completions",
-        {
-            "model": LLM_API_MODEL,
-            "messages": [
-                {"role": "system", "content": _ARTIFACT_PROMPTS[type_]},
-                {"role": "user", "content": user},
-            ],
-            "temperature": 0,
-        },
-        timeout=LLM_API_TIMEOUT,
-        headers={"Authorization": f"Bearer {LLM_API_KEY}"},
-    )
-    raw = body["choices"][0]["message"]["content"]
+    raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_], user)
     return _parse_json(raw)
 
 

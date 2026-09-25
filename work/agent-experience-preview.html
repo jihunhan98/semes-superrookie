@@ -1,0 +1,223 @@
+<div id="reqops-agent-preview" aria-label="요구사항 처리 에이전트 UX 비교 화면">
+  <style>
+    #reqops-agent-preview{--rp-bg:light-dark(#f7f8fa,#15171a);--rp-panel:light-dark(#ffffff,#202329);--rp-panel2:light-dark(#f1f3f5,#292d33);--rp-text:light-dark(#182230,#edf1f5);--rp-muted:light-dark(#667085,#a8b0bb);--rp-line:light-dark(#d9dee7,#3a4048);--rp-blue:light-dark(#1769e0,#73a7ff);--rp-blue-soft:light-dark(#eaf2ff,#203451);--rp-green:light-dark(#17884f,#61d99b);--rp-green-soft:light-dark(#e8f7ef,#1d3a2d);--rp-amber:light-dark(#a56000,#ffc266);--rp-amber-soft:light-dark(#fff5dd,#44351d);--rp-purple:light-dark(#6d45c7,#b89cff);--rp-purple-soft:light-dark(#f1ebff,#342947);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--rp-text);background:transparent;width:100%}
+    #reqops-agent-preview *{box-sizing:border-box}
+    #reqops-agent-preview .window{background:var(--rp-bg);border:1px solid var(--rp-line);border-radius:14px;overflow:hidden;min-height:650px}
+    #reqops-agent-preview .topbar{height:54px;background:var(--rp-panel);border-bottom:1px solid var(--rp-line);display:flex;align-items:center;gap:14px;padding:0 18px}
+    #reqops-agent-preview .brand{display:flex;align-items:center;gap:9px;font-weight:600;white-space:nowrap}
+    #reqops-agent-preview .logo{width:28px;height:28px;border-radius:7px;background:var(--rp-blue);color:white;display:grid;place-items:center;font-weight:600}
+    #reqops-agent-preview .project{color:var(--rp-muted);font-size:13px;border-left:1px solid var(--rp-line);padding-left:14px}
+    #reqops-agent-preview .top-spacer{flex:1}
+    #reqops-agent-preview .view-switch{display:flex;background:var(--rp-panel2);padding:3px;border-radius:8px}
+    #reqops-agent-preview .view-btn{border:0;background:transparent;color:var(--rp-muted);padding:7px 12px;border-radius:6px;font:inherit;font-size:13px}
+    #reqops-agent-preview .view-btn.active{background:var(--rp-panel);color:var(--rp-text);font-weight:500}
+    #reqops-agent-preview .shell{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:596px}
+    #reqops-agent-preview .side{border-right:1px solid var(--rp-line);background:var(--rp-panel);padding:16px 10px}
+    #reqops-agent-preview .side-label{font-size:11px;color:var(--rp-muted);padding:8px 10px;text-transform:uppercase;letter-spacing:.06em}
+    #reqops-agent-preview .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;color:var(--rp-muted);font-size:13px;margin:2px 0}
+    #reqops-agent-preview .nav-item.active{background:var(--rp-blue-soft);color:var(--rp-blue);font-weight:500}
+    #reqops-agent-preview .content{padding:22px 26px 28px;min-width:0}
+    #reqops-agent-preview .crumb{font-size:12px;color:var(--rp-muted);margin-bottom:10px}
+    #reqops-agent-preview .hero{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
+    #reqops-agent-preview .hero-main{min-width:0;flex:1}
+    #reqops-agent-preview h2{font-size:21px;margin:0 0 7px;font-weight:600;line-height:1.3}
+    #reqops-agent-preview .reqline{color:var(--rp-muted);font-size:13px;line-height:1.5;max-width:740px}
+    #reqops-agent-preview .status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 9px;background:var(--rp-green-soft);color:var(--rp-green);font-size:12px;white-space:nowrap}
+    #reqops-agent-preview .agent-strip{background:var(--rp-panel);border:1px solid var(--rp-line);border-radius:10px;padding:13px 15px;display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    #reqops-agent-preview .agent-mark{width:30px;height:30px;border-radius:9px;background:var(--rp-purple-soft);color:var(--rp-purple);display:grid;place-items:center;flex:0 0 auto}
+    #reqops-agent-preview .agent-copy{min-width:0;flex:1}
+    #reqops-agent-preview .agent-title{font-size:13px;font-weight:500;margin-bottom:3px}
+    #reqops-agent-preview .agent-sub{font-size:12px;color:var(--rp-muted)}
+    #reqops-agent-preview .progressline{display:flex;gap:5px;align-items:center}
+    #reqops-agent-preview .prog{height:6px;width:34px;border-radius:4px;background:var(--rp-green)}
+    #reqops-agent-preview .summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    #reqops-agent-preview .summary{background:var(--rp-panel);border:1px solid var(--rp-line);border-radius:9px;padding:12px 13px}
+    #reqops-agent-preview .summary-label{font-size:11px;color:var(--rp-muted);margin-bottom:5px}
+    #reqops-agent-preview .summary-value{font-size:20px;font-weight:600}
+    #reqops-agent-preview .layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(250px,.8fr);gap:14px}
+    #reqops-agent-preview .section{background:var(--rp-panel);border:1px solid var(--rp-line);border-radius:10px;overflow:hidden}
+    #reqops-agent-preview .section-head{padding:13px 15px;border-bottom:1px solid var(--rp-line);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+    #reqops-agent-preview .count{margin-left:auto;background:var(--rp-panel2);color:var(--rp-muted);padding:2px 7px;border-radius:999px;font-size:11px}
+    #reqops-agent-preview .decision{padding:13px 15px;border-bottom:1px solid var(--rp-line)}
+    #reqops-agent-preview .decision:last-child{border-bottom:0}
+    #reqops-agent-preview .question{font-size:13px;margin-bottom:9px;line-height:1.4}
+    #reqops-agent-preview .why{font-size:11px;color:var(--rp-muted);margin-bottom:8px}
+    #reqops-agent-preview .answer-row{display:flex;gap:7px;align-items:center}
+    #reqops-agent-preview .field{flex:1;border:1px solid var(--rp-line);background:var(--rp-bg);color:var(--rp-text);border-radius:7px;padding:8px 10px;font:inherit;font-size:13px;min-width:0}
+    #reqops-agent-preview .unit{font-size:12px;color:var(--rp-muted)}
+    #reqops-agent-preview .issue{padding:13px 15px;border-bottom:1px solid var(--rp-line)}
+    #reqops-agent-preview .issue:last-child{border-bottom:0}
+    #reqops-agent-preview .issue-top{display:flex;align-items:center;gap:9px}
+    #reqops-agent-preview .issue-key{font-size:11px;color:var(--rp-blue);font-weight:500}
+    #reqops-agent-preview .issue-title{font-size:13px;font-weight:500;flex:1}
+    #reqops-agent-preview .confidence{font-size:11px;color:var(--rp-green)}
+    #reqops-agent-preview .artifacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+    #reqops-agent-preview .artifact{font-size:11px;padding:4px 7px;border-radius:5px;background:var(--rp-panel2);color:var(--rp-muted)}
+    #reqops-agent-preview .artifact.done{background:var(--rp-green-soft);color:var(--rp-green)}
+    #reqops-agent-preview .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+    #reqops-agent-preview .action{border:1px solid var(--rp-line);background:var(--rp-panel);color:var(--rp-text);border-radius:7px;padding:9px 13px;font:inherit;font-size:13px}
+    #reqops-agent-preview .action.primary{border-color:var(--rp-blue);background:var(--rp-blue);color:white}
+    #reqops-agent-preview .oldflow{display:grid;gap:9px;max-width:720px;margin:0 auto}
+    #reqops-agent-preview .oldstep{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;background:var(--rp-panel);border:1px solid var(--rp-line);border-radius:9px;padding:11px 13px}
+    #reqops-agent-preview .stepnum{width:28px;height:28px;border-radius:50%;background:var(--rp-panel2);display:grid;place-items:center;font-size:12px;color:var(--rp-muted)}
+    #reqops-agent-preview .oldname{font-size:13px;font-weight:500}
+    #reqops-agent-preview .oldmeta{font-size:11px;color:var(--rp-muted);margin-top:3px}
+    #reqops-agent-preview .clicks{font-size:11px;color:var(--rp-amber);background:var(--rp-amber-soft);padding:4px 7px;border-radius:5px}
+    #reqops-agent-preview .old-arrow{text-align:center;color:var(--rp-muted);height:12px}
+    #reqops-agent-preview .old-summary{background:var(--rp-amber-soft);color:var(--rp-amber);border-radius:9px;padding:12px 14px;font-size:13px;text-align:center;margin-bottom:15px}
+    #reqops-agent-preview .hidden{display:none}
+    @media(max-width:760px){#reqops-agent-preview .shell{grid-template-columns:1fr}#reqops-agent-preview .side{display:none}#reqops-agent-preview .content{padding:16px}#reqops-agent-preview .summary-row{grid-template-columns:repeat(2,1fr)}#reqops-agent-preview .layout{grid-template-columns:1fr}#reqops-agent-preview .project{display:none}}
+  </style>
+
+  <div class="window">
+    <div class="topbar">
+      <div class="brand"><span class="logo">RE</span> ReqOps</div>
+      <div class="project">VCS 개선 프로젝트</div>
+      <div class="top-spacer"></div>
+      <div class="view-switch" role="tablist" aria-label="UX 비교">
+        <button class="view-btn" id="old-view-btn" type="button" role="tab" aria-selected="false">현재 방식</button>
+        <button class="view-btn active" id="agent-view-btn" type="button" role="tab" aria-selected="true">에이전트 방식</button>
+      </div>
+    </div>
+    <div class="shell">
+      <aside class="side">
+        <div class="side-label">프로젝트</div>
+        <div class="nav-item"><i data-lucide="layout-dashboard" aria-hidden="true"></i> 대시보드</div>
+        <div class="nav-item active"><i data-lucide="sparkles" aria-hidden="true"></i> AI 작업</div>
+        <div class="nav-item"><i data-lucide="file-text" aria-hidden="true"></i> 요구사항</div>
+        <div class="nav-item"><i data-lucide="git-branch" aria-hidden="true"></i> 개발 이슈</div>
+        <div class="nav-item"><i data-lucide="layers" aria-hidden="true"></i> 산출물</div>
+      </aside>
+      <main class="content">
+        <section id="agent-view">
+          <div class="crumb">AI 작업 / REQ-AMR-014</div>
+          <div class="hero">
+            <div class="hero-main">
+              <h2>AMR 매칭 정책 개선</h2>
+              <div class="reqline">가용한 AMR 중 가장 가까운 장비를 선택하고, 배터리가 부족하면 제외한 뒤 신속하게 재할당한다.</div>
+            </div>
+            <span class="status"><i data-lucide="check-circle-2" aria-hidden="true"></i> 초안 생성 완료</span>
+          </div>
+
+          <div class="agent-strip">
+            <div class="agent-mark"><i data-lucide="bot" aria-hidden="true"></i></div>
+            <div class="agent-copy">
+              <div class="agent-title">프로젝트 자료 24건을 참고해 전체 작업 패키지를 만들었습니다</div>
+              <div class="agent-sub">기존 요구사항 9건 · 확정 산출물 12건 · 설계 문서 3건</div>
+            </div>
+            <div class="progressline" aria-label="모든 생성 단계 완료"><span class="prog"></span><span class="prog"></span><span class="prog"></span><span class="prog"></span></div>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary"><div class="summary-label">개발 이슈</div><div class="summary-value">3</div></div>
+            <div class="summary"><div class="summary-label">생성된 산출물</div><div class="summary-value">12</div></div>
+            <div class="summary"><div class="summary-label">자동 작성</div><div class="summary-value">89%</div></div>
+            <div class="summary"><div class="summary-label">결정 필요</div><div class="summary-value" style="color:var(--rp-amber)">3</div></div>
+          </div>
+
+          <div class="layout">
+            <section class="section">
+              <div class="section-head"><i data-lucide="git-branch" aria-hidden="true"></i> 생성된 작업 패키지 <span class="count">3개 이슈</span></div>
+              <div class="issue">
+                <div class="issue-top"><span class="issue-key">DEV-01</span><span class="issue-title">AMR 가용 상태 및 SoC 필터링</span><span class="confidence">근거 충분</span></div>
+                <div class="artifacts"><span class="artifact done">SWVOC 완료</span><span class="artifact done">기능 요구사항 완료</span><span class="artifact done">비기능 요구사항 완료</span><span class="artifact done">Detail Design 완료</span></div>
+              </div>
+              <div class="issue">
+                <div class="issue-top"><span class="issue-key">DEV-02</span><span class="issue-title">맨해튼 거리 기반 AMR 매칭</span><span class="confidence">근거 충분</span></div>
+                <div class="artifacts"><span class="artifact done">SWVOC 완료</span><span class="artifact done">기능 요구사항 완료</span><span class="artifact done">비기능 요구사항 완료</span><span class="artifact done">Detail Design 완료</span></div>
+              </div>
+              <div class="issue">
+                <div class="issue-top"><span class="issue-key">DEV-03</span><span class="issue-title">배터리 부족 시 재할당 처리</span><span class="confidence" style="color:var(--rp-amber)">결정 3건</span></div>
+                <div class="artifacts"><span class="artifact done">SWVOC 완료</span><span class="artifact">기능 요구사항 보류</span><span class="artifact">비기능 요구사항 보류</span><span class="artifact done">Detail Design 완료</span></div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-head"><i data-lucide="circle-help" aria-hidden="true"></i> 결정이 필요한 것 <span class="count">3</span></div>
+              <div class="decision">
+                <div class="question">AMR의 최소 배터리 기준은 얼마인가요?</div>
+                <div class="why">기존 프로젝트 자료에서 수치를 찾지 못했습니다.</div>
+                <div class="answer-row"><input class="field" value="20" aria-label="최소 배터리 기준"><span class="unit">%</span></div>
+              </div>
+              <div class="decision">
+                <div class="question">재할당은 몇 초 안에 완료되어야 하나요?</div>
+                <div class="why">비기능 요구사항과 테스트 기준에 사용됩니다.</div>
+                <div class="answer-row"><input class="field" value="3" aria-label="재할당 제한 시간"><span class="unit">초</span></div>
+              </div>
+              <div class="decision">
+                <div class="question">동일 거리의 AMR이 여러 대라면?</div>
+                <div class="answer-row"><select class="field" aria-label="동일 거리 우선순위"><option>SoC가 높은 AMR 우선</option><option>대기 시간이 긴 AMR 우선</option><option>장비 ID 순</option></select></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="actions">
+            <button class="action" type="button">전체 결과 자세히 보기</button>
+            <button class="action primary" type="button" id="approve-btn">답변 반영 후 전체 승인</button>
+          </div>
+        </section>
+
+        <section id="old-view" class="hidden">
+          <div class="crumb">기존 작업 흐름</div>
+          <div class="hero"><div class="hero-main"><h2>같은 요구사항을 처리하는 현재 방식</h2><div class="reqline">각 단계에서 사용자가 직접 입력·검토·저장하고 다음 화면으로 이동합니다.</div></div></div>
+          <div class="old-summary">완료까지 약 18번의 선택·입력·저장 행동이 필요합니다</div>
+          <div class="oldflow">
+            <div class="oldstep"><span class="stepnum">1</span><div><div class="oldname">요구사항 등록</div><div class="oldmeta">요구사항 ID·요청자·내용 입력</div></div><span class="clicks">입력 4회</span></div>
+            <div class="old-arrow">↓</div>
+            <div class="oldstep"><span class="stepnum">2</span><div><div class="oldname">AI 검토 결과 확인</div><div class="oldmeta">지적사항을 읽고 본문을 다시 수정</div></div><span class="clicks">확인·수정</span></div>
+            <div class="old-arrow">↓</div>
+            <div class="oldstep"><span class="stepnum">3</span><div><div class="oldname">고객 합의 기록</div><div class="oldmeta">합의 방법·담당자·날짜·내용 입력</div></div><span class="clicks">입력 4회</span></div>
+            <div class="old-arrow">↓</div>
+            <div class="oldstep"><span class="stepnum">4</span><div><div class="oldname">개발 이슈 생성 및 확정</div><div class="oldmeta">분할 판단 후 이슈별 본문 작성</div></div><span class="clicks">반복</span></div>
+            <div class="old-arrow">↓</div>
+            <div class="oldstep"><span class="stepnum">5</span><div><div class="oldname">산출물 4종을 각각 생성·검토·저장</div><div class="oldmeta">SWVOC · 기능 · 비기능 · Detail Design</div></div><span class="clicks">이슈당 8회+</span></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('reqops-agent-preview');
+      const agent = root.querySelector('#agent-view');
+      const old = root.querySelector('#old-view');
+      const agentBtn = root.querySelector('#agent-view-btn');
+      const oldBtn = root.querySelector('#old-view-btn');
+      const state = { view: 'agent', compact: false };
+
+      function setView(view) {
+        state.view = view;
+        const isAgent = view === 'agent';
+        agent.classList.toggle('hidden', !isAgent);
+        old.classList.toggle('hidden', isAgent);
+        agentBtn.classList.toggle('active', isAgent);
+        oldBtn.classList.toggle('active', !isAgent);
+        agentBtn.setAttribute('aria-selected', String(isAgent));
+        oldBtn.setAttribute('aria-selected', String(!isAgent));
+        window.openai?.setWidgetState({ modelContent: { selectedExperience: view }, privateContent: { view } }).catch(() => {});
+      }
+
+      function renderTweak() {
+        setView(state.view);
+        root.style.setProperty('--rp-density', state.compact ? '.82' : '1');
+      }
+
+      agentBtn.addEventListener('click', () => setView('agent'));
+      oldBtn.addEventListener('click', () => setView('old'));
+      root.querySelector('#approve-btn').addEventListener('click', (event) => {
+        event.currentTarget.textContent = '전체 패키지 승인 완료';
+        event.currentTarget.disabled = true;
+      });
+
+      const saved = window.openai?.widgetState?.privateContent;
+      if (saved?.view === 'old' || saved?.view === 'agent') state.view = saved.view;
+      renderTweak();
+
+      if (globalThis.Tweak) {
+        const tweak = new Tweak({ container: root, onChange: renderTweak });
+        tweak.addSelect(state, 'view', { label: '비교 화면', options: [{ label: '에이전트 방식', value: 'agent' }, { label: '현재 방식', value: 'old' }], reference: 'experience.view' });
+      }
+    })();
+  </script>
+</div>

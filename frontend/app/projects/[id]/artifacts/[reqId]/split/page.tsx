@@ -176,7 +176,7 @@ export default function IssueSplitPage() {
       // 산출물 4종은 서버가 확정 직후 백그라운드에서 미리 만들어 둔다(여기서
       // 기다리지 않는다) — 그래서 이 호출이 끝나면 곧장 넘어간다.
       await confirmIssueSplit(projectId, requirementId, { userId: user.id, issues });
-      router.push(`/projects/${projectId}/artifacts/${requirementId}`);
+      router.push(`/projects/${projectId}/requirements/${requirementId}/review`);
     } catch (err) {
       setConfirmError(err instanceof Error ? err.message : "이슈 확정에 실패했습니다.");
       setConfirming(false);

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.semes.reqops.domain.job.service.AiJobService;
 
 /** "이슈 나누기" 화면(산출물 도출 1단계) — 요구사항 1건을 개발 이슈 N건으로 나눈다. */
 @RestController
@@ -21,6 +22,7 @@ public class DevIssueController {
 
     private final DevIssueService devIssueService;
     private final ArtifactService artifactService;
+    private final AiJobService aiJobService;
 
     /** AI 분할 초안 — 아무것도 저장하지 않는다. 화면 진입 시·"AI 다시 나눠줘" 클릭 시 호출. */
     @PostMapping("/split-preview")
@@ -45,10 +47,9 @@ public class DevIssueController {
                                             @Valid @RequestBody ConfirmSplitRequest request) {
         List<IssueResponse> issues = devIssueService.confirmSplit(projectId, requirementId, request);
         for (IssueResponse issue : issues) {
-            for (ArtifactType type : ArtifactType.values()) {
-                artifactService.warmDraftAsync(projectId, requirementId, issue.issueKey(), type.slug(), request.userId());
-            }
+            artifactService.ensurePlaceholders(issue.id(), request.userId());
         }
+        aiJobService.enqueueGeneration(projectId, requirementId, request.userId(), issues);
         return issues;
     }
 

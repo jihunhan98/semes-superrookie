@@ -40,6 +40,10 @@ public class DevIssueArtifact {
     @Column(nullable = false, length = 20)
     private String engine;
 
+    @Column(name = "schema_version", nullable = false) private int schemaVersion = 2;
+    @Column(name = "generation_state", nullable = false, length = 20) private String generationState = "READY";
+    @Version @Column(name = "row_version", nullable = false) private long rowVersion;
+
     @Column(name = "created_by", nullable = false)
     private Long createdBy;
 
@@ -99,4 +103,7 @@ public class DevIssueArtifact {
     public Long getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public int getSchemaVersion() { return schemaVersion; }
+    public String getGenerationState() { return generationState; }
+    public long getRowVersion() { return rowVersion; }
 }

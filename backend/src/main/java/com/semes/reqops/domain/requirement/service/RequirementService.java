@@ -28,6 +28,8 @@ import com.semes.reqops.domain.user.repository.UserRepository;
 import com.semes.reqops.global.ai.AiAnalyzeDto;
 import com.semes.reqops.global.ai.AiClient;
 import com.semes.reqops.global.exception.ApiErrors;
+import com.semes.reqops.domain.workflow.service.BundleService;
+import com.semes.reqops.domain.job.service.AiJobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +61,8 @@ public class RequirementService {
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final AiClient aiClient;
+    private final BundleService bundleService;
+    private final AiJobService aiJobService;
 
     /**
      * 요구사항 최초 등록.
@@ -80,8 +84,8 @@ public class RequirementService {
                 req.requesterDept(), req.requesterName(), req.userId());
         requirementRepository.save(requirement);
 
-        AiAnalyzeDto.Response ai = aiClient.analyzeFull(req.content(), existingOf(projectId, requirement.getId()));
-        saveAiResult(requirement.getId(), ai, req.content());
+        aiDraftRepository.save(new RequirementAiDraft(requirement.getId(), req.content(), "unavailable"));
+        aiJobService.enqueueAnalysis(projectId, requirement.getId(), req.userId(), req.content());
 
         return detail(projectId, requirement.getId(), req.userId());
     }
@@ -226,15 +230,21 @@ public class RequirementService {
         requireMember(projectId, req.userId());
         Requirement r = findInProject(projectId, requirementId);
 
-        RequirementConsensus consensus = consensusRepository
-                .findFirstByRequirementIdOrderByIdDesc(requirementId)
-                .orElseThrow(ApiErrors.ConsensusRequired::new);
+        RequirementConsensus consensus = req.consensusId() == null
+                ? consensusRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
+                    .orElseThrow(ApiErrors.ConsensusRequired::new)
+                : consensusRepository.findById(req.consensusId())
+                    .filter(c -> c.getRequirementId().equals(requirementId))
+                    .orElseThrow(ApiErrors.ConsensusRequired::new);
 
         RequirementVersion lastVersion = versionRepository
                 .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
         // 같은 합의로 두 번 확정하면 두 번째 버전은 근거 없이 올라간 셈이 된다.
         if (!isUnusedConsensus(consensus.getId(), lastVersion)) {
             throw new ApiErrors.ConsensusRequired();
+        }
+        if (!normalizeLines(consensus.getAgreedContent()).equals(normalizeLines(req.content()))) {
+            throw new ApiErrors.Conflict("합의 당시 본문과 확정하려는 본문이 다릅니다. 변경된 본문으로 다시 합의해주세요.");
         }
 
         String version = nextVersionOf(requirementId);
@@ -246,8 +256,9 @@ public class RequirementService {
         r.confirm(req.content(), version);
         requirementRepository.save(r);
 
-        versionRepository.save(new RequirementVersion(
+        RequirementVersion savedVersion = versionRepository.save(new RequirementVersion(
                 requirementId, version, title, req.content(), consensus.getId(), req.userId()));
+        bundleService.start(requirementId, savedVersion.getId(), req.userId());
 
         return detail(projectId, requirementId, req.userId());
     }
@@ -318,6 +329,10 @@ public class RequirementService {
         }
         Long used = lastVersion.getConsensusId();
         return used == null || consensusId > used;
+    }
+
+    private String normalizeLines(String value) {
+        return value == null ? "" : value.replace("\r\n", "\n").replace('\r', '\n');
     }
 
     /**
