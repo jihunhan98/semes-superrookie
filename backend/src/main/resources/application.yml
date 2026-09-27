@@ -1,6 +1,6 @@
 spring:
   datasource:
-    # 사내 Oracle 서버(SID 방식). 주소·계정은 환경에 맞게 수정.
+    # Oracle 주소·계정은 gitignore 된 backend/.env 또는 실행 환경변수로만 주입한다.
     url: ${DB_URL:jdbc:oracle:thin:@localhost:1521/XEPDB1}
     username: ${DB_USERNAME:REQOPS}
     password: ${DB_PASSWORD:}
@@ -16,8 +16,6 @@ server:
   port: 8080
 
 app:
-  # CORS 허용 오리진은 CorsConfig 에서 패턴("*")으로 전부 허용한다 — 프론트를
-  # localhost 로 열든 LAN IP 로 열든 여기서 따로 맞출 필요가 없다.
   ai:
     # 요구사항 검토 AI 서버(ai-model, FastAPI). 미가동이어도 등록은 되며 검출 0건으로 처리된다.
     base-url: ${AI_BASE_URL:http://localhost:8001}

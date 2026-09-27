@@ -51,7 +51,7 @@ export default function Header({
         RE
       </Link>
       <span className="brand">
-        요구사항 엔지니어링
+        ReqOps Agent
         {projectName && (
           <>
             <span className="slash">/</span>
@@ -60,8 +60,7 @@ export default function Header({
         )}
       </span>
       <span className="sp" />
-      <div className="search">🔍 프로젝트 검색</div>
-      <div className="ico">🔔</div>
+      <Link href="/dashboard" className="header-project-link">프로젝트</Link>
       <div className="avmenu" ref={menuRef}>
         <button className="av" title={user?.name ?? "로그인 필요"} onClick={() => setMenuOpen((v) => !v)}>
           {initial}

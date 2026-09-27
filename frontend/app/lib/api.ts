@@ -277,6 +277,14 @@ export function createRequirement(projectId: number, input: RequirementInput): P
   return postJson<RequirementDetail>(`/api/projects/${projectId}/requirements`, input);
 }
 
+export type RequirementAttachment = { id:number; fileName:string; mediaType:string; fileSize:number; extractionState:"EXTRACTED"|"UNSUPPORTED"|"FAILED"; extractedText:string|null; createdAt:string|null };
+export async function uploadRequirementAttachment(projectId:number,requirementId:number,userId:number,file:File):Promise<RequirementAttachment>{
+  const form=new FormData();form.append("file",file);
+  const response=await fetch(`${BACKEND}/api/projects/${projectId}/requirements/${requirementId}/attachments?userId=${userId}`,{method:"POST",body:form});
+  if(!response.ok){let message="첨부 파일 업로드에 실패했습니다.";try{const body=await response.json();if(body?.message)message=body.message;}catch{}throw new Error(message);}return response.json();
+}
+export function listRequirementAttachments(projectId:number,requirementId:number,userId:number):Promise<RequirementAttachment[]>{return getJson<RequirementAttachment[]>(`/api/projects/${projectId}/requirements/${requirementId}/attachments?userId=${userId}`);}
+
 export function getRequirement(
   projectId: number,
   requirementId: number,
@@ -373,10 +381,25 @@ export type DevIssue = {
   issueKey: string;
   title: string;
   quote: string | null;
+  symptom: string | null;
+  improvementReq: string | null;
+  changeScope: string | null;
+  constraintsNote: string | null;
+  beforeState: string | null;
+  afterState: string | null;
+  dueOn: string | null;
+  resolvedAt: string | null;
+  state: "DRAFT" | "CONFIRMED" | "RETIRED";
+  revision: number;
   displayOrder: number;
   createdByName: string | null;
   createdAt: string | null;
 };
+
+export type DevIssueUpdate = Pick<DevIssue,
+  "title" | "quote" | "symptom" | "improvementReq" | "changeScope" |
+  "constraintsNote" | "beforeState" | "afterState" | "dueOn"
+> & { userId: number; confirmed: boolean };
 
 /** AI 분할 초안 요청 — 저장하지 않는다. 화면 진입 시·"AI 다시 나눠줘" 클릭 시 호출. */
 export function previewIssueSplit(
@@ -410,6 +433,18 @@ export function listDevIssues(
 ): Promise<DevIssue[]> {
   return getJson<DevIssue[]>(
     `/api/projects/${projectId}/requirements/${requirementId}/issues?userId=${userId}`,
+  );
+}
+
+export function updateDevIssue(
+  projectId: number,
+  requirementId: number,
+  issueId: number,
+  input: DevIssueUpdate,
+): Promise<DevIssue> {
+  return patchJson<DevIssue>(
+    `/api/projects/${projectId}/requirements/${requirementId}/issues/${issueId}`,
+    input,
   );
 }
 

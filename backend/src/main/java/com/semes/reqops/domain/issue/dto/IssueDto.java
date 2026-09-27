@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
+import java.time.LocalDate;
 
 /** "이슈 나누기" 화면 요청/응답 DTO 모음. */
 public final class IssueDto {
@@ -40,7 +41,28 @@ public final class IssueDto {
     /** 사람이 최종 확정한 이슈 한 건. quote는 원문에 없어도 된다 — 직접 추가한 이슈일 수 있으므로. */
     public record IssueInput(
             @NotBlank @Size(max = 200) String title,
-            @Size(max = 4000) String quote
+            @Size(max = 4000) String quote,
+            String symptom,
+            String improvementReq,
+            String changeScope,
+            String constraintsNote,
+            String beforeState,
+            String afterState,
+            LocalDate dueOn
+    ) {}
+
+    public record UpdateRequest(
+            @NotNull Long userId,
+            @NotBlank @Size(max = 200) String title,
+            @Size(max = 4000) String quote,
+            String symptom,
+            String improvementReq,
+            String changeScope,
+            String constraintsNote,
+            String beforeState,
+            String afterState,
+            LocalDate dueOn,
+            boolean confirmed
     ) {}
 
     /**
@@ -60,6 +82,16 @@ public final class IssueDto {
             String issueKey,
             String title,
             String quote,
+            String symptom,
+            String improvementReq,
+            String changeScope,
+            String constraintsNote,
+            String beforeState,
+            String afterState,
+            LocalDate dueOn,
+            String resolvedAt,
+            String state,
+            long revision,
             int displayOrder,
             String createdByName,
             String createdAt

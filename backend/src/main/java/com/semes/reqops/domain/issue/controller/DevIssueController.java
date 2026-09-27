@@ -6,6 +6,7 @@ import com.semes.reqops.domain.issue.dto.IssueDto.ConfirmSplitRequest;
 import com.semes.reqops.domain.issue.dto.IssueDto.IssueResponse;
 import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewRequest;
 import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewResponse;
+import com.semes.reqops.domain.issue.dto.IssueDto.UpdateRequest;
 import com.semes.reqops.domain.issue.service.DevIssueService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,5 +59,13 @@ public class DevIssueController {
                                     @PathVariable Long requirementId,
                                     @RequestParam Long userId) {
         return devIssueService.list(projectId, requirementId, userId);
+    }
+
+    @PatchMapping("/{issueId}")
+    public IssueResponse update(@PathVariable Long projectId,
+                                @PathVariable Long requirementId,
+                                @PathVariable Long issueId,
+                                @Valid @RequestBody UpdateRequest request) {
+        return devIssueService.update(projectId, requirementId, issueId, request);
     }
 }

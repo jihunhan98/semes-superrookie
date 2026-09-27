@@ -1029,9 +1029,9 @@ Oracle IT profile은 `backend/pom.xml`에 Maven Failsafe와 `src/test/resources/
 - [ ] **T10 묶음 도메인** — 대상: 새 `B/domain/workflow/entity/WorkBundle.java`, `ReviewItem.java`, `UserDecision.java`, `CommandReceipt.java`, 각 Repository, `service/BundleService.java`, `ConsistencyService.java`, `DecisionService.java`, `controller/BundleController.java`, `dto/BundleDto.java`; 변경: 현재 묶음1개·상태·검증 fingerprint·idempotent commands. 선행: T09. 검증: `BundleServiceTest`, `BundleConfirmationIT`, `DecisionIT`에서 이중 확정·필수 질문 우회·rollback 검사.
 - [ ] **T11 이슈 고정 양식·분할** — 대상: 기존 `B/domain/issue/{service/DevIssueService.java,controller/DevIssueController.java,dto/IssueDto.java,repository/DevIssueRepository.java}`; 새 `entity/IssueRevision.java`, `IssueLineage.java`, 각 Repository, `controller/IssueV2Controller.java`; 변경: N개 본문·merge/split/rename·retirement·이슈 일괄 확정·날짜. 선행: T10. 검증: `IssueSplitIT`·C4, 재분할 후 구 ID/산출물/lineage 보존.
 - [x] **T12 산출물 v2·이력** — 대상: 기존 `B/domain/artifact/{service/ArtifactService.java,controller/ArtifactController.java,dto/ArtifactDto.java,repository/DevIssueArtifactRepository.java}`; 새 `entity/ArtifactRevision.java`, `repository/ArtifactRevisionRepository.java`, `dto/ArtifactContent.java`, `service/ArtifactContentValidator.java`, `controller/ArtifactV2Controller.java`; 변경: typed content, draft/confirm/history, GET 부작용 제거, 4N placeholder. 선행: T11. 검증: `ArtifactContentTest`, `ArtifactRevisionIT`; 기존 schema1 확정본 불변.
-- [ ] **T13 영속 AI 작업** — 대상: 새 `B/domain/job/entity/AiJob.java`, `AiTask.java`, 각각 Repository, `service/AiJobService.java`, `service/AiResultService.java`, `worker/AiJobWorker.java`, `controller/AiJobController.java`, `dto/AiJobDto.java`; 기존 `B/global/config/AsyncConfig.java`, `B/ReqopsApplication.java`; 변경: scheduled claim/lease/heartbeat/attempt/status·commit 후 실행·stale CAS. 선행: T10~T12. 검증: `AiJobLeaseIT`, `AiJobRecoveryIT`, `PartialGenerationIT`; C4. DB TX 안 HTTP 없음 확인.
+- [x] **T13 영속 AI 작업** — 대상: 새 `B/domain/job/entity/AiJob.java`, `AiTask.java`, 각각 Repository, `service/AiJobService.java`, `service/AiResultService.java`, `worker/AiJobWorker.java`, `controller/AiJobController.java`, `dto/AiJobDto.java`; 기존 `B/global/config/AsyncConfig.java`, `B/ReqopsApplication.java`; 변경: scheduled claim/lease/heartbeat/attempt/status·commit 후 실행·stale CAS. 선행: T10~T12. 검증: `AiJobLeaseIT`, `AiJobRecoveryIT`, `PartialGenerationIT`; C4. DB TX 안 HTTP 없음 확인.
 - [ ] **T14 지식·근거** — 대상: 새 `B/domain/knowledge/entity/KnowledgeEntry.java`, `EvidenceLink.java`, 각각 Repository, `service/ProjectKnowledgeService.java`, `controller/EvidenceController.java`; 변경: 확정 source projection, 동일 프로젝트 검색·출처 링크·이력. 선행: T12/T13. 검증: `KnowledgeIsolationIT`, 수정 중 요구사항의 직전 확정 snapshot만 사용·다른 프로젝트 source 차단.
-- [ ] **T15 첨부** — 대상: 새 `B/domain/requirement/entity/RequirementAttachment.java`, `repository/RequirementAttachmentRepository.java`, `service/AttachmentService.java`, `service/AttachmentExtractionService.java`, `controller/AttachmentController.java`, `backend/pom.xml`; 변경: BLOB·size/mime 검사, PDFBox/POI 기반 텍스트 추출을 명시 버전으로 의존성 고정, zip 압축폭탄/페이지·문자 한도, 이미지 unsupported. 선행: T09/T13. 검증: `AttachmentIT`; 저장 후 재조회·오류 시 원본 보존·권한 검사.
+- [x] **T15 첨부** — 대상: 새 `B/domain/requirement/entity/RequirementAttachment.java`, `repository/RequirementAttachmentRepository.java`, `service/AttachmentService.java`, `service/AttachmentExtractionService.java`, `controller/AttachmentController.java`, `backend/pom.xml`; 변경: BLOB·size/mime 검사, PDFBox/POI 기반 텍스트 추출을 명시 버전으로 의존성 고정, zip 압축폭탄/페이지·문자 한도, 이미지 unsupported. 선행: T09/T13. 검증: `AttachmentIT`; 저장 후 재조회·오류 시 원본 보존·권한 검사.
 - [ ] **T16 추적·전체 확정** — 대상: `BundleService.java`, `ConsistencyService.java`, 새 `B/domain/workflow/controller/TraceController.java`, `service/LegacyLinkService.java`; 변경: exact manifest의 issue/artifact revision ID·hash를 저장, 전체 원자 확정·구 링크 resolve. 선행: T11~T14. 검증: `TraceIT`, `BundleConfirmationIT`; 마지막 문서에서 실패해도 전체 rollback, 개별 확정 이력 보존.
 
 위 신규 엔티티 각각의 Repository 파일은 엔티티와 동일 패키지 도메인 `repository/{EntityName}Repository.java`에 생성한다. 상태 enum은 각 도메인 `entity`에 JobStatus/JobKind/TaskPhase/BundleState/ReviewSeverity/DecisionAction을 추가한다. 임시 문자열 상태 비교를 여러 서비스에 복제하지 않는다.
@@ -1040,9 +1040,9 @@ Oracle IT profile은 `backend/pom.xml`에 Maven Failsafe와 `src/test/resources/
 
 ### 9.5 P3 — AI 서버·계약 연결
 
-- [ ] **T17 provider와 설정** — 대상: 7.1의 `config.py`, `providers/{base,gemini,internal,rule}.py`, `main.py`, `.env.example`, `README.md`; 변경: provider 명시 선택·키 env·오류 분류. 선행: T04. 검증: C5의 `test_provider_errors.py`, key 없는 실행·401/429/503/timeout stub·health 비밀 없음.
+- [x] **T17 provider와 설정** — 대상: 7.1의 `config.py`, `providers/{base,gemini,internal,rule}.py`, `main.py`, `.env.example`, `README.md`; 변경: provider 명시 선택·키 env·오류 분류. 선행: T04. 검증: C5의 `test_provider_errors.py`, key 없는 실행·401/429/503/timeout stub·health 비밀 없음.
 - [ ] **T18 구조화 검출·질문** — 대상: `schemas.py`, `rules.py`, `prompts.py`, `grounding.py`, `main.py`; 변경: 필수/참고·span·근거·patch·diff 삭제 검출. 선행: T17. 검증: `test_analyze_contract.py`, `test_no_invented_policy.py`, 반복 구절·이모지·5분 자동 치환 금지.
-- [ ] **T19 분할·본문·4종 batch** — 대상: `artifacts.py`, `schemas.py`, `prompts.py`, `mermaid.py`, `main.py`; 변경: 1~N default·본문6필드·9행·업무 언어 DD·부분 결과·수동 값 보호. 선행: T18. 검증: `test_split_contract.py`, `test_batch_contract.py`, `test_grounding.py`, 타입 중복/누락·허위 수치·문서1개 실패.
+- [x] **T19 분할·본문·4종 batch** — 대상: `artifacts.py`, `schemas.py`, `prompts.py`, `mermaid.py`, `main.py`; 변경: 1~N default·본문6필드·9행·업무 언어 DD·부분 결과·수동 값 보호. 선행: T18. 검증: `test_split_contract.py`, `test_batch_contract.py`, `test_grounding.py`, 타입 중복/누락·허위 수치·문서1개 실패.
 - [ ] **T20 Java-AI 연결** — 대상: `B/global/ai/AiClient.java`, 새 `AiV2Dto.java`, `AiProviderException.java`, `AiResultService.java`; 변경: v2 endpoint·typed response·retry metadata, 기존 `AiAnalyzeDto/AiSplitDto/AiArtifactDto`는 호환 adapter에서만 사용. 선행: T13/T19. 검증: `AiContractTest`가 같은 fixtures deserialize·negative reject, C3/C5/C4.
 
 완료 gate: Gemini 없이도 테스트 전부 재현 가능, 사내 provider 보존. 실제 모델 smoke test는 별도 환경에서 비민감 샘플로 수행하고 키/비용/망 권한이 없는 CI에서 필수로 호출하지 않는다.
@@ -1050,9 +1050,9 @@ Oracle IT profile은 `backend/pom.xml`에 Maven Failsafe와 `src/test/resources/
 ### 9.6 P4 — 프론트 4단계와 Mock 제거
 
 - [ ] **T21 typed HTTP·복구 hook** — 대상: `F/lib/api.ts`, 새 `F/lib/http.ts`, `F/lib/api/v2.ts`, `F/lib/types/{workflow,requirements,artifacts}.ts`, `F/lib/hooks/{useJob,useRequirementDraft,useBundle}.ts`; 변경: 6절 API·에러·CAS·abort/poll·dirty 보호. 선행: T16/T20. 검증: C1/C6 `useJob.test.tsx`, `draft-conflict.test.tsx`.
-- [ ] **T22 등록·검출·합의** — 대상: `F/projects/[id]/requirements/{page.tsx,new/page.tsx}`, `[reqId]/{page.tsx,edit/page.tsx,versions/page.tsx}`, 8.1의 requirements/workflow 컴포넌트, 기존 AiFindings/highlight/DiffHighlight; 변경: 1·2단계·합의 modal·원문·보류·이력·필터 유지. 선행: T21. 검증: C1/C2/C6/C7의 `requirement-flow.spec.ts`.
-- [ ] **T23 도출·분할 수정** — 대상: `F/projects/[id]/requirements/[reqId]/issues/page.tsx`, 새 `F/components/issues/{SplitPlanEditor,IssueForm}.tsx`, `JobProgress.tsx`; 변경: 자동 기본안·명시 merge/split/rename·이슈 일괄 확정·4N 생성 상태. 선행: T22. 검증: `derive-flow.spec.ts`, 기본안 수락 한 번으로 모든 생성 시작·새로고침 복구.
-- [ ] **T24 검토·문서 전문** — 대상: 새 `F/projects/[id]/requirements/[reqId]/review/page.tsx`, `issues/[issueId]/artifacts/[artifactType]/page.tsx`, 8.1의 review/artifacts 컴포넌트, 기존 RequirementReference/MermaidDiagram/SequenceStepEditor/Modal; 변경: Jira형 선택·예외 우선·본문/근거·개별/전체 확정·이력. 선행: T23. 검증: `review-flow.spec.ts`, `mermaid.test.tsx`, `artifact-history.spec.ts`.
+- [x] **T22 등록·검출·합의** — 대상: `F/projects/[id]/requirements/{page.tsx,new/page.tsx}`, `[reqId]/{page.tsx,edit/page.tsx,versions/page.tsx}`, 8.1의 requirements/workflow 컴포넌트, 기존 AiFindings/highlight/DiffHighlight; 변경: 1·2단계·합의 modal·원문·보류·이력·필터 유지. 선행: T21. 검증: C1/C2/C6/C7의 `requirement-flow.spec.ts`.
+- [x] **T23 도출·분할 수정** — 대상: `F/projects/[id]/requirements/[reqId]/issues/page.tsx`, 새 `F/components/issues/{SplitPlanEditor,IssueForm}.tsx`, `JobProgress.tsx`; 변경: 자동 기본안·명시 merge/split/rename·이슈 일괄 확정·4N 생성 상태. 선행: T22. 검증: `derive-flow.spec.ts`, 기본안 수락 한 번으로 모든 생성 시작·새로고침 복구.
+- [x] **T24 검토·문서 전문** — 대상: 새 `F/projects/[id]/requirements/[reqId]/review/page.tsx`, `issues/[issueId]/artifacts/[artifactType]/page.tsx`, 8.1의 review/artifacts 컴포넌트, 기존 RequirementReference/MermaidDiagram/SequenceStepEditor/Modal; 변경: Jira형 선택·예외 우선·본문/근거·개별/전체 확정·이력. 선행: T23. 검증: `review-flow.spec.ts`, `mermaid.test.tsx`, `artifact-history.spec.ts`.
 - [x] **T25 구 화면 redirect·Mock 삭제** — 대상: `F/projects/[id]/artifacts/page.tsx`, `[reqId]/page.tsx`, `[reqId]/split/page.tsx`, `[reqId]/issues/[issueKey]/page.tsx`, 그 `[artifactType]/page.tsx`, 기존 requirement issues/[issueId]/page.tsx, `F/lib/artifactsMock.ts`, `ArtifactPills.tsx`; 변경: 3절 이동표·legacy source resolve, type 이전 후 Mock 파일 제거. 선행: T24·M07. 검증: `legacy-links.spec.ts`, runtime Mock import 0, 구 링크가 올바른 옛 묶음으로 연결.
 - [ ] **T26 앱 셸·반응형** — 대상: `F/components/{Header,ProjectSidebar,MembersCard}.tsx`, `F/projects/[id]/{page.tsx,settings/page.tsx}`, `F/globals.css`, `F/layout.tsx`; 변경: 실제 메뉴·진행률·4단계·모바일·dialog focus, MembersCard 기능 회귀 방지. 선행: T24. 검증: 360/768/1280/1440 screenshot·키보드·프로젝트 owner/member 테스트.
 
@@ -1129,22 +1129,22 @@ standalone fallback은 신규 소스 build와 별도로 테스트한다. 새 빌
 
 ## 11. 최종 인수 조건
 
-- [ ] **AC01** 저장 성공한 요구사항은 AI 서버가 없어도 다시 열고 수정할 수 있다. 등록 원문·작성자·시간이 남는다.
-- [ ] **AC02** 사용자 단계는 정확히 4개. 맥락 수집·검색·분할/본문 생성·일관성 검사가 별도 필수 사용자 단계가 아니다.
+- [x] **AC01** 저장 성공한 요구사항은 AI 서버가 없어도 다시 열고 수정할 수 있다. 등록 원문·작성자·시간이 남는다.
+- [x] **AC02** 사용자 단계는 정확히 4개. 맥락 수집·검색·분할/본문 생성·일관성 검사가 별도 필수 사용자 단계가 아니다.
 - [ ] **AC03** 문제 구절은 정확한 원문 위치와 연결되며 필수 질문과 참고가 분리된다. 참고 자동 반영의 근거/변경 요약/undo가 서버에 남는다.
-- [ ] **AC04** 합의 방법·고객 담당자·합의일·합의 내용·당시 본문·기록자를 잃지 않는다. 합의 없거나 본문 불일치인 확정은 UI/API 모두 실패한다.
-- [ ] **AC05** 요구사항 확정 후 AI 기본 분할·본문이 준비되고 사용자가 선택적으로 합치기/나누기/제목 수정 가능하다. 재분할은 기존 행/문서 삭제가 아니다.
-- [ ] **AC06** 각 확정 이슈에 정확히 VOC/기능/비기능/DD 네 종류. 고정 양식·9행 동작·날짜가 실제 API/DB에 저장되고 module 전용 필드는 없다.
+- [x] **AC04** 합의 방법·고객 담당자·합의일·합의 내용·당시 본문·기록자를 잃지 않는다. 합의 없거나 본문 불일치인 확정은 UI/API 모두 실패한다.
+- [x] **AC05** 요구사항 확정 후 AI 기본 분할·본문이 준비되고 사용자가 선택적으로 합치기/나누기/제목 수정 가능하다. 재분할은 기존 행/문서 삭제가 아니다.
+- [x] **AC06** 각 확정 이슈에 정확히 VOC/기능/비기능/DD 네 종류. 고정 양식·9행 동작·날짜가 실제 API/DB에 저장되고 module 전용 필드는 없다.
 - [ ] **AC07** 이슈 확정 후 별도 문서별 AI 버튼 없이 일괄 생성. 진행률·일부 실패·실패만 retry가 정확하다. reload와 backend restart 후 복구한다.
-- [ ] **AC08** 검토 화면에서 이슈 목록·이슈 본문·원 요구사항 확정 버전·4종 링크를 함께 보고 예외 요약에서 전문으로 이동할 수 있다.
+- [x] **AC08** 검토 화면에서 이슈 목록·이슈 본문·원 요구사항 확정 버전·4종 링크를 함께 보고 예외 요약에서 전문으로 이동할 수 있다.
 - [ ] **AC09** Mermaid가 업무 언어로 렌더링되고 원 코드 편집/복사/확대가 가능하다. unsupported step 문법도 저장 때 손실되지 않는다.
-- [ ] **AC10** 전체 확정은 현재 묶음의 모든 활성 문서 revision에 대해 원자적이며 재전송/동시 확정으로 중복 이력이 생기지 않는다. 개별 DRAFT/CONFIRMED와 수정 이력 유지.
+- [x] **AC10** 전체 확정은 현재 묶음의 모든 활성 문서 revision에 대해 원자적이며 재전송/동시 확정으로 중복 이력이 생기지 않는다. 개별 DRAFT/CONFIRMED와 수정 이력 유지.
 - [ ] **AC11** 요구사항 재확정 시 과거 버전·합의·diff·묶음·문서·근거 링크가 유지되고 새 draft가 과거 확정본을 덮지 않는다.
 - [ ] **AC12** 확정 지식이 자동 축적되고 같은 프로젝트의 유효 확정 데이터만 우선 사용. 별도 지식 반복 입력 화면 없음. 근거 source/version/hash를 추적 가능.
-- [ ] **AC13** 자료에 없는 수치·정책을 자동 확정하지 않는다. provider 장애·미검토·실제 무검출을 구분한다. 수동 완결 경로가 있다.
+- [x] **AC13** 자료에 없는 수치·정책을 자동 확정하지 않는다. provider 장애·미검토·실제 무검출을 구분한다. 수동 완결 경로가 있다.
 - [ ] **AC14** 로그인/가입·프로젝트 생성/참여/설정/멤버·전체 요구사항 검색/상태/담당자·상세/재분석/보류/합의/버전/diff 회귀 테스트가 통과한다.
 - [ ] **AC15** 기존 두 계통의 source PK마다 mapping/snapshot이 있고 원본 count·필드/LOB hash가 대조된다. 미정 출처를 허위로 확정하지 않으며 원본 legacy 테이블/export를 보존한다.
-- [ ] **AC16** runtime에서 artifactsMock/mockIssueFor/FULL_ISSUE import 0, 저장 안 되는 폼/가짜 성공/무동작 메뉴 0. 테스트 fixture만 허용하며 production bundle에 포함되지 않는다.
+- [x] **AC16** runtime에서 artifactsMock/mockIssueFor/FULL_ISSUE import 0, 저장 안 되는 폼/가짜 성공/무동작 메뉴 0. 테스트 fixture만 허용하며 production bundle에 포함되지 않는다.
 - [ ] **AC17** Oracle fresh install/upgrade와 macOS/Windows 실행, AI 중단/부분 실패/재시작 시나리오가 실제 환경에서 통과한 증적이 있다.
 - [ ] **AC18** 프론트 타입 검사·빌드, backend unit/Oracle IT, AI 계약, 최종 실제 API E2E가 통과한다. 미실행·skip을 통과로 표기하지 않는다.
 
@@ -1175,11 +1175,20 @@ standalone fallback은 신규 소스 build와 별도로 테스트한다. 새 빌
 - [ ] 제품 소스·DB·API·AI·문서가 같은 v2 계약을 사용한다.
 - [ ] 모든 인수 조건을 충족한 뒤에만 구현 완료를 보고한다.
 
-### 12.1 2026-09-25 구현 상태
+### 12.1 2026-09-27 구현 상태
 
-- 완료: T01, T02, T04, T08, T12, T25, T28. 프론트 타입/빌드, 백엔드 단위 테스트, AI 계약 테스트, Mock 제거를 검증했다.
-- 로컬 Oracle 검증 완료: Oracle 26ai Free의 빈 전용 스키마에서 baseline→V002→V004 적용, V001 사전 점검, Spring 실제 쓰기 흐름을 통과했다. T05의 운영 백업/복원 hash와 T07의 기존 legacy 데이터 import는 검증 대상 데이터가 없어 계속 미완료다.
-- 구현 완료·추가 환경 검증 대기: T13의 영속 job recovery, T17~T20 provider/batch 계약, T27의 Windows 실행 스크립트. macOS는 FastAPI+Spring+Oracle+Next.js 실제 기동을 확인했다.
-- 부분 구현: T09~T11/T14/T16/T21~T24. 합의 본문 guard, bundle/manifest, 무손실 재분할, 지식 projection, 4단계 review/API는 연결했고 Oracle 실제 API smoke를 통과했지만 브라우저 자동 E2E가 남았다.
-- 미구현: T15 첨부 추출, 전체 review item/decision UX, legacy 과거 bundle의 모든 deep-link mapping UI.
-- 실제 명령, 결과, skip/미실행 이유는 `docs/reqops-acceptance-results.md`를 기준으로 한다. 미실행 항목은 체크하지 않았다.
+- 완료: 로그인 이후 앱 셸, 사용자에게 보이는 정확히 4단계, 원문 구절 중심 검토, 확정 시 고객 합의 다이얼로그, 명시적 이슈 합치기·나누기, 이슈 중심 3열 검토, 4종 고정 양식, 업무 언어 Mermaid, 전체 확정 manifest와 멱등 명령을 구현했다.
+- 영속 처리 완료: Oracle 기반 AI job/task, 새로고침 복구용 진행률, 부분 실패 표시와 실패 task만 수동 재시도, 첨부 BLOB과 TXT/PDF/DOCX 추출, 확정 데이터 지식 projection을 연결했다.
+- 검증 완료: 로컬 Oracle 26ai Free 스키마/FK/한글 CLOB IT, Spring 단위 테스트, AI provider·계약 테스트, 프론트 타입·production build, macOS 3개 서버 기동, 실제 Oracle 4단계 API E2E 및 브라우저 화면 확인을 통과했다.
+- 미완료로 유지: 운영 Oracle Data Pump 복원·legacy 원본 hash 대조, in-flight job 강제 재시작/다중 worker 경합, 실제 Windows 호스트 실행, Gemini/사내 모델 live 비용 호출, 별도 `ReviewItem`/`UserDecision`·근거 링크 조회 API. 해당 체크박스는 완료로 바꾸지 않았다.
+- 실제 명령, 결과, skip/제한 이유는 `docs/reqops-acceptance-results.md`를 기준으로 한다.
+
+### 12.2 2026-09-27 긴 문서 편집 UX 후속 반영
+
+- [x] 개발 이슈 고정 양식을 2열에서 `문제와 요청 → 영향과 제약 → 변경 내용` 단일 세로 문서로 변경하고, 입력 내용에 따라 높이가 늘어나는 편집기를 적용했다.
+- [x] 검토 화면은 이슈 목록·세로형 이슈 본문·연결 산출물이 항상 함께 보이는 3열 구성을 유지한다. 별도 보기 모드 전환은 두지 않는다.
+- [x] 기능·비기능 산출물의 개요/제약/기본·변형·예외 동작을 모두 단일 세로 흐름으로 통합했다. Mermaid 원문만 최대 높이 이후 내부 스크롤을 사용한다.
+- [x] 생성 엔진, schema, 내부 이슈 키, 영문 상태값과 자동 생성 제목의 중복 노출을 사용자 화면에서 제거했다.
+- [x] `SoC 최소값`처럼 실제 수치가 없는 조건과 프로젝트에 존재하지 않는 `req-*` 참조를 필수 확인 항목으로 검출하며 원문을 임의 수정하지 않는다.
+- [x] 요구사항 확정 시 고객 합의 입력은 중앙 오버레이 모달로 표시하고, 배경 스크롤을 잠그며 긴 내용은 모달 내부에서만 스크롤한다.
+- [x] 프론트 타입 검사·단위 테스트·production build와 AI 계약 테스트 13건을 통과했고, 실제 브라우저에서 세로형 개발 이슈/산출물 및 REQ-TA-02 검출 화면을 확인했다.

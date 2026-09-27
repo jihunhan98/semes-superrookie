@@ -21,10 +21,11 @@ T_BOUNDARY = "예외·경계 조건 누락"
 T_CONJ = "접속사 범위 모호"
 T_TIME = "시간·일정 모호"
 T_CONFLICT = "기존 요구사항과 상충"
+T_REFERENCE = "참조 요구사항 확인 필요"
 
 ALL_TYPES = [
     T_QUANT, T_ADVERB, T_SUBJECT, T_WHEN,
-    T_BOUNDARY, T_CONJ, T_TIME, T_CONFLICT,
+    T_BOUNDARY, T_CONJ, T_TIME, T_CONFLICT, T_REFERENCE,
 ]
 
 
@@ -61,6 +62,10 @@ PHRASE_RULES: list[tuple[str, str, str, str, str | None]] = [
     ("가용 AMR", T_QUANT,
      "무엇을 '가용'으로 볼지 판정 기준이 없어 해석이 갈릴 수 있음",
      "가용 AMR = IDLE 상태이며 SoC(배터리 잔량)가 최소값 이상인 AMR",
+     None),
+    ("SoC 최소값", T_QUANT,
+     "최소값의 실제 수치와 단위가 없어 어떤 AMR을 제외해야 하는지 검증할 수 없음",
+     "프로젝트 자료나 고객 합의에서 확인된 최소 SoC 값을 명시",
      None),
     ("가장 가까운", T_QUANT,
      "거리를 어떤 기준으로 잴지(직선거리/경로거리) 정의되지 않음",
@@ -123,6 +128,12 @@ PHRASE_RULES: list[tuple[str, str, str, str, str | None]] = [
 # 예외·경계 조건 누락 — 조건문인데 else 가 없는 경우를 잡는다.
 _COND_PAT = re.compile(r"(경우에 한하여|경우에만|때에만|조건에서만)")
 _EXCEPT_HINT = re.compile(r"(그 외|이외|아니면|그렇지 않으면|예외)")
+# 한글 조사("req-ta-01과")는 Unicode 단어 문자라 \b로는 경계가 잡히지 않는다.
+# 요구사항 키에 허용하는 ASCII 범위만 앞뒤에서 제외해 원문 구절을 정확히 찾는다.
+_REQ_REFERENCE = re.compile(
+    r"(?<![A-Za-z0-9-])req-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?![A-Za-z0-9-])",
+    re.IGNORECASE,
+)
 
 
 def detect(content: str, existing: list[dict] | None = None) -> list[Finding]:
@@ -145,6 +156,23 @@ def detect(content: str, existing: list[dict] | None = None) -> list[Finding]:
             _COND_PAT.search(content).group(1),
             "조건을 만족하지 못하는 경우의 동작이 정의되지 않음",
             "조건 불충족 시의 동작(거부/대기/알림 등)을 함께 명시",
+        ))
+
+    known_keys = {str(row.get("reqKey") or "").casefold() for row in (existing or [])}
+    for match in _REQ_REFERENCE.finditer(content):
+        referenced = match.group(0)
+        if referenced.casefold() in known_keys:
+            continue
+        key = (T_REFERENCE, referenced.casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        findings.append(Finding(
+            T_REFERENCE,
+            referenced,
+            f"같은 프로젝트의 확정 요구사항에서 {referenced}을 찾을 수 없어 참조한 기준을 확인할 수 없음",
+            "참조 요구사항을 프로젝트에 등록하거나, 해당 기준을 이 요구사항 본문에 직접 명시",
+            conflict_req_key=referenced,
         ))
 
     findings.extend(_detect_conflicts(content, existing or []))

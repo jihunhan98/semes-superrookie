@@ -128,4 +128,7 @@ public final class ApiErrors {
     public static class BadRequest extends RuntimeException {
         public BadRequest(String message) { super(message); }
     }
+    public static class PayloadTooLarge extends RuntimeException { public PayloadTooLarge(String message) { super(message); } }
+    public static class UnsupportedMedia extends RuntimeException { public UnsupportedMedia(String message) { super(message); } }
+    public static class Forbidden extends RuntimeException { public Forbidden(String message) { super(message); } }
 }

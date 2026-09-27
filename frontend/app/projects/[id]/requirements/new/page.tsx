@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
-import { createRequirement, getProject, type ProjectDetail } from "../../../../lib/api";
+import { createRequirement, getProject, uploadRequirementAttachment, type ProjectDetail } from "../../../../lib/api";
+import WorkflowStepper from "../../../../components/WorkflowStepper";
 import { getCurrentUser } from "../../../../lib/session";
 
 export default function RequirementNewPage() {
@@ -20,6 +21,7 @@ export default function RequirementNewPage() {
   const [content, setContent] = useState("");
   const [requesterDept, setRequesterDept] = useState("");
   const [requesterName, setRequesterName] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   // 등록은 저장 + AI 초기 검토가 함께 끝나야 완료된다 → 그동안 로딩 표시.
   const [saving, setSaving] = useState(false);
@@ -59,9 +61,12 @@ export default function RequirementNewPage() {
         requesterDept: requesterDept.trim(),
         requesterName: requesterName.trim(),
       });
+      const failed:string[]=[];
+      for(const file of files){try{await uploadRequirementAttachment(projectId,created.id,user.id,file);}catch{failed.push(file.name);}}
       // 등록 직후는 상세 화면(확정본 열람용)이 아니라 검토 화면으로 바로 보낸다 —
       // 등록과 동시에 이미 끝나 있는 AI 초기 검토 결과를 한 번 더 클릭 없이 바로 보여주려는 것.
-      router.push(`/projects/${projectId}/requirements/${created.id}/edit`);
+      const warning=failed.length?`?attachmentWarning=${encodeURIComponent(`${failed.join(", ")} 업로드 실패 · 요구사항은 정상 저장됨`)}`:"";
+      router.push(`/projects/${projectId}/requirements/${created.id}/edit${warning}`);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "등록에 실패했습니다.");
       setSaving(false);
@@ -73,6 +78,7 @@ export default function RequirementNewPage() {
       <div className="appshell">
         <Header />
         <main className="main">
+          <WorkflowStepper step={1} />
           <p className="lmsg err">{error}</p>
         </main>
       </div>
@@ -146,6 +152,11 @@ export default function RequirementNewPage() {
                 placeholder="AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다."
                 disabled={saving}
               />
+              <div className="attachment-picker">
+                <div><b>참고 자료</b><span>TXT, PDF, DOCX · 파일당 최대 10MB · 스캔 이미지는 원본만 보존</span></div>
+                <label className="btn">파일 선택<input type="file" multiple accept=".txt,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event)=>setFiles(Array.from(event.target.files??[]))} disabled={saving}/></label>
+                {files.length>0&&<ul>{files.map(file=><li key={`${file.name}-${file.size}`}>{file.name}<span>{Math.ceil(file.size/1024)} KB</span></li>)}</ul>}
+              </div>
             </div>
           </div>
 

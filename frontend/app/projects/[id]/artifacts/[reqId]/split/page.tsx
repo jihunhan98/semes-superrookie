@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
+import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import { locateSpans } from "../../../../../lib/highlight";
 import { ISSUE_PALETTE as PALETTE } from "../../../../../lib/issuePalette";
 import {
@@ -17,13 +18,6 @@ import {
   type RequirementDetail,
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
-
-/** AI 검토 화면과 같은 세 상태. */
-const ENGINE_LABEL: Record<string, string> = {
-  "llm-api": "사내 LLM",
-  rule: "규칙 기반",
-  unavailable: "AI 미응답 · 전체를 이슈 1개로 시작",
-};
 
 type Candidate = { clientId: string; title: string; quote: string };
 
@@ -86,7 +80,6 @@ export default function IssueSplitPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
-  const [engine, setEngine] = useState<string | null>(null);
   const [active, setActive] = useState<number | null>(null);
 
   const [aiReason, setAiReason] = useState("");
@@ -118,7 +111,6 @@ export default function IssueSplitPage() {
         } else {
           const preview = await previewIssueSplit(projectId, requirementId, { userId: user.id, reason: "" });
           setCandidates(preview.issues.map((i) => ({ clientId: newClientId(), title: i.title, quote: i.quote })));
-          setEngine(preview.engine);
         }
       })
       .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
@@ -135,7 +127,6 @@ export default function IssueSplitPage() {
         reason: aiReason.trim(),
       });
       setCandidates(preview.issues.map((i) => ({ clientId: newClientId(), title: i.title, quote: i.quote })));
-      setEngine(preview.engine);
     } catch (err) {
       setRegenError(err instanceof Error ? err.message : "AI 분할에 실패했습니다.");
     } finally {
@@ -153,6 +144,30 @@ export default function IssueSplitPage() {
 
   function addCandidate() {
     setCandidates((prev) => [...(prev ?? []), { clientId: newClientId(), title: "", quote: "" }]);
+  }
+
+  function mergeWithPrevious(index: number) {
+    setCandidates((previous) => {
+      if (!previous || index < 1) return previous;
+      const before = previous[index - 1]; const current = previous[index];
+      const merged = { ...before, quote: [before.quote, current.quote].filter(Boolean).join(" ") };
+      return previous.map((item, itemIndex) => itemIndex === index - 1 ? merged : item).filter((_, itemIndex) => itemIndex !== index);
+    });
+  }
+
+  function splitCandidate(index: number) {
+    setCandidates((previous) => {
+      if (!previous) return previous;
+      const current = previous[index]; const text = current.quote.trim();
+      let boundary = text.indexOf(". ");
+      if (boundary >= 0) boundary += 1;
+      if (boundary < 1) { const middle = Math.floor(text.length / 2); boundary = text.indexOf(" ", middle); }
+      if (boundary < 1 || boundary >= text.length - 1) return previous;
+      const first = text.slice(0, boundary).trim(); const second = text.slice(boundary).trim();
+      const next = [...previous]; next[index] = { ...current, quote: first };
+      next.splice(index + 1, 0, { clientId: newClientId(), title: `${current.title} · 추가 범위`, quote: second });
+      return next;
+    });
   }
 
   const located = useMemo(() => {
@@ -213,10 +228,10 @@ export default function IssueSplitPage() {
           {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
           <main className="main">
             <div className="crumb">
-              <Link href={`/projects/${project.id}/artifacts`}>
-                <b>산출물</b>
+              <Link href={`/projects/${project.id}/requirements/${req.id}`}>
+                <b>{req.reqKey}</b>
               </Link>{" "}
-              / {req.reqKey} / 이슈 나누기
+              / 개발 이슈 도출
             </div>
             <p className="lmsg err" style={{ marginTop: 16, maxWidth: 640 }}>
               확정된 요구사항만 이슈로 나눌 수 있습니다. 지금 상태: {req.stateLabel}
@@ -237,7 +252,7 @@ export default function IssueSplitPage() {
         <div className="body">
           {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
           <main className="main">
-            <div className="placeholder">🤖 AI가 이슈 경계를 분석하는 중…</div>
+            <div className="placeholder">개발 이슈 범위를 정리하는 중…</div>
           </main>
         </div>
       </div>
@@ -250,22 +265,12 @@ export default function IssueSplitPage() {
       <div className="body">
         {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
         <main className="main">
+          <WorkflowStepper step={3} />
           <div className="crumb">
-            <Link href={`/projects/${project.id}/artifacts`}>
-              <b>산출물</b>
-            </Link>{" "}
-            / <Link href={`/projects/${project.id}/artifacts/${requirementId}`}>{req.reqKey}</Link> / 이슈 나누기
+            <Link href={`/projects/${project.id}/requirements/${requirementId}`}><b>{req.reqKey}</b></Link> / 개발 이슈 도출
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>🧩 이슈로 나누기</h1>
-            {engine && (
-              <span
-                className="lbl"
-                style={{ padding: "2px 11px", background: "var(--surface-muted)", color: "var(--muted)" }}
-              >
-                {ENGINE_LABEL[engine] ?? engine}
-              </span>
-            )}
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>개발 이슈 도출</h1>
             <span className="tagv">🏷 v{req.version}</span>
           </div>
 
@@ -273,7 +278,7 @@ export default function IssueSplitPage() {
           <div className="wcard" style={{ marginTop: 16, maxWidth: 1000 }}>
             <div className="wcb">
               <div className="fieldlab" style={{ marginTop: 0 }}>
-                AI에게 물어보기 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+                추가로 반영할 내용 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
               </div>
               <textarea
                 className="reqta"
@@ -284,7 +289,7 @@ export default function IssueSplitPage() {
               />
               <div className="wfoot" style={{ paddingTop: 10 }}>
                 <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
-                  {regenerating ? "나누는 중…" : "🤖 AI로 다시 나누기"}
+                  {regenerating ? "나누는 중…" : "다시 나누기"}
                 </button>
               </div>
               {regenError && (
@@ -344,6 +349,10 @@ export default function IssueSplitPage() {
                       onChange={(e) => updateCandidate(c.clientId, { quote: e.target.value })}
                       placeholder="이 이슈가 커버하는 요구사항 구절 — 직접 써도 됩니다"
                     />
+                    <div className="issue-split-tools">
+                      <button className="btn sm" disabled={i === 0} onClick={() => mergeWithPrevious(i)}>↑ 위 이슈와 합치기</button>
+                      <button className="btn sm" disabled={c.quote.trim().length < 3} onClick={() => splitCandidate(i)}>이 구절 둘로 나누기</button>
+                    </div>
                     {c.quote.trim() && !located[i] && (
                       <span className="nospan" style={{ marginTop: 6, display: "inline-block" }}>
                         원문에서 위치를 찾지 못함
@@ -365,11 +374,11 @@ export default function IssueSplitPage() {
           )}
           <div className="wfoot" style={{ marginTop: 16, maxWidth: 1000 }}>
             <button className="btn prim" onClick={onConfirm} disabled={confirming}>
-              {confirming ? "확정 중…" : "확정"}
+              {confirming ? "작업을 시작하는 중…" : "이슈 확정 및 산출물 4종 자동 생성"}
             </button>
             <Link
               className="btn"
-              href={`/projects/${project.id}/artifacts/${requirementId}`}
+              href={`/projects/${project.id}/requirements/${requirementId}`}
               style={confirming ? { pointerEvents: "none", opacity: 0.5 } : undefined}
             >
               취소

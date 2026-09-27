@@ -1,604 +1,97 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import AiFindings from "../../../../../components/AiFindings";
 import Header from "../../../../../components/Header";
+import Modal from "../../../../../components/Modal";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
+import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import {
-  confirmRequirement,
-  diffAnalyzeRequirement,
-  getProject,
-  getRequirement,
-  holdRequirement,
-  recordConsensus,
-  type ProjectDetail,
-  type RequirementDetail,
+  confirmRequirement, diffAnalyzeRequirement, getProject, getRequirement, holdRequirement,
+  listRequirementAttachments, recordConsensus, uploadRequirementAttachment,
+  type ProjectDetail, type RequirementAttachment, type RequirementDetail,
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
 
-/**
- * 어떻게 검토됐는지 배지. 상세 화면과 동일한 세 상태.
- */
-const ENGINE_LABEL: Record<string, string> = {
-  "llm-api": "사내 LLM",
-  rule: "규칙 기반",
-  unavailable: "AI 미응답",
-};
-
 const METHODS = ["대면 미팅", "화상회의", "유선", "메일"];
-
-function today() {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
-}
+function today() { return new Date().toISOString().slice(0, 10); }
+function size(bytes: number) { return bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
 
 export default function RequirementEditPage() {
-  const router = useRouter();
-  const params = useParams<{ id: string; reqId: string }>();
-  const projectId = Number(params.id);
-  const requirementId = Number(params.reqId);
-
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [req, setReq] = useState<RequirementDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  /** 이 화면에 들어온 시점의 확정본. "되돌리기"의 기준이 된다. */
-  const [baseContent, setBaseContent] = useState("");
-  /** 들어온 시점의 확정 버전 — 헤더의 "v1.0.1 → v1.0.2" 표시에 쓴다. */
-  const [baseVersion, setBaseVersion] = useState<string | null>(null);
-
-  // 1단계 — AI에게 물어보기(본문과 함께 전달됨)
-  const [aiPrompt, setAiPrompt] = useState("");
-  // 2단계 — 최종 본문 + AI 검토
-  const [draft, setDraft] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  // 3단계 — 고객 합의
-  const [method, setMethod] = useState(METHODS[0]);
-  const [contact, setContact] = useState("");
-  const [agreedOn, setAgreedOn] = useState(today());
-  const [note, setNote] = useState("");
-  const [savingConsensus, setSavingConsensus] = useState(false);
-  // 증빙 파일 — 디자인만. 아직 서버로 올리지 않고 화면에만 표시한다.
-  const [files, setFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  // 4단계 — 변경 사유(버전 이력 제목) + 확정 / 보류
-  const [commitTitle, setCommitTitle] = useState("");
-  const [confirming, setConfirming] = useState(false);
-  const [holding, setHolding] = useState(false);
-  // 에러는 단계별로 따로 둔다 — 하나로 합치면 "변경 사유를 입력하세요" 같은 4단계
-  // 오류가 2단계 AI 검토 버튼 옆에도 같이 뜨는 식으로 엉뚱한 곳에 나타난다.
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-  const [consensusError, setConsensusError] = useState<string | null>(null);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [holdError, setHoldError] = useState<string | null>(null);
+  const router = useRouter(); const search = useSearchParams(); const params = useParams<{ id: string; reqId: string }>();
+  const projectId = Number(params.id); const requirementId = Number(params.reqId);
+  const [project, setProject] = useState<ProjectDetail | null>(null); const [requirement, setRequirement] = useState<RequirementDetail | null>(null);
+  const [baseContent, setBaseContent] = useState(""); const [draft, setDraft] = useState(""); const [prompt, setPrompt] = useState("");
+  const [attachments, setAttachments] = useState<RequirementAttachment[]>([]); const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false); const [uploading, setUploading] = useState(false); const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null); const [confirmOpen, setConfirmOpen] = useState(false); const fileRef = useRef<HTMLInputElement>(null);
+  const [method, setMethod] = useState(METHODS[0]); const [contact, setContact] = useState(""); const [agreedOn, setAgreedOn] = useState(today());
+  const [agreement, setAgreement] = useState(""); const [versionTitle, setVersionTitle] = useState("");
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    if (!Number.isFinite(projectId) || !Number.isFinite(requirementId)) return;
-
-    Promise.all([getProject(projectId, user.id), getRequirement(projectId, requirementId, user.id)])
-      .then(([p, r]) => {
-        setProject(p);
-        setReq(r);
-        setBaseContent(r.content);
-        setBaseVersion(r.version);
-        setDraft(r.content);
+    const user = getCurrentUser(); if (!user) { router.replace("/login"); return; }
+    Promise.all([getProject(projectId, user.id), getRequirement(projectId, requirementId, user.id), listRequirementAttachments(projectId, requirementId, user.id)])
+      .then(([loadedProject, loadedRequirement, files]) => {
+        setProject(loadedProject); setRequirement(loadedRequirement); setBaseContent(loadedRequirement.content);
+        setDraft(loadedRequirement.aiDraftContent || loadedRequirement.content); setAttachments(files);
+        if (loadedRequirement.consensus) { setMethod(loadedRequirement.consensus.method); setContact(loadedRequirement.consensus.customerContact); setAgreement(loadedRequirement.consensus.note ?? ""); }
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
+      .catch((cause) => setError(cause instanceof Error ? cause.message : "요구사항을 불러오지 못했습니다."));
   }, [projectId, requirementId, router]);
 
-  async function onAnalyze() {
-    const user = getCurrentUser();
-    if (!user) return;
-    setAnalyzing(true);
-    setAnalyzeError(null);
+  async function analyze() {
+    const user = getCurrentUser(); if (!user) return; setAnalyzing(true); setError(null);
+    try { const updated = await diffAnalyzeRequirement(projectId, requirementId, { userId: user.id, content: draft, reason: prompt.trim() }); setRequirement(updated); setDraft(updated.aiDraftContent); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "AI 분석에 실패했습니다. 본문은 계속 수정할 수 있습니다."); }
+    finally { setAnalyzing(false); }
+  }
+
+  async function upload(files: FileList | null) {
+    const user = getCurrentUser(); if (!user || !files?.length) return; setUploading(true); setError(null);
+    try { for (const file of Array.from(files)) { const saved = await uploadRequirementAttachment(projectId, requirementId, user.id, file); setAttachments((current) => [...current, saved]); } }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "첨부 파일을 저장하지 못했습니다."); }
+    finally { setUploading(false); }
+  }
+
+  async function hold() {
+    const user = getCurrentUser(); if (!user) return; setBusy(true); setError(null);
+    try { await holdRequirement(projectId, requirementId, user.id); router.push(`/projects/${projectId}/requirements/${requirementId}`); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "보류하지 못했습니다."); setBusy(false); }
+  }
+
+  async function agreeAndConfirm() {
+    const user = getCurrentUser(); if (!user) return;
+    if (!contact.trim() || !agreement.trim() || !versionTitle.trim()) { setError("고객 담당자, 합의 내용, 변경 요약을 모두 입력하세요."); return; }
+    setBusy(true); setError(null);
     try {
-      const updated = await diffAnalyzeRequirement(projectId, requirementId, {
-        userId: user.id,
-        content: draft,
-        reason: aiPrompt.trim(),
-      });
-      setReq(updated);
-      // 제안이 반영된 문장으로 본문을 채운다.
-      setDraft(updated.aiDraftContent);
-    } catch (err) {
-      setAnalyzeError(err instanceof Error ? err.message : "AI 검토에 실패했습니다.");
-    } finally {
-      setAnalyzing(false);
-    }
+      const withConsensus = await recordConsensus(projectId, requirementId, { userId: user.id, method, customerContact: contact.trim(), agreedOn, note: agreement.trim(), agreedContent: draft });
+      await confirmRequirement(projectId, requirementId, { userId: user.id, content: draft, title: versionTitle.trim(), consensusId: withConsensus.consensus?.id });
+      router.push(`/projects/${projectId}/requirements/${requirementId}/issues`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "요구사항을 확정하지 못했습니다."); setBusy(false); }
   }
 
-  /**
-   * 증빙 파일 첨부 — 지금은 화면에만 표시. 이미지만 허용한다(회신 메일·화면
-   * 캡처, 회의록 사진 등). accept="image/*" 로 대부분 걸러지지만, "모든 파일"로
-   * 우회해 고를 수도 있어 한 번 더 확인한다.
-   */
-  function onPickFiles(files: FileList | null) {
-    const picked = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
-    setFiles((prev) => [...prev, ...picked]);
-  }
+  if (!project || !requirement) return <div className="appshell"><Header /><main className="main"><div className="placeholder">요구사항을 불러오는 중…</div>{error && <p className="lmsg err">{error}</p>}</main></div>;
+  const dirty = draft !== baseContent; const requiredCount = requirement.findings.filter((finding) => !finding.findingType.includes("참고")).length;
 
-  function removeFile(i: number) {
-    setFiles((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  async function onSaveConsensus() {
-    const user = getCurrentUser();
-    if (!user) return;
-    if (!contact.trim()) {
-      setConsensusError("고객측 담당자를 입력하세요.");
-      return;
-    }
-    setSavingConsensus(true);
-    setConsensusError(null);
-    try {
-      const updated = await recordConsensus(projectId, requirementId, {
-        userId: user.id,
-        method,
-        customerContact: contact.trim(),
-        agreedOn,
-        note: note.trim(),
-        agreedContent: draft,
-      });
-      setReq(updated);
-      // 변경 사유 기본값으로 합의 내용을 넣어준다. 그대로 써도 되고 고쳐도 된다.
-      if (!commitTitle.trim() && note.trim()) setCommitTitle(note.trim());
-    } catch (err) {
-      setConsensusError(err instanceof Error ? err.message : "합의 기록에 실패했습니다.");
-    } finally {
-      setSavingConsensus(false);
-    }
-  }
-
-  async function onConfirm() {
-    const user = getCurrentUser();
-    if (!user) return;
-    if (!commitTitle.trim()) {
-      setConfirmError("변경 사유를 입력하세요 — 버전 이력의 제목이 됩니다.");
-      return;
-    }
-    setConfirming(true);
-    setConfirmError(null);
-    try {
-      await confirmRequirement(projectId, requirementId, {
-        userId: user.id,
-        content: draft,
-        title: commitTitle.trim(),
-      });
-      router.push(`/projects/${projectId}/requirements/${requirementId}`);
-    } catch (err) {
-      setConfirmError(err instanceof Error ? err.message : "확정에 실패했습니다.");
-      setConfirming(false);
-    }
-  }
-
-  async function onHold() {
-    const user = getCurrentUser();
-    if (!user) return;
-    setHolding(true);
-    setHoldError(null);
-    try {
-      await holdRequirement(projectId, requirementId, user.id);
-      router.push(`/projects/${projectId}/requirements/${requirementId}`);
-    } catch (err) {
-      setHoldError(err instanceof Error ? err.message : "보류 처리에 실패했습니다.");
-      setHolding(false);
-    }
-  }
-
-  if (error) {
-    return (
-      <div className="appshell">
-        <Header />
-        <main className="main">
-          <p className="lmsg err">{error}</p>
-        </main>
+  return <div className="appshell"><Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((open) => !open)} /><div className="body">
+    {sidebarOpen && <ProjectSidebar projectId={projectId} projectName={project.name} active="requirements" />}
+    <main className="main requirement-review-page">
+      <WorkflowStepper step={2} />
+      {search.get("attachmentWarning") && <p className="lmsg err">{search.get("attachmentWarning")}</p>}
+      <div className="crumb"><Link href={`/projects/${projectId}/requirements`}>요구사항</Link> / <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement.reqKey}</Link> / 검출 결과 수정</div>
+      <section className="stage-heading"><div><span className="section-kicker">2단계</span><h1>문제가 된 구절만 확인하고 확정하세요</h1><p>원문 위치, 필요한 질문, 최종 본문을 한 화면에 모았습니다.</p></div><div className="review-metrics"><span><b>{requiredCount}</b>필수 질문</span><span><b>{requirement.findings.length - requiredCount}</b>참고 의견</span></div></section>
+      <section className="review-prompt"><div><b>추가로 반영할 내용</b><span>선택 · 비워두면 바뀐 문장만 다시 검토합니다.</span></div><input value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 재전송 담당자는 고객 운영팀으로 명시해줘" /><button className="btn" onClick={analyze} disabled={analyzing}>{analyzing ? "검토 중…" : "다시 검토"}</button></section>
+      <div className="requirement-review-grid">
+        <section className="review-findings-panel"><div className="pane-heading"><div><span>원문 내 검출 결과</span><small>필수 질문과 근거 부족 항목을 먼저 봅니다.</small></div><b>{requirement.findings.length}건</b></div><AiFindings content={draft} findings={requirement.findings} contentLabel="현재 본문" empty={<><b>확인을 요구하는 문제가 없습니다.</b><span>필요하면 본문을 직접 수정한 뒤 다시 분석하세요.</span></>} /></section>
+        <section className="review-editor-panel"><div className="pane-heading"><div><span>확정될 본문</span><small>이 내용이 고객 합의 스냅샷과 새 버전에 그대로 저장됩니다.</small></div>{dirty && <b>수정됨</b>}</div><textarea className="reqta review-editor" value={draft} onChange={(event) => setDraft(event.target.value)} /><div className="editor-actions"><button className="btn sm" disabled={!dirty} onClick={() => setDraft(baseContent)}>원문으로 되돌리기</button><span>{requirement.version ? `현재 v${requirement.version} · 다음 v${requirement.nextVersion}` : `최초 확정 v${requirement.nextVersion}`}</span></div></section>
       </div>
-    );
-  }
-
-  if (!project || !req) {
-    return (
-      <div className="appshell">
-        <Header />
-        <main className="main">
-          <div className="placeholder">불러오는 중…</div>
-        </main>
-      </div>
-    );
-  }
-
-  const dirty = draft !== baseContent;
-  const consensus = req.consensus;
-  // 이 화면에서 새로 기록한 합의만 유효하다. canConfirm 이 그 판단(미사용 합의)을 담고 있다.
-  const consensusReady = consensus !== null && req.canConfirm;
-  const draftChangedAfterConsensus = consensusReady && consensus.agreedContent !== draft;
-  const canConfirm = consensusReady && commitTitle.trim().length > 0 && draft.trim().length > 0;
-
-  return (
-    <div className="appshell">
-      <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-      <div className="body">
-        {sidebarOpen && (
-          <ProjectSidebar projectId={project.id} projectName={project.name} active="requirements" />
-        )}
-        <main className="main">
-          <div className="crumb">
-            <Link href={`/projects/${project.id}/requirements`}>
-              <b>요구사항</b>
-            </Link>{" "}
-            / <Link href={`/projects/${project.id}/requirements/${req.id}`}>{req.reqKey}</Link> / 수정
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, fontFamily: "var(--mono)" }}>
-              {req.reqKey}
-            </h1>
-            <span
-              className="lbl"
-              style={{ padding: "2px 11px", background: "var(--surface-muted)", color: "var(--muted)" }}
-            >
-              {req.stateLabel}
-            </span>
-            <span className="tagv">
-              {baseVersion ? `🏷 v${baseVersion} → v${req.nextVersion}` : `🏷 확정 시 v${req.nextVersion}`}
-            </span>
-          </div>
-
-          <div className="wizard">
-            {/* ── 1단계 : AI에게 물어보기 ──────────────────────────── */}
-            <div className="wstep">
-              <div className="wnum">1</div>
-              <div className="wbody">
-                <div className="wtitle">
-                  AI에게 물어보기
-                  <span className="wsub">
-                    본문과 함께 AI한테 전달돼요. <b>선택 입력</b> — 비워두면 바뀐 부분만 보고 검토해요.
-                  </span>
-                </div>
-                <div className="wcard">
-                  <div className="wcb">
-                    <textarea
-                      className="reqta"
-                      style={{ minHeight: 72 }}
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="고객 측에서 배터리 20% 미만이면 재할당하라고 요청했어. 구체적인 조건은 네가 적당히 채워줘."
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── 2단계 : AI 검토 결과를 보고 본문 수정 ───────────────
-                왼쪽은 항상 떠 있는 읽기 전용 결과 카드(+ 다시 분석 버튼), 오른쪽은 편집만. */}
-            <div className="wstep">
-              <div className="wnum">2</div>
-              <div className="wbody">
-                <div className="wtitle">
-                  AI 검토 결과를 보고 본문 수정
-                  <span className="wsub">
-                    왼쪽은 <b>읽기 전용 참고 자료</b>이고, 실제 편집은 오른쪽에서만 합니다.
-                  </span>
-                </div>
-
-                <div className="w2col">
-                  {/* 왼쪽: AI 검토 결과 — 읽기 전용. 적용 버튼 없음. */}
-                  <div className="wcard readonly">
-                    <div className="wch">
-                      🤖 AI 검토 결과
-                      <span className="rt">
-                        <span
-                          className="lbl"
-                          style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
-                        >
-                          읽기 전용
-                        </span>
-                        <span
-                          className="lbl"
-                          style={{
-                            padding: "1px 9px",
-                            marginLeft: 6,
-                            background: "var(--surface-muted)",
-                            color: "var(--muted)",
-                          }}
-                        >
-                          {ENGINE_LABEL[req.aiEngine] ?? req.aiEngine}
-                        </span>
-                        <span className="cnt" style={{ marginLeft: 8 }}>
-                          {req.findings.length}건
-                        </span>
-                        <button
-                          className="btn sm"
-                          style={{ marginLeft: 8 }}
-                          onClick={onAnalyze}
-                          disabled={analyzing}
-                        >
-                          {analyzing ? "분석 중…" : "↻ 다시 분석"}
-                        </button>
-                      </span>
-                    </div>
-                    <div className="wcb">
-                      {/* 검출 구절은 바뀐 뒤 문장(draft) 기준이라 draft 에 형광펜을 칠한다. */}
-                      <AiFindings
-                        content={draft}
-                        findings={req.findings}
-                        contentLabel="최종 본문"
-                        empty="검출된 불명확·상충이 없습니다."
-                      />
-                      <div className="wnote">본문을 고친 뒤 &ldquo;다시 분석&rdquo;을 누르면 바뀐 부분만 다시 봅니다.</div>
-                      {analyzeError && (
-                        <p className="lmsg err" style={{ marginTop: 10, marginBottom: 0 }}>
-                          {analyzeError}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 오른쪽: 최종 본문 — 여기서만 편집 */}
-                  <div className="wcard">
-                    <div className="wch">
-                      ✏️ 최종 본문
-                      <span className="rt">
-                        <span className="lbl blue" style={{ padding: "1px 9px" }}>
-                          여기서만 편집
-                        </span>
-                      </span>
-                    </div>
-                    <div className="wcb">
-                      {dirty ? (
-                        <div className="prefill">⬇ AI 제안이 반영됐어요. 그대로 두거나 고치세요.</div>
-                      ) : (
-                        <div
-                          className="prefill"
-                          style={{
-                            background: "var(--surface-muted)",
-                            borderColor: "var(--line)",
-                            color: "var(--muted)",
-                          }}
-                        >
-                          {baseVersion ? `확정본(v${baseVersion})` : "등록 원문"} 그대로예요.
-                        </div>
-                      )}
-                      <textarea
-                        className="reqta"
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                      />
-                      <div className="prefill-act">
-                        <button className="btn sm" onClick={() => setDraft(baseContent)} disabled={!dirty}>
-                          ↩ {baseVersion ? `확정본(v${baseVersion})` : "등록 원문"}으로 되돌리기
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── 3단계 : 고객 합의 ────────────────────────────────── */}
-            <div className="wstep">
-              <div className={`wnum${consensusReady ? " ok" : ""}`}>3</div>
-              <div className="wbody">
-                <div className="wtitle">
-                  고객 합의
-                  <span className="wsub">협의 결과를 기록합니다.</span>
-                </div>
-
-                <div className="wcard" style={{ borderColor: "var(--purple)" }}>
-                  <div className="wcb consensus">
-                    {consensusReady ? (
-                      <>
-                        <div className="crow">
-                          <span>
-                            <b>방법</b>
-                            {consensus.method}
-                          </span>
-                          <span>
-                            <b>고객측 담당자</b>
-                            {consensus.customerContact}
-                          </span>
-                          <span>
-                            <b>합의일</b>
-                            {consensus.agreedOn}
-                          </span>
-                          {consensus.recordedByName && (
-                            <span>
-                              <b>기록</b>
-                              {consensus.recordedByName}
-                            </span>
-                          )}
-                          <span className="cdone">✓ 합의 완료</span>
-                        </div>
-                        {consensus.note && <div className="ctext">{consensus.note}</div>}
-                        {draftChangedAfterConsensus && (
-                          <div className="fconf" style={{ marginTop: 10 }}>
-                            ⚠ 합의한 뒤에 본문이 바뀌었습니다. 이대로 확정하면 <b>합의한 문장과 다른
-                            내용</b>이 확정됩니다 — 고객과 다시 확인하고 아래에서 합의를 다시
-                            기록하세요.
-                          </div>
-                        )}
-                        <div className="prefill-act">
-                          <button className="btn sm" onClick={() => setReq({ ...req, canConfirm: false })}>
-                            ✎ 합의 다시 기록
-                          </button>
-                          <span className="pf-orig">
-                            합의된 문장: &ldquo;{consensus.agreedContent}&rdquo;
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="cform">
-                          <div className="fi2">
-                            <div className="fieldlab">합의 방법</div>
-                            <select value={method} onChange={(e) => setMethod(e.target.value)}>
-                              {METHODS.map((m) => (
-                                <option key={m} value={m}>
-                                  {m}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="fi2">
-                            <div className="fieldlab">고객측 담당자</div>
-                            <input
-                              value={contact}
-                              onChange={(e) => setContact(e.target.value)}
-                              placeholder="삼성전자 EDS 김민석 책임"
-                            />
-                          </div>
-                          <div className="fi2">
-                            <div className="fieldlab">합의일</div>
-                            <input
-                              type="date"
-                              value={agreedOn}
-                              onChange={(e) => setAgreedOn(e.target.value)}
-                            />
-                          </div>
-                        </div>
-                        <div className="fieldlab">합의 내용</div>
-                        <textarea
-                          className="reqta"
-                          style={{ minHeight: 84 }}
-                          value={note}
-                          onChange={(e) => setNote(e.target.value)}
-                          placeholder="위 수정안(우선순위 req-ta-01 기준 통일)에 동의함. 회신 메일로 확인."
-                        />
-
-                        {/* 증빙 이미지 — 디자인만. 실제 업로드·저장은 나중에 붙인다. */}
-                        <div className="fieldlab">
-                          증빙 이미지{" "}
-                          <span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 11.5 }}>
-                            (선택 · 준비 중)
-                          </span>
-                        </div>
-                        <div className="fileattach">
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              onPickFiles(e.target.files);
-                              e.target.value = "";
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="btn sm"
-                            onClick={() => fileInputRef.current?.click()}
-                          >
-                            🖼 이미지 첨부
-                          </button>
-                          <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 10 }}>
-                            이미지 파일만 가능해요(PNG, JPG 등). 회신 메일 캡처·회의록 사진 등. 아직 저장은 안 돼요.
-                          </span>
-                          {files.length > 0 && (
-                            <ul className="filelist">
-                              {files.map((f, i) => (
-                                <li key={`${f.name}-${i}`}>
-                                  <span className="fname">🖼️ {f.name}</span>
-                                  <span className="fsize">{formatFileSize(f.size)}</span>
-                                  <button
-                                    type="button"
-                                    className="filex"
-                                    onClick={() => removeFile(i)}
-                                    aria-label="파일 제거"
-                                  >
-                                    ✕
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-
-                        {consensusError && (
-                          <p className="lmsg err" style={{ marginTop: 12, marginBottom: 0 }}>
-                            {consensusError}
-                          </p>
-                        )}
-                        <div className="wfoot">
-                          <button className="btn prim" onClick={onSaveConsensus} disabled={savingConsensus}>
-                            {savingConsensus ? "저장 중…" : "합의 기록 저장"}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── 4단계 : 변경 사유 확인 후 확정 ───────────────────── */}
-            <div className="wstep">
-              <div className={`wnum${canConfirm ? "" : " off"}`}>4</div>
-              <div className="wbody">
-                <div className="wtitle">
-                  변경 사유 확인 후 확정
-                  <span className="wsub">이 문구가 버전 이력의 제목이 됩니다 (커밋 메시지).</span>
-                </div>
-                <div className="wcard">
-                  <div className="wcb">
-                    <div className="commitin">
-                      <input
-                        value={commitTitle}
-                        onChange={(e) => setCommitTitle(e.target.value)}
-                        placeholder="req-ta-01과 우선순위 기준 통일 (고객 요청 반영, 합의 완료)"
-                      />
-                      <span className="aihint">✨ 합의 내용에서 채움 · 편집 가능</span>
-                    </div>
-                    {confirmError && (
-                      <p className="lmsg err" style={{ marginBottom: 0 }}>
-                        {confirmError}
-                      </p>
-                    )}
-                    {holdError && (
-                      <p className="lmsg err" style={{ marginBottom: 0 }}>
-                        {holdError}
-                      </p>
-                    )}
-                    <div className="wfoot">
-                      <button
-                        className="btn prim"
-                        onClick={onConfirm}
-                        disabled={!canConfirm || confirming || holding}
-                      >
-                        {confirming ? "확정 중…" : `확정 저장 → v${req.nextVersion}`}
-                      </button>
-                      <button className="btn" onClick={onHold} disabled={confirming || holding}>
-                        {holding ? "처리 중…" : "보류"}
-                      </button>
-                      <button
-                        className="btn"
-                        onClick={() => router.push(`/projects/${projectId}/requirements/${requirementId}`)}
-                        disabled={confirming || holding}
-                      >
-                        취소
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+      <section className="evidence-strip"><div><b>프로젝트 근거 자료</b><span>TXT·PDF·DOCX 텍스트는 검색 근거로, 이미지는 원본으로 Oracle에 보존됩니다.</span></div><input ref={fileRef} type="file" multiple accept=".txt,.pdf,.docx,image/*" hidden onChange={(event) => { upload(event.target.files); event.target.value = ""; }} /><button className="btn sm" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? "업로드 중…" : "자료 추가"}</button>{attachments.length > 0 && <ul>{attachments.map((file) => <li key={file.id}><span>📎 {file.fileName}</span><small>{size(file.fileSize)} · {file.extractionState === "EXTRACTED" ? "텍스트 추출 완료" : "원본 보존"}</small></li>)}</ul>}</section>
+      {error && <p className="lmsg err" aria-live="polite">{error}</p>}
+      <footer className="stage-action-bar"><div><b>확정할 준비가 되었나요?</b><span>확정 버튼에서 고객 합의를 기록한 뒤 이슈 자동 도출로 이어집니다.</span></div><button className="btn" onClick={hold} disabled={busy}>보류</button><button className="btn prim" onClick={() => { setError(null); setConfirmOpen(true); }} disabled={busy || !draft.trim()}>요구사항 확정</button></footer>
+    </main>
+  </div>
+  {confirmOpen && <Modal title="고객 합의 기록 및 요구사항 확정" icon="✓" onClose={() => !busy && setConfirmOpen(false)} wide><div className="consensus-dialog-intro"><b>합의 기록 없이는 최종 확정할 수 없습니다.</b><span>아래 본문 스냅샷과 기록자가 버전 이력에 함께 보존됩니다.</span></div><div className="consensus-dialog-grid"><label><span>합의 방법</span><select value={method} onChange={(event) => setMethod(event.target.value)}>{METHODS.map((item) => <option key={item}>{item}</option>)}</select></label><label><span>고객 담당자</span><input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="김고객 책임" /></label><label><span>합의일</span><input type="date" value={agreedOn} onChange={(event) => setAgreedOn(event.target.value)} /></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} onChange={(event) => setAgreement(event.target.value)} placeholder="확정 본문과 예외 처리 방향에 동의함" /></label><label className="wide"><span>변경 요약 · 버전 이력 제목</span><input value={versionTitle} onChange={(event) => setVersionTitle(event.target.value)} placeholder="고객 합의 반영 및 알림 실패 처리 확정" /></label></div><div className="consensus-snapshot"><span>합의 당시 본문 스냅샷</span><p>{draft}</p></div>{error && <p className="lmsg err">{error}</p>}<div className="modal-actions"><button className="btn" onClick={() => setConfirmOpen(false)} disabled={busy}>취소</button><button className="btn prim" onClick={agreeAndConfirm} disabled={busy}>{busy ? "기록하고 확정하는 중…" : "합의 기록 후 확정"}</button></div></Modal>}
+  </div>;
 }

@@ -103,10 +103,45 @@ def generate_v2(type_: str, title: str, quote: str | None) -> dict:
         ]
         return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
     if type_ == "detail-design":
-        return {"description": quote, "classDiagram": None, "sequenceDiagramAsIs": None,
-                "sequenceDiagramToBe": None, "asIsApplicability": "UNKNOWN", "asIsReason": None,
+        safe_title = _mermaid_text(title or "요구사항 처리")
+        safe_quote = _mermaid_text(quote or title or "확정 요구사항")
+        class_diagram = (
+            "classDiagram\n"
+            "    class 업무요청 {\n"
+            "      +요청내용\n"
+            "      +처리상태\n"
+            "    }\n"
+            "    class 처리결과 {\n"
+            "      +결과내용\n"
+            "    }\n"
+            "    업무요청 --> 처리결과 : 업무 처리"
+        )
+        sequence_as_is = (
+            "sequenceDiagram\n"
+            "    participant 요청자 as 업무 요청자\n"
+            "    participant 시스템 as 업무 시스템\n"
+            f"    요청자->>시스템: {safe_title} 요청\n"
+            "    시스템-->>요청자: 현재 처리 결과"
+        )
+        sequence_to_be = (
+            "sequenceDiagram\n"
+            "    participant 요청자 as 업무 요청자\n"
+            "    participant 시스템 as 업무 시스템\n"
+            "    participant 담당자 as 업무 담당자\n"
+            f"    요청자->>시스템: {safe_title} 요청\n"
+            f"    Note over 시스템,담당자: 확정 근거 - {safe_quote}\n"
+            "    시스템->>담당자: 처리 결과 전달\n"
+            "    담당자-->>요청자: 결과 확인"
+        )
+        return {"description": quote, "classDiagram": class_diagram, "sequenceDiagramAsIs": sequence_as_is,
+                "sequenceDiagramToBe": sequence_to_be, "asIsApplicability": "UNKNOWN", "asIsReason": "기존 흐름 근거 확인 필요",
                 "legacyExtras": extras}
     return {}
+
+
+def _mermaid_text(value: str) -> str:
+    """Keep evidence text readable without allowing it to break Mermaid statements."""
+    return " ".join(value.replace('"', "'").replace(";", ",").split())
 
 
 def is_valid_shape(type_: str, content: object) -> bool:

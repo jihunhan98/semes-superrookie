@@ -135,10 +135,11 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 |---|---|---|
 | `llm-api` | 사내 LLM API 서비스(GPT-OSS-120B)가 응답함 | OpenAI 호환 `POST {LLM_API_BASE}/chat/completions` · `Authorization: Bearer {LLM_API_KEY}` |
 | `rule` | 사내 LLM 미응답(주소 미설정·연결 실패·타임아웃) — 규칙 결과만 | — |
+| `gemini` | `AI_PROVIDER=gemini`로 명시 선택했고 Gemini 구조화 응답을 받음 | — |
 | `unavailable` | AI 서버 자체가 응답하지 않음. 이 값은 AI 서버가 아니라 **백엔드가** 채운다 | — |
 
-- 폐쇄망은 반출이 막혀 외부 AI API를 못 쓴다. 그래서 사내 LLM API 하나만 쓰고,
-  응답하지 못해도 규칙 기반으로 항상 응답한다.
+- 기본은 외부 전송이 없는 `AI_PROVIDER=rule`이다. 사내망은 `internal`, 허가된 환경은
+  `gemini`를 명시 선택하며, 응답하지 못해도 규칙 기반으로 항상 응답한다.
 - LLM이 붙어도 **규칙 결과가 먼저**이고 LLM이 새로 찾은 것만 덧붙는다. LLM이 원문에 없는
   `targetSpan`이나 정의되지 않은 유형을 만들어내면 버린다(환각 방지).
 - 주소·모델명은 소스가 아니라 환경 변수로 넘긴다 (`LLM_API_BASE` / `LLM_API_MODEL` 등,
@@ -146,11 +147,21 @@ Base URL `/api` · 형식 `application/json` · 세션/토큰 없음(로그인�
 
 ---
 
-## 3. 기능 3 — 산출물 도출
+## 3. 기능 3~4 — 이슈·산출물 도출과 전체 확정
 
-| 메서드 | 경로 | 설명 | 요청 | 응답 |
-|---|---|---|---|---|
-| POST | `/api/requirements/{id}/derive` | 개발 이슈 N + 4종 도출 | — | `201` {issues[]} |
-| GET | `/api/issues/{id}` | 개발 이슈 + 하위 산출물 | — | `200` {issue, artifacts[]} |
-| PATCH | `/api/artifacts/{id}` | 산출물 편집·확정 | `body`str | `200` |
-| GET | `/api/trace` | 요구사항↔산출물 추적 | `reqId`*str (query) | `200` {requirement, issues[], artifacts[]} |
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| POST | `/api/projects/{projectId}/requirements/{requirementId}/issues/split-preview` | 저장하지 않는 AI 분할 기본안 |
+| POST | `/api/projects/{projectId}/requirements/{requirementId}/issues` | 사람이 수정한 이슈 N건 확정, 이슈별 4종 placeholder와 영속 생성 job 시작 |
+| GET | `/api/projects/{projectId}/requirements/{requirementId}/issues` | 활성 이슈와 고정 양식 조회 |
+| PATCH | `/api/projects/{projectId}/requirements/{requirementId}/issues/{issueId}` | 이슈 고정 양식 임시 저장/확정 |
+| GET | `/api/projects/{projectId}/requirements/{requirementId}/issues/{issueKey}/artifacts/{type}` | 산출물 고정 양식 조회 |
+| POST | `.../artifacts/{type}/regenerate` | 해당 산출물 새 초안 생성 |
+| POST | `.../artifacts/{type}/confirm` | 편집 내용과 revision 확정 |
+| GET | `/api/v2/projects/{projectId}/requirements/{requirementId}/bundle` | 이슈·산출물·생성 진행률·manifest 조회 |
+| POST | `/api/v2/projects/{projectId}/requirements/{requirementId}/bundle/confirm` | expectedRevision과 idempotencyKey 기반 전체 확정 |
+| GET | `/api/v2/jobs/{jobId}` | 생성 성공/실패/대기 건수 조회 |
+| POST | `/api/v2/jobs/{jobId}/retry` | 최종 실패 task만 재시도 |
+| POST/GET | `/api/projects/{projectId}/requirements/{requirementId}/attachments` | Oracle BLOB 첨부 저장/조회 |
+
+산출물 `type`은 `voc`, `functional`, `nonfunctional`, `detail-design`만 허용한다. 묶음 전체 확정은 모든 활성 이슈와 산출물 4종이 `CONFIRMED`일 때만 성공한다.

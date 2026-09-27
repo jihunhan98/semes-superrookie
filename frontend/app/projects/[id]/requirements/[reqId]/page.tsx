@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../components/Header";
 import ProjectSidebar from "../../../../components/ProjectSidebar";
+import WorkflowStepper from "../../../../components/WorkflowStepper";
 import {
   getProject,
   getRequirement,
@@ -69,7 +70,7 @@ export default function RequirementDetailPage() {
         {sidebarOpen && (
           <ProjectSidebar projectId={project.id} projectName={project.name} active="requirements" />
         )}
-        <main className="main">
+        <main className="main requirement-detail-main">
           <div className="crumb">
             <Link href={`/projects/${project.id}/requirements`}>
               <b>요구사항</b>
@@ -86,13 +87,33 @@ export default function RequirementDetailPage() {
                 한다. 확정 전/후 구분 없이 같은 화면 하나로 처리한다 — 등록 자체가 이미
                 최초 확정의 시작이고, 그 뒤로는 전부 "수정"이기 때문. */}
             <Link
-              className="btn prim"
+              className="btn"
               href={`/projects/${project.id}/requirements/${req.id}/edit`}
               style={{ marginLeft: "auto" }}
             >
               수정하기
             </Link>
           </div>
+
+          <section className="detail-workflow">
+            <div className="detail-workflow-head">
+              <div>
+                <span className="section-kicker">CURRENT WORKFLOW</span>
+                <h2>{req.state === "CONFIRMED" ? "요구사항이 확정되었습니다" : "고객 합의와 확정을 진행하세요"}</h2>
+              </div>
+              <div className="detail-actions">
+                {req.state === "CONFIRMED" ? (
+                  <>
+                    <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/issues`}>3단계 · 이슈 도출</Link>
+                    <Link className="btn" href={`/projects/${project.id}/requirements/${req.id}/review`}>4단계 · 검토</Link>
+                  </>
+                ) : (
+                  <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/edit`}>2단계 계속하기</Link>
+                )}
+              </div>
+            </div>
+            <WorkflowStepper step={req.state === "CONFIRMED" ? 3 : req.state === "RECEIVED" ? 1 : 2} />
+          </section>
 
           {/* 본문 ↔ 버전 이력 탭 */}
           <div className="rtabs">

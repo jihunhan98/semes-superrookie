@@ -11,6 +11,7 @@ cp frontend/.env.example frontend/.env.local
 cd ai-model && python3.13 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt && cd ..
 cd frontend && npm ci && cd ..
 # backend/.env에 실제 DB_URL, DB_USERNAME, DB_PASSWORD를 입력한 뒤
+# Gemini를 사용할 때만 ai-model/.env에 AI_PROVIDER=gemini와 GEMINI_API_KEY를 입력
 ./run-all.sh --with-backend
 ```
 
@@ -31,6 +32,7 @@ cd ..
 set DB_URL=jdbc:oracle:thin:@localhost:1521/XEPDB1
 set DB_USERNAME=REQOPS
 set DB_PASSWORD=실제값
+rem Gemini 사용 시 ai-model\.env에 AI_PROVIDER=gemini, GEMINI_API_KEY=실제값 설정
 run-all.bat --with-backend
 ```
 

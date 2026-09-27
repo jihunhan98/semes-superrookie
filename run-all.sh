@@ -74,7 +74,9 @@ fi
 
 if [ "$WITH_BACKEND" = "1" ]; then
   echo "  [2/3] 백엔드 실행            http://localhost:8080"
-  launch "ReqOps - 백엔드 (8080)" "backend" "./mvnw spring-boot:run" "backend.log"
+  # Terminal.app가 새 로그인 셸을 만들 때 부모 셸 환경을 잃는 경우가 있어
+  # 백엔드 프로세스가 시작되는 바로 그 셸에서 gitignore 된 .env를 다시 읽는다.
+  launch "ReqOps - 백엔드 (8080)" "backend" "set -a; [ ! -f .env ] || . ./.env; set +a; ./mvnw spring-boot:run" "backend.log"
 else
   echo "  [2/3] 백엔드 건너뜀          필요하면 --with-backend 사용"
 fi

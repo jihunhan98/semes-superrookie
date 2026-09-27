@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
     }
 
-    @ExceptionHandler({ApiErrors.NotProjectOwner.class, ApiErrors.NotProjectMember.class})
+    @ExceptionHandler({ApiErrors.NotProjectOwner.class, ApiErrors.NotProjectMember.class, ApiErrors.Forbidden.class})
     public ResponseEntity<Map<String, String>> handleForbidden(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
     }
@@ -89,4 +89,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleBadRequest(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
     }
+    @ExceptionHandler(ApiErrors.PayloadTooLarge.class)
+    public ResponseEntity<Map<String,String>> handleTooLarge(ApiErrors.PayloadTooLarge e){return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("message",e.getMessage()));}
+    @ExceptionHandler(ApiErrors.UnsupportedMedia.class)
+    public ResponseEntity<Map<String,String>> handleUnsupported(ApiErrors.UnsupportedMedia e){return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(Map.of("message",e.getMessage()));}
 }

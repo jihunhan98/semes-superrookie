@@ -3,6 +3,7 @@ package com.semes.reqops.domain.issue.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 개발 이슈 — 확정 요구사항을 "이슈 나누기" 화면에서 나눈 결과 한 건.
@@ -51,6 +52,8 @@ public class DevIssue {
     @Lob @Column(name = "constraints_note") private String constraintsNote;
     @Lob @Column(name = "before_state") private String beforeState;
     @Lob @Column(name = "after_state") private String afterState;
+    @Column(name = "due_on") private LocalDate dueOn;
+    @Column(name = "resolved_at") private LocalDateTime resolvedAt;
     @Column(name = "issue_state", nullable = false, length = 20) private String issueState = "DRAFT";
     @Version @Column(name = "row_version", nullable = false) private long rowVersion;
 
@@ -83,7 +86,8 @@ public class DevIssue {
     public void assignBundle(Long bundleId) { this.bundleId = bundleId; }
 
     public void updateBody(String title, String quote, String symptom, String improvementReq,
-                           String changeScope, String constraintsNote, String beforeState, String afterState) {
+                           String changeScope, String constraintsNote, String beforeState, String afterState,
+                           LocalDate dueOn) {
         this.title = title;
         this.quote = quote;
         this.symptom = symptom;
@@ -92,7 +96,11 @@ public class DevIssue {
         this.constraintsNote = constraintsNote;
         this.beforeState = beforeState;
         this.afterState = afterState;
+        this.dueOn = dueOn;
     }
+
+    public void confirm() { this.issueState = "CONFIRMED"; }
+    public void resolve() { this.resolvedAt = LocalDateTime.now(); }
 
     public Long getId() { return id; }
     public Long getRequirementId() { return requirementId; }
@@ -109,6 +117,8 @@ public class DevIssue {
     public String getConstraintsNote() { return constraintsNote; }
     public String getBeforeState() { return beforeState; }
     public String getAfterState() { return afterState; }
+    public LocalDate getDueOn() { return dueOn; }
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
     public String getIssueState() { return issueState; }
     public long getRowVersion() { return rowVersion; }
 }

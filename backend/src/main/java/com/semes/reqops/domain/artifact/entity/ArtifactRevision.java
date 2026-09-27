@@ -17,5 +17,5 @@ public class ArtifactRevision {
     protected ArtifactRevision(){}
     public ArtifactRevision(Long artifactId,int revisionNo,ArtifactState state,String contentJson,String hash,String reason,Long actorId){this.artifactId=artifactId;this.revisionNo=revisionNo;this.state=state;this.contentJson=contentJson;this.contentHash=hash;this.reason=reason;this.actorId=actorId;}
     @PrePersist void created(){createdAt=LocalDateTime.now();}
-    public Long getId(){return id;} public int getRevisionNo(){return revisionNo;} public ArtifactState getState(){return state;} public String getContentJson(){return contentJson;} public LocalDateTime getCreatedAt(){return createdAt;}
+    public Long getId(){return id;} public int getRevisionNo(){return revisionNo;} public ArtifactState getState(){return state;} public String getContentJson(){return contentJson;} public String getContentHash(){return contentHash;} public LocalDateTime getCreatedAt(){return createdAt;}
 }

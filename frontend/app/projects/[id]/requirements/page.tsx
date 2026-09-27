@@ -28,6 +28,12 @@ const STATE_COLOR: Record<ReqState, string> = {
 
 type StateFilter = "ALL" | "OPEN" | "CONFIRMED";
 
+function workflowStage(row: RequirementSummary) {
+  if (row.state === "CONFIRMED") return { number: 3, label: "도출 준비" };
+  if (row.state === "RECEIVED") return { number: 1, label: "등록" };
+  return { number: 2, label: "검출·합의" };
+}
+
 export default function RequirementListPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -120,15 +126,24 @@ export default function RequirementListPage() {
         {sidebarOpen && (
           <ProjectSidebar projectId={project.id} projectName={project.name} active="requirements" />
         )}
-        <main className="main">
-          <div className="rqtoolbar">
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
-              요구사항 <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 16 }}>{counts.all}</span>
-            </h1>
+        <main className="main requirements-main">
+          <section className="requirements-hero">
+            <div>
+              <span className="section-kicker">REQUIREMENT PIPELINE</span>
+              <h1>요구사항</h1>
+              <p>등록 원문, AI 검출, 고객 합의와 확정 버전을 한 목록에서 추적합니다.</p>
+            </div>
             <Link className="btn prim" href={`/projects/${project.id}/requirements/new`}>
               ＋ 새 요구사항
             </Link>
-          </div>
+          </section>
+
+          <section className="requirement-metrics" aria-label="요구사항 현황">
+            <div><span>전체</span><b>{counts.all}</b></div>
+            <div><span>진행 중</span><b>{counts.open}</b></div>
+            <div><span>확정</span><b>{counts.confirmed}</b></div>
+            <div><span>AI 확인 항목</span><b>{rows.reduce((sum, row) => sum + row.findingCount, 0)}</b></div>
+          </section>
 
           <div className="rqbar">
             <div className="seg">
@@ -193,6 +208,10 @@ export default function RequirementListPage() {
                   href={`/projects/${project.id}/requirements/${r.id}`}
                 >
                   <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
+                  <span className="rq-stage">
+                    <b>{workflowStage(r).number}</b>
+                    {workflowStage(r).label}
+                  </span>
                   <span className="rmid">{r.reqKey}</span>
                   <span className="rtit">{r.content}</span>
                   <span className="rt">

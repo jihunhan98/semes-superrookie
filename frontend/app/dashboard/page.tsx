@@ -27,28 +27,44 @@ export default function DashboardPage() {
   return (
     <div className="appshell">
       <Header />
-      <main className="main" style={{ maxWidth: 1000, margin: "0 auto", width: "100%" }}>
-        <div className="toolbar">
-          <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>프로젝트</h1>
-          <span style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-            <Link className="btn prim" href="/projects/new">
-              ＋ New Project
-            </Link>
-            <Link className="btn" href="/projects/open">
-              📂 Open Project
-            </Link>
-          </span>
+      <main className="main dashboard-main">
+        <section className="dashboard-hero">
+          <div>
+            <span className="section-kicker">WORKSPACE</span>
+            <h1>요구사항 운영을 시작하세요</h1>
+            <p>고객 원문부터 합의, 개발 이슈와 산출물 확정까지 하나의 이력으로 관리합니다.</p>
+          </div>
+          <div className="dashboard-actions">
+            <Link className="btn prim" href="/projects/new">＋ 새 프로젝트</Link>
+            <Link className="btn" href="/projects/open">참여 코드로 열기</Link>
+          </div>
+        </section>
+
+        <section className="dashboard-guide" aria-label="업무 흐름 안내">
+          <div><span>01</span><b>요구사항 등록</b><small>원문과 요청자 보존</small></div>
+          <div><span>02</span><b>검출·고객 합의</b><small>모호성 확인과 확정</small></div>
+          <div><span>03</span><b>개발 항목 도출</b><small>이슈와 산출물 자동 준비</small></div>
+          <div><span>04</span><b>검토·전체 확정</b><small>근거와 버전 이력 고정</small></div>
+        </section>
+
+        <div className="section-heading">
+          <div>
+            <span className="section-kicker">MY PROJECTS</span>
+            <h2>참여 프로젝트</h2>
+          </div>
+          {projects && <span className="section-count">{projects.length}</span>}
         </div>
-        <p className="psub">
-          최근 연 프로젝트에서 이어서 작업하거나(카드 클릭), 새로 만들거나, 토큰으로 기존 프로젝트를 엽니다.
-        </p>
 
         {error && <p className="lmsg err">{error}</p>}
 
         {!error && projects === null && <div className="placeholder">불러오는 중…</div>}
 
         {projects !== null && projects.length === 0 && (
-          <div className="placeholder">아직 참여 중인 프로젝트가 없습니다. New Project로 만들거나 Open Project로 참여해보세요.</div>
+          <div className="empty-workspace">
+            <b>첫 프로젝트를 만들어보세요</b>
+            <span>새 프로젝트를 만들거나 참여 코드로 기존 프로젝트에 들어갈 수 있습니다.</span>
+            <Link className="btn prim" href="/projects/new">새 프로젝트 만들기</Link>
+          </div>
         )}
 
         {projects !== null && projects.length > 0 && (
@@ -70,6 +86,7 @@ export default function DashboardPage() {
                     <span>
                       멤버 <b>{p.memberCount}</b>
                     </span>
+                    <span className="project-open">프로젝트 열기 →</span>
                   </div>
                 </div>
               </Link>

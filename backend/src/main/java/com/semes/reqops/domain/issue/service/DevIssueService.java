@@ -6,6 +6,7 @@ import com.semes.reqops.domain.issue.dto.IssueDto.IssueInput;
 import com.semes.reqops.domain.issue.dto.IssueDto.IssueResponse;
 import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewRequest;
 import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewResponse;
+import com.semes.reqops.domain.issue.dto.IssueDto.UpdateRequest;
 import com.semes.reqops.domain.issue.entity.DevIssue;
 import com.semes.reqops.domain.issue.repository.DevIssueRepository;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
@@ -88,6 +89,10 @@ public class DevIssueService {
                     blankToNull(in.quote()),
                     i,
                     req.userId());
+            issue.updateBody(in.title().trim(), blankToNull(in.quote()),
+                    defaultText(in.symptom(), in.quote()), defaultText(in.improvementReq(), in.title()),
+                    defaultText(in.changeScope(), in.quote()), blankToNull(in.constraintsNote()),
+                    blankToNull(in.beforeState()), defaultText(in.afterState(), in.quote()), in.dueOn());
             bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
                     .ifPresent(bundle -> issue.assignBundle(bundle.getId()));
             devIssueRepository.save(issue);
@@ -110,12 +115,30 @@ public class DevIssueService {
                 .toList();
     }
 
+    @Transactional
+    public IssueResponse update(Long projectId, Long requirementId, Long issueId, UpdateRequest req) {
+        requireMember(projectId, req.userId());
+        findInProject(projectId, requirementId);
+        DevIssue issue = devIssueRepository.findById(issueId)
+                .filter(row -> row.getRequirementId().equals(requirementId) && !"RETIRED".equals(row.getIssueState()))
+                .orElseThrow(() -> new ApiErrors.DevIssueNotFound(String.valueOf(issueId)));
+        issue.updateBody(req.title().trim(), blankToNull(req.quote()), blankToNull(req.symptom()),
+                blankToNull(req.improvementReq()), blankToNull(req.changeScope()), blankToNull(req.constraintsNote()),
+                blankToNull(req.beforeState()), blankToNull(req.afterState()), req.dueOn());
+        if (req.confirmed()) issue.confirm();
+        return toResponse(devIssueRepository.save(issue));
+    }
+
     // ── 내부 구현 ────────────────────────────────────────────────
 
     private IssueResponse toResponse(DevIssue issue) {
         String createdByName = userRepository.findById(issue.getCreatedBy()).map(User::getName).orElse(null);
         return new IssueResponse(
                 issue.getId(), issue.getIssueKey(), issue.getTitle(), issue.getQuote(),
+                issue.getSymptom(), issue.getImprovementReq(), issue.getChangeScope(), issue.getConstraintsNote(),
+                issue.getBeforeState(), issue.getAfterState(), issue.getDueOn(),
+                issue.getResolvedAt() == null ? null : issue.getResolvedAt().format(TS),
+                issue.getIssueState(), issue.getRowVersion(),
                 issue.getDisplayOrder(), createdByName,
                 issue.getCreatedAt() == null ? null : issue.getCreatedAt().format(TS));
     }
@@ -145,5 +168,10 @@ public class DevIssueService {
 
     private String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s;
+    }
+
+    private String defaultText(String value, String fallback) {
+        String normalized = blankToNull(value);
+        return normalized == null ? blankToNull(fallback) : normalized;
     }
 }
