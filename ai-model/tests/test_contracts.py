@@ -49,6 +49,18 @@ def test_batch_reports_partial_failure_without_dropping_successes():
 def test_detail_design_fallback_uses_business_language_mermaid():
     content = artifacts.generate_v2("detail-design", "주문 승인 알림", "승인되면 배차 담당자에게 알린다")
     assert content["classDiagram"].startswith("classDiagram")
-    assert "업무 요청자" in content["sequenceDiagramAsIs"]
-    assert "업무 담당자" in content["sequenceDiagramToBe"]
+    assert "확인되지 않음" in content["sequenceDiagramAsIs"]
+    assert "요구사항 검토자" in content["sequenceDiagramToBe"]
     assert "TargetService" not in content["sequenceDiagramToBe"]
+
+
+def test_amr_detail_design_is_grounded_in_matching_requirement():
+    requirement = ("AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 "
+                   "맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다. 처리 우선순위는 "
+                   "req-ta-01과 동일하게 SoC 높은 순으로 정한다.")
+    content = artifacts.generate_v2("detail-design", "AMR 매칭", requirement, requirement)
+    diagrams = content["classDiagram"] + content["sequenceDiagramToBe"]
+    assert all(term in diagrams for term in ("AMR후보", "맵경로", "맨해튼", "IDLE", "SoC"))
+    assert "업무요청" not in diagrams
+    assert "현재 처리 결과" not in diagrams
+    assert "확인되지 않음" in content["sequenceDiagramAsIs"]

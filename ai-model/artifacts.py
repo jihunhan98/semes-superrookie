@@ -89,7 +89,8 @@ def generate_rule(type_: str, title: str, quote: str | None) -> dict:
     return fn(title or "", quote or "")
 
 
-def generate_v2(type_: str, title: str, quote: str | None) -> dict:
+def generate_v2(type_: str, title: str, quote: str | None,
+                requirement_content: str | None = None) -> dict:
     """Canonical schema v2. Unknown business values stay null instead of being invented."""
     quote = quote or None
     extras: dict = {}
@@ -103,40 +104,105 @@ def generate_v2(type_: str, title: str, quote: str | None) -> dict:
         ]
         return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
     if type_ == "detail-design":
+        evidence = " ".join(part for part in (title, quote, requirement_content) if part)
+        if _is_amr_matching(evidence):
+            return _amr_matching_detail_design(quote or requirement_content)
+
         safe_title = _mermaid_text(title or "요구사항 처리")
-        safe_quote = _mermaid_text(quote or title or "확정 요구사항")
+        safe_quote = _mermaid_text(quote or requirement_content or title or "확정 요구사항")
         class_diagram = (
             "classDiagram\n"
-            "    class 업무요청 {\n"
-            "      +요청내용\n"
-            "      +처리상태\n"
+            "    class 요구사항근거 {\n"
+            "      +확정본문\n"
             "    }\n"
-            "    class 처리결과 {\n"
-            "      +결과내용\n"
+            "    class 변경대상 {\n"
+            "      +검토내용\n"
             "    }\n"
-            "    업무요청 --> 처리결과 : 업무 처리"
+            "    요구사항근거 --> 변경대상 : 설계 근거"
         )
         sequence_as_is = (
             "sequenceDiagram\n"
-            "    participant 요청자 as 업무 요청자\n"
-            "    participant 시스템 as 업무 시스템\n"
-            f"    요청자->>시스템: {safe_title} 요청\n"
-            "    시스템-->>요청자: 현재 처리 결과"
+            "    participant 사용자 as 요구사항 검토자\n"
+            "    participant 대상 as 변경 대상\n"
+            "    Note over 사용자,대상: 변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"
         )
         sequence_to_be = (
             "sequenceDiagram\n"
-            "    participant 요청자 as 업무 요청자\n"
-            "    participant 시스템 as 업무 시스템\n"
-            "    participant 담당자 as 업무 담당자\n"
-            f"    요청자->>시스템: {safe_title} 요청\n"
-            f"    Note over 시스템,담당자: 확정 근거 - {safe_quote}\n"
-            "    시스템->>담당자: 처리 결과 전달\n"
-            "    담당자-->>요청자: 결과 확인"
+            "    participant 사용자 as 요구사항 검토자\n"
+            "    participant 대상 as 변경 대상\n"
+            f"    사용자->>대상: {safe_title}\n"
+            f"    Note over 사용자,대상: 확정 근거 - {safe_quote}\n"
+            "    대상-->>사용자: 요구사항 반영 결과"
         )
         return {"description": quote, "classDiagram": class_diagram, "sequenceDiagramAsIs": sequence_as_is,
-                "sequenceDiagramToBe": sequence_to_be, "asIsApplicability": "UNKNOWN", "asIsReason": "기존 흐름 근거 확인 필요",
+                "sequenceDiagramToBe": sequence_to_be, "asIsApplicability": "UNKNOWN",
+                "asIsReason": "변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
                 "legacyExtras": extras}
     return {}
+
+
+def _is_amr_matching(evidence: str) -> bool:
+    normalized = evidence.upper()
+    return "AMR" in normalized and any(
+        keyword in normalized for keyword in ("매칭", "IDLE", "SOC", "맨해튼", "최단 경로")
+    )
+
+
+def _amr_matching_detail_design(description: str | None) -> dict:
+    """Build only the AMR concepts and flow stated in the supplied requirement."""
+    class_diagram = (
+        "classDiagram\n"
+        "    class 매칭요청 {\n"
+        "      +요청위치\n"
+        "      +최소SoC\n"
+        "      +우선순위기준\n"
+        "    }\n"
+        "    class AMR후보 {\n"
+        "      +상태\n"
+        "      +SoC\n"
+        "      +현재위치\n"
+        "    }\n"
+        "    class 맵경로 {\n"
+        "      +맨해튼거리\n"
+        "    }\n"
+        "    class 매칭결과 {\n"
+        "      +선택AMR\n"
+        "      +선택근거\n"
+        "    }\n"
+        "    매칭요청 --> AMR후보 : IDLE 및 SoC 조건 조회\n"
+        "    AMR후보 --> 맵경로 : 후보별 거리 계산\n"
+        "    맵경로 --> 매칭결과 : 최단 경로 후보 선택\n"
+        "    AMR후보 --> 매칭결과 : 동일 조건 시 SoC 우선"
+    )
+    sequence_as_is = (
+        "sequenceDiagram\n"
+        "    participant 요청자 as AMR 배정 요청자\n"
+        "    participant 매칭 as AMR 매칭 시스템\n"
+        "    Note over 요청자,매칭: 변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"
+    )
+    sequence_to_be = (
+        "sequenceDiagram\n"
+        "    participant 요청자 as AMR 배정 요청자\n"
+        "    participant 매칭 as AMR 매칭 시스템\n"
+        "    participant 상태 as AMR 상태 정보\n"
+        "    participant 경로 as 맵 경로 정보\n"
+        "    요청자->>매칭: AMR 매칭 요청\n"
+        "    매칭->>상태: IDLE 및 최소 SoC 이상 후보 조회\n"
+        "    상태-->>매칭: 조건을 만족한 AMR 후보\n"
+        "    매칭->>경로: 후보별 맨해튼 경로 거리 계산\n"
+        "    경로-->>매칭: 후보별 경로 거리\n"
+        "    매칭->>매칭: 최단 경로 우선, 동일 조건이면 SoC 높은 순 정렬\n"
+        "    매칭-->>요청자: 선택 AMR과 선택 근거 반환"
+    )
+    return {
+        "description": description,
+        "classDiagram": class_diagram,
+        "sequenceDiagramAsIs": sequence_as_is,
+        "sequenceDiagramToBe": sequence_to_be,
+        "asIsApplicability": "UNKNOWN",
+        "asIsReason": "변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
+        "legacyExtras": {},
+    }
 
 
 def _mermaid_text(value: str) -> str:

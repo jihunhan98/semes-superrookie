@@ -278,7 +278,7 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
 
     title = req.issueTitle or ""
     quote = req.issueQuote or ""
-    content = artifacts.generate_v2(req.type, title, quote)
+    content = artifacts.generate_v2(req.type, title, quote, req.requirementContent)
     engine = "rule"
 
     if PROVIDER.enabled and req.type in _ARTIFACT_PROMPTS:
@@ -305,7 +305,8 @@ def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
             outputs.append(ArtifactOutput(type=requested, status="FAILED", content=None, errors=["UNSUPPORTED_TYPE"]))
             continue
         outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED",
-            content=artifacts.generate_v2(allowed[requested], req.issueTitle, req.issueQuote)))
+            content=artifacts.generate_v2(
+                allowed[requested], req.issueTitle, req.issueQuote, req.requirementContent)))
     issue = {"title": req.issueTitle, "symptom": None, "improvementReq": req.issueQuote,
              "changeScope": None, "constraintsNote": None, "beforeState": None, "afterState": None}
     return ArtifactBatchResponse(issue=issue, outputs=outputs, engine=PROVIDER.name)
@@ -434,45 +435,54 @@ _VOC_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이
 
 주어진 개발 이슈(제목·구절)와 근거가 된 확정 요구사항 전문을 바탕으로 SWVOC를 작성하라.
 반드시 아래 JSON 형식으로만 답한다.
-{{"description":"이 요청의 취지를 한두 문장으로 정리","request":"확정 본문·고객 취지에서 발췌한 구체적 요청사항","notes":"다른 요구사항과의 관계 등 특이사항"}}"""
+{{"requester":null,"requestContent":"확정 본문·고객 취지에서 발췌한 요청사항",
+"specialNotes":null,"legacyExtras":{{}}}}"""
 
 _FUNCTIONAL_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 기능 요구사항 명세를 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
 
 주어진 개발 이슈(제목·구절)와 근거가 된 확정 요구사항 전문을 바탕으로 기능 요구사항을 작성하라.
-"동작 정의"는 반드시 기본 3행(선행조건·시나리오·후행조건) + 예외 3행(선행조건·시나리오·후행조건)
-총 6행으로 채운다.
+기본·변형·예외 동작을 각각 작성한다. 자료에 없는 조건이나 결과는 null로 두고 applicability를
+"UNKNOWN"으로 표시하며 reason에 확인이 필요한 이유를 쓴다.
 반드시 아래 JSON 형식으로만 답한다.
-{{"description":"이 기능이 하는 일을 한 문장으로","role":"이 기능의 역할","purpose":"이 기능의 목적",
-"behaviors":[{{"type":"기본","item":"선행조건","content":"..."}},{{"type":"기본","item":"시나리오","content":"..."}},
-{{"type":"기본","item":"후행조건","content":"..."}},{{"type":"예외","item":"선행조건","content":"..."}},
-{{"type":"예외","item":"시나리오","content":"..."}},{{"type":"예외","item":"후행조건","content":"..."}}]}}"""
+{{"overview":"기능 개요","constraintsNote":null,
+"scenarios":[
+{{"type":"BASIC","precondition":null,"scenario":"...","postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
+{{"type":"VARIANT","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
+{{"type":"EXCEPTION","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}}],
+"legacyExtras":{{}}}}"""
 
 _NONFUNCTIONAL_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 비기능 요구사항
 (성능·신뢰성·가용성 등 품질 속성) 명세를 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
 
-기능 요구사항과 같은 구조이되, 동작 유형·성능·장애 대응 등 품질 속성 관점으로 작성하라.
-"동작 정의"는 반드시 기본 3행 + 예외 3행 총 6행으로 채운다.
+기본·변형·예외 동작을 품질 속성 관점으로 작성한다. 근거에 성능 수치나 장애 정책이 없으면
+절대 만들어내지 말고 null과 UNKNOWN으로 표시한다.
 반드시 아래 JSON 형식으로만 답한다.
-{{"description":"이 품질 속성이 왜 필요한지 한 문장으로","role":"보장해야 할 역할","purpose":"목적",
-"behaviors":[{{"type":"기본","item":"선행조건","content":"..."}},{{"type":"기본","item":"시나리오","content":"..."}},
-{{"type":"기본","item":"후행조건","content":"..."}},{{"type":"예외","item":"선행조건","content":"..."}},
-{{"type":"예외","item":"시나리오","content":"..."}},{{"type":"예외","item":"후행조건","content":"..."}}],
-"constraints":null}}"""
+{{"overview":"비기능 개요","constraintsNote":null,
+"scenarios":[
+{{"type":"BASIC","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
+{{"type":"VARIANT","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
+{{"type":"EXCEPTION","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}}],
+"legacyExtras":{{}}}}"""
 
 _DETAIL_DESIGN_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 Detail Design(상세 설계)을 작성하는 전문가다.
 {_ARTIFACT_DOMAIN_CONTEXT}
 
-Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 설계하라.
-sequenceBeforeCode/sequenceAfterCode는 Mermaid sequenceDiagram 문법의 완성된 코드 문자열이다
-(participant 선언부터 포함해, 사람이 그대로 복사해 mermaid로 렌더링할 수 있어야 한다). 이번에
-바뀐 부분은 "(변경)"을 메시지 텍스트 끝에 붙여 표시한다.
-반드시 아래 JSON 형식으로만 답한다(sequence*Code 안의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다).
-{{"description":"변경 전/후 처리 흐름을 한두 문장으로",
-"classDiagram":[{{"name":"ClassName","fields":["+ method(): Type"],"changed":true}}],
-"sequenceBeforeCode":"sequenceDiagram\\n    participant Host\\n    Host->>TargetService: 설명",
-"sequenceAfterCode":"sequenceDiagram\\n    participant Host\\n    Host->>TargetService: 설명 (변경)"}}"""
+Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 Mermaid 완성 코드로 설계하라.
+기술 클래스명만 나열하지 말고 사용자가 이해할 수 있는 업무 개념과 업무 언어를 쓴다. 예를 들어
+AMR 매칭 요구사항이라면 실제 근거에 있는 AMR 후보, 상태, SoC, 맵 경로, 선택 결과와 그 처리 순서를
+표현한다. 업무요청/처리결과, Host/TargetService 같은 범용 자리표시자를 쓰지 않는다.
+변경 전 흐름의 근거가 없으면 흐름을 추측하지 말고 sequenceDiagram 안에
+"변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"이라는 Note만 넣고 asIsApplicability를
+"UNKNOWN"으로 둔다. Mermaid 코드의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다.
+반드시 아래 JSON 형식으로만 답한다.
+{{"description":"요구사항 근거에 따른 설계 설명",
+"classDiagram":"classDiagram\\n    class 업무개념 {{\\n      +근거속성\\n    }}",
+"sequenceDiagramAsIs":"sequenceDiagram\\n    participant 검토자\\n    Note over 검토자: 변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
+"sequenceDiagramToBe":"sequenceDiagram\\n    participant 요청자 as 업무 역할\\n    요청자->>처리자: 근거가 있는 업무 동작",
+"asIsApplicability":"UNKNOWN","asIsReason":"변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
+"legacyExtras":{{}}}}"""
 
 _ARTIFACT_PROMPTS = {
     "voc": _VOC_PROMPT,
