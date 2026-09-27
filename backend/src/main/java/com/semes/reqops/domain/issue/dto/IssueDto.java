@@ -38,10 +38,10 @@ public final class IssueDto {
             String engine
     ) {}
 
-    /** 사람이 최종 확정한 이슈 한 건. quote는 원문에 없어도 된다 — 직접 추가한 이슈일 수 있으므로. */
+    /** 사람이 최종 확정한 이슈 한 건. quote는 추적성을 위해 확정 요구사항의 연속 구절이어야 한다. */
     public record IssueInput(
             @NotBlank @Size(max = 200) String title,
-            @Size(max = 4000) String quote,
+            @NotBlank @Size(max = 4000) String quote,
             String symptom,
             String improvementReq,
             String changeScope,

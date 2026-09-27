@@ -21,6 +21,16 @@ def test_missing_soc_value_and_unknown_requirement_are_required_findings():
     assert any(row.finding_type == rules.T_REFERENCE and row.target_span == "req-ta-01" for row in findings)
     assert rules.build_draft(text, findings) == text
 
+
+def test_amr_matching_detects_missing_distance_endpoints_and_empty_candidate_policy():
+    text = ("AMR 매칭 시 IDLE 상태이며 SoC 30% 이상인 AMR 중 맨해튼 거리 기준 최단 경로에 "
+            "있는 AMR을 선택한다. SoC 높은 순으로 정한다.")
+    findings = rules.detect(text)
+    reasons = " ".join(row.reason for row in findings)
+    assert "출발점과 도착점" in reasons
+    assert "한 대도 없을 때" in reasons
+    assert "최종 선택 기준" in reasons
+
 def test_known_requirement_reference_is_not_flagged():
     text = "req-ta-01과 동일한 순서로 처리한다."
     findings = rules.detect(text, [{"reqKey": "REQ-TA-01", "content": "SoC 높은 순"}])
@@ -31,6 +41,13 @@ def test_split_quotes_are_grounded():
     body = client.post("/split", json={"content": content}).json()
     assert body["issues"]
     assert all(row["quote"] in content for row in body["issues"])
+
+
+def test_amr_matching_is_one_cohesive_issue_with_business_title():
+    content = ("AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맨해튼 거리 기준으로 선택한다. "
+               "거리가 같으면 SoC 높은 순으로 정한다.")
+    body = client.post("/split", json={"content": content}).json()
+    assert body["issues"] == [{"title": "AMR 후보 선정 및 매칭 우선순위", "quote": content}]
 
 def test_v2_scenario_shape():
     content = artifacts.generate_v2("functional", "AMR 선택", "요구사항에 따라 AMR을 선택한다.")

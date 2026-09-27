@@ -7,6 +7,7 @@
 3. `@db/migrations/V002__agent_expand.sql`을 적용한다. Oracle DDL은 implicit commit이므로 중간 실패 시 dictionary와 `REQ_SCHEMA_HISTORY`를 대조하고 무작정 재실행하지 않는다.
 4. 애플리케이션을 `--reqops.migration.mode=verify`로 실행한 후 `import`, 다시 `verify` 순으로 실행한다. 두 번째 import에서 신규 mapping이 0건이어야 한다.
 5. snapshot/hash/count가 원본과 일치한 뒤 `@db/migrations/V004__agent_constraints.sql`을 적용한다. legacy 테이블은 삭제하지 않고 읽기 전용으로 보존한다.
+6. `@db/migrations/V005__review_trace_guards.sql`을 적용해 필수 검토 상태, 이슈 lineage, 산출물 근거 링크 조회용 인덱스와 근거 링크 중복 방지 인덱스를 생성한다. 되돌릴 때는 데이터 행을 삭제하지 않고 `db/migrations/rollback/V005__review_trace_guards_rollback.sql`로 인덱스와 ledger 행만 제거한다.
 
 ```bash
 cd backend

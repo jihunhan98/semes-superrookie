@@ -177,12 +177,20 @@ export default function IssueSplitPage() {
 
   async function onConfirm() {
     const user = getCurrentUser();
-    if (!user || !candidates) return;
+    if (!user || !candidates || !req) return;
     const issues = candidates
       .map((c) => ({ title: c.title.trim(), quote: c.quote.trim() }))
       .filter((c) => c.title.length > 0);
     if (issues.length === 0) {
       setConfirmError("제목이 있는 이슈가 1개 이상 있어야 합니다.");
+      return;
+    }
+    if (issues.some((issue) => !issue.quote || !req.content.includes(issue.quote))) {
+      setConfirmError("모든 이슈의 근거 구절은 확정 요구사항 본문에서 선택해야 합니다.");
+      return;
+    }
+    if (new Set(issues.map((issue) => issue.quote)).size !== issues.length) {
+      setConfirmError("같은 근거 구절을 여러 이슈에 중복 연결할 수 없습니다.");
       return;
     }
     setConfirming(true);

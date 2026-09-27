@@ -158,6 +158,28 @@ def detect(content: str, existing: list[dict] | None = None) -> list[Finding]:
             "조건 불충족 시의 동작(거부/대기/알림 등)을 함께 명시",
         ))
 
+    normalized = content.upper()
+    if "AMR" in normalized and "매칭" in content:
+        if "맨해튼 거리" in content and not any(term in content for term in ("작업 시작 위치", "요청 위치", "목적지", "도착 위치")):
+            findings.append(Finding(
+                T_QUANT, "맨해튼 거리",
+                "거리 계산의 출발점과 도착점이 없어 같은 구현 결과를 재현할 수 없음",
+                "AMR 현재 위치와 작업 시작 위치처럼 거리 계산의 양 끝점을 명시",
+            ))
+        if not any(term in content for term in ("후보가 없", "AMR이 없", "대기", "재시도", "매칭 실패")):
+            target = "AMR을 선택한다" if "AMR을 선택한다" in content else "AMR 매칭"
+            findings.append(Finding(
+                T_BOUNDARY, target,
+                "IDLE 및 SoC 조건을 만족하는 AMR이 한 대도 없을 때의 처리가 정의되지 않음",
+                "후보가 없을 때 대기, 재시도, 실패 응답 중 업무 정책을 명시",
+            ))
+        if "SOC 높은 순" in normalized and not any(term in content for term in ("같으면", "동일하면", "동률", "같은 경우")):
+            findings.append(Finding(
+                T_BOUNDARY, "SoC 높은 순",
+                "거리와 SoC가 모두 같은 후보가 여러 대일 때 최종 선택 기준이 없음",
+                "동률일 때 적용할 마지막 선택 기준을 명시",
+            ))
+
     known_keys = {str(row.get("reqKey") or "").casefold() for row in (existing or [])}
     for match in _REQ_REFERENCE.finditer(content):
         referenced = match.group(0)
@@ -267,6 +289,10 @@ def split_issues(content: str) -> list[IssueCandidate]:
     text = (content or "").strip()
     if not text:
         return []
+
+    normalized = text.upper()
+    if "AMR" in normalized and any(keyword in normalized for keyword in ("매칭", "IDLE", "SOC", "맨해튼")):
+        return [IssueCandidate("AMR 후보 선정 및 매칭 우선순위", text)]
 
     parts = [p.strip() for p in _SENTENCE_END.split(text) if p.strip()]
     if len(parts) <= 1:

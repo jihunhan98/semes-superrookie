@@ -15,9 +15,12 @@ class OracleSchemaIT {
     }
     @Test void expandedSchemaAndNoCascadeArePresent() throws Exception {
         try (Connection connection = connect()) {
-            Set<String> expected = Set.of("WORK_BUNDLES","AI_JOBS","AI_TASKS","ARTIFACT_REVISIONS","KNOWLEDGE_ENTRIES","COMMAND_RECEIPTS","LEGACY_SNAPSHOTS","REQ_ATTACHMENTS");
+            Set<String> expected = Set.of("WORK_BUNDLES","AI_JOBS","AI_TASKS","ARTIFACT_REVISIONS",
+                    "ISSUE_REVISIONS","ISSUE_LINEAGE","REVIEW_ITEMS","USER_DECISIONS",
+                    "KNOWLEDGE_ENTRIES","EVIDENCE_LINKS","COMMAND_RECEIPTS","LEGACY_SNAPSHOTS","REQ_ATTACHMENTS");
             try (var statement=connection.prepareStatement("select table_name from user_tables");var rows=statement.executeQuery()) { var actual=new java.util.HashSet<String>();while(rows.next())actual.add(rows.getString(1));assertTrue(actual.containsAll(expected),()->"missing="+expected.stream().filter(t->!actual.contains(t)).toList()); }
             try (var statement=connection.prepareStatement("select delete_rule from user_constraints where constraint_name='FK_DEV_ISSUE_ARTIFACTS_ISSUE'");var rows=statement.executeQuery()) { assertTrue(rows.next());assertEquals("NO ACTION",rows.getString(1)); }
+            try (var statement=connection.prepareStatement("select count(*) from user_indexes where index_name in ('IX_FINDING_OPEN_BLOCKER','IX_REVIEW_ITEM_FINDING','IX_ISSUE_LINEAGE_TARGET','UQ_EVIDENCE_TRACE')");var rows=statement.executeQuery()) { assertTrue(rows.next());assertEquals(4,rows.getInt(1)); }
         }
     }
     @Test void koreanClobRoundTripsWithoutLoss() throws Exception {

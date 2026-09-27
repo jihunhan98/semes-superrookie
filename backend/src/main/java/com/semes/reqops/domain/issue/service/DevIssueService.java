@@ -1,5 +1,6 @@
 package com.semes.reqops.domain.issue.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.semes.reqops.domain.issue.dto.IssueDto.ConfirmSplitRequest;
 import com.semes.reqops.domain.issue.dto.IssueDto.IssueCandidate;
 import com.semes.reqops.domain.issue.dto.IssueDto.IssueInput;
@@ -8,7 +9,11 @@ import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewRequest;
 import com.semes.reqops.domain.issue.dto.IssueDto.SplitPreviewResponse;
 import com.semes.reqops.domain.issue.dto.IssueDto.UpdateRequest;
 import com.semes.reqops.domain.issue.entity.DevIssue;
+import com.semes.reqops.domain.issue.entity.IssueLineage;
+import com.semes.reqops.domain.issue.entity.IssueRevision;
 import com.semes.reqops.domain.issue.repository.DevIssueRepository;
+import com.semes.reqops.domain.issue.repository.IssueLineageRepository;
+import com.semes.reqops.domain.issue.repository.IssueRevisionRepository;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
 import com.semes.reqops.domain.requirement.entity.ReqState;
 import com.semes.reqops.domain.requirement.entity.Requirement;
@@ -25,7 +30,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -46,6 +57,9 @@ public class DevIssueService {
     private final UserRepository userRepository;
     private final AiClient aiClient;
     private final WorkBundleRepository bundleRepository;
+    private final IssueRevisionRepository revisionRepository;
+    private final IssueLineageRepository lineageRepository;
+    private final ObjectMapper objectMapper;
 
     /** 화면이 열릴 때·"AI 다시 나눠줘"를 눌렀을 때 — 아무것도 저장하지 않는다. */
     @Transactional(readOnly = true)
@@ -63,23 +77,30 @@ public class DevIssueService {
 
     /**
      * 분할 확정 — 이 요구사항의 기존 이슈를 전부 지우고 사람이 최종 확정한 목록으로
-     * 새로 쌓는다(재분할은 이력을 남기지 않는다 — {@link DevIssue} 설명 참고).
+     * 새로 쌓는다. 기존 이슈는 보존하고 revision과 split/merge lineage를 기록한다.
      */
     @Transactional
     public List<IssueResponse> confirmSplit(Long projectId, Long requirementId, ConfirmSplitRequest req) {
         requireMember(projectId, req.userId());
-        findConfirmed(projectId, requirementId);
+        Requirement requirement = findConfirmed(projectId, requirementId);
+
+        List<String> normalizedQuotes = req.issues().stream().map(IssueInput::quote)
+                .map(String::trim).toList();
+        if (normalizedQuotes.stream().anyMatch(quote -> !requirement.getContent().contains(quote))) {
+            throw new ApiErrors.BadRequest("개발 이슈의 근거 구절은 확정 요구사항 본문에 그대로 존재해야 합니다.");
+        }
+        if (normalizedQuotes.stream().distinct().count() != normalizedQuotes.size()) {
+            throw new ApiErrors.BadRequest("같은 요구사항 구절을 여러 개발 이슈에 중복 연결할 수 없습니다.");
+        }
 
         List<DevIssue> previous = devIssueRepository
                 .findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId, "RETIRED");
+        previous.forEach(issue -> saveRevision(issue, "재분할 전 스냅샷", req.userId()));
         previous.forEach(DevIssue::retire);
         devIssueRepository.saveAll(previous);
 
-        String reqKey = requirementRepository.findById(requirementId)
-                .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId))
-                .getReqKey();
-
         List<IssueInput> inputs = req.issues();
+        List<DevIssue> created = new ArrayList<>();
         for (int i = 0; i < inputs.size(); i++) {
             IssueInput in = inputs.get(i);
             DevIssue issue = new DevIssue(
@@ -95,8 +116,11 @@ public class DevIssueService {
                     blankToNull(in.beforeState()), defaultText(in.afterState(), in.quote()), in.dueOn());
             bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
                     .ifPresent(bundle -> issue.assignBundle(bundle.getId()));
-            devIssueRepository.save(issue);
+            DevIssue saved = devIssueRepository.save(issue);
+            saveRevision(saved, "분할 확정", req.userId());
+            created.add(saved);
         }
+        saveLineage(previous, created);
 
         bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
                 .ifPresent(bundle -> { bundle.issuesReady(); bundleRepository.save(bundle); });
@@ -126,7 +150,9 @@ public class DevIssueService {
                 blankToNull(req.improvementReq()), blankToNull(req.changeScope()), blankToNull(req.constraintsNote()),
                 blankToNull(req.beforeState()), blankToNull(req.afterState()), req.dueOn());
         if (req.confirmed()) issue.confirm();
-        return toResponse(devIssueRepository.save(issue));
+        DevIssue saved = devIssueRepository.save(issue);
+        saveRevision(saved, req.confirmed() ? "개발 이슈 확정" : "개발 이슈 수정", req.userId());
+        return toResponse(saved);
     }
 
     // ── 내부 구현 ────────────────────────────────────────────────
@@ -173,5 +199,49 @@ public class DevIssueService {
     private String defaultText(String value, String fallback) {
         String normalized = blankToNull(value);
         return normalized == null ? blankToNull(fallback) : normalized;
+    }
+
+    private void saveRevision(DevIssue issue, String reason, Long actorId) {
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("issueKey", issue.getIssueKey()); snapshot.put("title", issue.getTitle());
+            snapshot.put("quote", issue.getQuote()); snapshot.put("symptom", issue.getSymptom());
+            snapshot.put("improvementReq", issue.getImprovementReq()); snapshot.put("changeScope", issue.getChangeScope());
+            snapshot.put("constraintsNote", issue.getConstraintsNote()); snapshot.put("beforeState", issue.getBeforeState());
+            snapshot.put("afterState", issue.getAfterState()); snapshot.put("dueOn", issue.getDueOn());
+            snapshot.put("state", issue.getIssueState());
+            String json = objectMapper.writeValueAsString(snapshot);
+            revisionRepository.save(new IssueRevision(issue.getId(),
+                    revisionRepository.countByIssueId(issue.getId()) + 1, json, sha256(json), reason, actorId));
+        } catch (Exception e) {
+            throw new IllegalStateException("개발 이슈 이력을 저장할 수 없습니다.", e);
+        }
+    }
+
+    private void saveLineage(List<DevIssue> previous, List<DevIssue> created) {
+        for (DevIssue source : previous) {
+            List<DevIssue> targets = created.stream()
+                    .filter(target -> overlaps(source.getQuote(), target.getQuote())).toList();
+            for (DevIssue target : targets) {
+                long sourceCount = previous.stream().filter(old -> overlaps(old.getQuote(), target.getQuote())).count();
+                String relation = targets.size() > 1 ? "SPLIT_TO" : sourceCount > 1 ? "MERGED_TO" : "REPLACED_BY";
+                lineageRepository.save(new IssueLineage(source.getId(), target.getId(), relation));
+            }
+        }
+    }
+
+    private boolean overlaps(String left, String right) {
+        if (left == null || right == null) return false;
+        String a = left.trim(); String b = right.trim();
+        return !a.isEmpty() && !b.isEmpty() && (a.contains(b) || b.contains(a));
+    }
+
+    private String sha256(String value) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

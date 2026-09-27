@@ -144,12 +144,15 @@ export type ReqState =
 
 /** AI 검토 결과 한 건 — 화면에서 읽기 전용으로만 보여준다. */
 export type Finding = {
+  id: number;
   findingType: string;
   targetSpan: string | null;
   reason: string | null;
   suggestion: string | null;
   /** 상충 유형일 때 상대 요구사항 ID. 그 외에는 null. */
   conflictReqKey: string | null;
+  severity: "BLOCKING" | "ADVISORY";
+  resolutionState: "OPEN" | "RESOLVED" | "ACCEPTED_WITH_REASON";
 };
 
 export type RequirementSummary = {
@@ -328,7 +331,7 @@ export function recordConsensus(
 export function confirmRequirement(
   projectId: number,
   requirementId: number,
-  input: { userId: number; content: string; title?: string; consensusId?: number },
+  input: { userId: number; content: string; title?: string; consensusId?: number; blockingDecisionReason?: string },
 ): Promise<RequirementDetail> {
   return postJson<RequirementDetail>(
     `/api/projects/${projectId}/requirements/${requirementId}/confirm`,

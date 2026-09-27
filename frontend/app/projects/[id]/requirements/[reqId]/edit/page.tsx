@@ -29,6 +29,7 @@ export default function RequirementEditPage() {
   const [error, setError] = useState<string | null>(null); const [confirmOpen, setConfirmOpen] = useState(false); const fileRef = useRef<HTMLInputElement>(null);
   const [method, setMethod] = useState(METHODS[0]); const [contact, setContact] = useState(""); const [agreedOn, setAgreedOn] = useState(today());
   const [agreement, setAgreement] = useState(""); const [versionTitle, setVersionTitle] = useState("");
+  const [blockingDecisionReason, setBlockingDecisionReason] = useState("");
 
   useEffect(() => {
     const user = getCurrentUser(); if (!user) { router.replace("/login"); return; }
@@ -63,17 +64,20 @@ export default function RequirementEditPage() {
 
   async function agreeAndConfirm() {
     const user = getCurrentUser(); if (!user) return;
+    if (!requirement) return;
+    const openBlocking = requirement.findings.filter((finding) => finding.severity === "BLOCKING" && finding.resolutionState === "OPEN");
     if (!contact.trim() || !agreement.trim() || !versionTitle.trim()) { setError("고객 담당자, 합의 내용, 변경 요약을 모두 입력하세요."); return; }
+    if (openBlocking.length > 0 && !blockingDecisionReason.trim()) { setError("필수 확인 항목을 그대로 수용하려면 고객 결정 근거를 입력하세요."); return; }
     setBusy(true); setError(null);
     try {
       const withConsensus = await recordConsensus(projectId, requirementId, { userId: user.id, method, customerContact: contact.trim(), agreedOn, note: agreement.trim(), agreedContent: draft });
-      await confirmRequirement(projectId, requirementId, { userId: user.id, content: draft, title: versionTitle.trim(), consensusId: withConsensus.consensus?.id });
+      await confirmRequirement(projectId, requirementId, { userId: user.id, content: draft, title: versionTitle.trim(), consensusId: withConsensus.consensus?.id, blockingDecisionReason: blockingDecisionReason.trim() || undefined });
       router.push(`/projects/${projectId}/requirements/${requirementId}/issues`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "요구사항을 확정하지 못했습니다."); setBusy(false); }
   }
 
   if (!project || !requirement) return <div className="appshell"><Header /><main className="main"><div className="placeholder">요구사항을 불러오는 중…</div>{error && <p className="lmsg err">{error}</p>}</main></div>;
-  const dirty = draft !== baseContent; const requiredCount = requirement.findings.filter((finding) => !finding.findingType.includes("참고")).length;
+  const dirty = draft !== baseContent; const requiredCount = requirement.findings.filter((finding) => finding.severity === "BLOCKING" && finding.resolutionState === "OPEN").length;
 
   return <div className="appshell"><Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((open) => !open)} /><div className="body">
     {sidebarOpen && <ProjectSidebar projectId={projectId} projectName={project.name} active="requirements" />}
@@ -92,6 +96,6 @@ export default function RequirementEditPage() {
       <footer className="stage-action-bar"><div><b>확정할 준비가 되었나요?</b><span>확정 버튼에서 고객 합의를 기록한 뒤 이슈 자동 도출로 이어집니다.</span></div><button className="btn" onClick={hold} disabled={busy}>보류</button><button className="btn prim" onClick={() => { setError(null); setConfirmOpen(true); }} disabled={busy || !draft.trim()}>요구사항 확정</button></footer>
     </main>
   </div>
-  {confirmOpen && <Modal title="고객 합의 기록 및 요구사항 확정" icon="✓" onClose={() => !busy && setConfirmOpen(false)} wide><div className="consensus-dialog-intro"><b>합의 기록 없이는 최종 확정할 수 없습니다.</b><span>아래 본문 스냅샷과 기록자가 버전 이력에 함께 보존됩니다.</span></div><div className="consensus-dialog-grid"><label><span>합의 방법</span><select value={method} onChange={(event) => setMethod(event.target.value)}>{METHODS.map((item) => <option key={item}>{item}</option>)}</select></label><label><span>고객 담당자</span><input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="김고객 책임" /></label><label><span>합의일</span><input type="date" value={agreedOn} onChange={(event) => setAgreedOn(event.target.value)} /></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} onChange={(event) => setAgreement(event.target.value)} placeholder="확정 본문과 예외 처리 방향에 동의함" /></label><label className="wide"><span>변경 요약 · 버전 이력 제목</span><input value={versionTitle} onChange={(event) => setVersionTitle(event.target.value)} placeholder="고객 합의 반영 및 알림 실패 처리 확정" /></label></div><div className="consensus-snapshot"><span>합의 당시 본문 스냅샷</span><p>{draft}</p></div>{error && <p className="lmsg err">{error}</p>}<div className="modal-actions"><button className="btn" onClick={() => setConfirmOpen(false)} disabled={busy}>취소</button><button className="btn prim" onClick={agreeAndConfirm} disabled={busy}>{busy ? "기록하고 확정하는 중…" : "합의 기록 후 확정"}</button></div></Modal>}
+  {confirmOpen && <Modal title="고객 합의 기록 및 요구사항 확정" icon="✓" onClose={() => !busy && setConfirmOpen(false)} wide><div className="consensus-dialog-intro"><b>합의 기록 없이는 최종 확정할 수 없습니다.</b><span>아래 본문 스냅샷과 기록자가 버전 이력에 함께 보존됩니다.</span></div><div className="consensus-dialog-grid"><label><span>합의 방법</span><select value={method} onChange={(event) => setMethod(event.target.value)}>{METHODS.map((item) => <option key={item}>{item}</option>)}</select></label><label><span>고객 담당자</span><input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="김고객 책임" /></label><label><span>합의일</span><input type="date" value={agreedOn} onChange={(event) => setAgreedOn(event.target.value)} /></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} onChange={(event) => setAgreement(event.target.value)} placeholder="확정 본문과 예외 처리 방향에 동의함" /></label>{requiredCount > 0 && <label className="wide"><span>필수 확인 항목 수용 근거</span><textarea rows={3} value={blockingDecisionReason} onChange={(event) => setBlockingDecisionReason(event.target.value)} placeholder="미확정 사항을 그대로 진행하기로 한 고객 결정과 후속 조치 근거" /><small>{requiredCount}건이 해결되지 않았습니다. 본문을 보완해 다시 검토하거나, 그대로 확정할 고객 결정 근거를 남겨야 합니다.</small></label>}<label className="wide"><span>변경 요약 · 버전 이력 제목</span><input value={versionTitle} onChange={(event) => setVersionTitle(event.target.value)} placeholder="고객 합의 반영 및 알림 실패 처리 확정" /></label></div><div className="consensus-snapshot"><span>합의 당시 본문 스냅샷</span><p>{draft}</p></div>{error && <p className="lmsg err">{error}</p>}<div className="modal-actions"><button className="btn" onClick={() => setConfirmOpen(false)} disabled={busy}>취소</button><button className="btn prim" onClick={agreeAndConfirm} disabled={busy}>{busy ? "기록하고 확정하는 중…" : "합의 기록 후 확정"}</button></div></Modal>}
   </div>;
 }

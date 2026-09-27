@@ -11,9 +11,14 @@ import com.semes.reqops.domain.artifact.repository.ArtifactRevisionRepository;
 import com.semes.reqops.domain.artifact.entity.ArtifactRevision;
 import com.semes.reqops.domain.issue.entity.DevIssue;
 import com.semes.reqops.domain.issue.repository.DevIssueRepository;
+import com.semes.reqops.domain.knowledge.entity.KnowledgeEntry;
+import com.semes.reqops.domain.knowledge.entity.EvidenceLink;
+import com.semes.reqops.domain.knowledge.repository.EvidenceLinkRepository;
+import com.semes.reqops.domain.knowledge.service.ProjectKnowledgeService;
 import com.semes.reqops.domain.project.repository.MembershipRepository;
 import com.semes.reqops.domain.requirement.entity.Requirement;
 import com.semes.reqops.domain.requirement.repository.RequirementRepository;
+import com.semes.reqops.domain.requirement.repository.RequirementVersionRepository;
 import com.semes.reqops.global.ai.AiAnalyzeDto;
 import com.semes.reqops.global.ai.AiArtifactDto;
 import com.semes.reqops.global.ai.AiClient;
@@ -54,6 +59,9 @@ public class ArtifactService {
     private final ObjectMapper objectMapper;
     private final ArtifactRevisionRepository revisionRepository;
     private final ArtifactContentValidator validator;
+    private final RequirementVersionRepository versionRepository;
+    private final ProjectKnowledgeService knowledgeService;
+    private final EvidenceLinkRepository evidenceLinkRepository;
 
     @Transactional(readOnly = true)
     public ArtifactResponse get(Long projectId, Long requirementId, String issueKey, String typeSlug, Long userId) {
@@ -85,6 +93,7 @@ public class ArtifactService {
         artifact.regenerate(writeJson(ai.content()), ai.engine());
         artifactRepository.save(artifact);
         saveRevision(artifact, blankToNull(req.reason()), req.userId());
+        linkRequirementEvidence(projectId, requirementId, issue, artifact);
         return toResponse(type, artifact);
     }
 
@@ -101,6 +110,7 @@ public class ArtifactService {
         artifact.confirm(writeJson(req.content()), req.userId());
         artifactRepository.save(artifact);
         saveRevision(artifact, "사용자 확정", req.userId());
+        linkRequirementEvidence(projectId, requirementId, issue, artifact);
         return toResponse(type, artifact);
     }
 
@@ -216,5 +226,22 @@ public class ArtifactService {
 
     private String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s;
+    }
+
+    private void linkRequirementEvidence(Long projectId, Long requirementId, DevIssue issue,
+                                         DevIssueArtifact artifact) {
+        Requirement requirement = requirementRepository.findById(requirementId)
+                .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId));
+        versionRepository.findFirstByRequirementIdOrderByIdDesc(requirementId).ifPresent(version -> {
+            KnowledgeEntry entry = knowledgeService.project(projectId, "REQUIREMENT", requirementId,
+                    version.getId(), version.getContent());
+            String quote = blankToNull(issue.getQuote()) == null ? version.getContent() : issue.getQuote();
+            String quoteHash = hash(quote);
+            if (!evidenceLinkRepository.existsByTargetTypeAndTargetIdAndKnowledgeEntryIdAndQuoteHash(
+                    "ARTIFACT", artifact.getId(), entry.getId(), quoteHash)) {
+                evidenceLinkRepository.save(new EvidenceLink(
+                        "ARTIFACT", artifact.getId(), entry.getId(), quote, quoteHash));
+            }
+        });
     }
 }

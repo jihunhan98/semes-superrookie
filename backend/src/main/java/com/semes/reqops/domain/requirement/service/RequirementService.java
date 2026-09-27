@@ -23,6 +23,10 @@ import com.semes.reqops.domain.requirement.repository.RequirementConsensusReposi
 import com.semes.reqops.domain.requirement.repository.RequirementFindingRepository;
 import com.semes.reqops.domain.requirement.repository.RequirementRepository;
 import com.semes.reqops.domain.requirement.repository.RequirementVersionRepository;
+import com.semes.reqops.domain.review.entity.ReviewItem;
+import com.semes.reqops.domain.review.entity.UserDecision;
+import com.semes.reqops.domain.review.repository.ReviewItemRepository;
+import com.semes.reqops.domain.review.repository.UserDecisionRepository;
 import com.semes.reqops.domain.user.entity.User;
 import com.semes.reqops.domain.user.repository.UserRepository;
 import com.semes.reqops.global.ai.AiAnalyzeDto;
@@ -37,10 +41,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.HexFormat;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,6 +71,8 @@ public class RequirementService {
     private final AiClient aiClient;
     private final BundleService bundleService;
     private final AiJobService aiJobService;
+    private final ReviewItemRepository reviewItemRepository;
+    private final UserDecisionRepository userDecisionRepository;
 
     /**
      * 요구사항 최초 등록.
@@ -108,7 +118,7 @@ public class RequirementService {
                         r.getVersion(),
                         r.getAssigneeId(),
                         names.get(r.getAssigneeId()),
-                        findingRepository.countByRequirementId(r.getId()),
+                        findingRepository.countByRequirementIdAndResolutionState(r.getId(), "OPEN"),
                         r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS)))
                 .toList();
     }
@@ -120,9 +130,10 @@ public class RequirementService {
         Requirement r = findInProject(projectId, requirementId);
 
         List<FindingResponse> findings = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
+                .filter(f -> "OPEN".equals(f.getResolutionState()))
                 .map(f -> new FindingResponse(
-                        f.getFindingType(), f.getTargetSpan(), f.getReason(),
-                        f.getSuggestion(), f.getConflictReqKey()))
+                        f.getId(), f.getFindingType(), f.getTargetSpan(), f.getReason(),
+                        f.getSuggestion(), f.getConflictReqKey(), f.getSeverity(), f.getResolutionState()))
                 .toList();
 
         // draft 가 없으면(=AI 미가동으로 저장 안 됨) 원문을 그대로 쓴다.
@@ -182,7 +193,9 @@ public class RequirementService {
         requireMember(projectId, req.userId());
         Requirement r = findInProject(projectId, requirementId);
 
-        findingRepository.deleteByRequirementId(requirementId);
+        // 과거 확정에서 수용 근거가 연결된 finding은 감사 이력으로 보존한다.
+        // 현재 분석의 미해결 항목만 교체해야 review_items FK와 사용자 결정이 유지된다.
+        findingRepository.deleteByRequirementIdAndResolutionState(requirementId, "OPEN");
         aiDraftRepository.deleteAll(aiDraftRepository.findByRequirementId(requirementId));
 
         AiAnalyzeDto.Response ai = aiClient.analyzeDiff(
@@ -245,6 +258,28 @@ public class RequirementService {
         }
         if (!normalizeLines(consensus.getAgreedContent()).equals(normalizeLines(req.content()))) {
             throw new ApiErrors.Conflict("합의 당시 본문과 확정하려는 본문이 다릅니다. 변경된 본문으로 다시 합의해주세요.");
+        }
+
+        List<RequirementFinding> openBlocking = findingRepository
+                .findByRequirementIdAndSeverityAndResolutionStateOrderByIdAsc(
+                        requirementId, "BLOCKING", "OPEN");
+        String decisionReason = blankToNull(req.blockingDecisionReason());
+        if (!openBlocking.isEmpty() && decisionReason == null) {
+            throw new ApiErrors.Conflict(
+                    "필수 확인 항목이 남아 있습니다. 본문을 수정해 다시 검토하거나 고객 결정 근거를 기록해주세요.");
+        }
+        for (RequirementFinding finding : openBlocking) {
+            finding.acceptWithReason();
+            findingRepository.save(finding);
+            String sourceJson = "{\"targetSpan\":\"" + jsonEscape(finding.getTargetSpan())
+                    + "\",\"inputHash\":\"" + jsonEscape(finding.getInputHash()) + "\"}";
+            ReviewItem item = reviewItemRepository.save(new ReviewItem(
+                    requirementId, finding.getId(), finding.getFindingType(), finding.getReason(), sourceJson,
+                    sha256(requirementId + ":" + finding.getId() + ":" + finding.getInputHash())));
+            item.accept();
+            reviewItemRepository.save(item);
+            userDecisionRepository.save(new UserDecision(
+                    item.getId(), "ACCEPT_WITH_REASON", req.content(), decisionReason, req.userId()));
         }
 
         String version = nextVersionOf(requirementId);
@@ -461,12 +496,34 @@ public class RequirementService {
         return (s == null || s.isBlank()) ? null : s;
     }
 
+    private String sha256(String value) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private String jsonEscape(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\n", "\\n").replace("\r", "\\r");
+    }
+
     /** AI 응답을 findings + draft 로 저장한다. */
     private void saveAiResult(Long requirementId, AiAnalyzeDto.Response ai, String originalContent) {
+        String analysisId = UUID.randomUUID().toString();
+        String inputHash = sha256(originalContent);
         if (ai.findings() != null) {
-            ai.findings().forEach(f -> findingRepository.save(new RequirementFinding(
-                    requirementId, f.findingType(), f.targetSpan(),
-                    f.reason(), f.suggestion(), f.conflictReqKey())));
+            ai.findings().forEach(f -> {
+                int start = f.targetSpan() == null ? -1 : originalContent.indexOf(f.targetSpan());
+                findingRepository.save(new RequirementFinding(
+                        requirementId, f.findingType(), f.targetSpan(),
+                        f.reason(), f.suggestion(), f.conflictReqKey(), analysisId,
+                        start < 0 ? null : start,
+                        start < 0 ? null : start + f.targetSpan().length(), inputHash));
+            });
         }
         String draft = (ai.draftContent() == null || ai.draftContent().isBlank())
                 ? originalContent : ai.draftContent();

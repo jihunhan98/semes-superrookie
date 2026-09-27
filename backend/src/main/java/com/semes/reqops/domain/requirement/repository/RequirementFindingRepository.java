@@ -9,7 +9,14 @@ public interface RequirementFindingRepository extends JpaRepository<RequirementF
 
     List<RequirementFinding> findByRequirementIdOrderByIdAsc(Long requirementId);
 
+    List<RequirementFinding> findByRequirementIdAndSeverityAndResolutionStateOrderByIdAsc(
+            Long requirementId, String severity, String resolutionState);
+
     void deleteByRequirementId(Long requirementId);
 
+    void deleteByRequirementIdAndResolutionState(Long requirementId, String resolutionState);
+
     int countByRequirementId(Long requirementId);
+
+    int countByRequirementIdAndResolutionState(Long requirementId, String resolutionState);
 }

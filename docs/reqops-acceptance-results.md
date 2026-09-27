@@ -16,15 +16,15 @@
 
 | 명령 | 결과 |
 |---|---|
-| `cd frontend && npm test` | 4/4 통과 |
+| `cd frontend && npm test` | 6/6 통과 |
 | `cd frontend && npm run typecheck` | 통과 |
 | `cd frontend && npm run build` | 통과, Next.js 14 production 21 routes |
 | `cd backend && ./mvnw -B test` | 16 tests, 실패 0, 조건부 skip 3 |
 | `cd backend && ORACLE_TEST_*=... ./mvnw -B -Poracle-it verify` | BUILD SUCCESS, `OracleSchemaIT` 2/2 통과 |
-| `cd ai-model && .venv/bin/python -m pytest -q` | 13/13 통과, 의존 라이브러리 deprecation warning 19건 |
+| `cd ai-model && .venv/bin/python -m pytest -q` | 16/16 통과, 의존 라이브러리 deprecation warning 19건 |
 | `git diff --check` | 통과 |
 
-백엔드 skip 3건은 테스트 JVM에서 임시 HTTP socket stub을 열 수 없을 때 skip하는 기존 `AiClientContractTest` 분기다. AI 서버의 동일 계약은 FastAPI `TestClient` 13건과 실제 8001 호출로 별도 검증했다.
+백엔드 skip 3건은 테스트 JVM에서 임시 HTTP socket stub을 열 수 없을 때 skip하는 기존 `AiClientContractTest` 분기다. AI 서버의 동일 계약은 FastAPI `TestClient` 16건과 실제 8001 호출로 별도 검증했다.
 
 ## 실제 Oracle·API E2E
 
@@ -61,4 +61,11 @@ macOS 인앱 브라우저에서 로그인 후 다음 화면을 실제 API 데이
 - 운영 Oracle 19c의 실제 legacy 데이터, Data Pump 복원, source PK별 snapshot/mapping 및 LOB hash 비교 자료가 없어 M01/M05~M08 검증은 미실행이다.
 - in-flight 상태에서 backend를 강제 종료한 lease 회수와 다중 worker `SKIP LOCKED` 경합은 자동 동시성 IT가 없다.
 - Gemini/사내 모델 live 호출은 외부 전송·비용을 임의 발생시키지 않기 위해 실행하지 않았다. 키는 `ai-model/.env`의 `GEMINI_API_KEY`, provider는 `AI_PROVIDER=gemini`로만 설정한다.
-- 별도 `ReviewItem`/`UserDecision` 도메인과 사용자에게 근거 링크 목록을 조회하는 API는 아직 없다. 현재는 finding, 합의, version, bundle manifest, knowledge projection으로 핵심 추적을 유지한다.
+- 사용자에게 산출물 근거 링크 목록을 직접 보여주는 조회 API와 화면은 아직 없다. `ReviewItem`/`UserDecision`과 `evidence_links` 저장은 연결했으며 현재는 DB 추적으로 확인한다.
+
+## 3단계 진입 전 보강 검증
+
+- OPEN BLOCKING 검출은 본문 재검토로 제거하거나 고객 결정 근거를 입력해야 확정할 수 있다. 수용 결정은 `review_items`와 `user_decisions`에 남는다.
+- 이슈 근거 구절은 확정 본문에 포함되고 서로 중복되지 않아야 하며, 재분할 전후 스냅샷과 lineage를 보존한다.
+- 산출물 생성·확정 시 사용한 확정 요구사항 버전과 구절을 `evidence_links`에 저장한다. 사용자용 근거 링크 조회 화면/API는 후속 범위로 남아 있다.
+- REQ-TA-02를 실제 재분석해 필수 항목 5건(최소 SoC, 거리 양 끝점, 후보 없음, 동률, 미존재 참조)을 화면에서 확인했다.

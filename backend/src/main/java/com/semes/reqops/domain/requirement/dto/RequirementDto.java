@@ -23,11 +23,14 @@ public final class RequirementDto {
 
     /** AI 검토 결과 한 건 — 화면에서 읽기 전용으로만 표시된다. */
     public record FindingResponse(
+            Long id,
             String findingType,
             String targetSpan,
             String reason,
             String suggestion,
-            String conflictReqKey
+            String conflictReqKey,
+            String severity,
+            String resolutionState
     ) {}
 
     /** 목록 행. */
@@ -118,7 +121,8 @@ public final class RequirementDto {
             @NotNull Long userId,
             @NotBlank String content,
             @Size(max = 200) String title,
-            Long consensusId
+            Long consensusId,
+            @Size(max = 1000) String blockingDecisionReason
     ) {}
 
     /** 보류 — 고객 협의가 더 필요해 확정을 미룬다. */

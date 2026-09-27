@@ -1180,7 +1180,7 @@ standalone fallback은 신규 소스 build와 별도로 테스트한다. 새 빌
 - 완료: 로그인 이후 앱 셸, 사용자에게 보이는 정확히 4단계, 원문 구절 중심 검토, 확정 시 고객 합의 다이얼로그, 명시적 이슈 합치기·나누기, 이슈 중심 3열 검토, 4종 고정 양식, 업무 언어 Mermaid, 전체 확정 manifest와 멱등 명령을 구현했다.
 - 영속 처리 완료: Oracle 기반 AI job/task, 새로고침 복구용 진행률, 부분 실패 표시와 실패 task만 수동 재시도, 첨부 BLOB과 TXT/PDF/DOCX 추출, 확정 데이터 지식 projection을 연결했다.
 - 검증 완료: 로컬 Oracle 26ai Free 스키마/FK/한글 CLOB IT, Spring 단위 테스트, AI provider·계약 테스트, 프론트 타입·production build, macOS 3개 서버 기동, 실제 Oracle 4단계 API E2E 및 브라우저 화면 확인을 통과했다.
-- 미완료로 유지: 운영 Oracle Data Pump 복원·legacy 원본 hash 대조, in-flight job 강제 재시작/다중 worker 경합, 실제 Windows 호스트 실행, Gemini/사내 모델 live 비용 호출, 별도 `ReviewItem`/`UserDecision`·근거 링크 조회 API. 해당 체크박스는 완료로 바꾸지 않았다.
+- 미완료로 유지: 운영 Oracle Data Pump 복원·legacy 원본 hash 대조, in-flight job 강제 재시작/다중 worker 경합, 실제 Windows 호스트 실행, Gemini/사내 모델 live 비용 호출, 사용자용 근거 링크 조회 API/화면. `ReviewItem`/`UserDecision` 저장은 12.3에서 연결했으며 나머지 체크박스는 완료로 바꾸지 않았다.
 - 실제 명령, 결과, skip/제한 이유는 `docs/reqops-acceptance-results.md`를 기준으로 한다.
 
 ### 12.2 2026-09-27 긴 문서 편집 UX 후속 반영
@@ -1192,3 +1192,14 @@ standalone fallback은 신규 소스 build와 별도로 테스트한다. 새 빌
 - [x] `SoC 최소값`처럼 실제 수치가 없는 조건과 프로젝트에 존재하지 않는 `req-*` 참조를 필수 확인 항목으로 검출하며 원문을 임의 수정하지 않는다.
 - [x] 요구사항 확정 시 고객 합의 입력은 중앙 오버레이 모달로 표시하고, 배경 스크롤을 잠그며 긴 내용은 모달 내부에서만 스크롤한다.
 - [x] 프론트 타입 검사·단위 테스트·production build와 AI 계약 테스트 13건을 통과했고, 실제 브라우저에서 세로형 개발 이슈/산출물 및 REQ-TA-02 검출 화면을 확인했다.
+
+### 12.3 2026-09-27 3단계 진입 전 검토·추적 보강
+
+- [x] `requirement_findings`의 severity/resolution/span/input hash를 애플리케이션 계약에 연결하고 OPEN BLOCKING 항목의 무근거 확정을 API에서 차단했다.
+- [x] 고객이 미확정 항목을 그대로 수용할 때 별도 결정 근거를 필수로 받고 `review_items`와 `user_decisions`에 기록한다.
+- [x] REQ-TA-02에서 최소 SoC, 거리 양 끝점, 후보 없음 처리, 동률 기준, 존재하지 않는 참조 요구사항을 필수 확인 항목으로 검출한다.
+- [x] 개발 이슈 근거 구절은 확정 요구사항에 존재하는 연속 구절만 허용하고 중복 연결을 프론트와 API에서 차단한다.
+- [x] AMR 매칭 문장은 한 구현 단위인 `AMR 후보 선정 및 매칭 우선순위`로 기본 분할한다.
+- [x] 재분할·이슈 수정/확정 시 `issue_revisions` 스냅샷과 `issue_lineage`의 SPLIT/MERGE/REPLACED 관계를 보존한다.
+- [x] 산출물 생성·확정 시 확정 요구사항 버전과 사용 구절을 `knowledge_entries`·`evidence_links`로 연결한다.
+- [x] Oracle V005 인덱스 migration과 데이터 비삭제 rollback SQL을 추가했다.

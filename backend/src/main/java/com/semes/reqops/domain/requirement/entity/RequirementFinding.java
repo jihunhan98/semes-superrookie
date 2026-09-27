@@ -38,6 +38,24 @@ public class RequirementFinding {
     @Column(name = "conflict_req_key", length = 50)
     private String conflictReqKey;
 
+    @Column(name = "analysis_id", length = 64)
+    private String analysisId;
+
+    @Column(nullable = false, length = 20)
+    private String severity = "BLOCKING";
+
+    @Column(name = "span_start")
+    private Integer spanStart;
+
+    @Column(name = "span_end")
+    private Integer spanEnd;
+
+    @Column(name = "resolution_state", nullable = false, length = 20)
+    private String resolutionState = "OPEN";
+
+    @Column(name = "input_hash", length = 64)
+    private String inputHash;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -46,12 +64,23 @@ public class RequirementFinding {
 
     public RequirementFinding(Long requirementId, String findingType, String targetSpan,
                               String reason, String suggestion, String conflictReqKey) {
+        this(requirementId, findingType, targetSpan, reason, suggestion, conflictReqKey,
+                null, null, null, null);
+    }
+
+    public RequirementFinding(Long requirementId, String findingType, String targetSpan,
+                              String reason, String suggestion, String conflictReqKey,
+                              String analysisId, Integer spanStart, Integer spanEnd, String inputHash) {
         this.requirementId = requirementId;
         this.findingType = findingType;
         this.targetSpan = targetSpan;
         this.reason = reason;
         this.suggestion = suggestion;
         this.conflictReqKey = conflictReqKey;
+        this.analysisId = analysisId;
+        this.spanStart = spanStart;
+        this.spanEnd = spanEnd;
+        this.inputHash = inputHash;
     }
 
     @PrePersist
@@ -66,5 +95,11 @@ public class RequirementFinding {
     public String getReason() { return reason; }
     public String getSuggestion() { return suggestion; }
     public String getConflictReqKey() { return conflictReqKey; }
+    public String getSeverity() { return severity; }
+    public String getResolutionState() { return resolutionState; }
+    public Integer getSpanStart() { return spanStart; }
+    public Integer getSpanEnd() { return spanEnd; }
+    public String getInputHash() { return inputHash; }
+    public void acceptWithReason() { this.resolutionState = "ACCEPTED_WITH_REASON"; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
