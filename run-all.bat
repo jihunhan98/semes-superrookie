@@ -29,7 +29,11 @@ echo.
 set "SKIPPED="
 if exist "backend\.env" for /f "usebackq tokens=1,* delims==" %%A in ("backend\.env") do if not "%%A"=="" set "%%A=%%B"
 set "WITH_BACKEND="
-if /i "%~1"=="--with-backend" set "WITH_BACKEND=1"
+set "DEV_MODE="
+for %%A in (%*) do (
+  if /i "%%~A"=="--with-backend" set "WITH_BACKEND=1"
+  if /i "%%~A"=="--dev" set "DEV_MODE=1"
+)
 
 rem ── 1. AI 서버 (FastAPI · 8001) ──────────────────────────────
 rem  venv 의 python.exe 를 직접 부른다 — activate 를 거치지 않아도 되고,
@@ -45,7 +49,7 @@ if defined PYEXE (
   rem 백엔드가 요구사항 등록 때 AI 서버를 부르므로 이쪽이 먼저 떠 있는 게 낫다.
   timeout /t 3 /nobreak >nul
 ) else (
-  echo  [1/2] AI 서버 건너뜀         가상환경 없음
+  echo  [1/3] AI 서버 건너뜀         가상환경 없음
   set "SKIPPED=1"
   set "MSG_AI=1"
 )
@@ -58,18 +62,20 @@ if defined WITH_BACKEND (
 )
 
 rem ── 2. 프론트 (Next.js · 3000) ───────────────────────────────
-rem  node_modules 가 있으면 개발 서버(코드 수정 즉시 반영), 없으면
-rem  커밋된 빌드 산출물로 띄운다. 산출물은 npm install 없이도 돌아간다.
-
+rem  기본 실행은 배포본. 소스 개발 서버는 --dev 옵션으로 선택한다.
 set "FRONTCMD="
 set "FRONTMODE="
-if exist "frontend\node_modules" (
-  set "FRONTCMD=cd /d frontend && npm run dev"
-  set "FRONTMODE=개발 서버"
-)
-if not defined FRONTCMD if exist "frontend\dist\standalone\server.js" (
-  set "FRONTCMD=cd /d frontend\dist\standalone && node server.js"
-  set "FRONTMODE=빌드 산출물"
+if defined DEV_MODE (
+  if exist "frontend\node_modules\next\dist\bin\next" (
+    set "FRONTCMD=cd /d frontend && npm run dev"
+    set "FRONTMODE=개발 서버"
+  )
+) else (
+  if exist "frontend\dist\standalone\server.js" (
+    set "FRONTCMD=cd /d frontend\dist\standalone && node server.js"
+    set "FRONTMODE=Agent UX 배포본"
+    if exist "frontend\dist\standalone\build-info.json" type "frontend\dist\standalone\build-info.json"
+  )
 )
 
 if defined FRONTCMD (
@@ -103,13 +109,14 @@ if defined SKIPPED (
     echo      python -m venv .venv
     echo      .venv\Scripts\activate
     echo      pip install -r requirements.txt
-    echo    ^(AI 서버가 없어도 요구사항 등록은 됩니다 - 규칙 기반으로만 검토됩니다.^)
+    echo    ^(AI 서버가 없으면 자동 검토는 사용할 수 없습니다.^)
   )
   if defined MSG_FRONT (
     echo.
-    echo  프론트 - node_modules 도 빌드 산출물도 없습니다.
+    echo  프론트 - 선택한 실행 모드의 파일이 없습니다.
     echo      cd frontend ^&^& npm install       ^(개발 서버로 띄우려면^)
-    echo    또는 frontend\dist\standalone 이 저장소에 있는지 확인하세요.
+    echo    기본 실행에는 frontend\dist\standalone 전체가 필요합니다.
+    echo    개발 서버는 run-all.bat --dev 로 실행하세요.
   )
   echo  ------------------------------------------
 )
