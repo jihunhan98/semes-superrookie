@@ -4,9 +4,9 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Settings:
-    provider: str = os.getenv("AI_PROVIDER", "rule").strip().lower()
-    internal_base: str = os.getenv("LLM_API_BASE", "").strip().rstrip("/")
-    internal_model: str = os.getenv("LLM_API_MODEL", "gpt-4").strip()
+    provider: str = os.getenv("AI_PROVIDER", "internal").strip().lower()
+    internal_base: str = os.getenv("LLM_API_BASE", "http://23.43.51.216:6100/v1").strip().rstrip("/")
+    internal_model: str = os.getenv("LLM_API_MODEL", "auto").strip()
     internal_key: str = os.getenv("LLM_API_KEY", "EMPTY")
     gemini_key: str = os.getenv("GEMINI_API_KEY", "")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")

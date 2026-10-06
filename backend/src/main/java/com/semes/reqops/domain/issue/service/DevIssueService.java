@@ -67,7 +67,11 @@ public class DevIssueService {
         requireMember(projectId, req.userId());
         Requirement r = findConfirmed(projectId, requirementId);
 
-        AiSplitDto.Response ai = aiClient.splitIssues(r.getContent(), blankToNull(req.reason()));
+        AiSplitDto.Response ai = aiClient.splitIssues(r.getContent(), blankToNull(req.reason()),
+                requirementRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream()
+                        .filter(other -> !other.getId().equals(requirementId))
+                        .map(other -> new com.semes.reqops.global.ai.AiAnalyzeDto.Existing(other.getReqKey(), other.getContent()))
+                        .toList());
         List<IssueCandidate> issues = (ai.issues() == null ? List.<AiSplitDto.IssueOut>of() : ai.issues()).stream()
                 .map(i -> new IssueCandidate(i.title(), i.quote()))
                 .toList();

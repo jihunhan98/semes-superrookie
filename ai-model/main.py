@@ -124,6 +124,7 @@ class SplitRequest(BaseModel):
     content: str = Field(..., description="확정된 요구사항 본문")
     # 사람이 "AI에게 물어보기"에 적은 참고 사항 — 선택.
     reason: str | None = Field(None, description="분할 시 참고할 추가 지시")
+    existing: list[ExistingRequirement] = Field(default_factory=list)
 
 
 class IssueOut(BaseModel):
@@ -174,6 +175,25 @@ class ArtifactBatchResponse(BaseModel):
     engine: str
 
 
+class ReviewIssue(BaseModel):
+    title: str
+    quote: str | None = None
+    content: dict = Field(default_factory=dict)
+    artifacts: list[dict] = Field(default_factory=list)
+
+
+class ReviewRequest(BaseModel):
+    requirementContent: str
+    existing: list[ExistingRequirement] = Field(default_factory=list)
+    issues: list[ReviewIssue]
+
+
+class ReviewResponse(BaseModel):
+    approved: bool
+    concerns: list[str]
+    engine: str
+
+
 @app.get("/health")
 def health() -> dict:
     """사내 LLM API 설정 여부 — 폐쇄망 배포 후 첫 확인용."""
@@ -209,7 +229,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     engine = "rule"
     if PROVIDER.enabled:
         try:
-            extra = _ask_llm_api(target, req.reason)
+            extra = _ask_llm_api(target, req.reason, req.existing)
             findings = _merge(findings, extra)
             engine = PROVIDER.name
         except Exception as e:  # LLM 실패는 치명적이지 않다 — 규칙 결과로 계속 간다.
@@ -248,7 +268,7 @@ def split(req: SplitRequest) -> SplitResponse:
 
     if PROVIDER.enabled:
         try:
-            llm_issues = _ask_llm_split(content, req.reason)
+            llm_issues = _ask_llm_split(content, req.reason, req.existing)
             if llm_issues:
                 issues = llm_issues
                 engine = PROVIDER.name
@@ -312,6 +332,34 @@ def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
     return ArtifactBatchResponse(issue=issue, outputs=outputs, engine=PROVIDER.name)
 
 
+_REVIEW_PROMPT = """당신은 VCS/AMR 요구사항과 개발 이슈, 산출물을 전체 검토하는 전문가다.
+대상 확정 요구사항과 프로젝트의 모든 다른 요구사항을 근거로 이슈와 산출물의 누락,
+모순, 근거 없는 수치·정책, 이슈 간 불일치를 점검하라. 다른 요구사항은 맥락이다.
+자료에 없는 사실을 지어내지 마라. JSON만 답하라:
+{"approved":true,"concerns":[]}
+문제가 있으면 approved=false와 구체적인 concerns 배열을 반환하라."""
+
+
+@app.post("/review", response_model=ReviewResponse)
+def review(req: ReviewRequest) -> ReviewResponse:
+    if not PROVIDER.enabled:
+        return ReviewResponse(approved=False, concerns=["LLM 제공자가 설정되지 않아 AI 검토를 할 수 없습니다."], engine="rule")
+    try:
+        user = "확정 요구사항 전문:\n" + req.requirementContent
+        user += _all_requirements(req.existing)
+        user += "\n\n검토할 개발 이슈와 산출물 전문(JSON):\n" + json.dumps(
+            [issue.model_dump() for issue in req.issues], ensure_ascii=False)
+        result = _parse_json(PROVIDER.generate(_REVIEW_PROMPT, user))
+        if type(result.get("approved")) is not bool or not isinstance(result.get("concerns"), list):
+            raise ValueError("검토 결과의 JSON 형식이 올바르지 않습니다.")
+        concerns = [str(item) for item in result["concerns"]]
+        return ReviewResponse(approved=result["approved"] and not concerns,
+                              concerns=concerns, engine=PROVIDER.name)
+    except Exception as exc:
+        log.warning("AI 전체 검토 실패: %s", exc)
+        return ReviewResponse(approved=False, concerns=["AI 전체 검토에 실패했습니다. 연결과 응답 형식을 확인하세요."], engine="unavailable")
+
+
 # ── 내부 구현 ────────────────────────────────────────────────────
 
 def _analysis_target(req: AnalyzeRequest) -> tuple[str, str]:
@@ -366,20 +414,27 @@ def _post_json(url: str, payload: dict, timeout: float, headers: dict | None = N
         return json.loads(res.read().decode("utf-8"))
 
 
-def _user_msg(content: str, reason: str | None) -> str:
+def _all_requirements(existing: list[ExistingRequirement] | None) -> str:
+    rows = existing or []
+    return "\n\n같은 프로젝트의 다른 요구사항 전문(모두 검토하고 관련성·상충 여부를 판단):\n" + (
+        "\n".join(f"- {e.reqKey}: {e.content}" for e in rows) if rows else "(없음)")
+
+
+def _user_msg(content: str, reason: str | None, existing: list[ExistingRequirement] | None = None) -> str:
     user = f"요구사항: {content}"
     if reason:
         user += f"\n수정 사유: {reason}"
-    return user
+    return user + _all_requirements(existing)
 
 
-def _ask_llm_api(content: str, reason: str | None) -> list[rules.Finding]:
+def _ask_llm_api(content: str, reason: str | None,
+                 existing: list[ExistingRequirement] | None = None) -> list[rules.Finding]:
     """사내 LLM API 서비스(OpenAI 호환)에 Chat Completions 로 판정을 요청한다.
 
     OpenAI 라이브러리의 client.chat.completions.create(...) 와 같은 HTTP 요청을
     표준 라이브러리로 보낸다 — 폐쇄망에 openai 패키지를 반입하지 않으려고.
     """
-    raw = PROVIDER.generate(_SYSTEM_PROMPT, _user_msg(content, reason))
+    raw = PROVIDER.generate(_SYSTEM_PROMPT, _user_msg(content, reason, existing))
     return _to_findings(raw, content)
 
 
@@ -397,13 +452,14 @@ _SPLIT_SYSTEM_PROMPT = """당신은 반도체 장비 소프트웨어(VCS/AMR) �
 {"issues":[{"title":"이슈 제목","quote":"원문 그대로의 해당 구절"}]}"""
 
 
-def _ask_llm_split(content: str, reason: str | None) -> list[rules.IssueCandidate]:
+def _ask_llm_split(content: str, reason: str | None,
+                   existing: list[ExistingRequirement] | None = None) -> list[rules.IssueCandidate]:
     """사내 LLM API로 이슈 분할을 요청한다. 환각 구절은 걸러낸다."""
     user = f"요구사항: {content}"
     if reason:
         user += f"\n참고 지시: {reason}"
 
-    raw = PROVIDER.generate(_SPLIT_SYSTEM_PROMPT, user)
+    raw = PROVIDER.generate(_SPLIT_SYSTEM_PROMPT, user + _all_requirements(existing))
     parsed = _parse_json(raw)
 
     out: list[rules.IssueCandidate] = []
@@ -496,9 +552,7 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
                       reason: str | None, existing: list[ExistingRequirement] | None = None) -> dict:
     """사내 LLM API로 산출물 1종의 초안을 요청한다."""
     user = f"개발 이슈 제목: {title}\n이 이슈가 커버하는 요구사항 구절: {quote}\n근거 요구사항 전문:\n{requirement_content}"
-    if existing:
-        lines = "\n".join(f"- {e.reqKey}: {e.content}" for e in existing)
-        user += f"\n\n프로젝트 내 다른 요구사항(관련 있으면 용어·설계를 맞추고, 없으면 무시):\n{lines}"
+    user += _all_requirements(existing)
     if reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 

@@ -6,7 +6,16 @@ class InternalProvider(Provider):
     name = "internal"
     def __init__(self, base: str, model: str, key: str, timeout: float): self.base,self.model,self.key,self.timeout=base,model,key,timeout
     def generate(self, system: str, user: str) -> str:
-        req=urllib.request.Request(f"{self.base}/chat/completions",data=json.dumps({"model":self.model,"messages":[{"role":"system","content":system},{"role":"user","content":user}],"temperature":0}).encode(),headers={"Content-Type":"application/json","Authorization":f"Bearer {self.key}"})
+        model = self.model
+        if model == "auto":
+            try:
+                models_req = urllib.request.Request(f"{self.base}/models", headers={"Authorization":f"Bearer {self.key}"})
+                with urllib.request.urlopen(models_req,timeout=self.timeout) as res:
+                    available = json.loads(res.read().decode()).get("data", [])
+                model = available[0]["id"]
+            except Exception as e:
+                raise ProviderError("MODEL_DISCOVERY_FAILED",True,"internal provider model discovery failed") from e
+        req=urllib.request.Request(f"{self.base}/chat/completions",data=json.dumps({"model":model,"messages":[{"role":"system","content":system},{"role":"user","content":user}],"temperature":0}).encode(),headers={"Content-Type":"application/json","Authorization":f"Bearer {self.key}"})
         try:
             with urllib.request.urlopen(req,timeout=self.timeout) as res: body=json.loads(res.read().decode())
             return body["choices"][0]["message"]["content"]

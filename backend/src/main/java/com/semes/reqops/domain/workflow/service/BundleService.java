@@ -17,6 +17,9 @@ import com.semes.reqops.domain.workflow.repository.CommandReceiptRepository;
 import com.semes.reqops.global.exception.ApiErrors;
 import com.semes.reqops.domain.knowledge.service.ProjectKnowledgeService;
 import com.semes.reqops.domain.requirement.repository.RequirementVersionRepository;
+import com.semes.reqops.domain.requirement.repository.RequirementRepository;
+import com.semes.reqops.global.ai.AiAnalyzeDto;
+import com.semes.reqops.global.ai.AiClient;
 import com.semes.reqops.domain.job.repository.AiJobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,8 @@ public class BundleService {
     private final CommandReceiptRepository receipts;
     private final ArtifactRevisionRepository artifactRevisions;
     private final AiJobRepository jobs;
+    private final RequirementRepository requirements;
+    private final AiClient aiClient;
 
     @Transactional
     public WorkBundle start(Long requirementId, Long versionId, Long actorId){
@@ -71,6 +76,32 @@ public class BundleService {
                 return Map.of("id",a.getId(),"type",a.getArtifactType().name(),"revision",a.getRowVersion(),"artifactRevisionId",revision.map(x->x.getId()).orElse(0L),"contentHash",revision.map(x->x.getContentHash()).orElse(""));
             }).toList()));
         }
+        // 모든 이슈와 산출물의 실제 본문을 프로젝트 요구사항 전체와 함께 AI에 전달한다.
+        var target = requirements.findById(requirementId).orElseThrow();
+        List<AiAnalyzeDto.Existing> others = requirements.findByProjectIdOrderByCreatedAtDesc(projectId).stream()
+                .filter(r -> !r.getId().equals(requirementId))
+                .map(r -> new AiAnalyzeDto.Existing(r.getReqKey(), r.getContent())).toList();
+        List<AiClient.ReviewIssue> reviewIssues = new ArrayList<>();
+        for (DevIssue issue : active) {
+            Map<String,Object> issueContent = new LinkedHashMap<>();
+            issueContent.put("symptom", issue.getSymptom());
+            issueContent.put("improvementReq", issue.getImprovementReq());
+            issueContent.put("changeScope", issue.getChangeScope());
+            issueContent.put("constraintsNote", issue.getConstraintsNote());
+            issueContent.put("beforeState", issue.getBeforeState());
+            issueContent.put("afterState", issue.getAfterState());
+            List<Map<String,Object>> documentContents = new ArrayList<>();
+            for (DevIssueArtifact doc : artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId())) {
+                try {
+                    documentContents.add(Map.of("type", doc.getArtifactType().name(),
+                            "content", objectMapper.readTree(doc.getContentJson())));
+                } catch (JsonProcessingException e) { throw new IllegalStateException(e); }
+            }
+            reviewIssues.add(new AiClient.ReviewIssue(issue.getTitle(), issue.getQuote(), issueContent, documentContents));
+        }
+        var aiReview = aiClient.review(new AiClient.ReviewRequest(target.getContent(), others, reviewIssues));
+        if (!aiReview.approved()) throw new ApiErrors.Conflict("AI 전체 검토를 통과하지 못했습니다: "
+                + String.join("; ", aiReview.concerns() == null ? List.of("검토 결과 없음") : aiReview.concerns()));
         try{String json=objectMapper.writeValueAsString(manifest);bundle.confirm(json,sha256(json),req.userId());WorkBundle saved=bundles.save(bundle);if(saved.getRequirementVersionId()!=null)versions.findById(saved.getRequirementVersionId()).ifPresent(v->knowledge.project(projectId,"REQUIREMENT",requirementId,v.getId(),v.getContent()));for(DevIssue issue:active)for(DevIssueArtifact doc:artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId()))knowledge.project(projectId,"ARTIFACT",doc.getId(),doc.getRowVersion(),doc.getContentJson());BundleResponse result=response(saved);if(commandKey!=null)receipts.save(new CommandReceipt(projectId,commandKey,requestHash,objectMapper.writeValueAsString(result)));return result;}
         catch(JsonProcessingException e){throw new IllegalStateException(e);}
     }

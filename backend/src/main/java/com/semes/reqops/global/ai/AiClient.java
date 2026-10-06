@@ -57,11 +57,12 @@ public class AiClient {
      * <p>AI 서버 자체가 응답하지 않아도 화면이 비어 있으면 안 되므로, 실패 시 본문
      * 전체를 이슈 1개로 보는 결과를 돌려준다(사람이 그 위에서 나누기로 쪼갤 수 있다).
      */
-    public AiSplitDto.Response splitIssues(String content, String reason) {
+    public AiSplitDto.Response splitIssues(String content, String reason,
+                                           List<AiAnalyzeDto.Existing> existing) {
         try {
             AiSplitDto.Response res = restClient.post()
                     .uri("/split")
-                    .body(new AiSplitDto.Request(content, reason))
+                    .body(new AiSplitDto.Request(content, reason, existing))
                     .retrieve()
                     .body(AiSplitDto.Response.class);
 
@@ -77,8 +78,30 @@ public class AiClient {
         }
     }
 
+    public AiSplitDto.Response splitIssues(String content, String reason) {
+        return splitIssues(content, reason, List.of());
+    }
+
     private AiSplitDto.Response splitUnavailable(String content) {
         return new AiSplitDto.Response(List.of(new AiSplitDto.IssueOut("전체 요구사항", content)), "unavailable", 0);
+    }
+
+    public record ReviewIssue(String title, String quote, Map<String, Object> content,
+                              List<Map<String, Object>> artifacts) {}
+    public record ReviewRequest(String requirementContent, List<AiAnalyzeDto.Existing> existing,
+                                List<ReviewIssue> issues) {}
+    public record ReviewResponse(boolean approved, List<String> concerns, String engine) {}
+
+    /** 전체 확정 직전에 AI가 모든 이슈와 산출물의 근거·일관성을 검사한다. */
+    public ReviewResponse review(ReviewRequest request) {
+        try {
+            ReviewResponse response = restClient.post().uri("/review").body(request)
+                    .retrieve().body(ReviewResponse.class);
+            return response == null ? new ReviewResponse(false, List.of("AI 검토 결과가 없습니다."), "unavailable") : response;
+        } catch (Exception e) {
+            log.warn("AI 전체 검토 실패: {}", e.getMessage());
+            return new ReviewResponse(false, List.of("AI 서버에 연결하지 못했습니다."), "unavailable");
+        }
     }
 
     /**
