@@ -16,7 +16,7 @@ public class AiTask {
  @PrePersist void created(){createdAt=updatedAt=LocalDateTime.now();} @PreUpdate void updated(){updatedAt=LocalDateTime.now();}
  public void claim(String worker,String token){status="RUNNING";workerId=worker;leaseToken=token;leaseUntil=LocalDateTime.now().plusSeconds(180);attempt++;}
  public void recoverExpired(){status="RETRY_WAIT";leaseUntil=null;leaseToken=null;workerId=null;nextRunAt=LocalDateTime.now();}
- public void succeed(String result){status="SUCCEEDED";resultJson=result;leaseUntil=null;} public void fail(String code,String message){errorCode=code;errorMessage=message;leaseUntil=null;if(attempt<maxAttempts){status="RETRY_WAIT";nextRunAt=LocalDateTime.now().plusSeconds(attempt==1?2:8);}else status="FAILED";}
+ public void succeed(String result){status="SUCCEEDED";resultJson=result;leaseUntil=null;} public void fail(String code,String message){errorCode=code;errorMessage=message==null?null:message.substring(0,Math.min(message.length(),1000));leaseUntil=null;if(attempt<maxAttempts){status="RETRY_WAIT";nextRunAt=LocalDateTime.now().plusSeconds(attempt==1?2:8);}else status="FAILED";}
  public void manualRetry(){status="RETRY_WAIT";attempt=0;errorCode=null;errorMessage=null;leaseUntil=null;leaseToken=null;workerId=null;nextRunAt=LocalDateTime.now();}
  public Long getId(){return id;} public Long getJobId(){return jobId;} public String getTaskKey(){return taskKey;} public String getStatus(){return status;} public String getInputJson(){return inputJson;} public int getAttempt(){return attempt;} public String getErrorCode(){return errorCode;} public String getErrorMessage(){return errorMessage;}
 }

@@ -99,31 +99,37 @@ public class DevIssueService {
 
         List<DevIssue> previous = devIssueRepository
                 .findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId, "RETIRED");
-        previous.forEach(issue -> saveRevision(issue, "재분할 전 스냅샷", req.userId()));
-        previous.forEach(DevIssue::retire);
-        devIssueRepository.saveAll(previous);
-
+        // Reordering/title edits preserve the immutable database ID and existing links.
         List<IssueInput> inputs = req.issues();
         List<DevIssue> created = new ArrayList<>();
-        for (int i = 0; i < inputs.size(); i++) {
-            IssueInput in = inputs.get(i);
-            DevIssue issue = new DevIssue(
-                    requirementId,
-                    "I-" + UUID.randomUUID().toString().substring(0, 12),
-                    in.title().trim(),
-                    blankToNull(in.quote()),
-                    i,
-                    req.userId());
-            issue.updateBody(in.title().trim(), blankToNull(in.quote()),
-                    defaultText(in.symptom(), in.quote()), defaultText(in.improvementReq(), in.title()),
-                    defaultText(in.changeScope(), in.quote()), blankToNull(in.constraintsNote()),
-                    blankToNull(in.beforeState()), defaultText(in.afterState(), in.quote()), in.dueOn());
-            bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
-                    .ifPresent(bundle -> issue.assignBundle(bundle.getId()));
-            DevIssue saved = devIssueRepository.save(issue);
-            saveRevision(saved, "분할 확정", req.userId());
-            created.add(saved);
+        List<IssueInput> newInputs=inputs.stream().filter(in->previous.stream().noneMatch(old->in.quote().trim().equals(old.getQuote()))).toList();
+        List<Map<String,Object>> enriched=List.of();
+        if(!newInputs.isEmpty()) {
+            var response=aiClient.insight("/issues/enrich",Map.of("requirementContent",requirement.getContent(),
+                "existing",requirementRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream().map(r->Map.of("reqKey",r.getReqKey(),"content",r.getContent())).toList(),
+                "issues",newInputs.stream().map(in->Map.of("title",in.title().trim(),"quote",in.quote().trim())).toList()));
+            enriched=objectMapper.convertValue(response.get("issues"),new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>(){});
         }
+        for(int i=0;i<inputs.size();i++) {
+            IssueInput in=inputs.get(i);
+            DevIssue issue=previous.stream().filter(old->in.quote().trim().equals(old.getQuote())).findFirst().orElse(null);
+            boolean isNew=issue==null;
+            if(isNew)issue=new DevIssue(requirementId,"I-"+UUID.randomUUID().toString().substring(0,12),in.title().trim(),in.quote().trim(),i,req.userId());
+            else saveRevision(issue,"수정 전 스냅샷",req.userId());
+            Map<String,Object> aiBody=enriched.stream().filter(row->in.quote().trim().equals(row.get("quote"))).findFirst().orElse(Map.of());
+            issue.reorder(i);
+            issue.updateBody(in.title().trim(),in.quote().trim(),
+                defaultText(in.symptom(),isNew?(String)aiBody.get("symptom"):issue.getSymptom()),
+                defaultText(in.improvementReq(),isNew?(String)aiBody.get("improvementReq"):issue.getImprovementReq()),
+                defaultText(in.changeScope(),isNew?(String)aiBody.get("changeScope"):issue.getChangeScope()),
+                defaultText(in.constraintsNote(),isNew?(String)aiBody.get("constraintsNote"):issue.getConstraintsNote()),
+                defaultText(in.beforeState(),isNew?(String)aiBody.get("beforeState"):issue.getBeforeState()),
+                defaultText(in.afterState(),isNew?(String)aiBody.get("afterState"):issue.getAfterState()),in.dueOn()==null?issue.getDueOn():in.dueOn());
+            var bundle=bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId,1);
+            if(bundle.isPresent())issue.assignBundle(bundle.get().getId());
+            DevIssue saved=devIssueRepository.save(issue);saveRevision(saved,"분할 확정",req.userId());created.add(saved);
+        }
+        previous.stream().filter(old->created.stream().noneMatch(row->row.getId().equals(old.getId()))).forEach(old->{saveRevision(old,"재분할 전 스냅샷",req.userId());old.retire();devIssueRepository.save(old);});
         saveLineage(previous, created);
 
         bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId, 1)
@@ -146,7 +152,8 @@ public class DevIssueService {
     @Transactional
     public IssueResponse update(Long projectId, Long requirementId, Long issueId, UpdateRequest req) {
         requireMember(projectId, req.userId());
-        findInProject(projectId, requirementId);
+        Requirement source=findInProject(projectId, requirementId);
+        if(blankToNull(req.quote())==null || !source.getContent().contains(req.quote().trim()))throw new ApiErrors.BadRequest("개발 이슈의 근거 구절은 요구사항 원문에 있어야 합니다.");
         DevIssue issue = devIssueRepository.findById(issueId)
                 .filter(row -> row.getRequirementId().equals(requirementId) && !"RETIRED".equals(row.getIssueState()))
                 .orElseThrow(() -> new ApiErrors.DevIssueNotFound(String.valueOf(issueId)));
@@ -227,6 +234,7 @@ public class DevIssueService {
             List<DevIssue> targets = created.stream()
                     .filter(target -> overlaps(source.getQuote(), target.getQuote())).toList();
             for (DevIssue target : targets) {
+                if(source.getId().equals(target.getId()))continue;
                 long sourceCount = previous.stream().filter(old -> overlaps(old.getQuote(), target.getQuote())).count();
                 String relation = targets.size() > 1 ? "SPLIT_TO" : sourceCount > 1 ? "MERGED_TO" : "REPLACED_BY";
                 lineageRepository.save(new IssueLineage(source.getId(), target.getId(), relation));

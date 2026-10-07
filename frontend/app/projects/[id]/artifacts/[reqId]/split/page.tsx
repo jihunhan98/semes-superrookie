@@ -283,10 +283,10 @@ export default function IssueSplitPage() {
           </div>
 
           {/* AI에게 물어보기 — 확정본 수정 화면 1단계와 같은 자리. 선택 입력. */}
-          <div className="wcard" style={{ marginTop: 16, maxWidth: 1000 }}>
+          <div className="wcard ai-recheck-card" style={{ marginTop: 16, maxWidth: 1000 }}>
             <div className="wcb">
               <div className="fieldlab" style={{ marginTop: 0 }}>
-                추가로 반영할 내용 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+                AI에게 추가로 검토 요청 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
               </div>
               <textarea
                 className="reqta"
@@ -297,7 +297,7 @@ export default function IssueSplitPage() {
               />
               <div className="wfoot" style={{ paddingTop: 10 }}>
                 <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
-                  {regenerating ? "나누는 중…" : "다시 나누기"}
+                  {regenerating ? "AI가 다시 검토 중이에요…" : "AI 재검토"}
                 </button>
               </div>
               {regenError && (

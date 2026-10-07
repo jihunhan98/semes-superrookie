@@ -20,7 +20,7 @@ const ARTIFACTS_ICON = (
   <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z" />
 );
 
-type NavKey = "home" | "requirements" | "artifacts" | "settings";
+type NavKey = "home" | "requirements" | "artifacts" | "settings" | "insights";
 
 export default function ProjectSidebar({
   projectId,
@@ -67,6 +67,7 @@ export default function ProjectSidebar({
         산출물
       </Link>
 
+      <Link href={`/projects/${projectId}/insights`} className={`nav${active === "insights" ? " on" : ""}`}><svg viewBox="0 0 16 16" fill="currentColor">{REQUIREMENTS_ICON}</svg>변경 영향 · 코드 근거</Link>
       <div className="nl">프로젝트</div>
       <Link href={`/projects/${projectId}/settings`} className={`nav${active === "settings" ? " on" : ""}`}>
         <svg viewBox="0 0 16 16" fill="currentColor">

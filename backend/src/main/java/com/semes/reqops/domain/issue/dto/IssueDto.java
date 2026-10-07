@@ -95,5 +95,5 @@ public final class IssueDto {
             int displayOrder,
             String createdByName,
             String createdAt
-    ) {}
+    ) { @com.fasterxml.jackson.annotation.JsonProperty("displayId") public String displayId(){return String.format("DEV-%06d",id);} }
 }

@@ -40,6 +40,7 @@ public class BundleService {
     private final AiJobRepository jobs;
     private final RequirementRepository requirements;
     private final AiClient aiClient;
+    private final com.semes.reqops.domain.insight.InsightService insights;
 
     @Transactional
     public WorkBundle start(Long requirementId, Long versionId, Long actorId){
@@ -99,9 +100,8 @@ public class BundleService {
             }
             reviewIssues.add(new AiClient.ReviewIssue(issue.getTitle(), issue.getQuote(), issueContent, documentContents));
         }
-        var aiReview = aiClient.review(new AiClient.ReviewRequest(target.getContent(), others, reviewIssues));
-        if (!aiReview.approved()) throw new ApiErrors.Conflict("AI 전체 검토를 통과하지 못했습니다: "
-                + String.join("; ", aiReview.concerns() == null ? List.of("검토 결과 없음") : aiReview.concerns()));
+        var coverage=insights.coverage(projectId,requirementId,req.userId());
+        if(!Boolean.TRUE.equals(coverage.get("approved")))throw new ApiErrors.Conflict("AI 누락·일관성 검토를 통과하지 못했습니다: "+coverage.get("concerns"));
         try{String json=objectMapper.writeValueAsString(manifest);bundle.confirm(json,sha256(json),req.userId());WorkBundle saved=bundles.save(bundle);if(saved.getRequirementVersionId()!=null)versions.findById(saved.getRequirementVersionId()).ifPresent(v->knowledge.project(projectId,"REQUIREMENT",requirementId,v.getId(),v.getContent()));for(DevIssue issue:active)for(DevIssueArtifact doc:artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId()))knowledge.project(projectId,"ARTIFACT",doc.getId(),doc.getRowVersion(),doc.getContentJson());BundleResponse result=response(saved);if(commandKey!=null)receipts.save(new CommandReceipt(projectId,commandKey,requestHash,objectMapper.writeValueAsString(result)));return result;}
         catch(JsonProcessingException e){throw new IllegalStateException(e);}
     }

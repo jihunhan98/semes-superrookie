@@ -53,31 +53,34 @@ def test_v2_scenario_shape():
     content = artifacts.generate_v2("functional", "AMR 선택", "요구사항에 따라 AMR을 선택한다.")
     assert [row["type"] for row in content["scenarios"]] == ["BASIC", "VARIANT", "EXCEPTION"]
 
-def test_batch_reports_partial_failure_without_dropping_successes():
+def test_batch_reports_partial_failure_without_dropping_successes(monkeypatch):
+    import main, json
+    class GroundedProvider:
+        enabled=True
+        name="test"
+        def generate(self, system, user):
+            return json.dumps({"requester":None,"requestContent":"시스템은 알림을 전송한다.","specialNotes":None,"legacyExtras":{},"evidence":[{"field":"requestContent","reqKey":"TARGET","quote":"시스템은 알림을 전송한다."}]})
+    monkeypatch.setattr(main,"PROVIDER",GroundedProvider())
     body = client.post("/v2/artifacts/batch", json={
         "issueTitle": "알림 처리", "issueQuote": "시스템은 알림을 전송한다.",
         "requirementContent": "시스템은 알림을 전송한다.",
         "requestedTypes": ["VOC", "UNKNOWN", "DETAIL_DESIGN"],
     }).json()
-    assert [row["status"] for row in body["outputs"]] == ["SUCCEEDED", "FAILED", "SUCCEEDED"]
+    assert [row["status"] for row in body["outputs"]] == ["SUCCEEDED", "FAILED", "FAILED"]
     assert body["outputs"][0]["content"] is not None
     assert body["outputs"][1]["errors"] == ["UNSUPPORTED_TYPE"]
 
-def test_detail_design_fallback_uses_business_language_mermaid():
+def test_detail_design_fallback_requires_actual_source():
     content = artifacts.generate_v2("detail-design", "주문 승인 알림", "승인되면 배차 담당자에게 알린다")
-    assert content["classDiagram"].startswith("classDiagram")
-    assert "확인되지 않음" in content["sequenceDiagramAsIs"]
-    assert "요구사항 검토자" in content["sequenceDiagramToBe"]
-    assert "TargetService" not in content["sequenceDiagramToBe"]
+    assert content["classDiagram"] is None
+    assert content["sequenceDiagramToBe"] is None
+    assert content["asIsApplicability"] == "UNKNOWN"
+    assert "소스" in content["asIsReason"]
 
 
-def test_amr_detail_design_is_grounded_in_matching_requirement():
-    requirement = ("AMR 매칭 시 IDLE 상태이며 SoC 최소값 이상인 AMR 중 맵 경로상 "
-                   "맨해튼 거리 기준 최단 경로에 있는 AMR을 선택한다. 처리 우선순위는 "
-                   "req-ta-01과 동일하게 SoC 높은 순으로 정한다.")
+def test_amr_fallback_does_not_present_business_concepts_as_real_classes():
+    requirement = "AMR 매칭 시 IDLE 상태이며 SoC 30% 이상인 AMR을 선택한다."
     content = artifacts.generate_v2("detail-design", "AMR 매칭", requirement, requirement)
-    diagrams = content["classDiagram"] + content["sequenceDiagramToBe"]
-    assert all(term in diagrams for term in ("AMR후보", "맵경로", "맨해튼", "IDLE", "SoC"))
-    assert "업무요청" not in diagrams
-    assert "현재 처리 결과" not in diagrams
-    assert "확인되지 않음" in content["sequenceDiagramAsIs"]
+    assert content["classDiagram"] is None
+    assert content["sequenceDiagramAsIs"] is None
+    assert content["sequenceDiagramToBe"] is None

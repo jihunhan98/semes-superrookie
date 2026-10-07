@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --test tests/unit/*.test.mjs",
-    "test:e2e": "node --test tests/e2e/*.test.mjs"
+    "test:e2e": "node --test tests/e2e/*.test.mjs",
+    "build:offline": "npm run build && node scripts/package-standalone.mjs"
   },
   "dependencies": {
     "mermaid": "^11.17.2",

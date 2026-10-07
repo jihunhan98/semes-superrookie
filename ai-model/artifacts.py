@@ -104,40 +104,9 @@ def generate_v2(type_: str, title: str, quote: str | None,
         ]
         return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
     if type_ == "detail-design":
-        evidence = " ".join(part for part in (title, quote, requirement_content) if part)
-        if _is_amr_matching(evidence):
-            return _amr_matching_detail_design(quote or requirement_content)
+        from grounding import missing_design
+        return missing_design("실제 클래스 소스 근거가 필요합니다. 소스를 등록한 뒤 AI 재검토해 주세요.")
 
-        safe_title = _mermaid_text(title or "요구사항 처리")
-        safe_quote = _mermaid_text(quote or requirement_content or title or "확정 요구사항")
-        class_diagram = (
-            "classDiagram\n"
-            "    class 요구사항근거 {\n"
-            "      +확정본문\n"
-            "    }\n"
-            "    class 변경대상 {\n"
-            "      +검토내용\n"
-            "    }\n"
-            "    요구사항근거 --> 변경대상 : 설계 근거"
-        )
-        sequence_as_is = (
-            "sequenceDiagram\n"
-            "    participant 사용자 as 요구사항 검토자\n"
-            "    participant 대상 as 변경 대상\n"
-            "    Note over 사용자,대상: 변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"
-        )
-        sequence_to_be = (
-            "sequenceDiagram\n"
-            "    participant 사용자 as 요구사항 검토자\n"
-            "    participant 대상 as 변경 대상\n"
-            f"    사용자->>대상: {safe_title}\n"
-            f"    Note over 사용자,대상: 확정 근거 - {safe_quote}\n"
-            "    대상-->>사용자: 요구사항 반영 결과"
-        )
-        return {"description": quote, "classDiagram": class_diagram, "sequenceDiagramAsIs": sequence_as_is,
-                "sequenceDiagramToBe": sequence_to_be, "asIsApplicability": "UNKNOWN",
-                "asIsReason": "변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
-                "legacyExtras": extras}
     return {}
 
 

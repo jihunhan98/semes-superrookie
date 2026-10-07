@@ -27,6 +27,16 @@ import java.util.Map;
 public class AiClient {
 
     private final RestClient restClient;
+    public Map<String,Object> insight(String path,Map<String,Object> input) {
+        try {
+            Map<String,Object> result=restClient.post().uri(path).body(input).retrieve().body(new org.springframework.core.ParameterizedTypeReference<Map<String,Object>>(){});
+            if(result==null)throw new IllegalStateException("AI 결과가 없습니다.");
+            return result;
+        } catch(org.springframework.web.client.RestClientResponseException e) {
+            throw new com.semes.reqops.global.exception.ApiErrors.Conflict("AI 분석 실패: "+e.getResponseBodyAsString());
+        } catch(Exception e) {throw new com.semes.reqops.global.exception.ApiErrors.Conflict("AI 분석에 연결하지 못했습니다. 다시 시도해 주세요.");}
+    }
+
 
     public AiClient(@Value("${app.ai.base-url}") String baseUrl,
                     @Value("${app.ai.timeout-ms:30000}") int timeoutMs) {
@@ -113,10 +123,13 @@ public class AiClient {
     public AiArtifactDto.Response generateArtifact(String type, String issueTitle, String issueQuote,
                                                     String requirementContent, String reason,
                                                     List<AiAnalyzeDto.Existing> existing) {
+        return generateArtifact(type,issueTitle,issueQuote,requirementContent,reason,existing,"TARGET",Map.of(),Map.of());
+    }
+    public AiArtifactDto.Response generateArtifact(String type,String issueTitle,String issueQuote,String requirementContent,String reason,List<AiAnalyzeDto.Existing> existing,String reqKey,Map<String,Object> issueContent,Map<String,Object> codeContext) {
         try {
             AiArtifactDto.Response res = restClient.post()
                     .uri("/artifacts/generate")
-                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason, existing))
+                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason, existing,reqKey,issueContent,codeContext))
                     .retrieve()
                     .body(AiArtifactDto.Response.class);
 

@@ -77,7 +77,7 @@ export default function RequirementNewPage() {
     return (
       <div className="appshell">
         <Header />
-        <main className="main">
+        <main className="main requirement-register">
           <WorkflowStepper step={1} />
           <p className="lmsg err">{error}</p>
         </main>
@@ -89,7 +89,7 @@ export default function RequirementNewPage() {
     return (
       <div className="appshell">
         <Header />
-        <main className="main">
+        <main className="main requirement-register">
           <div className="placeholder">불러오는 중…</div>
         </main>
       </div>
@@ -103,17 +103,17 @@ export default function RequirementNewPage() {
         {sidebarOpen && (
           <ProjectSidebar projectId={project.id} projectName={project.name} active="requirements" />
         )}
-        <main className="main">
+        <main className="main requirement-register">
           <div className="crumb">
             <b>요구사항</b> / 등록
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 2px" }}>새 요구사항 등록</h1>
           <p className="psub" style={{ marginBottom: 12 }}>
-            입력하고 등록하면, 저장과 함께 AI가 자동으로 초기 검토를 시작합니다.
+            등록하면 AI가 내용과 관련 요구사항의 영향을 검토합니다.
           </p>
 
           <div className="regcard">
-            <div className="rch">📝 요구사항 입력</div>
+            <div className="rch">요구사항 입력</div>
             <div className="rcb">
               <div className="reqmeta">
                 <div className="fi2">
@@ -168,7 +168,7 @@ export default function RequirementNewPage() {
 
           <div className="regfoot">
             <button className="btn prim" onClick={onSubmit} disabled={saving}>
-              {saving ? "⏳ 등록 중…" : "등록하기"}
+              {saving ? "⏳ 등록 중…" : "등록하고 AI 검토"}
             </button>
             <button
               className="btn"

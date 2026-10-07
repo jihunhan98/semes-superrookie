@@ -2,6 +2,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeF
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { prepareBuildKeys } from './runtime-build-keys.cjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const at = (...parts) => resolve(root, ...parts);
@@ -14,6 +15,10 @@ mkdirSync(staging, { recursive: true });
 cpSync(source, staging, { recursive: true });
 cpSync(at('.next/static'), resolve(staging, '.next/static'), { recursive: true });
 if (existsSync(at('public'))) cpSync(at('public'), resolve(staging, 'public'), { recursive: true });
+prepareBuildKeys(staging, false);
+cpSync(at('scripts/runtime-build-keys.cjs'), resolve(staging, 'runtime-build-keys.cjs'));
+const serverPath = resolve(staging, 'server.js');
+writeFileSync(serverPath, "require('./runtime-build-keys.cjs').prepareBuildKeys(__dirname);\n" + readFileSync(serverPath, 'utf8'));
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
 writeFileSync(resolve(staging, 'build-info.json'), JSON.stringify({
   sourceCommit: commit,

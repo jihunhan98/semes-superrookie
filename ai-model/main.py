@@ -31,6 +31,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 import artifacts
+import grounding
+import insights
 import rules
 from config import Settings
 from providers import GeminiProvider, InternalProvider, RuleProvider
@@ -150,6 +152,10 @@ class ArtifactGenerateRequest(BaseModel):
     # 상충 검출용 existing과 같은 값을 그대로 재사용한다(백엔드에서).
     existing: list[ExistingRequirement] = Field(default_factory=list)
 
+    reqKey: str = "TARGET"
+    issueContent: dict = Field(default_factory=dict)
+    codeContext: dict = Field(default_factory=dict)
+
 
 class ArtifactGenerateResponse(BaseModel):
     content: dict
@@ -161,6 +167,10 @@ class ArtifactBatchRequest(BaseModel):
     issueQuote: str | None = None
     requirementContent: str
     requestedTypes: list[str] = Field(default_factory=lambda: ["VOC", "FUNCTIONAL", "NONFUNCTIONAL", "DETAIL_DESIGN"])
+    reqKey: str = "TARGET"
+    existing: list[ExistingRequirement] = Field(default_factory=list)
+    issueContent: dict = Field(default_factory=dict)
+    codeContext: dict = Field(default_factory=dict)
 
 class ArtifactOutput(BaseModel):
     type: str
@@ -298,22 +308,35 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
 
     title = req.issueTitle or ""
     quote = req.issueQuote or ""
-    content = artifacts.generate_v2(req.type, title, quote, req.requirementContent)
+    content = (grounding.missing_design("실제 클래스 근거를 등록한 뒤 AI 재검토를 실행해 주세요.") if req.type == "detail-design" else artifacts.generate_v2(req.type, title, quote, req.requirementContent))
+    errors = []
     engine = "rule"
 
     if PROVIDER.enabled and req.type in _ARTIFACT_PROMPTS:
         try:
             llm_content = _ask_llm_artifact(
-                req.type, title, quote, req.requirementContent, req.reason, req.existing)
-            if artifacts.is_valid_v2_shape(req.type, llm_content):
-                content = llm_content
-                engine = PROVIDER.name
+                req.type, title, quote, req.requirementContent, req.reason, req.existing, req.reqKey, req.issueContent, req.codeContext)
+            if not artifacts.is_valid_v2_shape(req.type, llm_content):
+                raise ValueError("산출물 필수 필드가 누락되었습니다.")
+            sources = {e.reqKey:e.content for e in req.existing}
+            sources[req.reqKey] = req.requirementContent
+            errors = grounding.validate_evidence(llm_content, sources)
+            errors += grounding.numeric_concerns(llm_content, "\n".join(sources.values()))
+            if req.type == "detail-design":
+                llm_content = grounding.render_design(llm_content, req.codeContext)
+            content = llm_content
+            engine = PROVIDER.name
         except Exception as e:
-            log.warning("사내 LLM 산출물 생성 실패, 규칙 결과만 사용: %s", e)
+            errors.append(str(e))
+            log.warning("산출물 생성/검증 실패: %s", e)
 
     elapsed = int((time.monotonic() - started) * 1000)
     log.info("artifacts.generate type=%s engine=%s %dms", req.type, engine, elapsed)
 
+    if engine == "rule": errors.append("AI 생성이 완료되지 않았습니다. 재검토가 필요합니다.")
+    content.setdefault("legacyExtras", {})["quality"] = {"status":"NEEDS_REVIEW" if errors else "GROUNDED", "concerns":errors}
+    content["legacyExtras"]["sourceVersion"] = req.codeContext.get("version")
+    content["legacyExtras"]["sourceSnapshotId"] = req.codeContext.get("snapshotId")
     return ArtifactGenerateResponse(content=content, engine=engine, elapsedMs=elapsed)
 
 @app.post("/v2/artifacts/batch", response_model=ArtifactBatchResponse)
@@ -324,9 +347,12 @@ def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
         if requested not in allowed:
             outputs.append(ArtifactOutput(type=requested, status="FAILED", content=None, errors=["UNSUPPORTED_TYPE"]))
             continue
-        outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED",
-            content=artifacts.generate_v2(
-                allowed[requested], req.issueTitle, req.issueQuote, req.requirementContent)))
+        generated = generate_artifact(ArtifactGenerateRequest(type=allowed[requested],
+            issueTitle=req.issueTitle, issueQuote=req.issueQuote, requirementContent=req.requirementContent,
+            reqKey=req.reqKey, existing=req.existing, issueContent=req.issueContent, codeContext=req.codeContext))
+        quality = generated.content.get("legacyExtras", {}).get("quality", {})
+        outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED" if quality.get("status")=="GROUNDED" else "FAILED",
+            content=generated.content, errors=quality.get("concerns", [])))
     issue = {"title": req.issueTitle, "symptom": None, "improvementReq": req.issueQuote,
              "changeScope": None, "constraintsNote": None, "beforeState": None, "afterState": None}
     return ArtifactBatchResponse(issue=issue, outputs=outputs, engine=PROVIDER.name)
@@ -526,9 +552,13 @@ _DETAIL_DESIGN_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 
 {_ARTIFACT_DOMAIN_CONTEXT}
 
 Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 Mermaid 완성 코드로 설계하라.
-기술 클래스명만 나열하지 말고 사용자가 이해할 수 있는 업무 개념과 업무 언어를 쓴다. 예를 들어
-AMR 매칭 요구사항이라면 실제 근거에 있는 AMR 후보, 상태, SoC, 맵 경로, 선택 결과와 그 처리 순서를
-표현한다. 업무요청/처리결과, Host/TargetService 같은 범용 자리표시자를 쓰지 않는다.
+반드시 codeContext에 있는 실제 클래스명과 메서드만 사용한다. 업무 개념으로 대체하지 않는다.
+코드가 없으면 생성할 수 없음을 명시한다. 제공된 클래스·메서드 id만 참조하는 diagramModel을 추가한다:
+{{"classIds":["클래스 id"],"changedClassIds":["변경 대상 클래스 id"],"relations":[{{"from":"클래스 id","to":"클래스 id","reason":"변경 제안 근거"}}],
+"before":[{{"from":"호출 클래스 id","to":"대상 클래스 id","methodId":"대상 메서드 id","evidence":"호출 클래스 메서드의 실제 구절","reason":"근거 설명"}}],
+"after":[{{"from":"클래스 id","to":"클래스 id","methodId":"메서드 id","reason":"변경 조건·이유"}}]}}
+before는 정적 소스에서 확인된 내용만 포함한다. 동적 호출이나 실행순서를 확정하지 않는다.
+after는 변경 제안이다. 새 클래스가 필요하면 description에 신규 제안으로 쓰되 등록된 클래스처럼 그리지 않는다.
 변경 전 흐름의 근거가 없으면 흐름을 추측하지 말고 sequenceDiagram 안에
 "변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"이라는 Note만 넣고 asIsApplicability를
 "UNKNOWN"으로 둔다. Mermaid 코드의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다.
@@ -549,14 +579,21 @@ _ARTIFACT_PROMPTS = {
 
 
 def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: str,
-                      reason: str | None, existing: list[ExistingRequirement] | None = None) -> dict:
+                      reason: str | None, existing: list[ExistingRequirement] | None = None,
+                      req_key: str = "TARGET", issue_content: dict | None = None, code_context: dict | None = None) -> dict:
     """사내 LLM API로 산출물 1종의 초안을 요청한다."""
     user = f"개발 이슈 제목: {title}\n이 이슈가 커버하는 요구사항 구절: {quote}\n근거 요구사항 전문:\n{requirement_content}"
     user += _all_requirements(existing)
     if reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 
-    raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_], user)
+    user += "\n대상 요구사항 ID: " + req_key
+    user += "\n개발 이슈 본문과 실제 코드 근거:\n" + grounding.checked_context({"issueContent":issue_content or {}, "codeContext":code_context or {}})
+    grounding.checked_context(user)
+    if type_ == "detail-design" and not (code_context or {}).get("symbols"):
+        raise ValueError("대상 SW의 클래스 소스를 먼저 등록해 주세요.")
+    evidence_rule = '\n모든 산출물에 evidence 배열을 추가하라: [{"field":"scenarios.0.scenario 또는 해당 JSON 필드 경로","reqKey":"실제 요구사항 ID","quote":"그 요구사항 원문 그대로"}]. 실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다. 누락된 예외·경계 조건은 확인 필요로 표시한다.'
+    raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_] + evidence_rule, user)
     return _parse_json(raw)
 
 
@@ -610,3 +647,32 @@ def _merge(base: list[rules.Finding], extra: list[rules.Finding]) -> list[rules.
         seen.add(key)
         merged.append(f)
     return merged
+
+
+insights.provider = PROVIDER
+insights.parse_json = _parse_json
+app.include_router(insights.router)
+
+class ArtifactValidationRequest(ArtifactGenerateRequest):
+    content: dict
+
+@app.post('/artifacts/validate')
+def validate_artifact(req: ArtifactValidationRequest):
+    content = json.loads(json.dumps(req.content))
+    sources = {e.reqKey:e.content for e in req.existing}
+    sources[req.reqKey] = req.requirementContent
+    errors = []
+    if not artifacts.is_valid_v2_shape(req.type, content): errors.append('산출물 필수 필드가 누락되었습니다.')
+    errors += grounding.validate_evidence(content, sources)
+    errors += grounding.numeric_concerns(content, '\n'.join(sources.values()))
+    if req.type == 'detail-design':
+        try:
+            original = [content.get(key) for key in ('classDiagram','sequenceDiagramAsIs','sequenceDiagramToBe')]
+            validated = grounding.render_design(json.loads(json.dumps(content)), req.codeContext)
+            if original != [validated.get(key) for key in ('classDiagram','sequenceDiagramAsIs','sequenceDiagramToBe')]:
+                errors.append('다이어그램이 검증된 코드 모델과 다릅니다. AI 재검토를 실행해 주세요.')
+            if (content.get('legacyExtras',{}).get('sourceVersion') != req.codeContext.get('version') or content.get('legacyExtras',{}).get('sourceSnapshotId') != req.codeContext.get('snapshotId')):
+                errors.append('코드 근거 버전이 바뀌었습니다. AI 재검토가 필요합니다.')
+        except ValueError as e: errors.append(str(e))
+    content.setdefault('legacyExtras',{})['quality']={'status':'NEEDS_REVIEW' if errors else 'GROUNDED','concerns':errors}
+    return {'valid':not errors,'content':content,'concerns':errors}

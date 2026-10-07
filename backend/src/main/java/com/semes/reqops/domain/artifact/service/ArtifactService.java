@@ -56,6 +56,7 @@ public class ArtifactService {
     private final RequirementRepository requirementRepository;
     private final MembershipRepository membershipRepository;
     private final AiClient aiClient;
+    private final com.semes.reqops.domain.insight.InsightService insights;
     private final ObjectMapper objectMapper;
     private final ArtifactRevisionRepository revisionRepository;
     private final ArtifactContentValidator validator;
@@ -71,7 +72,18 @@ public class ArtifactService {
 
         DevIssueArtifact artifact = artifactRepository.findByDevIssueIdAndArtifactType(issue.getId(), type)
                 .orElseThrow(() -> new ApiErrors.Conflict("산출물 초안이 아직 준비되지 않았습니다."));
-        return toResponse(type, artifact);
+        ArtifactResponse response=toResponse(type, artifact);
+        if(type==ArtifactType.DETAIL_DESIGN) {
+            Map<String,Object> doc=new java.util.LinkedHashMap<>(response.content());
+            Map<String,Object> extras=objectMapper.convertValue(doc.getOrDefault("legacyExtras",Map.of()),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
+            Object latest=insights.code(projectId).get("snapshotId");
+            if(!java.util.Objects.equals(String.valueOf(extras.get("sourceSnapshotId")),String.valueOf(latest))) {
+                extras.put("quality",Map.of("status","NEEDS_REVIEW","concerns",List.of("코드 근거가 변경되었습니다. AI 재검토가 필요합니다.")));
+                doc.put("legacyExtras",extras);
+                response=new ArtifactResponse(response.type(),response.state(),doc,response.engine(),response.updatedAt());
+            }
+        }
+        return response;
     }
 
     @Transactional
@@ -89,7 +101,7 @@ public class ArtifactService {
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId))
                 .getContent();
         AiArtifactDto.Response ai = aiClient.generateArtifact(
-                type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId));
+                type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId),requirementRepository.findById(requirementId).orElseThrow().getReqKey(),issue.aiContent(),insights.code(projectId));
         artifact.regenerate(writeJson(ai.content()), ai.engine());
         artifactRepository.save(artifact);
         saveRevision(artifact, blankToNull(req.reason()), req.userId());
@@ -107,7 +119,10 @@ public class ArtifactService {
         DevIssueArtifact artifact = artifactRepository.findByDevIssueIdAndArtifactType(issue.getId(), type)
                 .orElseGet(() -> createDraft(issue, type, null, req.userId()));
         validator.validateConfirmed(type, req.content());
-        artifact.confirm(writeJson(req.content()), req.userId());
+        Requirement source=requirementRepository.findById(requirementId).orElseThrow();
+        Map<String,Object> validation=aiClient.insight("/artifacts/validate",map("type",type.slug(),"content",req.content(),"reqKey",source.getReqKey(),"requirementContent",source.getContent(),"existing",existingOf(projectId,requirementId),"codeContext",insights.code(projectId)));
+        if(!Boolean.TRUE.equals(validation.get("valid")))throw new ApiErrors.Conflict("산출물 근거 검토가 필요합니다: "+validation.get("concerns"));
+        artifact.confirm(writeJson(objectMapper.convertValue(validation.get("content"),new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){})), req.userId());
         artifactRepository.save(artifact);
         saveRevision(artifact, "사용자 확정", req.userId());
         linkRequirementEvidence(projectId, requirementId, issue, artifact);
@@ -143,7 +158,7 @@ public class ArtifactService {
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(issue.getRequirementId()));
         AiArtifactDto.Response ai = aiClient.generateArtifact(
                 type.slug(), issue.getTitle(), issue.getQuote(), r.getContent(), reason,
-                existingOf(r.getProjectId(), r.getId()));
+                existingOf(r.getProjectId(), r.getId()),r.getReqKey(),issue.aiContent(),insights.code(r.getProjectId()));
         return artifactRepository.save(
                 new DevIssueArtifact(issue.getId(), type, writeJson(ai.content()), ai.engine(), userId));
     }

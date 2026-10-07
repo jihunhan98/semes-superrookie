@@ -82,12 +82,14 @@ public class DevIssue {
         if (this.issueState == null) this.issueState = "DRAFT";
     }
 
+    public void reorder(int order){this.displayOrder=order;}
     public void retire() { this.issueState = "RETIRED"; }
     public void assignBundle(Long bundleId) { this.bundleId = bundleId; }
 
     public void updateBody(String title, String quote, String symptom, String improvementReq,
                            String changeScope, String constraintsNote, String beforeState, String afterState,
                            LocalDate dueOn) {
+        this.issueState = "DRAFT";
         this.title = title;
         this.quote = quote;
         this.symptom = symptom;
@@ -102,6 +104,8 @@ public class DevIssue {
     public void confirm() { this.issueState = "CONFIRMED"; }
     public void resolve() { this.resolvedAt = LocalDateTime.now(); }
 
+    public String getDisplayId(){return String.format("DEV-%06d",id);}
+    public java.util.Map<String,Object> aiContent(){var m=new java.util.LinkedHashMap<String,Object>();m.put("displayId",getDisplayId());m.put("symptom",symptom);m.put("improvementReq",improvementReq);m.put("changeScope",changeScope);m.put("constraintsNote",constraintsNote);m.put("beforeState",beforeState);m.put("afterState",afterState);return m;}
     public Long getId() { return id; }
     public Long getRequirementId() { return requirementId; }
     public String getIssueKey() { return issueKey; }
