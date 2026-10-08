@@ -173,3 +173,12 @@ mvn -o -Dmaven.repo.local=/opt/repo/m2-offline clean package
 
 명세: `docs/기능명세서.md` · `docs/API명세서.md` · `docs/테이블명세서.md`
 화면: `docs/화면정의서.html`(기능 1) · `docs/screens/f2.html`(기능 2)
+
+## 서버 설정은 한 번만 설정하고 유지
+
+- 사내 모델 서버: `ai-model/.env`의 `LLM_API_BASE`(`/v1` 포함), `LLM_API_MODEL`, `LLM_API_KEY`. 최초에만 `.env.example`을 `.env`로 복사하고 실제 값을 입력합니다. 이미 있는 `.env`는 덮어쓰지 않습니다.
+- ReqOps AI 프로그램/DB: `backend/.env`의 `AI_BASE_URL`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`. 같은 PC에서 실행하면 `AI_BASE_URL=http://localhost:8001`입니다. `run-all.bat --with-backend`로 시작하면 이 파일을 읽습니다. IDE에서 백엔드를 별도로 실행하면 동일 값을 IDE 실행 환경변수에 설정합니다.
+- `.env`, `.env.*` 및 `application-local.*`는 Git 추적에서 제외합니다. `.env.example`에는 실제 주소·계정·키를 넣지 않습니다. 공통 실행 코드와 기본 설정 템플릿은 계속 버전 관리합니다.
+- 로컬 `.env`보다 이미 지정된 프로세스 환경변수가 우선합니다. 설정을 바꾼 뒤에는 해당 서버를 재시작합니다.
+- ZIP 업데이트 시에도 기존 `.env`와 가상환경 폴더를 유지하세요. 새 폴더로 교체한다면 기존 `.env`를 직접 옮겨야 합니다. Git ignore는 ZIP 교체 시 설정을 복원하는 기능이 아닙니다.
+- 프론트의 `NEXT_PUBLIC_BACKEND`는 빌드 시 반영되는 값입니다. 이미 제공된 standalone 빌드의 주소를 `.env`만으로 바꿀 수는 없습니다.

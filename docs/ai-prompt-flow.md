@@ -16,4 +16,4 @@ flowchart TD
 
 고객 합의 기록은 실제 고객 합의 내용을 저장합니다. AI 검토 결과를 고객의 합의로 위조하지 않습니다. 확정 버튼의 서버 검증도 데이터 무결성을 위해 실행됩니다.
 
-사내 OpenAI 호환 API: `http://23.43.51.216:6100/v1` (`AI_PROVIDER=internal`, 모델은 `/models`의 첫 번째 모델을 자동 선택). API 인증 키는 환경 변수 `LLM_API_KEY`로 설정하며 저장소에 넣지 않습니다.
+사내 OpenAI 호환 API: `ai-model/.env`의 `LLM_API_BASE` (`AI_PROVIDER=internal`, 모델은 `/models`의 첫 번째 모델을 자동 선택). API 인증 키는 환경 변수 `LLM_API_KEY`로 설정하며 저장소에 넣지 않습니다.

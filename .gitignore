@@ -85,3 +85,11 @@ backend/target/
 !frontend/dist/
 !frontend/dist/**
 frontend/dist/**/.DS_Store
+
+# Local server settings: keep after standalone allow-list as well.
+**/.env
+**/.env.*
+!**/.env.example
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
