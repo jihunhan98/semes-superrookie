@@ -104,8 +104,7 @@ def generate_v2(type_: str, title: str, quote: str | None,
         ]
         return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
     if type_ == "detail-design":
-        from grounding import missing_design
-        return missing_design("실제 클래스 소스 근거가 필요합니다. 소스를 등록한 뒤 AI 재검토해 주세요.")
+        return dict(description=quote, classDiagram=None, sequenceDiagramAsIs=None, sequenceDiagramToBe=None, asIsApplicability="UNKNOWN", asIsReason="변경 전 처리 흐름은 요구사항에서 확인되지 않았습니다.", legacyExtras=extras)
 
     return {}
 

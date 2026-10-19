@@ -34,7 +34,7 @@ export default function SignupPage() {
 
   return (
     <main className="auth-stage">
-      <section className="auth-story"><div className="auth-brand"><span className="auth-mark">RE</span><span>ReqOps Agent</span></div><p className="auth-eyebrow">ONE CONNECTED WORKSPACE</p><h1>함께 검토하고,<br/>명확하게 연결하세요.</h1><p className="auth-lead">요구사항과 개발 이슈, 산출물을 하나의 업무 공간에서 이어갑니다.</p><div className="auth-trust"><span>AI 검토</span><span>변경 영향 알림</span><span>근거 추적</span></div></section>
+      <section className="auth-story"><div className="auth-brand"><span className="auth-mark">RE</span><span>ReqOps Agent</span></div><p className="auth-eyebrow">ONE CONNECTED WORKSPACE</p><h1>함께 검토하고,<br/>명확하게 연결하세요.</h1><p className="auth-lead">요구사항과 개발 이슈, 산출물을 하나의 업무 공간에서 이어갑니다.</p><div className="auth-trust"><span>AI 검토</span><span>산출물 검토</span><span>검토 이력</span></div></section>
       <section className="auth-panel"><div className="auth-panel-heading"><p>새로운 업무 공간의 시작</p><h2>계정 만들기</h2><span>프로젝트에서 사용할 정보를 입력해 주세요.</span></div>
 
         <form className="lcard auth-card" onSubmit={onSubmit}>

@@ -70,12 +70,13 @@ def test_batch_reports_partial_failure_without_dropping_successes(monkeypatch):
     assert body["outputs"][0]["content"] is not None
     assert body["outputs"][1]["errors"] == ["UNSUPPORTED_TYPE"]
 
-def test_detail_design_fallback_requires_actual_source():
+def test_detail_design_fallback_keeps_unverified_previous_flow_unknown():
     content = artifacts.generate_v2("detail-design", "주문 승인 알림", "승인되면 배차 담당자에게 알린다")
     assert content["classDiagram"] is None
     assert content["sequenceDiagramToBe"] is None
     assert content["asIsApplicability"] == "UNKNOWN"
-    assert "소스" in content["asIsReason"]
+    assert "요구사항" in content["asIsReason"]
+    assert "소스" not in content["asIsReason"]
 
 
 def test_amr_fallback_does_not_present_business_concepts_as_real_classes():

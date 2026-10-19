@@ -10,7 +10,7 @@ import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import AutoGrowTextarea from "../../../../../components/AutoGrowTextarea";
 import ReviewDialog from "../../../../../components/ReviewDialog";
 import ArtifactReviewForm, { ARTIFACT_LABELS, ARTIFACT_TYPES } from "../../../../../components/ArtifactReviewForm";
-import { devId } from "../../../../../lib/insights";
+import { devId } from "../../../../../lib/identifiers";
 import { confirmBundle, retryJob } from "../../../../../lib/api/v2";
 import { getProject, getRequirement, updateDevIssue, type ArtifactDetail, type ArtifactTypeSlug, type ProjectDetail, type RequirementDetail, type User } from "../../../../../lib/api";
 import { useBundle } from "../../../../../lib/hooks/useBundle";

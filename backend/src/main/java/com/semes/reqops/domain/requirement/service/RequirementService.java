@@ -69,7 +69,6 @@ public class RequirementService {
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final AiClient aiClient;
-    private final com.semes.reqops.domain.insight.InsightService insights;
     private final BundleService bundleService;
     private final AiJobService aiJobService;
     private final ReviewItemRepository reviewItemRepository;
@@ -97,7 +96,6 @@ public class RequirementService {
 
         aiDraftRepository.save(new RequirementAiDraft(requirement.getId(), req.content(), "unavailable"));
         aiJobService.enqueueAnalysis(projectId, requirement.getId(), req.userId(), req.content());
-        insights.enqueue(projectId,requirement.getId(),req.userId(),"",req.content(),true);
 
         return detail(projectId, requirement.getId(), req.userId());
     }
@@ -207,7 +205,6 @@ public class RequirementService {
         // 목록에서 "지금 손대는 중"으로 보이게 한다. 버전은 재확정 전까지 그대로.
         r.startRevision();
         requirementRepository.save(r);
-        insights.enqueue(projectId,requirementId,req.userId(),r.getContent(),req.content(),true);
 
         return detail(projectId, requirementId, req.userId());
     }
@@ -298,7 +295,6 @@ public class RequirementService {
         RequirementVersion savedVersion = versionRepository.save(new RequirementVersion(
                 requirementId, version, title, req.content(), consensus.getId(), req.userId()));
         bundleService.start(requirementId, savedVersion.getId(), req.userId());
-        insights.enqueue(projectId,requirementId,req.userId(),beforeContent,req.content(),false);
 
         return detail(projectId, requirementId, req.userId());
     }

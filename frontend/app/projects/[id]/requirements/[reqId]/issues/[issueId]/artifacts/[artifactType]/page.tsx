@@ -9,7 +9,7 @@ import ArtifactReviewForm, { ARTIFACT_LABELS } from "../../../../../../../../com
 import { getCurrentUser } from "../../../../../../../../lib/session";
 import { getCurrentBundle } from "../../../../../../../../lib/api/v2";
 import type { ArtifactTypeSlug } from "../../../../../../../../lib/api";
-import { devId } from "../../../../../../../../lib/insights";
+import { devId } from "../../../../../../../../lib/identifiers";
 
 export default function ArtifactEditor() {
   const params = useParams<{ id: string; reqId: string; issueId: string; artifactType: ArtifactTypeSlug }>();
