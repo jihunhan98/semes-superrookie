@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="742" viewBox="0 0 1100 742" role="img" aria-label="STEP 5 · REQ03 수정 후 확인할 내용">
+  <title>STEP 5 · REQ03 수정 후 확인할 내용</title>
+  <desc>기존 9개 확인 · 본문 스냅샷 v2 · 50% 이상 → 30% 이상</desc>
+  <rect x="0" y="0" width="1100" height="742" fill="#f7f8fa" rx="0" />
+  <rect x="0" y="0" width="1100" height="62" fill="#fff" rx="0" />
+  <line x1="0" y1="62" x2="1100" y2="62" stroke="#dfe1e6" />
+  <text x="26" y="39" fill="#0c66e4" font-size="23" font-weight="600" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">ReqOps</text>
+  <text x="156" y="39" fill="#172b4d" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">요구사항</text>
+  <text x="260" y="39" fill="#626f86" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">산출물</text>
+  <text x="792" y="38" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">UI 시안 · 서비스 연결 전</text>
+  <text x="30" y="102" fill="#172b4d" font-size="25" font-weight="600" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">STEP 5 · REQ03 수정 후 확인할 내용</text>
+  <text x="30" y="132" fill="#626f86" font-size="15" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">기존 9개 확인 · 본문 스냅샷 v2 · 50% 이상 → 30% 이상</text>
+  <rect x="30" y="162" width="1040" height="546" fill="#fff" rx="6" stroke="#dfe1e6" stroke-width="1" />
+  <rect x="31" y="163" width="239" height="544" fill="#fafbfc" rx="5" />
+  <line x1="270" y1="163" x2="270" y2="708" stroke="#dfe1e6" />
+  <text x="48" y="195" fill="#626f86" font-size="15" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">확인 항목</text>
+  <rect x="31" y="216" width="239" height="137" fill="#e9f2ff" rx="0" />
+  <rect x="31" y="216" width="3" height="137" fill="#0c66e4" rx="0" />
+  <text x="48" y="247" fill="#0c66e4" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">REQ07</text>
+  <text x="48" y="278" fill="#172b4d" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">30% 이상~50% 미만 AMR의</text>
+  <text x="48" y="302" fill="#172b4d" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">후보 포함 여부가 다릅니다</text>
+  <text x="48" y="334" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">기준 불일치</text>
+  <text x="48" y="389" fill="#0c66e4" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">REQ09</text>
+  <text x="48" y="420" fill="#172b4d" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">낮은 배터리의 범위 확인</text>
+  <text x="48" y="481" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">의미 확인</text>
+  <rect x="292" y="183" width="98" height="26" fill="#fff7e5" rx="3" />
+  <text x="301" y="201" fill="#974f0c" font-size="13" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">기준 불일치</text>
+  <text x="292" y="242" fill="#172b4d" font-size="20" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">30% 이상~50% 미만 AMR의 후보 포함 여부가 다릅니다</text>
+  <rect x="292" y="279" width="366" height="158" fill="#fff" rx="4" stroke="#dfe1e6" stroke-width="1" />
+  <rect x="293" y="280" width="364" height="39" fill="#f7f8fa" rx="0" />
+  <text x="304" y="305" fill="#0c66e4" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">REQ03</text>
+  <text x="383" y="305" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">수정한 문장</text>
+  <text x="305" y="349" fill="#172b4d" font-size="18" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">IDLE 상태이며 SOC가 30% 이상인</text>
+  <text x="305" y="378.7" fill="#172b4d" font-size="18" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">AMR을 배정 후보에 포함한다.</text>
+  <rect x="682" y="279" width="366" height="158" fill="#fff" rx="4" stroke="#dfe1e6" stroke-width="1" />
+  <rect x="683" y="280" width="364" height="39" fill="#f7f8fa" rx="0" />
+  <text x="694" y="305" fill="#0c66e4" font-size="16" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">REQ07</text>
+  <text x="773" y="305" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">기존 문장</text>
+  <text x="695" y="349" fill="#172b4d" font-size="18" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">SOC가 50% 미만인 AMR은 배정 후보에서</text>
+  <text x="695" y="378.7" fill="#172b4d" font-size="18" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">제외한다.</text>
+  <text x="292" y="475" fill="#172b4d" font-size="17" font-weight="600" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">왜 확인해야 하나요?</text>
+  <text x="292" y="507" fill="#172b4d" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">두 문장 모두 배정 후보를 정하는 조건입니다. REQ03의 기준은 30%로 바뀌었지만 REQ07의</text>
+  <text x="292" y="535.05" fill="#172b4d" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">50% 제외 기준은 남아 있습니다.</text>
+  <rect x="292" y="569" width="756" height="61" fill="#e9f2ff" rx="4" />
+  <text x="307" y="605" fill="#172b4d" font-size="17" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">예: IDLE · SOC 40% → REQ03 포함 / REQ07 제외</text>
+  <line x1="270" y1="652" x2="1070" y2="652" stroke="#dfe1e6" />
+  <text x="292" y="683" fill="#626f86" font-size="14" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">저장 당시 원문을 비교한 결과입니다.</text>
+  <rect x="824" y="666" width="80" height="39" fill="#fff" rx="4" stroke="#dfe1e6" stroke-width="1" />
+  <text x="836" y="691" fill="#172b4d" font-size="15" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">닫기</text>
+  <rect x="920" y="666" width="128" height="39" fill="#0c66e4" rx="4" stroke="#0c66e4" stroke-width="1" />
+  <text x="932" y="691" fill="#fff" font-size="15" font-weight="400" font-family="Arial, Malgun Gothic, Apple SD Gothic Neo, sans-serif">알림 확인</text>
+</svg>

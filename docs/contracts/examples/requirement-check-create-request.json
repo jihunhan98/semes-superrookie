@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "checkId": "CHECK-000022",
+  "projectId": 1,
+  "eventType": "CREATED",
+  "source": {
+    "reqKey": "REQ11",
+    "contentRevision": 1,
+    "beforeContent": null,
+    "afterContent": "충전 중인 AMR도 긴급 작업의 배정 후보에 포함한다."
+  },
+  "targets": [
+    {
+      "reqKey": "REQ01",
+      "contentRevision": 1,
+      "content": "배정 요청 시 AMR 상태와 SOC를 조회한다."
+    },
+    {
+      "reqKey": "REQ02",
+      "contentRevision": 1,
+      "content": "IDLE 상태의 AMR만 일반 작업의 배정 후보로 조회한다."
+    },
+    {
+      "reqKey": "REQ03",
+      "contentRevision": 2,
+      "content": "IDLE 상태이며 SOC가 30% 이상인 AMR을 배정 후보에 포함한다."
+    },
+    {
+      "reqKey": "REQ04",
+      "contentRevision": 1,
+      "content": "충전 중인 AMR은 모든 작업의 배정 후보에서 제외한다."
+    },
+    {
+      "reqKey": "REQ05",
+      "contentRevision": 1,
+      "content": "후보 중 목적지까지의 경로가 가장 짧은 AMR을 선택한다."
+    },
+    {
+      "reqKey": "REQ06",
+      "contentRevision": 1,
+      "content": "경로 길이가 같으면 SOC가 높은 AMR을 선택한다."
+    },
+    {
+      "reqKey": "REQ07",
+      "contentRevision": 1,
+      "content": "SOC가 50% 미만인 AMR은 배정 후보에서 제외한다."
+    },
+    {
+      "reqKey": "REQ08",
+      "contentRevision": 1,
+      "content": "SOC가 30% 이하인 AMR은 충전을 시작한다."
+    },
+    {
+      "reqKey": "REQ09",
+      "contentRevision": 1,
+      "content": "배터리가 낮은 AMR은 배정 후보에서 제외한다."
+    },
+    {
+      "reqKey": "REQ10",
+      "contentRevision": 1,
+      "content": "요청된 작업에는 동일한 후보 선정 기준을 적용한다."
+    }
+  ],
+  "requestedAt": "2026-10-19T17:00:00+09:00",
+  "inputHash": "6b49f6fbc826310fb702647ef7461ce5399b877294afe75c956e0e54c57e1aab"
+}

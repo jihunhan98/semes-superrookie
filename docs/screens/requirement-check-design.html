@@ -14,7 +14,7 @@
       const root=document.getElementById('requirement-check-preview');const el=id=>root.querySelector('#'+id);
       const examples={
         update:{source:'REQ03',action:'수정',version:'v2',scope:'기존 요구사항 9개 확인',change:'SOC 50% 이상 → SOC 30% 이상',sourceText:'IDLE 상태이며 SOC가 30% 이상인 AMR을 배정 후보에 포함한다.',findings:[
-          {id:'REQ07',kind:'기준 불일치',title:'30~49% AMR의 후보 포함 여부가 다릅니다',source:'IDLE 상태이며 SOC가 <mark>30% 이상</mark>인 AMR을 배정 후보에 포함한다.',target:'SOC가 <mark>50% 미만</mark>인 AMR은 배정 후보에서 제외한다.',reason:'두 요구사항 모두 배정 후보를 정하는 조건입니다. REQ03은 기준을 30%로 낮췄지만, REQ07에는 50% 제외 기준이 남아 있습니다.',case:'예: IDLE · SOC 40% → REQ03에서는 포함, REQ07에서는 제외',targetText:'작업 배정 시 SOC가 50% 미만인 AMR은 배정 후보에서 제외한다.'},
+          {id:'REQ07',kind:'기준 불일치',title:'30% 이상~50% 미만 AMR의 후보 포함 여부가 다릅니다',source:'IDLE 상태이며 SOC가 <mark>30% 이상</mark>인 AMR을 배정 후보에 포함한다.',target:'SOC가 <mark>50% 미만</mark>인 AMR은 배정 후보에서 제외한다.',reason:'두 요구사항 모두 배정 후보를 정하는 조건입니다. REQ03은 기준을 30%로 낮췄지만, REQ07에는 50% 제외 기준이 남아 있습니다.',case:'예: IDLE · SOC 40% → REQ03에서는 포함, REQ07에서는 제외',targetText:'작업 배정 시 SOC가 50% 미만인 AMR은 배정 후보에서 제외한다.'},
           {id:'REQ09',kind:'의미 확인',title:'낮은 배터리의 범위를 확인해야 합니다',source:'IDLE 상태이며 SOC가 <mark>30% 이상</mark>인 AMR을 배정 후보에 포함한다.',target:'<mark>배터리가 낮은 AMR</mark>은 배정 후보에서 제외한다.',reason:'REQ09의 ‘낮은 배터리’에 수치 기준이 없습니다. REQ03의 30%와 같은 기준인지, 별도의 제외 조건인지 확인이 필요합니다.',case:'충돌로 확정할 수 없습니다. ‘낮은’의 범위가 정해져야 함께 적용할 수 있습니다.',targetText:'배터리가 낮은 AMR은 배정 후보에서 제외한다.'}
         ]},
         create:{source:'REQ11',action:'추가',version:'v1',scope:'기존 요구사항 10개 확인',change:'신규 등록',sourceText:'충전 중인 AMR도 긴급 작업의 배정 후보에 포함한다.',findings:[

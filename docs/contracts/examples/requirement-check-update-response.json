@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "checkId": "CHECK-000021",
+  "inputHash": "9c93a8ab9c3c350fa069726bb0ac24d4de2d0dbeb6d126c1fa032e40710ef142",
+  "status": "COMPLETED",
+  "targetCount": 9,
+  "checkedCount": 9,
+  "results": [
+    {
+      "reqKey": "REQ01",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ02",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ04",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ05",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ06",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ07",
+      "status": "CHECKED",
+      "findingIds": [
+        "F-001"
+      ]
+    },
+    {
+      "reqKey": "REQ08",
+      "status": "CHECKED",
+      "findingIds": []
+    },
+    {
+      "reqKey": "REQ09",
+      "status": "CHECKED",
+      "findingIds": [
+        "F-002"
+      ]
+    },
+    {
+      "reqKey": "REQ10",
+      "status": "CHECKED",
+      "findingIds": []
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "targetReqKey": "REQ07",
+      "kind": "CRITERIA_MISMATCH",
+      "title": "30% 이상~50% 미만 AMR의 후보 포함 여부가 다릅니다",
+      "sourceQuote": "IDLE 상태이며 SOC가 30% 이상인 AMR을 배정 후보에 포함한다.",
+      "targetQuote": "SOC가 50% 미만인 AMR은 배정 후보에서 제외한다.",
+      "reason": "두 문장 모두 배정 후보를 정하는 조건입니다. 수정한 REQ03은 30% 이상을 포함하지만 REQ07은 50% 미만을 제외합니다.",
+      "example": "IDLE 상태이며 SOC가 40%인 AMR: REQ03 포함 / REQ07 제외",
+      "sourceReqKey": "REQ03"
+    },
+    {
+      "id": "F-002",
+      "targetReqKey": "REQ09",
+      "kind": "MEANING_UNCLEAR",
+      "title": "낮은 배터리의 범위를 확인해야 합니다",
+      "sourceQuote": "IDLE 상태이며 SOC가 30% 이상인 AMR을 배정 후보에 포함한다.",
+      "targetQuote": "배터리가 낮은 AMR은 배정 후보에서 제외한다.",
+      "reason": "REQ09의 낮은 배터리에 수치 기준이 없어 REQ03의 30%와 같은 조건인지 확정할 수 없습니다.",
+      "example": "낮은 배터리의 범위를 확인하기 전에는 충돌로 확정하지 않습니다.",
+      "sourceReqKey": "REQ03"
+    }
+  ]
+}
