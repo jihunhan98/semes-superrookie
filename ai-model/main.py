@@ -116,6 +116,11 @@ class GlossaryTerm(BaseModel):
     status: str = "PENDING"
 
 
+class ProjectContext(BaseModel):
+    name: str
+    description: str | None = None
+
+
 class AnalyzeRequest(BaseModel):
     content: str = Field(..., description="검토할 요구사항 본문")
     # 변경 전 본문도 현재 본문 전체와 함께 문맥으로 검토한다.
@@ -124,6 +129,7 @@ class AnalyzeRequest(BaseModel):
     # 상충 검출용 — 같은 프로젝트의 기존 요구사항
     existing: list[ExistingRequirement] = Field(default_factory=list)
     glossary: list[GlossaryTerm] = Field(default_factory=list)
+    projectContext: ProjectContext | None = None
 
 
 class FindingOut(BaseModel):
@@ -264,7 +270,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     existing = [e.model_dump() for e in req.existing]
     term_context = _user_msg(req.content, req.reason, req.existing)
     if req.baseContent: term_context += "\n변경 전 본문 전체:\n" + req.baseContent
-    terms, term_status = intake.extract_terms(req.content, glossary, PROVIDER, _parse_json, term_context)
+    terms, term_status = intake.extract_terms(req.content, glossary, PROVIDER, _parse_json, term_context,
+                                             req.projectContext.model_dump() if req.projectContext else None)
     effective_glossary = glossary + [dict(id=None, name=t['name'], definition=t['definition'], status='PENDING') for t in terms]
     confirmed_definitions = "\n".join(t['definition'] for t in glossary if t['status']=='CONFIRMED')
     findings = review.detect(req.content, existing, confirmed_definitions)
@@ -306,6 +313,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 findings.extend(validated)
                 reviewed += len(batch)
                 successes += 1
+            except ProviderError as error:
+                log.warning('AI review failed stage=%s code=%s upstreamStatus=%s; keeping rule results',error.stage,error.code,error.upstream_status)
             except Exception:
                 log.warning("요구사항 검토 배치 실패; 규칙 검토 결과를 유지합니다.")
         engine = PROVIDER.name if successes else "rule"
@@ -670,8 +679,23 @@ def clarify_answer(req: ClarificationAnswerRequest):
         if replacement==req.targetSpan: raise ValueError('답변을 반영해 문장을 구체화하지 못했습니다. 답변을 확인해주세요.')
         return {'replacement':replacement}
     except ProviderError as error:
-        log.warning('AI answer failed path=/clarify-answer code=PROVIDER_%s',error.code)
-        raise HTTPException(status_code=503,detail={'code':'PROVIDER_'+error.code,'message':'AI 문장 작성 서버에 연결하지 못했습니다. 입력은 유지됩니다. 잠시 후 다시 시도해주세요.'})
+        upstream=error.upstream_status
+        if upstream is None and error.code.startswith('HTTP_'):
+            try: upstream=int(error.code[5:])
+            except ValueError: pass
+        phase='모델 목록 조회' if error.stage=='model_discovery' else '문장 작성 요청'
+        if error.code=='TIMEOUT':
+            status,message=504,f'사내 AI의 {phase} 응답이 제한 시간을 초과했습니다.'
+        elif upstream is not None:
+            status=502 if 400<=upstream<500 and upstream!=429 else 503
+            message=f'사내 AI가 {phase}에 HTTP {upstream}을 반환했습니다.'
+            if error.parameter: message+=f' 확인할 요청 항목: {error.parameter}.'
+        elif error.code in {'INVALID_RESPONSE','MODEL_DISCOVERY_FAILED'}:
+            status,message=502,f'사내 AI의 {phase} 결과 형식이 올바르지 않습니다.'
+        else:
+            status,message=503,f'사내 AI에 연결하지 못했습니다. 처리 단계: {phase}.'
+        log.warning('AI answer failed path=/clarify-answer stage=%s code=PROVIDER_%s upstreamStatus=%s parameter=%s',error.stage,error.code,upstream,error.parameter)
+        raise HTTPException(status_code=status,detail={'code':'PROVIDER_'+error.code,'stage':error.stage,'upstreamStatus':upstream,'retryable':error.retryable,'message':message+' 입력한 답변은 유지됩니다.'})
     except intake.AnswerGenerationError as error:
         log.warning('AI answer failed path=/clarify-answer code=ANSWER_GENERATION')
         raise HTTPException(status_code=502,detail={'code':'ANSWER_GENERATION','message':str(error)})

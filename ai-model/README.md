@@ -149,6 +149,8 @@ ai-model/
 
 ## 등록 질문·프로젝트 용어사전
 
-`/analyze` 요청의 `glossary`는 `{id,name,definition,status}` 목록이다. 응답은 `terms`(name/definition/quote), `termStatus`와 각 finding의 `questionText`, `options`를 추가한다. `/clarify-answer`는 content/targetSpan/question/answer/proposals/glossary를 받아 `{replacement}`를 반환한다. 본문 전체 저장과 정확한 위치 교체는 백엔드가 담당한다. 선택 구절 불일치는 409, 요청 형식·규칙 답변 반영 불가는 422, 잘못된 AI 문장 출력은 502, 모델 연결 실패는 503으로 구분한다. 응답 detail에는 원인 코드와 안내를 제공한다.
+`/analyze` 요청의 `glossary`는 `{id,name,definition,status}` 목록이다. 응답은 `terms`(name/definition/quote), `termStatus`와 각 finding의 `questionText`, `options`를 추가한다. `/clarify-answer`는 content/targetSpan/question/answer/proposals/glossary를 받아 `{replacement}`를 반환한다. 본문 전체 저장과 정확한 위치 교체는 백엔드가 담당한다. 선택 구절 불일치는 409, 요청 형식·규칙 답변 반영 불가는 422, 잘못된 AI 문장 출력은 502, 모델 연결 실패는 503, 시간 초과는 504로 구분한다. 사내 모델의 4xx 요청 거절은 502와 실제 upstreamStatus로 구분한다. 응답 detail에는 원인 코드와 안내를 제공한다.
 
 `intake.py`가 중요 용어 추출·질문 구성·답변 반영을 담당한다. CONFIRMED만 확정 정책으로 참고하고 PENDING은 추정으로 전달한다. DISMISSED는 뜻을 제공하지 않고 재등록 방지 이름만 전달한다. [사용 흐름·제약·DB 적용](../docs/registration-questions-and-glossary.md).
+
+용어 추출에는 `/analyze.projectContext`의 프로젝트 이름·설명을 사용한다. 핵심 도메인 개념만 선정하며 일반 IT 약어·UI 단어·개별 상태값은 제외한다. 모델은 중요도 HIGH·kind·domainReason을 함께 반환해야 하며 새 후보는 최대 5개다. [선별 기준과 AI 오류 진단](../docs/registration-questions-and-glossary.md).

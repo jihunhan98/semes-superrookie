@@ -93,7 +93,7 @@ def test_provider_timeout_is_not_reported_as_invalid_input(monkeypatch):
         def generate(self,*args):raise ProviderError('TIMEOUT',True,'internal timeout')
     monkeypatch.setattr(main,'PROVIDER',Provider())
     response=client.post('/clarify-answer',json={'content':'필요 시 작업을 시작한다.','targetSpan':'필요 시 작업을 시작한다.','question':'어떤 조건인가요?','answer':'통신 장애가 발생했을 때'})
-    assert response.status_code==503
+    assert response.status_code==504
     assert response.json()['detail']['code']=='PROVIDER_TIMEOUT'
 
 
@@ -121,3 +121,50 @@ def test_rule_only_unsupported_answer_has_actionable_reason():
     assert response.status_code==422
     assert response.json()['detail']['code']=='ANSWER_NOT_APPLIED'
     assert '본문을 직접 수정' in response.json()['detail']['message']
+
+
+def test_domain_fallback_excludes_general_words_status_values_and_implementation_names():
+    content='VCS에서 AMR의 SOC와 Task Step을 관리한다. API HTTP JSON UI ID SYSTEM READY ASSIGNED MOVE_TO_LOAD TaskRequest UserController를 표시한다.'
+    terms,status=intake.extract_terms(content,[],main.PROVIDER,main._parse_json,content,{'name':'VCS','description':'Vehicle Control System'})
+    assert {t['name'] for t in terms}=={'VCS','AMR','SOC','Task Step'}
+    assert status=='RULE_ONLY'
+
+
+def test_domain_scope_does_not_import_vehicle_terms_into_unrelated_project():
+    text='API에서 AMR 이벤트 예제를 전송한다.'
+    terms,_=intake.extract_terms(text,[],main.PROVIDER,main._parse_json,text,{'name':'급여 관리','description':'직원 급여 정산'})
+    assert not terms
+
+
+def test_domain_model_must_justify_importance_and_receives_project_context():
+    calls=[]
+    text='웨이퍼 맵을 분석하고 화면에 READY 상태와 JSON을 표시한다.'
+    def candidate(name,**extra):
+        return dict(name=name,definition='설명',quote=text,importance='HIGH',kind='BUSINESS_CONCEPT',domainReason='프로젝트의 웨이퍼 검사 결과를 해석하는 핵심 업무 개념이다.',**extra)
+    class Provider:
+        enabled=True
+        def generate(self,system,user):
+            calls.append((system,user))
+            return json.dumps({'terms':[candidate('화면'),candidate('READY'),candidate('JSON'),candidate('웨이퍼 맵'),{**candidate('분석'),'importance':'LOW'}]})
+    terms,status=intake.extract_terms(text,[],Provider(),main._parse_json,text,{'name':'웨이퍼 검사','description':'웨이퍼 결함 검사 시스템'})
+    assert status=='COMPLETE'
+    assert [t['name'] for t in terms]==['웨이퍼 맵']
+    assert '웨이퍼 결함 검사 시스템' in calls[0][1]
+    assert 'terms=[]' in calls[0][0]
+
+
+def test_domain_synonyms_do_not_create_multiple_glossary_rows():
+    text='Vehicle Control System의 AMR을 제어한다.'
+    terms,_=intake.extract_terms(text,[{'name':'VCS','definition':'차량 제어','status':'CONFIRMED'}],main.PROVIDER,main._parse_json,text,{'name':'VCS'})
+    assert [t['name'] for t in terms]==['AMR']
+    assert intake.term_key('VCS (Vehicle Control System)')==intake.term_key('VCS')
+
+
+def test_domain_candidates_are_capped_and_not_forced_to_fill_quota():
+    text=' '.join('핵심개념'+chr(65+i) for i in range(9))
+    class Provider:
+        enabled=True
+        def generate(self,*args):
+            return json.dumps({'terms':[dict(name='핵심개념'+chr(65+i),definition='프로젝트 고유 의미',quote=text,importance='HIGH',kind='DOMAIN_ENTITY',domainReason='프로젝트의 핵심 업무 개체로 사용되는 용어이다.') for i in range(9)]})
+    terms,_=intake.extract_terms(text,[],Provider(),main._parse_json,text)
+    assert len(terms)==5

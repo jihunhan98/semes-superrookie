@@ -1,10 +1,12 @@
 """Registration intake: project terminology and answerable clarification questions."""
 import json
+import logging
+import unicodedata
 import re
 import rules
 import review
 
-TERM = re.compile(r'(?<![A-Za-z0-9_])(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|(?:[A-Z][a-z]+){2,}|[A-Z][A-Z0-9_]{1,})(?![A-Za-z0-9_])')
+TERM = re.compile(r'(?<![A-Za-z0-9_])(?:SoC|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|(?:[A-Z][a-z]+){2,}|[A-Z][A-Z0-9_]{1,})(?![A-Za-z0-9_])')
 
 
 class AnswerGenerationError(ValueError):
@@ -17,33 +19,83 @@ def glossary_text(rows):
     return '\n프로젝트 용어사전(사용자 확정 정의가 우선, PENDING은 AI 추정으로 사실처럼 단정 금지):\n' + json.dumps(active, ensure_ascii=False) + '\n사용하지 않기로 결정한 용어 이름(재등록하거나 뜻을 추정하지 않음):' + json.dumps(ignored,ensure_ascii=False)
 
 
-def extract_terms(content, glossary, provider, parse_json, context):
-    known = {r['name'].casefold() for r in glossary}
-    fallback = []
+# These are generic UI/implementation words, not project-domain concepts.
+GENERIC_TERMS = set("시스템 사용자 운영자 화면 상태 조건 기준 등록 수정 삭제 조회 저장 버튼 목록 내용 요구사항 담당자 예외처리 system user operator screen status state condition requirement data api http https json xml html css ui ux db database id url tcp udp sql dto request response true false and or null none ms".split())
+STATE_VALUES = {'ASSIGNED','IDLE','RUNNING','COMPLETED','FAILED','READY','PENDING','SUCCESS','ERROR','ACTIVE','INACTIVE','WAITING'}
+TERM_KINDS = {'DOMAIN_SYSTEM','DOMAIN_ENTITY','BUSINESS_CONCEPT','WORKFLOW_CONCEPT','DOMAIN_METRIC'}
+MAX_NEW_TERMS = 5
+ALIASES = {
+    'vehiclecontrolsystem':'vcs', 'autonomousmobilerobot':'amr',
+    'automatedguidedvehicle':'agv', 'stateofcharge':'soc',
+}
+VCS_CORE = {'vcs','amr','agv','soc','taskstep','trafficzone','작업스텝','가용amr'}
+
+
+def term_key(name):
+    name=unicodedata.normalize('NFKC',name).strip()
+    pair=re.fullmatch(r'([^()]+)\(([^()]+)\)',name)
+    if pair and term_key(pair[1])==term_key(pair[2]): return term_key(pair[1])
+    key=re.sub(r'[\W_]+','',name,flags=re.UNICODE).casefold()
+    return ALIASES.get(key,key)
+
+
+def eligible_term(name):
+    key=term_key(name)
+    if not key or key in GENERIC_TERMS: return False
+    # State lists belong inside the parent concept's definition, not separate rows.
+    if name.upper() in STATE_VALUES or re.fullmatch(r'[A-Z0-9]+(?:_[A-Z0-9]+)+',name): return False
+    if re.fullmatch(r'(?:REQ|TASK|ISSUE|STEP)[-_]?\d+',name,re.I): return False
+    if re.search(r'(?:DTO|Request|Response|Controller|Repository|Service)$',name) and key not in VCS_CORE: return False
+    return True
+
+
+def extract_terms(content, glossary, provider, parse_json, context, project_context=None):
+    project_context=project_context or {}
+    known={term_key(r['name']) for r in glossary}
+    scope=' '.join(str(project_context.get(k) or '') for k in ('name','description')).strip()
+    scope_key=term_key(scope)
+    # No broad "all acronyms/title-case words" fallback. Uncertain terms are omitted.
+    vcs_scope=any(x in (scope or content).casefold() for x in ('vcs','vehicle control system','차량 제어','amr','agv'))
+    fallback=[]
     for m in TERM.finditer(content):
-        name=m.group().strip()
-        if name.casefold() in known or name in {'AND','OR','REQ','TRUE','FALSE','MS'} or re.match(r'REQ[-_]',content[m.start():]): continue
-        known.add(name.casefold())
+        name=m.group().strip();key=term_key(name)
+        if key in known or not eligible_term(name): continue
+        if not ((vcs_scope and key in VCS_CORE) or (scope_key and key in scope_key)): continue
+        known.add(key)
         line_start=content.rfind('\n',0,m.start())+1
         line_end=content.find('\n',m.end())
         quote=content[max(line_start,m.start()-400):min(line_end if line_end>=0 else len(content),m.end()+400)]
-        fallback.append(dict(name=name,definition=f'「{quote}」에서 사용하는 용어로 보입니다. 정확한 의미와 범위는 사용자 확인이 필요합니다.',quote=quote))
+        fallback.append(dict(name=name,definition=f'「{quote}」에서 사용하는 프로젝트 도메인 용어로 보입니다. 정확한 의미와 범위는 사용자 확인이 필요합니다.',quote=quote))
+        if len(fallback)>=MAX_NEW_TERMS: break
     if not provider.enabled: return fallback, 'RULE_ONLY'
     try:
-        raw=provider.generate('''요구사항 등록 시 프로젝트 용어사전을 정리한다. 도메인 이해에 중요한 용어·상태·약어를 추출하고 문맥에서 의미를 추정한다.
-기존 용어 이름은 중복 등록하지 않는다. 추정은 사용자가 확인하기 전까지 미확정이다. 없는 단계 목록·수치·업무 정책을 만들지 않는다.
-용어 이름은 현재 본문에 실제로 나타난 표기를 사용하고 quote는 현재 본문의 정확한 인용이다.
-JSON만 반환: {"terms":[{"name":"Task Step","definition":"문맥에 근거한 추정 의미. 불확실한 부분도 설명","quote":"실제 사용 문장"}]}''',context+glossary_text(glossary))
+        raw=provider.generate('''요구사항 등록 시 현재 프로젝트의 핵심 도메인 용어만 선별한다. 단어 수집이나 일반 개발 용어 사전이 아니다.
+프로젝트 이름·설명, 기존 요구사항, 사용자 확정 용어로 업무 도메인을 먼저 판단한다. VCS는 예시일 뿐이며 다른 프로젝트에 VCS 용어를 억지로 추가하지 않는다.
+이 용어의 프로젝트 고유 의미를 모르면 요구사항을 잘못 해석할 가능성이 큰 경우만 HIGH로 선정한다. 중요한 용어가 없으면 terms=[]를 반환한다. 보통 0~3개, 최대 5개. 개수를 채우려고 추출하지 않는다.
+예: VCS 차량 제어 프로젝트의 VCS(Vehicle Control System), AMR, SOC, Task Step 같은 핵심 업무 개념은 후보가 될 수 있다.
+제외: 시스템/사용자/화면/상태/조건 같은 일반 단어, API/HTTP/JSON/ID 같은 일반 IT 약어, 문서 제목, 수치/단위/요구사항 ID, 구현 클래스/변수/필드 이름.
+ASSIGNED, MOVE_TO_LOAD 같은 개별 상태는 독립 등록하지 말고 Task Step 같은 상위 개념의 내용에 목록으로 설명한다. 일반 동작이나 문장 전체를 용어로 만들지 않는다.
+동의어·약어와 풀네임은 한 개념으로 본다. 기존 용어가 있으면 새 행으로 등록하지 않는다. 기존 정의는 덮어쓰지 않는다.
+정의는 문맥 근거로 추정하고 불확실성을 명시한다. 없는 정책·수치·단계 목록은 만들지 않는다. name은 현재 본문에 실제 등장하는 표기, quote는 정확한 본문 인용이다.
+JSON만 반환: {"terms":[{"name":"Task Step","definition":"문맥에 근거한 의미와 적용 범위","quote":"실제 사용 문장","importance":"HIGH","kind":"WORKFLOW_CONCEPT","domainReason":"이 프로젝트에서 태스크 전환 규칙을 이해하는 핵심 개념인 이유"}]}
+kind는 DOMAIN_SYSTEM, DOMAIN_ENTITY, BUSINESS_CONCEPT, WORKFLOW_CONCEPT, DOMAIN_METRIC 중 하나다.''',
+            '현재 프로젝트 정보:\n'+json.dumps(project_context,ensure_ascii=False)+'\n'+context+glossary_text(glossary))
         data=parse_json(raw)
         if not isinstance(data.get('terms'),list): raise ValueError('용어 목록 누락')
-        terms=[]; seen={r['name'].casefold() for r in glossary}
+        terms=[];seen={term_key(r['name']) for r in glossary}
         for row in data['terms']:
+            if not isinstance(row,dict): continue
             name=str(row.get('name','')).strip();definition=str(row.get('definition','')).strip();quote=str(row.get('quote',''))
             if not name or len(name)>100 or not definition or len(definition)>10000 or not quote or quote not in content: continue
-            if name.casefold() not in quote.casefold() or name.casefold() in seen: continue
-            seen.add(name.casefold());terms.append(dict(name=name,definition=definition,quote=quote))
+            if row.get('importance')!='HIGH' or row.get('kind') not in TERM_KINDS or len(str(row.get('domainReason','')).strip())<10: continue
+            if not eligible_term(name) or name.casefold() not in quote.casefold() or term_key(name) in seen: continue
+            seen.add(term_key(name));terms.append(dict(name=name,definition=definition,quote=quote))
+            if len(terms)>=MAX_NEW_TERMS: break
         return terms,'COMPLETE'
-    except Exception:
+    except Exception as error:
+        from providers.base import ProviderError
+        if isinstance(error,ProviderError):
+            logging.getLogger('ai-model').warning('AI glossary failed stage=%s code=%s upstreamStatus=%s',error.stage,error.code,error.upstream_status)
         return fallback,'FAILED'
 
 

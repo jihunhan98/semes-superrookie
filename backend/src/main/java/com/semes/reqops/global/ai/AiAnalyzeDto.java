@@ -10,8 +10,10 @@ public final class AiAnalyzeDto {
     }
     public record GlossaryTerm(Long id, String name, String definition, String status) {}
     public record TermCandidate(String name, String definition, String quote) {}
-    public record Request(String content, String baseContent, String reason, List<Existing> existing, List<GlossaryTerm> glossary) {
-        public Request(String content,String baseContent,String reason,List<Existing> existing){this(content,baseContent,reason,existing,List.of());}
+    public record ProjectContext(String name, String description) {}
+    public record Request(String content, String baseContent, String reason, List<Existing> existing, List<GlossaryTerm> glossary, ProjectContext projectContext) {
+        public Request(String content,String baseContent,String reason,List<Existing> existing,List<GlossaryTerm> glossary){this(content,baseContent,reason,existing,glossary,null);}
+        public Request(String content,String baseContent,String reason,List<Existing> existing){this(content,baseContent,reason,existing,List.of(),null);}
     }
     public record Proposal(String label, String operation, String before, String after,
                            Integer start, Integer end, boolean needsInput) {}
