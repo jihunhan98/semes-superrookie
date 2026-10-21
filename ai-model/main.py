@@ -27,7 +27,9 @@ import time
 import urllib.error
 import urllib.request
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import artifacts
@@ -36,6 +38,7 @@ import artifact_review
 import rules
 from config import Settings
 from providers import GeminiProvider, InternalProvider, RuleProvider
+from providers.base import ProviderError
 
 log = logging.getLogger("ai-model")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -86,6 +89,15 @@ PROVIDER = ({
 ANALYZE_DELAY = float(os.getenv("ANALYZE_DELAY", "0"))
 
 app = FastAPI(title="요구사항 검토 AI", version="1.0")
+
+
+@app.exception_handler(RequestValidationError)
+async def invalid_request(request: Request, error: RequestValidationError):
+    # Log field names and error types only, never requirement text or credentials.
+    fields=[{'loc':list(e['loc']),'msg':e['msg'],'type':e['type']} for e in error.errors()]
+    log.warning('AI request rejected path=%s code=REQUEST_VALIDATION fields=%s',request.url.path,
+                [(e['loc'],e['type']) for e in fields])
+    return JSONResponse(status_code=422,content={'code':'REQUEST_VALIDATION','detail':fields})
 
 
 # ── 요청/응답 스키마 ──────────────────────────────────────────────
@@ -657,5 +669,15 @@ def clarify_answer(req: ClarificationAnswerRequest):
             req.proposals,[t.model_dump() for t in req.glossary],PROVIDER,_parse_json)
         if replacement==req.targetSpan: raise ValueError('답변을 반영해 문장을 구체화하지 못했습니다. 답변을 확인해주세요.')
         return {'replacement':replacement}
+    except ProviderError as error:
+        log.warning('AI answer failed path=/clarify-answer code=PROVIDER_%s',error.code)
+        raise HTTPException(status_code=503,detail={'code':'PROVIDER_'+error.code,'message':'AI 문장 작성 서버에 연결하지 못했습니다. 입력은 유지됩니다. 잠시 후 다시 시도해주세요.'})
+    except intake.AnswerGenerationError as error:
+        log.warning('AI answer failed path=/clarify-answer code=ANSWER_GENERATION')
+        raise HTTPException(status_code=502,detail={'code':'ANSWER_GENERATION','message':str(error)})
+    except ValueError as error:
+        log.warning('AI answer not applied path=/clarify-answer code=ANSWER_NOT_APPLIED')
+        raise HTTPException(status_code=422,detail={'code':'ANSWER_NOT_APPLIED','message':str(error)})
     except Exception as error:
-        raise HTTPException(status_code=422,detail=str(error))
+        log.error('AI answer failed path=/clarify-answer code=ANSWER_INTERNAL type=%s',type(error).__name__)
+        raise HTTPException(status_code=500,detail={'code':'ANSWER_INTERNAL','message':'답변 처리 중 오류가 발생했습니다. 입력은 유지됩니다. 다시 시도해주세요.'})

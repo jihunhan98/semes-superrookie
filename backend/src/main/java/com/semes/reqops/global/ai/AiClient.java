@@ -33,8 +33,32 @@ public class AiClient {
             if(result==null)throw new IllegalStateException("AI 결과가 없습니다.");
             return result;
         } catch(org.springframework.web.client.RestClientResponseException e) {
-            throw new com.semes.reqops.global.exception.ApiErrors.Conflict("AI 분석 실패: "+e.getResponseBodyAsString());
+            log.warn("AI 요청 실패 — path={} status={}", path, e.getStatusCode().value());
+            throw new com.semes.reqops.global.exception.ApiErrors.Conflict(aiFailureMessage(e.getResponseBodyAsString(), e.getStatusCode().value()));
         } catch(Exception e) {throw new com.semes.reqops.global.exception.ApiErrors.Conflict("AI 분석에 연결하지 못했습니다. 다시 시도해 주세요.");}
+    }
+
+    private static String aiFailureMessage(String body, int status) {
+        try {
+            var root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+            var detail = root.path("detail");
+            if (detail.isTextual()) return detail.asText();
+            if (detail.isObject() && detail.path("message").isTextual()) {
+                String code = detail.path("code").asText("");
+                return detail.path("message").asText() + (code.isBlank() ? "" : " (" + code + ")");
+            }
+            if (detail.isArray()) {
+                java.util.List<String> fields = new java.util.ArrayList<>();
+                for (var issue : detail) {
+                    java.util.List<String> location = new java.util.ArrayList<>();
+                    for (var part : issue.path("loc")) if (!"body".equals(part.asText())) location.add(part.asText());
+                    if (!location.isEmpty()) fields.add(String.join(".", location));
+                }
+                return "AI 요청 형식이 맞지 않습니다. 확인할 항목: " + (fields.isEmpty() ? "요청 데이터" : String.join(", ", fields))
+                        + ". 백엔드와 AI 서버를 같은 버전으로 업데이트해주세요. (HTTP " + status + ")";
+            }
+        } catch (Exception ignored) { /* Non-JSON gateway responses must not appear in the product UI. */ }
+        return "AI 요청을 처리하지 못했습니다. 입력은 유지됩니다. 다시 시도해주세요. (HTTP " + status + ")";
     }
 
 

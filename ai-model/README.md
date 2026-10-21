@@ -149,6 +149,6 @@ ai-model/
 
 ## 등록 질문·프로젝트 용어사전
 
-`/analyze` 요청의 `glossary`는 `{id,name,definition,status}` 목록이다. 응답은 `terms`(name/definition/quote), `termStatus`와 각 finding의 `questionText`, `options`를 추가한다. `/clarify-answer`는 content/targetSpan/question/answer/proposals/glossary를 받아 `{replacement}`를 반환한다. 본문 전체 저장과 정확한 위치 교체는 백엔드가 담당한다. 선택 구절 불일치는 409, 불완전한 문장 작성은 422다.
+`/analyze` 요청의 `glossary`는 `{id,name,definition,status}` 목록이다. 응답은 `terms`(name/definition/quote), `termStatus`와 각 finding의 `questionText`, `options`를 추가한다. `/clarify-answer`는 content/targetSpan/question/answer/proposals/glossary를 받아 `{replacement}`를 반환한다. 본문 전체 저장과 정확한 위치 교체는 백엔드가 담당한다. 선택 구절 불일치는 409, 요청 형식·규칙 답변 반영 불가는 422, 잘못된 AI 문장 출력은 502, 모델 연결 실패는 503으로 구분한다. 응답 detail에는 원인 코드와 안내를 제공한다.
 
 `intake.py`가 중요 용어 추출·질문 구성·답변 반영을 담당한다. CONFIRMED만 확정 정책으로 참고하고 PENDING은 추정으로 전달한다. DISMISSED는 뜻을 제공하지 않고 재등록 방지 이름만 전달한다. [사용 흐름·제약·DB 적용](../docs/registration-questions-and-glossary.md).

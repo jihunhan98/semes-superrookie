@@ -7,6 +7,10 @@ import review
 TERM = re.compile(r'(?<![A-Za-z0-9_])(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+|(?:[A-Z][a-z]+){2,}|[A-Z][A-Z0-9_]{1,})(?![A-Za-z0-9_])')
 
 
+class AnswerGenerationError(ValueError):
+    """The model returned an unusable answer; this is not invalid user input."""
+
+
 def glossary_text(rows):
     active=[r for r in rows if r.get('status')!='DISMISSED']
     ignored=[r['name'] for r in rows if r.get('status')=='DISMISSED']
@@ -97,11 +101,15 @@ def answer_replacement(content, before, question, answer, proposals, glossary, p
 사용자 답변과 확정된 용어 정의를 우선한다. 질문 대상 이외의 기존 조건·주체·수치를 삭제하거나 변경하지 않는다.
 답변하지 않은 정책을 새로 정하거나 빈 값 표시를 추가하지 않는다. PENDING 용어 정의는 확정 사실이 아니다.
 JSON만 반환: {"replacement":"원문 대신 들어갈 완전한 문장"}''',json.dumps(dict(content=content,targetSpan=before,question=question,answer=answer,glossary=glossary),ensure_ascii=False))
-        result=parse_json(raw).get('replacement')
-        if not isinstance(result,str) or not result.strip() or len(result)>12000: raise ValueError('문장 반영 결과가 올바르지 않습니다.')
+        try:
+            result=parse_json(raw).get('replacement')
+        except Exception as error:
+            raise AnswerGenerationError('AI가 문장 반영 결과를 올바른 형식으로 반환하지 못했습니다. 다시 시도해주세요.') from error
+        if not isinstance(result,str) or not result.strip() or len(result)>12000: raise AnswerGenerationError('AI가 문장 반영 결과를 올바른 형식으로 반환하지 못했습니다. 다시 시도해주세요.')
         numbers=set(re.findall(r'\d+(?:\.\d+)?',before+' '+answer+' '+json.dumps([t for t in glossary if t.get('status')=='CONFIRMED'],ensure_ascii=False)))
-        if any(n not in numbers for n in re.findall(r'\d+(?:\.\d+)?',result)): raise ValueError('답변에 근거 없는 수치가 포함되어 다시 확인이 필요합니다.')
-        if '⟦' in result or '⟧' in result: raise ValueError('답변하지 않은 값이 포함된 결과입니다. 답변을 조금 더 구체적으로 입력해주세요.')
+        if any(n not in numbers for n in re.findall(r'\d+(?:\.\d+)?',result)): raise AnswerGenerationError('AI가 답변에 근거 없는 수치를 추가해 반영하지 않았습니다. 입력은 유지됩니다. 다시 시도해주세요.')
+        if '⟦' in result or '⟧' in result: raise AnswerGenerationError('AI가 답변하지 않은 빈 값을 추가해 반영하지 않았습니다. 입력은 유지됩니다. 다시 시도해주세요.')
+        if result.strip()==before: raise AnswerGenerationError('AI가 답변을 반영한 문장을 만들지 못했습니다. 입력은 유지됩니다. 다시 시도해주세요.')
         return result.strip()
     if '필요 시' in before:
         condition=answer.rstrip('.')

@@ -65,8 +65,9 @@ def test_model_cannot_invent_unanswered_numeric_policy(monkeypatch):
         def generate(self,*args):return '{"replacement":"1초 후 3회 재시도한다."}'
     monkeypatch.setattr(main,'PROVIDER',Provider())
     response=client.post('/clarify-answer',json={'content':'응답이 없으면 재시도한다.','targetSpan':'응답이 없으면 재시도한다.','question':'대기시간?','answer':'1000ms'})
-    assert response.status_code==422
-    assert '근거 없는 수치' in response.json()['detail']
+    assert response.status_code==502
+    assert response.json()['detail']['code']=='ANSWER_GENERATION'
+    assert '근거 없는 수치' in response.json()['detail']['message']
 
 def test_new_task_step_states_are_not_options_until_user_confirms_definition():
     text='필요 시 다음 스텝으로 전환한다.'
@@ -82,3 +83,41 @@ def test_dismissed_terms_are_not_recreated_or_used_as_definitions():
     assert not body['terms']
     assert '사용하지 않을 추정 의미' not in intake.glossary_text(glossary)
     assert 'Task Step' in intake.glossary_text(glossary)
+
+
+def test_provider_timeout_is_not_reported_as_invalid_input(monkeypatch):
+    from providers.base import ProviderError
+    class Provider:
+        enabled=True
+        name='test'
+        def generate(self,*args):raise ProviderError('TIMEOUT',True,'internal timeout')
+    monkeypatch.setattr(main,'PROVIDER',Provider())
+    response=client.post('/clarify-answer',json={'content':'필요 시 작업을 시작한다.','targetSpan':'필요 시 작업을 시작한다.','question':'어떤 조건인가요?','answer':'통신 장애가 발생했을 때'})
+    assert response.status_code==503
+    assert response.json()['detail']['code']=='PROVIDER_TIMEOUT'
+
+
+def test_invalid_model_json_is_not_reported_as_invalid_input(monkeypatch):
+    class Provider:
+        enabled=True
+        name='test'
+        def generate(self,*args):return '완성하지 못한 응답'
+    monkeypatch.setattr(main,'PROVIDER',Provider())
+    response=client.post('/clarify-answer',json={'content':'필요 시 작업을 시작한다.','targetSpan':'필요 시 작업을 시작한다.','question':'어떤 조건인가요?','answer':'통신 장애가 발생했을 때'})
+    assert response.status_code==502
+    assert response.json()['detail']['code']=='ANSWER_GENERATION'
+
+
+def test_schema_error_identifies_missing_field_without_echoing_user_content():
+    response=client.post('/clarify-answer',json={'content':'PRIVATE_REQUIREMENT_TEXT','answer':'답변'})
+    assert response.status_code==422
+    assert response.json()['code']=='REQUEST_VALIDATION'
+    assert any('targetSpan' in e['loc'] for e in response.json()['detail'])
+    assert 'PRIVATE_REQUIREMENT_TEXT' not in response.text
+
+
+def test_rule_only_unsupported_answer_has_actionable_reason():
+    response=client.post('/clarify-answer',json={'content':'거리를 계산한다.','targetSpan':'거리를 계산한다.','question':'거리 기준인가요?','answer':'노드 간 최단경로'})
+    assert response.status_code==422
+    assert response.json()['detail']['code']=='ANSWER_NOT_APPLIED'
+    assert '본문을 직접 수정' in response.json()['detail']['message']
