@@ -14,11 +14,11 @@ def test_no_invented_policy_replacement():
     assert draft == text
     assert "5분" not in draft and "맨해튼" not in draft and "IDLE" not in draft
 
-def test_missing_soc_value_and_unknown_requirement_are_required_findings():
+def test_missing_soc_value_is_detected_but_reference_lookup_is_excluded():
     text = "SoC 최소값 이상인 AMR을 선택하고 req-ta-01과 동일한 순서로 처리한다."
     findings = rules.detect(text, [{"reqKey": "REQ-OTHER", "content": "다른 기준"}])
     assert any(row.finding_type == rules.T_QUANT and row.target_span == "SoC 최소값" for row in findings)
-    assert any(row.finding_type == rules.T_REFERENCE and row.target_span == "req-ta-01" for row in findings)
+    assert not any(row.finding_type == rules.T_REFERENCE for row in findings)
     assert rules.build_draft(text, findings) == text
 
 

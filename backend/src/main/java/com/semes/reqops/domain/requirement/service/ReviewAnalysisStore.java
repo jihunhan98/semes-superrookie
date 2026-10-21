@@ -45,7 +45,7 @@ public class ReviewAnalysisStore {
         Finding extra = null;
         try { if (f.getSuggestionData() != null) extra = mapper.readValue(f.getSuggestionData(), Finding.class); }
         catch (Exception ignored) { /* Old findings are still readable, but never executable edits. */ }
-        return new FindingResponse(f.getId(), f.getFindingType(), f.getTargetSpan(), f.getReason(),
+        return new FindingResponse(f.getId(), ReviewFindingTypes.normalize(f.getFindingType()), f.getTargetSpan(), f.getReason(),
             f.getSuggestion(), f.getConflictReqKey(), f.getSeverity(), f.getResolutionState(),
             extra == null || extra.proposals() == null ? List.of() : extra.proposals(),
             extra == null ? null : extra.interpretations(), extra == null ? null : extra.conflictQuote(),
@@ -63,7 +63,7 @@ public class ReviewAnalysisStore {
             if ("KEPT".equals(old.getResolutionState())) {
                 if (previous != null && Objects.equals(previous.existingHash(), existingHash(existing))
                     && Objects.equals(old.getInputHash(), hash(content))) {
-                    kept.add(old.getFindingType() + ":" + old.getSpanStart() + ":" + old.getConflictReqKey() + ":" + old.getReason());
+                    kept.add(ReviewFindingTypes.normalize(old.getFindingType()) + ":" + old.getSpanStart() + ":" + old.getConflictReqKey() + ":" + old.getReason());
                 }
                 old.supersede();
                 findings.save(old);
@@ -74,6 +74,8 @@ public class ReviewAnalysisStore {
         }
         String analysis = UUID.randomUUID().toString(), inputHash = hash(content);
         for (Finding f : response.findings() == null ? List.<Finding>of() : response.findings()) {
+            String category = ReviewFindingTypes.normalize(f.findingType());
+            if (category == null) continue;
             Integer start = f.spanStart(), end = f.spanEnd();
             if (start == null || end == null || start < 0 || end > content.length() || start >= end
                 || !content.substring(start, end).equals(f.targetSpan())) {
@@ -93,7 +95,7 @@ public class ReviewAnalysisStore {
                 .anyMatch(r -> Objects.equals(r.reqKey(), f.conflictReqKey()) && ("CONFIRMED".equals(r.state()) || r.version() != null)
                     && f.conflictQuote() != null && !f.conflictQuote().isBlank() && r.content().contains(f.conflictQuote()));
             String severity = groundedConflict && "BLOCKING".equals(f.severity()) ? "BLOCKING" : "ADVISORY";
-            Finding checked = new Finding(f.findingType(), f.targetSpan(), f.reason(), f.suggestion(),
+            Finding checked = new Finding(category, f.targetSpan(), f.reason(), f.suggestion(),
                 f.conflictReqKey(), severity, safe, f.interpretations(), f.conflictQuote(), start, end);
             RequirementFinding entity = new RequirementFinding(id, checked.findingType(), checked.targetSpan(),
                 checked.reason(), checked.suggestion(), checked.conflictReqKey(), analysis, start, end, inputHash);

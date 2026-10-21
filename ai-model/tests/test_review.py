@@ -125,3 +125,30 @@ def test_distinct_missing_criteria_in_same_sentence_are_not_lost():
     reasons=' '.join(f['reason'] for f in body['findings'])
     assert '가용' in reasons and '거리를' in reasons
     assert len(body['findings']) >= 3
+
+
+def test_categories_are_five_and_time_is_a_numeric_criterion():
+    assert len(main.rules.ALL_TYPES) == 5
+    body=analyze('응답이 없으면 재시도한다.')
+    assert body['findings'][0]['findingType'] == '수치·판단 기준 불명확'
+    assert client.get('/types').json()['types'] == main.rules.ALL_TYPES
+
+
+def test_unknown_requirement_reference_is_not_detected_in_either_path():
+    text='REQ-12에 따라 처리한다.'
+    assert not analyze(text)['findings']
+    assert not main.rules.detect(text)
+
+
+def test_old_llm_labels_merge_and_removed_reference_is_ignored(monkeypatch):
+    class Provider:
+        enabled=True
+        name='test'
+        def generate(self,*args):
+            return json.dumps({'findings':[
+                {'findingType':'시간·일정 모호','targetSpan':'응답이 없으면 재시도한다.','interpretations':'대기시간 차이로 재시도 시점이 달라진다.'},
+                {'findingType':'참조 요구사항 확인 필요','targetSpan':'REQ-12','reason':'미등록 참조'}]})
+    monkeypatch.setattr(main,'PROVIDER',Provider())
+    body=analyze('REQ-12에 따라 처리한다. 응답이 없으면 재시도한다.')
+    assert body['reviewStatus']=='COMPLETE'
+    assert all(f['findingType']=='수치·판단 기준 불명확' for f in body['findings'])

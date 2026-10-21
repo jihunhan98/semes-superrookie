@@ -263,12 +263,14 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                     raise ValueError("검토 결과 목록 누락")
                 validated = review.model_findings(parsed, req.content, batch)
                 for row in parsed["findings"]:
+                    if isinstance(row, dict) and row.get("findingType") == rules.T_REFERENCE:
+                        continue
                     if not isinstance(row, dict) or not row.get("targetSpan") or row["targetSpan"] not in req.content:
                         invalid = True
                     elif not review.heading(row["targetSpan"]) and (
                         not row.get("interpretations") or len(row["targetSpan"]) > 500
                         or req.content.count(row["targetSpan"]) != 1
-                        or row.get("findingType") not in rules.ALL_TYPES):
+                        or rules.normalize_type(row.get("findingType")) is None):
                         invalid = True
                 findings.extend(validated)
                 reviewed += len(batch)
@@ -408,6 +410,9 @@ def review(req: ReviewRequest) -> ReviewResponse:
 # ── 내부 구현 ────────────────────────────────────────────────────
 
 _SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 달라질 실제 문제만 검토한다.
+등록되지 않은 요구사항 ID를 참조했다는 사실 자체는 검출하지 않는다. 다른 요구사항 내용과의 상충 검토는 유지한다.
+시간·주기·대기시간·횟수 누락과 모호한 판단 기준은 모두 수치·판단 기준 불명확으로 분류한다.
+발생 조건과 AND/OR 묶음 모호성은 모두 동작 조건 불명확으로 분류한다.
 제목, 목차, 단순 나열의 '및', '등', 문체는 검출하지 않는다. 전체 본문, 용어 정의, 참조를 먼저 확인한다.
 정의된 기준을 다시 누락으로 지적하지 않는다. 같은 대상·속성·조건·시점인지 확인해야 상충이다.
 버전이 없는 초안은 공식 확정 기준이 아니다. 버전이 있으면 전달된 본문은 마지막 확정본이며 수정 중 상태여도 기존 확정 기준으로 비교한다. 현재 본문과 기존 요구사항을 모두 읽고 변경 전후와 삭제도 검토한다.
@@ -415,7 +420,7 @@ _SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 
 제안은 설명이 아니라 그대로 넣을 문장이다. 교체/앞뒤 삽입/삭제를 구분하고 대안은 따로 제시한다.
 문제마다 서로 다른 해석과 결과 차이를 interpretations에 구체적으로 쓴다.
 JSON만 반환한다. 문제 없으면 {"findings":[]}.
-{"findings":[{"findingType":"정량 기준 부재|모호한 정도부사|주어·주체 불명확|조건 발생 시점 불명확|예외·경계 조건 누락|접속사 범위 모호|시간·일정 모호|기존 요구사항과 상충|참조 요구사항 확인 필요",
+{"findings":[{"findingType":"수치·판단 기준 불명확|수행 주체 불명확|동작 조건 불명확|예외 처리 누락|기존 요구사항과 상충",
 "targetSpan":"현재 본문의 유일한 완전한 문장 또는 절 원문","reason":"실제 문제와 근거","suggestion":"선택 안내",
 "interpretations":"구체적인 해석과 결과 차이","conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
 "proposals":[{"label":"제안 적용","operation":"REPLACE|INSERT_BEFORE|INSERT_AFTER|DELETE","after":"수정된 본문"}]}]}

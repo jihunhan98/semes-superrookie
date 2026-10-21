@@ -66,12 +66,6 @@ def detect(content: str, existing: list[dict] | None = None):
         refs = rules._REQ_REFERENCE.findall(text)
         reference_text = '\n'.join(known[r.casefold()]['content'] for r in refs if r.casefold() in known)
         other_context = content[:offset] + content[offset + len(text):] + '\n' + reference_text
-        for match in rules._REQ_REFERENCE.finditer(text):
-            if match.group().casefold() not in known:
-                result.append(make(content, text, offset, rules.T_REFERENCE,
-                    f'{match.group()}을 같은 프로젝트의 요구사항에서 찾을 수 없습니다.',
-                    '참조 ID를 확인하거나 실제 적용할 기준을 본문에 작성하세요.',
-                    text.replace(match.group(), '⟦참조 요구사항 ID: 입력 필요⟧', 1)))
         logic = re.search(r'([A-Za-z가-힣0-9_]+)\s*또는\s*([A-Za-z가-힣0-9_]+)\s*및\s*([A-Za-z0-9_]+|[가-힣]+?)(?=이면|일 때|인 경우|\s|[,.])', text)
         if logic and not re.search(r'모두|중 하나|괄호|\(', text):
             a, b, c = logic.groups()
@@ -188,6 +182,11 @@ def model_findings(raw: dict, content: str, existing: list[dict]):
     out = []
     sources = {r['reqKey']: r for r in existing}
     for row in raw.get('findings', []):
+        if not isinstance(row, dict):
+            continue
+        row = dict(row, findingType=rules.normalize_type(row.get('findingType')))
+        if row['findingType'] is None:
+            continue
         span = row.get('targetSpan', '')
         if not span or len(span) > 500 or content.count(span) != 1 or heading(span):
             continue

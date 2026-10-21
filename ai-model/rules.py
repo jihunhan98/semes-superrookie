@@ -13,20 +13,25 @@ import re
 from dataclasses import dataclass, field
 
 # 검출 유형 — 프론트 배지 라벨과 문자열이 그대로 일치해야 한다.
-T_QUANT = "정량 기준 부재"
-T_ADVERB = "모호한 정도부사"
-T_SUBJECT = "주어·주체 불명확"
-T_WHEN = "조건 발생 시점 불명확"
-T_BOUNDARY = "예외·경계 조건 누락"
-T_CONJ = "접속사 범위 모호"
-T_TIME = "시간·일정 모호"
+T_QUANT = "수치·판단 기준 불명확"
+T_SUBJECT = "수행 주체 불명확"
+T_WHEN = "동작 조건 불명확"
+T_BOUNDARY = "예외 처리 누락"
 T_CONFLICT = "기존 요구사항과 상충"
-T_REFERENCE = "참조 요구사항 확인 필요"
+# Internal aliases retain focused detection rules without exposing extra categories.
+T_ADVERB = T_TIME = T_QUANT
+T_CONJ = T_WHEN
+T_REFERENCE = "참조 요구사항 확인 필요"  # excluded legacy category, never emitted
+ALL_TYPES = [T_QUANT, T_SUBJECT, T_WHEN, T_BOUNDARY, T_CONFLICT]
+LEGACY_TYPES = {
+    "정량 기준 부재": T_QUANT, "모호한 정도부사": T_QUANT, "시간·일정 모호": T_QUANT,
+    "주어·주체 불명확": T_SUBJECT, "조건 발생 시점 불명확": T_WHEN,
+    "접속사 범위 모호": T_WHEN, "예외·경계 조건 누락": T_BOUNDARY,
+}
 
-ALL_TYPES = [
-    T_QUANT, T_ADVERB, T_SUBJECT, T_WHEN,
-    T_BOUNDARY, T_CONJ, T_TIME, T_CONFLICT, T_REFERENCE,
-]
+def normalize_type(value):
+    return value if value in ALL_TYPES else LEGACY_TYPES.get(value)
+
 
 
 @dataclass
@@ -176,23 +181,6 @@ def detect(content: str, existing: list[dict] | None = None) -> list[Finding]:
                 "거리와 SoC가 모두 같은 후보가 여러 대일 때 최종 선택 기준이 없음",
                 "동률일 때 적용할 마지막 선택 기준을 명시",
             ))
-
-    known_keys = {str(row.get("reqKey") or "").casefold() for row in (existing or [])}
-    for match in _REQ_REFERENCE.finditer(content):
-        referenced = match.group(0)
-        if referenced.casefold() in known_keys:
-            continue
-        key = (T_REFERENCE, referenced.casefold())
-        if key in seen:
-            continue
-        seen.add(key)
-        findings.append(Finding(
-            T_REFERENCE,
-            referenced,
-            f"같은 프로젝트의 확정 요구사항에서 {referenced}을 찾을 수 없어 참조한 기준을 확인할 수 없음",
-            "참조 요구사항을 프로젝트에 등록하거나, 해당 기준을 이 요구사항 본문에 직접 명시",
-            conflict_req_key=referenced,
-        ))
 
     findings.extend(_detect_conflicts(content, existing or []))
     return findings

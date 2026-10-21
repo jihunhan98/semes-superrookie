@@ -119,7 +119,8 @@ public class RequirementService {
                         r.getVersion(),
                         r.getAssigneeId(),
                         names.get(r.getAssigneeId()),
-                        findingRepository.countByRequirementIdAndResolutionState(r.getId(), "OPEN"),
+                        (int) findingRepository.findByRequirementIdOrderByIdAsc(r.getId()).stream()
+                            .filter(f -> "OPEN".equals(f.getResolutionState()) && ReviewFindingTypes.normalize(f.getFindingType()) != null).count(),
                         r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS)))
                 .toList();
     }
@@ -132,6 +133,7 @@ public class RequirementService {
 
         List<FindingResponse> findings = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
                 .filter(f -> "OPEN".equals(f.getResolutionState()) || "KEPT".equals(f.getResolutionState()))
+                .filter(f -> ReviewFindingTypes.normalize(f.getFindingType()) != null)
                 .map(reviewStore::response)
                 .toList();
 
@@ -275,7 +277,7 @@ public class RequirementService {
         }
 
         List<RequirementFinding> openBlocking = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
-                .filter(f -> "BLOCKING".equals(f.getSeverity()) && List.of("OPEN", "KEPT").contains(f.getResolutionState())).toList();
+                .filter(f -> ReviewFindingTypes.normalize(f.getFindingType()) != null && "BLOCKING".equals(f.getSeverity()) && List.of("OPEN", "KEPT").contains(f.getResolutionState())).toList();
         String decisionReason = blankToNull(req.blockingDecisionReason());
         Map<Long, String> reasons = req.decisions() == null ? Map.of() : req.decisions().stream()
             .filter(d -> "ACCEPT_WITH_REASON".equals(d.action()) && blankToNull(d.reason()) != null)
@@ -324,6 +326,9 @@ public class RequirementService {
         RequirementFinding f = findingRepository.findById(findingId)
             .filter(item -> item.getRequirementId().equals(requirementId))
             .orElseThrow(() -> new ApiErrors.Conflict("검토 항목을 찾지 못했습니다."));
+        if (ReviewFindingTypes.normalize(f.getFindingType()) == null) {
+            throw new ApiErrors.Conflict("더 이상 사용하는 검출 항목이 아닙니다. 다시 검토해주세요.");
+        }
         if (!List.of("KEEP", "APPLY", "UNDO").contains(req.action())) throw new ApiErrors.Conflict("지원하지 않는 검토 결정입니다.");
         if (!"OPEN".equals(f.getResolutionState()) && !"KEPT".equals(f.getResolutionState())) {
             throw new ApiErrors.Conflict("이전 검토의 제안입니다. 현재 검토 항목을 사용해주세요.");
