@@ -1,6 +1,6 @@
 # ReqOps — 요구사항 검토 및 산출물 관리
 
-> Jira 프로젝트 여러 개 등록 및 실제 Jira 이슈 화면 연결: [설정·사용 방법](docs/jira-integration.md). 기존 DB에는 `db/migrations/V006__jira_projects.sql` 적용이 필요합니다.
+> Jira 프로젝트 여러 개 등록 및 실제 Jira 이슈 화면 연결: [설정·사용 방법](docs/jira-integration.md). 기존 DB에서는 `db/init.sql` 전체를 DBeaver의 SQL 스크립트 실행으로 실행하세요. 이번 Jira 테이블 추가 SQL만 들어 있습니다.
 
 요구사항 등록, AI 본문 검토, 개발 이슈·산출물 생성, 산출물 검토·전체 확정을 관리합니다. 작업 브랜치는 **`semes`**입니다.
 

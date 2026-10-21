@@ -32,12 +32,12 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 
 ## 1. DB (Oracle)
 
-`db/init.sql`을 실행한다.
+처음 설치하는 빈 DB에는 `db/baseline-init.sql`을 실행한다. 기존 DB의 이번 Jira 변경분만 적용하려면 `db/init.sql` 전체를 DBeaver의 SQL 스크립트 실행으로 실행한다.
 
 1. DBA(SYSTEM) 계정으로 접속 → 파일 상단 **스키마 생성** 부분 실행 (`REQOPS` 사용자 생성)
 2. `REQOPS` 계정으로 접속 → **테이블 생성** 부분 실행 (`USERS`, `PROJECTS`, `MEMBERSHIPS`, `PROJECT_TOKENS`, `REQUIREMENTS`, `REQUIREMENT_FINDINGS`, `REQUIREMENT_AI_DRAFTS`)
 
-> 접속 주소(호스트·포트·SID)·비밀번호는 환경에 맞게 `db/init.sql`과 `backend/src/main/resources/application.yml`에서 함께 수정.
+> 접속 주소(호스트·포트·SID)·비밀번호는 환경에 맞게 `db/baseline-init.sql`과 `backend/src/main/resources/application.yml`에서 함께 수정.
 
 ## 2. AI 서버 (FastAPI · `ai-model`)
 
