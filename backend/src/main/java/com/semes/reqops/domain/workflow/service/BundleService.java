@@ -3,6 +3,8 @@ package com.semes.reqops.domain.workflow.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.semes.reqops.domain.artifact.entity.ArtifactState;
+import com.semes.reqops.domain.artifact.entity.ArtifactRevision;
+import com.semes.reqops.domain.workflow.entity.BundleState;
 import com.semes.reqops.domain.artifact.entity.DevIssueArtifact;
 import com.semes.reqops.domain.artifact.repository.DevIssueArtifactRepository;
 import com.semes.reqops.domain.artifact.repository.ArtifactRevisionRepository;
@@ -38,7 +40,6 @@ public class BundleService {
     private final CommandReceiptRepository receipts;
     private final ArtifactRevisionRepository artifactRevisions;
     private final AiJobRepository jobs;
-    private final com.semes.reqops.domain.artifact.service.ArtifactReviewService artifactReview;
 
     @Transactional
     public WorkBundle start(Long requirementId, Long versionId, Long actorId){
@@ -64,19 +65,34 @@ public class BundleService {
         if(bundle.getRowVersion()!=req.expectedRevision()) throw new ApiErrors.Conflict("작업 묶음이 변경되었습니다. 새로고침 후 다시 확인해주세요.");
         List<DevIssue> active=issues.findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId,"RETIRED");
         if(active.isEmpty()) throw new ApiErrors.Conflict("확정할 개발 이슈가 없습니다.");
+        if(bundle.getState()==BundleState.GENERATING)
+            throw new ApiErrors.Conflict("산출물 생성이 끝난 후 확정해주세요.");
+        jobs.findFirstByRequirementIdAndKindOrderByIdDesc(requirementId,"GENERATE").ifPresent(job->{
+            if(job.getFailedCount()>0 || job.getSucceededCount()<job.getTotalCount())
+                throw new ApiErrors.Conflict("산출물 생성이 완료되지 않았습니다. 실패한 산출물을 다시 생성해주세요.");
+        });
         List<Map<String,Object>> manifest=new ArrayList<>();
         for(DevIssue issue:active){
-            if(!"CONFIRMED".equals(issue.getIssueState())) throw new ApiErrors.Conflict("모든 개발 이슈의 고정 양식을 먼저 확정해주세요.");
             List<DevIssueArtifact> docs=artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId());
-            if(docs.size()!=4 || docs.stream().anyMatch(a->a.getState()!=ArtifactState.CONFIRMED))
-                throw new ApiErrors.Conflict("모든 활성 이슈의 산출물 4종을 먼저 확정해주세요.");
+            if(docs.size()!=4)
+                throw new ApiErrors.Conflict("산출물 4종이 생성된 후 확정해주세요.");
+            // Confirm the saved drafts together; individual review is optional.
+            issue.confirm();
+            issues.saveAndFlush(issue);
+            for(DevIssueArtifact doc:docs){
+                if(doc.getState()!=ArtifactState.CONFIRMED){
+                    doc.confirm(doc.getContentJson(),req.userId());
+                    artifacts.saveAndFlush(doc);
+                    artifactRevisions.save(new ArtifactRevision(doc.getId(),
+                            artifactRevisions.countByArtifactId(doc.getId())+1,ArtifactState.CONFIRMED,
+                            doc.getContentJson(),sha256(doc.getContentJson()),"전체 확정",req.userId()));
+                }
+            }
             manifest.add(Map.of("issueId",issue.getId(),"issueRevision",issue.getRowVersion(),"artifacts",docs.stream().map(a->{
                 var revision=artifactRevisions.findByArtifactIdOrderByRevisionNoDesc(a.getId()).stream().findFirst();
                 return Map.of("id",a.getId(),"type",a.getArtifactType().name(),"revision",a.getRowVersion(),"artifactRevisionId",revision.map(x->x.getId()).orElse(0L),"contentHash",revision.map(x->x.getContentHash()).orElse(""));
             }).toList()));
         }
-        var coverage=artifactReview.coverage(projectId,requirementId,req.userId());
-        if(!Boolean.TRUE.equals(coverage.get("approved")))throw new ApiErrors.Conflict("AI 누락·일관성 검토를 통과하지 못했습니다: "+coverage.get("concerns"));
         try{String json=objectMapper.writeValueAsString(manifest);bundle.confirm(json,sha256(json),req.userId());WorkBundle saved=bundles.save(bundle);if(saved.getRequirementVersionId()!=null)versions.findById(saved.getRequirementVersionId()).ifPresent(v->knowledge.project(projectId,"REQUIREMENT",requirementId,v.getId(),v.getContent()));for(DevIssue issue:active)for(DevIssueArtifact doc:artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId()))knowledge.project(projectId,"ARTIFACT",doc.getId(),doc.getRowVersion(),doc.getContentJson());BundleResponse result=response(saved);if(commandKey!=null)receipts.save(new CommandReceipt(projectId,commandKey,requestHash,objectMapper.writeValueAsString(result)));return result;}
         catch(JsonProcessingException e){throw new IllegalStateException(e);}
     }

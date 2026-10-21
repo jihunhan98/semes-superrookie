@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import CoveragePanel from "../../../../../components/CoveragePanel";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
@@ -93,8 +92,7 @@ export default function ReviewPage() {
       {data.issues.map(item => <article className="jira-issue-group" key={item.id}><div className="jira-issue-row"><span className="jira-type-icon" aria-hidden="true">✓</span><div className="jira-row-title"><button className="jira-text-link" onClick={() => openDocument(item, "issue")}>{devId(item.id)}</button><button className="jira-row-name" onClick={() => openDocument(item, "issue")}>{item.title}</button></div><Status confirmed={item.state === "CONFIRMED"} /><button className="btn sm" onClick={() => openDocument(item, "issue")}>상세 검토</button></div><div className="jira-artifact-list">{ARTIFACT_TYPES.map(type => { const artifact = item.artifacts.find(doc => doc.type === type); return <button key={type} className="jira-artifact-row" onClick={() => openDocument(item, type)}><span className="jira-document-icon" aria-hidden="true">≡</span><span>{ARTIFACT_LABELS[type]}</span><Status confirmed={artifact?.state === "CONFIRMED"} /><span className="jira-row-open">열기 ↗</span></button>; })}</div></article>)}
     </section>
     {error && <p className="lmsg err" role="alert">{error}</p>}{notice && <p className="lmsg" aria-live="polite">{notice}</p>}
-    {user && <CoveragePanel projectId={projectId} requirementId={requirementId} userId={user.id} revision={JSON.stringify(data.issues.map(item => [item.revision, item.artifacts.map(doc => doc.revision)]))} />}
-    <footer className="bundle-confirm-bar"><div><b>개발 이슈와 산출물 4종 검토</b><span>내용을 확인한 후 현재 내용으로 전체 확정합니다.</span></div><button className="btn prim" disabled={busy || !data.issues.length || data.state === "CONFIRMED" || data.state === "GENERATING"} onClick={finish}>{data.state === "CONFIRMED" ? "전체 확정됨" : data.state === "GENERATING" ? "생성 완료 대기 중" : busy ? "확정 중…" : "전체 확정"}</button></footer>
+    <footer className="bundle-confirm-bar"><div><b>개발 이슈와 산출물 4종 검토</b><span>개별 검토·저장 없이 현재 저장된 내용으로 한 번에 확정합니다.</span></div><button className="btn prim" disabled={busy || !data.issues.length || data.state === "CONFIRMED" || data.state === "GENERATING" || Boolean(data.generation && (data.generation.failed > 0 || data.generation.pending > 0))} onClick={finish}>{data.state === "CONFIRMED" ? "전체 확정됨" : data.state === "GENERATING" ? "생성 완료 대기 중" : busy ? "확정 중…" : "전체 확정"}</button></footer>
     {opened && issue && draft && user && <ReviewDialog title={target === "issue" ? draft.title || issue.title : ARTIFACT_LABELS[target]} breadcrumb={`${project.name} / ${devId(issue.id)} / ${target === "issue" ? "개발 이슈" : ARTIFACT_LABELS[target]}`} onClose={closeDocument}>
       <nav className="jira-document-nav" aria-label="검토할 문서">{(["issue", ...ARTIFACT_TYPES] as Target[]).map(next => <button type="button" key={next} aria-current={target === next ? "page" : undefined} disabled={processing} onClick={() => { if (target !== next) openDocument(issue, next); }}>{next === "issue" ? "개발 이슈" : ARTIFACT_LABELS[next]}</button>)}</nav>
       <div className="jira-dialog-grid" key={`${issue.id}-${target}`}><div className="jira-dialog-main">
