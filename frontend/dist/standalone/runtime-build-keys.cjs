@@ -10,8 +10,8 @@ function prepareBuildKeys(root, generate = true) {
   const referencePath = path.join(next, 'server', 'server-reference-manifest.json');
   const preview = JSON.parse(fs.readFileSync(previewPath, 'utf8'));
   const reference = JSON.parse(fs.readFileSync(referencePath, 'utf8'));
-  for (const name of ['previewModeSigningKey', 'previewModeEncryptionKey']) {
-    preview.preview[name] = generate ? crypto.randomBytes(32).toString('hex') : '';
+  for (const name of ['previewModeId', 'previewModeSigningKey', 'previewModeEncryptionKey']) {
+    preview.preview[name] = generate ? crypto.randomBytes(name === 'previewModeId' ? 16 : 32).toString('hex') : '';
   }
   reference.encryptionKey = generate
     ? (process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY || crypto.randomBytes(32).toString('base64'))
