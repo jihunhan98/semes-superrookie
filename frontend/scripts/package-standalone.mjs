@@ -16,6 +16,11 @@ cpSync(source, staging, { recursive: true });
 cpSync(at('.next/static'), resolve(staging, '.next/static'), { recursive: true });
 if (existsSync(at('public'))) cpSync(at('public'), resolve(staging, 'public'), { recursive: true });
 prepareBuildKeys(staging, false);
+const previewManifest = JSON.parse(readFileSync(resolve(staging, '.next/prerender-manifest.json'), 'utf8'));
+const referenceManifest = JSON.parse(readFileSync(resolve(staging, '.next/server/server-reference-manifest.json'), 'utf8'));
+if (Object.values(previewManifest.preview).some(Boolean) || referenceManifest.encryptionKey) {
+  throw new Error('Distribution manifests must not contain runtime keys.');
+}
 cpSync(at('scripts/runtime-build-keys.cjs'), resolve(staging, 'runtime-build-keys.cjs'));
 const serverPath = resolve(staging, 'server.js');
 writeFileSync(serverPath, "require('./runtime-build-keys.cjs').prepareBuildKeys(__dirname);\n" + readFileSync(serverPath, 'utf8'));
