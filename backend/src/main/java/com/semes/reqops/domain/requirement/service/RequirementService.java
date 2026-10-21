@@ -69,6 +69,7 @@ public class RequirementService {
     private final MembershipRepository membershipRepository;
     private final UserRepository userRepository;
     private final AiClient aiClient;
+    private final ReviewAnalysisStore reviewStore;
     private final BundleService bundleService;
     private final AiJobService aiJobService;
     private final ReviewItemRepository reviewItemRepository;
@@ -130,10 +131,8 @@ public class RequirementService {
         Requirement r = findInProject(projectId, requirementId);
 
         List<FindingResponse> findings = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
-                .filter(f -> "OPEN".equals(f.getResolutionState()))
-                .map(f -> new FindingResponse(
-                        f.getId(), f.getFindingType(), f.getTargetSpan(), f.getReason(),
-                        f.getSuggestion(), f.getConflictReqKey(), f.getSeverity(), f.getResolutionState()))
+                .filter(f -> "OPEN".equals(f.getResolutionState()) || "KEPT".equals(f.getResolutionState()))
+                .map(reviewStore::response)
                 .toList();
 
         // draft 가 없으면(=AI 미가동으로 저장 안 됨) 원문을 그대로 쓴다.
@@ -167,6 +166,7 @@ public class RequirementService {
                 r.getAssigneeId(), assigneeName,
                 draft,
                 engine,
+                reviewStore.context(aiDraft),
                 findings,
                 consensus,
                 canConfirm,
@@ -193,14 +193,13 @@ public class RequirementService {
         requireMember(projectId, req.userId());
         Requirement r = findInProject(projectId, requirementId);
 
+        // Lock before analysis so simultaneous edits cannot publish stale review results.
+        requirementRepository.findLockedById(requirementId).orElseThrow();
         // 과거 확정에서 수용 근거가 연결된 finding은 감사 이력으로 보존한다.
         // 현재 분석의 미해결 항목만 교체해야 review_items FK와 사용자 결정이 유지된다.
-        findingRepository.deleteByRequirementIdAndResolutionState(requirementId, "OPEN");
-        aiDraftRepository.deleteAll(aiDraftRepository.findByRequirementId(requirementId));
-
-        AiAnalyzeDto.Response ai = aiClient.analyzeDiff(
-                req.content(), r.getContent(), req.reason(), existingOf(projectId, requirementId));
-        saveAiResult(requirementId, ai, req.content());
+        List<AiAnalyzeDto.Existing> existing = reviewStore.existing(projectId, requirementId);
+        AiAnalyzeDto.Response ai = aiClient.analyzeDiff(req.content(), r.getContent(), req.reason(), existing);
+        reviewStore.save(requirementId, req.content(), ai, existing, false);
 
         // 목록에서 "지금 손대는 중"으로 보이게 한다. 버전은 재확정 전까지 그대로.
         r.startRevision();
@@ -242,6 +241,21 @@ public class RequirementService {
     public DetailResponse confirm(Long projectId, Long requirementId, ConfirmRequest req) {
         requireMember(projectId, req.userId());
         Requirement r = findInProject(projectId, requirementId);
+        requirementRepository.findLockedById(requirementId).orElseThrow();
+        if (req.content().contains("⟦") || req.content().contains("⟧")) {
+            throw new ApiErrors.Conflict("본문에 입력이 필요한 항목이 남아 있습니다. 표시된 값을 채워주세요.");
+        }
+        RequirementAiDraft latestReview = aiDraftRepository.findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+        AiAnalyzeDto.ReviewContext context = reviewStore.context(latestReview);
+        if (context == null || !ReviewAnalysisStore.hash(req.content()).equals(context.inputHash())) {
+            throw new ApiErrors.Conflict("현재 본문으로 AI 재검토를 먼저 실행해주세요.");
+        }
+        if (!reviewStore.existingHash(reviewStore.existing(projectId, requirementId)).equals(context.existingHash())) {
+            throw new ApiErrors.Conflict("다른 요구사항이 변경되었습니다. 최신 내용으로 다시 검토해주세요.");
+        }
+        if ("FAILED".equals(context.status()) || "PARTIAL".equals(context.status())) {
+            throw new ApiErrors.Conflict("검토가 완료되지 않았습니다. AI 재검토를 다시 실행해주세요.");
+        }
 
         RequirementConsensus consensus = req.consensusId() == null
                 ? consensusRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
@@ -260,11 +274,14 @@ public class RequirementService {
             throw new ApiErrors.Conflict("합의 당시 본문과 확정하려는 본문이 다릅니다. 변경된 본문으로 다시 합의해주세요.");
         }
 
-        List<RequirementFinding> openBlocking = findingRepository
-                .findByRequirementIdAndSeverityAndResolutionStateOrderByIdAsc(
-                        requirementId, "BLOCKING", "OPEN");
+        List<RequirementFinding> openBlocking = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
+                .filter(f -> "BLOCKING".equals(f.getSeverity()) && List.of("OPEN", "KEPT").contains(f.getResolutionState())).toList();
         String decisionReason = blankToNull(req.blockingDecisionReason());
-        if (!openBlocking.isEmpty() && decisionReason == null) {
+        Map<Long, String> reasons = req.decisions() == null ? Map.of() : req.decisions().stream()
+            .filter(d -> "ACCEPT_WITH_REASON".equals(d.action()) && blankToNull(d.reason()) != null)
+            .collect(Collectors.toMap(com.semes.reqops.domain.requirement.dto.RequirementDto.FindingDecision::findingId,
+                com.semes.reqops.domain.requirement.dto.RequirementDto.FindingDecision::reason, (a, b) -> b));
+        if (openBlocking.stream().anyMatch(f -> !reasons.containsKey(f.getId())) && decisionReason == null) {
             throw new ApiErrors.Conflict(
                     "필수 확인 항목이 남아 있습니다. 본문을 수정해 다시 검토하거나 고객 결정 근거를 기록해주세요.");
         }
@@ -279,7 +296,7 @@ public class RequirementService {
             item.accept();
             reviewItemRepository.save(item);
             userDecisionRepository.save(new UserDecision(
-                    item.getId(), "ACCEPT_WITH_REASON", req.content(), decisionReason, req.userId()));
+                    item.getId(), "ACCEPT_WITH_REASON", req.content(), reasons.getOrDefault(finding.getId(), decisionReason), req.userId()));
         }
 
         String version = nextVersionOf(requirementId);
@@ -288,13 +305,72 @@ public class RequirementService {
         // 대비해 방어적으로 기본값을 넣어둔다.
         String title = blankToNull(req.title()) == null ? "최초 확정" : req.title().trim();
 
-        String beforeContent=r.getContent();
         r.confirm(req.content(), version);
         requirementRepository.save(r);
 
         RequirementVersion savedVersion = versionRepository.save(new RequirementVersion(
                 requirementId, version, title, req.content(), consensus.getId(), req.userId()));
         bundleService.start(requirementId, savedVersion.getId(), req.userId());
+
+        return detail(projectId, requirementId, req.userId());
+    }
+
+    @Transactional
+    public DetailResponse decide(Long projectId, Long requirementId, Long findingId,
+            com.semes.reqops.domain.requirement.dto.RequirementDto.DecisionRequest req) {
+        requireMember(projectId, req.userId());
+        findInProject(projectId, requirementId);
+        requirementRepository.findLockedById(requirementId).orElseThrow();
+        RequirementFinding f = findingRepository.findById(findingId)
+            .filter(item -> item.getRequirementId().equals(requirementId))
+            .orElseThrow(() -> new ApiErrors.Conflict("검토 항목을 찾지 못했습니다."));
+        if (!List.of("KEEP", "APPLY", "UNDO").contains(req.action())) throw new ApiErrors.Conflict("지원하지 않는 검토 결정입니다.");
+        if (!"OPEN".equals(f.getResolutionState()) && !"KEPT".equals(f.getResolutionState())) {
+            throw new ApiErrors.Conflict("이전 검토의 제안입니다. 현재 검토 항목을 사용해주세요.");
+        }
+        RequirementAiDraft latest = aiDraftRepository.findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+        AiAnalyzeDto.ReviewContext latestContext = reviewStore.context(latest);
+        if (latestContext == null || !java.util.Objects.equals(latestContext.inputHash(), f.getInputHash())) {
+            throw new ApiErrors.Conflict("검토 기준이 변경되었습니다. 다시 검토해주세요.");
+        }
+        if ("KEEP".equals(req.action())) {
+            if (!ReviewAnalysisStore.hash(req.content()).equals(f.getInputHash())) {
+                throw new ApiErrors.Conflict("본문이 변경되었습니다. 다시 검토한 뒤 원문 유지를 선택해주세요.");
+            }
+            f.keepOriginal();
+            findingRepository.save(f);
+        } else {
+            List<AiAnalyzeDto.Proposal> proposals = reviewStore.response(f).proposals();
+            if (req.proposalIndex() == null || req.proposalIndex() < 0 || req.proposalIndex() >= proposals.size()
+                || req.start() == null || req.end() == null || req.start() < 0 || req.end() < req.start()
+                || req.end() > req.content().length() || req.resultContent() == null) {
+                throw new ApiErrors.Conflict("적용 위치 또는 제안을 확인할 수 없습니다.");
+            }
+            AiAnalyzeDto.Proposal p = proposals.get(req.proposalIndex());
+            String before = p.before(), after = p.after();
+            if ("INSERT_BEFORE".equals(p.operation())) after = p.after() + "\n";
+            if ("INSERT_AFTER".equals(p.operation())) after = "\n" + p.after();
+            int start = req.start(), end = req.end();
+            if ("UNDO".equals(req.action())) {
+                before = "REPLACE".equals(p.operation()) || "DELETE".equals(p.operation()) ? p.before() : "";
+                if ("DELETE".equals(p.operation())) after = "";
+                String swap = before; before = after; after = swap;
+            } else {
+                if (!req.content().substring(start, end).equals(before)) throw new ApiErrors.Conflict("대상 문장이 바뀌었습니다.");
+                if ("INSERT_BEFORE".equals(p.operation())) end = start;
+                if ("INSERT_AFTER".equals(p.operation())) start = end;
+                if ("DELETE".equals(p.operation())) after = "";
+                before = req.content().substring(start, end);
+            }
+            String expected = req.content().substring(0, start) + after + req.content().substring(end);
+            if (!req.content().substring(start, end).equals(before) || !expected.equals(req.resultContent())) {
+                throw new ApiErrors.Conflict("선택한 제안과 변경된 본문이 일치하지 않습니다.");
+            }
+        }
+        ReviewItem item = reviewItemRepository.save(new ReviewItem(requirementId, f.getId(), f.getFindingType(),
+            f.getReason(), reviewStore.json(Map.of("targetSpan", f.getTargetSpan())),
+            sha256(requirementId + ":" + f.getId() + ":" + req.action() + ":" + UUID.randomUUID())));
+        userDecisionRepository.save(new UserDecision(item.getId(), req.action(), reviewStore.json(req), blankToNull(req.reason()), req.userId()));
 
         return detail(projectId, requirementId, req.userId());
     }
@@ -510,34 +586,6 @@ public class RequirementService {
         if (value == null) return "";
         return value.replace("\\", "\\\\").replace("\"", "\\\"")
                 .replace("\n", "\\n").replace("\r", "\\r");
-    }
-
-    /** AI 응답을 findings + draft 로 저장한다. */
-    private void saveAiResult(Long requirementId, AiAnalyzeDto.Response ai, String originalContent) {
-        String analysisId = UUID.randomUUID().toString();
-        String inputHash = sha256(originalContent);
-        if (ai.findings() != null) {
-            ai.findings().forEach(f -> {
-                int start = f.targetSpan() == null ? -1 : originalContent.indexOf(f.targetSpan());
-                findingRepository.save(new RequirementFinding(
-                        requirementId, f.findingType(), f.targetSpan(),
-                        f.reason(), f.suggestion(), f.conflictReqKey(), analysisId,
-                        start < 0 ? null : start,
-                        start < 0 ? null : start + f.targetSpan().length(), inputHash));
-            });
-        }
-        String draft = (ai.draftContent() == null || ai.draftContent().isBlank())
-                ? originalContent : ai.draftContent();
-        String engine = (ai.engine() == null || ai.engine().isBlank()) ? "unavailable" : ai.engine();
-        aiDraftRepository.save(new RequirementAiDraft(requirementId, draft, engine));
-    }
-
-    /** 상충 검출에 쓸 같은 프로젝트의 다른 요구사항들. */
-    private List<AiAnalyzeDto.Existing> existingOf(Long projectId, Long excludeId) {
-        return requirementRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream()
-                .filter(r -> !r.getId().equals(excludeId))
-                .map(r -> new AiAnalyzeDto.Existing(r.getReqKey(), r.getContent()))
-                .toList();
     }
 
     private Requirement findInProject(Long projectId, Long requirementId) {

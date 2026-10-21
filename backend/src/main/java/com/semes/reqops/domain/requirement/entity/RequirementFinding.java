@@ -4,12 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/**
- * AI 검토 결과 한 건.
- *
- * <p>화면에서 <b>읽기 전용 참고 자료</b>로만 쓰인다. 사용자가 "적용"하는 대상이 아니라,
- * 제안이 이미 반영된 문장({@link RequirementAiDraft})을 만들 때 재료로 쓰인다.
- */
+/** A contextual finding with validated, opt-in edit proposals and an analysis snapshot hash. */
 @Entity
 @Table(name = "REQUIREMENT_FINDINGS")
 public class RequirementFinding {
@@ -42,7 +37,7 @@ public class RequirementFinding {
     private String analysisId;
 
     @Column(nullable = false, length = 20)
-    private String severity = "BLOCKING";
+    private String severity = "ADVISORY";
 
     @Column(name = "span_start")
     private Integer spanStart;
@@ -55,6 +50,10 @@ public class RequirementFinding {
 
     @Column(name = "input_hash", length = 64)
     private String inputHash;
+
+    @Lob
+    @Column(name = "suggestion_data")
+    private String suggestionData;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -100,6 +99,13 @@ public class RequirementFinding {
     public Integer getSpanStart() { return spanStart; }
     public Integer getSpanEnd() { return spanEnd; }
     public String getInputHash() { return inputHash; }
+    public String getSuggestionData() { return suggestionData; }
+    public void setReviewData(String severity, String data) {
+        this.severity = "BLOCKING".equals(severity) ? "BLOCKING" : "ADVISORY";
+        this.suggestionData = data;
+    }
+    public void supersede() { this.resolutionState = "SUPERSEDED"; }
+    public void keepOriginal() { this.resolutionState = "KEPT"; }
     public void acceptWithReason() { this.resolutionState = "ACCEPTED_WITH_REASON"; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

@@ -24,17 +24,15 @@ class AiClientContractTest {
                 "AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다.",
                 List.of(new AiAnalyzeDto.Existing("req-ta-01", "태스크는 요청 순으로 할당한다.")));
 
-        assertEquals("full", res.scope());
+        assertEquals("full-context", res.scope());
         assertNotEquals("unavailable", res.engine(), "AI 서버가 떠 있어야 합니다");
-        assertTrue(res.findings().size() >= 3, "정량 2건 + 상충 1건 이상");
+        assertTrue(res.findings().size() >= 3, "가용 기준·거리 기준·후보 없음 정책을 구분");
 
-        // 상충은 문장 치환으로 해결되지 않으므로 conflictReqKey 가 채워진다.
-        assertTrue(res.findings().stream()
-                .anyMatch(f -> "req-ta-01".equals(f.conflictReqKey())));
+        // Different task allocation and AMR selection policies are not automatically contradictions.
+        assertFalse(res.findings().stream().anyMatch(f -> "req-ta-01".equals(f.conflictReqKey())));
+        assertEquals("AMR 매칭 시 가용한 AMR 중 가장 가까운 AMR을 선택한다.", res.draftContent());
+        assertTrue(res.findings().stream().anyMatch(f -> f.proposals() != null && !f.proposals().isEmpty()));
 
-        // draft 는 제안이 반영된 문장 — 원문의 모호 표현이 사라져 있어야 한다.
-        assertFalse(res.draftContent().contains("가용한 AMR"));
-        assertTrue(res.draftContent().contains("IDLE"));
     }
 
     @Test
@@ -48,7 +46,7 @@ class AiClientContractTest {
                 "req-ta-01과 기준 통일 요청",
                 List.of());
 
-        assertEquals("diff", res.scope());
+        assertEquals("full-context", res.scope());
         assertNotNull(res.draftContent());
     }
 

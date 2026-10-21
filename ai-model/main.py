@@ -93,11 +93,13 @@ app = FastAPI(title="요구사항 검토 AI", version="1.0")
 class ExistingRequirement(BaseModel):
     reqKey: str
     content: str
+    state: str | None = None
+    version: str | None = None
 
 
 class AnalyzeRequest(BaseModel):
     content: str = Field(..., description="검토할 요구사항 본문")
-    # 확정본 수정 시에만 채워진다. 있으면 '변경분만' 검토한다.
+    # 변경 전 본문도 현재 본문 전체와 함께 문맥으로 검토한다.
     baseContent: str | None = Field(None, description="수정 전 확정본")
     reason: str | None = Field(None, description="수정 사유")
     # 상충 검출용 — 같은 프로젝트의 기존 요구사항
@@ -110,16 +112,24 @@ class FindingOut(BaseModel):
     reason: str
     suggestion: str
     conflictReqKey: str | None = None
+    severity: str = "ADVISORY"
+    proposals: list[dict] = Field(default_factory=list)
+    interpretations: str = ""
+    conflictQuote: str | None = None
+    spanStart: int | None = None
+    spanEnd: int | None = None
 
 
 class AnalyzeResponse(BaseModel):
     findings: list[FindingOut]
-    # 제안이 모두 반영된 문장 — 확정 화면의 "확정될 본문"에 그대로 채워진다.
+    # 입력 본문 그대로. 수정안은 findings[].proposals로 반환한다.
     draftContent: str
     # llm-api(사내 LLM 응답 받음) | rule(LLM 미응답, 규칙 결과만) — 운영 중 확인용
     engine: str
     scope: str  # full | diff
     elapsedMs: int
+    reviewStatus: str = "RULE_ONLY"
+    reviewedCount: int = 0
 
 
 class SplitRequest(BaseModel):
@@ -225,37 +235,52 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     if ANALYZE_DELAY > 0:
         time.sleep(ANALYZE_DELAY)
 
-    # 확정본 수정이면 바뀐 부분만 본다. 이미 합의된 문장을 다시 건드리지 않기 위함.
-    target, scope = _analysis_target(req)
-
+    import review
     existing = [e.model_dump() for e in req.existing]
-    findings = rules.detect(target, existing)
-
-    # 규칙 검출은 위에서 이미 돌았다. 그래서 LLM 을 못 써도 "검토는 됐다"가 맞다 —
-    # 여기서 unavailable 을 쓰면 화면에 "AI 미응답 N건" 같은 앞뒤 안 맞는 표시가 나온다.
-    # unavailable 은 AI 서버 자체가 응답하지 못한 경우에만 백엔드가 채운다.
-    engine = "rule"
+    findings = review.detect(req.content, existing)
+    invalid = any(len(f.target_span) > 500 for f in findings)
+    findings = [f for f in findings if len(f.target_span) <= 500]
+    engine, status, reviewed = "rule", "RULE_ONLY", 0
+    # Every batch contains the entire current document; no source is silently dropped.
+    batches, batch, size = [], [], len(req.content)
+    for row in existing:
+        if batch and size + len(row["content"]) > 40000:
+            batches.append(batch)
+            batch, size = [], len(req.content)
+        batch.append(row)
+        size += len(row["content"])
+    batches.append(batch)
     if PROVIDER.enabled:
-        try:
-            extra = _ask_llm_api(target, req.reason, req.existing)
-            findings = _merge(findings, extra)
-            engine = PROVIDER.name
-        except Exception as e:  # LLM 실패는 치명적이지 않다 — 규칙 결과로 계속 간다.
-            log.warning("사내 LLM 호출 실패, 규칙 결과만 사용: %s", e)
-
-    # draft 는 항상 '전체 본문' 기준으로 만든다 (화면의 본문 칸을 채우는 값이므로).
-    draft = rules.build_draft(req.content, findings)
-
-    elapsed = int((time.monotonic() - started) * 1000)
-    log.info("analyze scope=%s engine=%s findings=%d %dms", scope, engine, len(findings), elapsed)
-
-    return AnalyzeResponse(
-        findings=[FindingOut(**f.to_dict()) for f in findings],
-        draftContent=draft,
-        engine=engine,
-        scope=scope,
-        elapsedMs=elapsed,
-    )
+        successes = 0
+        for batch in batches:
+            try:
+                user = _user_msg(req.content, req.reason, [ExistingRequirement(**e) for e in batch])
+                if req.baseContent:
+                    user += "\n변경 전 본문 전체:\n" + req.baseContent
+                raw = PROVIDER.generate(_SYSTEM_PROMPT, user)
+                parsed = _parse_json(raw)
+                if not isinstance(parsed.get("findings"), list):
+                    raise ValueError("검토 결과 목록 누락")
+                validated = review.model_findings(parsed, req.content, batch)
+                for row in parsed["findings"]:
+                    if not isinstance(row, dict) or not row.get("targetSpan") or row["targetSpan"] not in req.content:
+                        invalid = True
+                    elif not review.heading(row["targetSpan"]) and (
+                        not row.get("interpretations") or len(row["targetSpan"]) > 500
+                        or req.content.count(row["targetSpan"]) != 1
+                        or row.get("findingType") not in rules.ALL_TYPES):
+                        invalid = True
+                findings.extend(validated)
+                reviewed += len(batch)
+                successes += 1
+            except Exception:
+                log.warning("요구사항 검토 배치 실패; 규칙 검토 결과를 유지합니다.")
+        engine = PROVIDER.name if successes else "rule"
+        status = "COMPLETE" if successes == len(batches) and not invalid else "PARTIAL"
+    if invalid: status = "PARTIAL"
+    return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in review.dedupe(findings)],
+        draftContent=req.content, engine=engine, scope="full-context",
+        elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewedCount=reviewed)
 
 
 @app.post("/split", response_model=SplitResponse)
@@ -382,46 +407,20 @@ def review(req: ReviewRequest) -> ReviewResponse:
 
 # ── 내부 구현 ────────────────────────────────────────────────────
 
-def _analysis_target(req: AnalyzeRequest) -> tuple[str, str]:
-    """검토 대상 텍스트와 범위를 정한다.
-
-    최초 확정: 본문 전체.
-    확정본 수정: 확정본에 없던 부분(=이번에 추가된 문장)만. 사유도 함께 본다.
-    """
-    if not req.baseContent:
-        return req.content, "full"
-
-    added = _added_part(req.baseContent, req.content)
-    if not added.strip():
-        # 추가 없이 문장을 고친 경우 — 전체를 보는 편이 안전하다.
-        return req.content, "full"
-
-    if req.reason:
-        return f"{added}\n(수정 사유: {req.reason})", "diff"
-    return added, "diff"
-
-
-def _added_part(base: str, current: str) -> str:
-    """current 에서 base 에 없는 뒷부분을 잘라낸다(단순 접두 비교)."""
-    if current.startswith(base):
-        return current[len(base):]
-    # 접두가 아니면 문장 단위로 새로 등장한 것만 모은다.
-    base_sentences = {s.strip() for s in base.split(".") if s.strip()}
-    added = [s.strip() for s in current.split(".") if s.strip() and s.strip() not in base_sentences]
-    return ". ".join(added)
-
-
-_SYSTEM_PROMPT = """당신은 반도체 장비 소프트웨어(VCS/AMR) 요구사항을 검토하는 전문가다.
-주어진 요구사항 문장에서 개발자와 고객이 서로 다르게 해석할 수 있는 부분을 찾아라.
-
-검출 유형은 다음 중 하나만 사용한다:
-정량 기준 부재, 모호한 정도부사, 주어·주체 불명확, 조건 발생 시점 불명확,
-예외·경계 조건 누락, 접속사 범위 모호, 시간·일정 모호
-
-반드시 아래 JSON 형식으로만 답한다. 문제가 없으면 findings 를 빈 배열로 둔다.
-{"findings":[{"findingType":"유형","targetSpan":"문제가 된 구절","reason":"왜 문제인지","suggestion":"어떻게 바꾸면 좋은지"}]}
-
-targetSpan 은 반드시 원문에 그대로 등장하는 구절이어야 한다."""
+_SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 달라질 실제 문제만 검토한다.
+제목, 목차, 단순 나열의 '및', '등', 문체는 검출하지 않는다. 전체 본문, 용어 정의, 참조를 먼저 확인한다.
+정의된 기준을 다시 누락으로 지적하지 않는다. 같은 대상·속성·조건·시점인지 확인해야 상충이다.
+버전이 없는 초안은 공식 확정 기준이 아니다. 버전이 있으면 전달된 본문은 마지막 확정본이며 수정 중 상태여도 기존 확정 기준으로 비교한다. 현재 본문과 기존 요구사항을 모두 읽고 변경 전후와 삭제도 검토한다.
+숫자·주체·업무 정책을 만들어 확정하지 않는다. 근거 없는 값은 ⟦항목명: 입력 필요⟧로 표시한다.
+제안은 설명이 아니라 그대로 넣을 문장이다. 교체/앞뒤 삽입/삭제를 구분하고 대안은 따로 제시한다.
+문제마다 서로 다른 해석과 결과 차이를 interpretations에 구체적으로 쓴다.
+JSON만 반환한다. 문제 없으면 {"findings":[]}.
+{"findings":[{"findingType":"정량 기준 부재|모호한 정도부사|주어·주체 불명확|조건 발생 시점 불명확|예외·경계 조건 누락|접속사 범위 모호|시간·일정 모호|기존 요구사항과 상충|참조 요구사항 확인 필요",
+"targetSpan":"현재 본문의 유일한 완전한 문장 또는 절 원문","reason":"실제 문제와 근거","suggestion":"선택 안내",
+"interpretations":"구체적인 해석과 결과 차이","conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
+"proposals":[{"label":"제안 적용","operation":"REPLACE|INSERT_BEFORE|INSERT_AFTER|DELETE","after":"수정된 본문"}]}]}
+상충이면 conflictReqKey와 conflictQuote에 기존 요구사항 ID와 정확한 인용, sameCondition에 동일 조건 근거를 명시한다.
+"""
 
 
 def _post_json(url: str, payload: dict, timeout: float, headers: dict | None = None) -> dict:
@@ -437,7 +436,7 @@ def _post_json(url: str, payload: dict, timeout: float, headers: dict | None = N
 def _all_requirements(existing: list[ExistingRequirement] | None) -> str:
     rows = existing or []
     return "\n\n같은 프로젝트의 다른 요구사항 전문(모두 검토하고 관련성·상충 여부를 판단):\n" + (
-        "\n".join(f"- {e.reqKey}: {e.content}" for e in rows) if rows else "(없음)")
+        "\n".join(f"- {e.reqKey} (상태={e.state or '미상'}, 버전={e.version or '없음'}): {e.content}" for e in rows) if rows else "(없음)")
 
 
 def _user_msg(content: str, reason: str | None, existing: list[ExistingRequirement] | None = None) -> str:
@@ -445,17 +444,6 @@ def _user_msg(content: str, reason: str | None, existing: list[ExistingRequireme
     if reason:
         user += f"\n수정 사유: {reason}"
     return user + _all_requirements(existing)
-
-
-def _ask_llm_api(content: str, reason: str | None,
-                 existing: list[ExistingRequirement] | None = None) -> list[rules.Finding]:
-    """사내 LLM API 서비스(OpenAI 호환)에 Chat Completions 로 판정을 요청한다.
-
-    OpenAI 라이브러리의 client.chat.completions.create(...) 와 같은 HTTP 요청을
-    표준 라이브러리로 보낸다 — 폐쇄망에 openai 패키지를 반입하지 않으려고.
-    """
-    raw = PROVIDER.generate(_SYSTEM_PROMPT, _user_msg(content, reason, existing))
-    return _to_findings(raw, content)
 
 
 _SPLIT_SYSTEM_PROMPT = """당신은 반도체 장비 소프트웨어(VCS/AMR) 요구사항을 개발 이슈(Jira 티켓)로
@@ -586,26 +574,6 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
     return _parse_json(raw)
 
 
-def _to_findings(raw: str, content: str) -> list[rules.Finding]:
-    """모델 응답 텍스트를 Finding 으로 바꾼다. 형식이 어긋난 항목은 조용히 버린다."""
-    parsed = _parse_json(raw)
-    out: list[rules.Finding] = []
-    for item in parsed.get("findings") or []:
-        ftype = item.get("findingType")
-        span = item.get("targetSpan") or ""
-        if ftype not in rules.ALL_TYPES:
-            continue
-        # 원문에 없는 구절을 LLM 이 만들어낸 경우는 버린다(환각 방지).
-        if span and span not in content:
-            continue
-        out.append(rules.Finding(
-            ftype, span,
-            item.get("reason") or "",
-            item.get("suggestion") or "",
-        ))
-    return out
-
-
 def _parse_json(text: str) -> dict:
     """모델이 앞뒤에 군더더기를 붙여도 첫 JSON 객체를 뽑아 파싱한다.
 
@@ -623,19 +591,6 @@ def _parse_json(text: str) -> dict:
         except Exception:
             return {}
     return parsed if isinstance(parsed, dict) else {}
-
-
-def _merge(base: list[rules.Finding], extra: list[rules.Finding]) -> list[rules.Finding]:
-    """규칙 결과를 우선하고, LLM 이 추가로 찾은 것만 덧붙인다."""
-    seen = {(f.finding_type, f.target_span) for f in base}
-    merged = list(base)
-    for f in extra:
-        key = (f.finding_type, f.target_span)
-        if key in seen:
-            continue
-        seen.add(key)
-        merged.append(f)
-    return merged
 
 
 artifact_review.provider = PROVIDER

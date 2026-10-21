@@ -1,6 +1,8 @@
 # ReqOps — 요구사항 검토 및 산출물 관리
 
-> Jira 프로젝트 여러 개 등록 및 실제 Jira 이슈 화면 연결: [설정·사용 방법](docs/jira-integration.md). 기존 DB에서는 `db/init.sql` 전체를 DBeaver의 SQL 스크립트 실행으로 실행하세요. 이번 Jira 테이블 추가 SQL만 들어 있습니다.
+> 요구사항 검출·좌우 비교·제안 적용이 반영되었습니다. [사용 방법과 적용 순서](docs/requirement-review-implementation.md) · [설계안](docs/requirement-review-suggestions.md)
+> 기존 DB에서는 **이번 변경분만 있는 `db/init.sql`**을 한 번 실행한 뒤 백엔드와 AI 서버, 프론트를 다시 시작하세요. Jira 테이블은 다시 만들지 않습니다.
+> Jira 연결 설정은 [설정·사용 방법](docs/jira-integration.md)을 참고하세요. 아직 Jira 테이블이 없는 DB에만 `db/migrations/V006__jira_projects.sql`을 별도로 적용하세요.
 
 요구사항 등록, AI 본문 검토, 개발 이슈·산출물 생성, 산출물 검토·전체 확정을 관리합니다. 작업 브랜치는 **`semes`**입니다.
 

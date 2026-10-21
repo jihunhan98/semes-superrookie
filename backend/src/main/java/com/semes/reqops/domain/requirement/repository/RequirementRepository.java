@@ -13,4 +13,7 @@ public interface RequirementRepository extends JpaRepository<Requirement, Long> 
     Optional<Requirement> findByProjectIdAndReqKey(Long projectId, String reqKey);
 
     boolean existsByProjectIdAndReqKey(Long projectId, String reqKey);
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select r from Requirement r where r.id = :id")
+    java.util.Optional<Requirement> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
 }

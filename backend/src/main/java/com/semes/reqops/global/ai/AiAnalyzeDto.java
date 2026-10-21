@@ -2,46 +2,28 @@ package com.semes.reqops.global.ai;
 
 import java.util.List;
 
-/** AI 서버(ai-model)와 주고받는 DTO. 필드명이 FastAPI 스키마와 1:1로 맞아야 한다. */
+/** Full-context review contract. All edit offsets use UTF-16 (Java/JavaScript indices). */
 public final class AiAnalyzeDto {
-
-    private AiAnalyzeDto() {
+    private AiAnalyzeDto() {}
+    public record Existing(String reqKey, String content, String state, String version) {
+        public Existing(String reqKey, String content) { this(reqKey, content, null, null); }
     }
-
-    /** 상충 검출용 — 같은 프로젝트의 기존 요구사항. */
-    public record Existing(String reqKey, String content) {}
-
-    /**
-     * @param content     검토할 본문
-     * @param baseContent 수정 전 확정본. null 이면 본문 전체를, 있으면 변경분만 검토한다.
-     * @param reason      수정 사유 (확정본 수정일 때만)
-     */
-    public record Request(
-            String content,
-            String baseContent,
-            String reason,
-            List<Existing> existing
-    ) {}
-
-    public record Finding(
-            String findingType,
-            String targetSpan,
-            String reason,
-            String suggestion,
-            String conflictReqKey
-    ) {}
-
-    /**
-     * @param draftContent 제안이 모두 반영된 문장 — 확정 화면 본문에 미리 채워지는 값
-     * @param engine       llm-api(사내 LLM 응답) | rule(규칙 기반만 — LLM 미설정·실패).
-     *                     AI 서버 자체가 응답하지 않으면(호출 실패) 백엔드가 unavailable 로 채운다.
-     * @param scope        full | diff — 본문 전체를 봤는지, 변경분만 봤는지
-     */
-    public record Response(
-            List<Finding> findings,
-            String draftContent,
-            String engine,
-            String scope,
-            Integer elapsedMs
-    ) {}
+    public record Request(String content, String baseContent, String reason, List<Existing> existing) {}
+    public record Proposal(String label, String operation, String before, String after,
+                           Integer start, Integer end, boolean needsInput) {}
+    public record Finding(String findingType, String targetSpan, String reason, String suggestion,
+                          String conflictReqKey, String severity, List<Proposal> proposals,
+                          String interpretations, String conflictQuote, Integer spanStart, Integer spanEnd) {
+        public Finding(String type, String span, String reason, String suggestion, String key) {
+            this(type, span, reason, suggestion, key, "ADVISORY", List.of(), null, null, null, null);
+        }
+    }
+    public record Response(List<Finding> findings, String draftContent, String engine, String scope,
+                           Integer elapsedMs, String reviewStatus, Integer reviewedCount) {
+        public Response(List<Finding> findings, String draft, String engine, String scope, Integer elapsed) {
+            this(findings, draft, engine, scope, elapsed, "unavailable".equals(engine) ? "FAILED" : "RULE_ONLY", 0);
+        }
+    }
+    public record ReviewContext(String inputHash, String existingHash, String status,
+                                int comparedCount, int totalCount) {}
 }

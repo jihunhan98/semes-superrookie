@@ -4,12 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/**
- * AI 제안이 모두 반영된 문장.
- *
- * <p>확정 화면의 "확정될 본문" 칸에 <b>미리 채워지는 값</b>이다. 사용자는 이 텍스트를
- * 그대로 확정하거나 직접 고치거나, 등록 원문으로 되돌린다 — 별도의 "적용" 버튼은 없다.
- */
+/** Analysis input snapshot and coverage metadata. Suggestions never overwrite this text. */
 @Entity
 @Table(name = "REQUIREMENT_AI_DRAFTS")
 public class RequirementAiDraft {
@@ -34,6 +29,10 @@ public class RequirementAiDraft {
     @Column(name = "engine", nullable = false, length = 20)
     private String engine;
 
+    @Lob
+    @Column(name = "review_data")
+    private String reviewData;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,6 +50,8 @@ public class RequirementAiDraft {
         this.createdAt = LocalDateTime.now();
     }
 
+    public String getReviewData() { return reviewData; }
+    public void setReviewData(String data) { reviewData = data; }
     public Long getId() { return id; }
     public Long getRequirementId() { return requirementId; }
     public String getDraftContent() { return draftContent; }

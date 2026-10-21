@@ -80,6 +80,13 @@ public class RequirementController {
         return requirementService.recordConsensus(projectId, requirementId, request);
     }
 
+    @PostMapping("/{requirementId}/findings/{findingId}/decision")
+    public DetailResponse decide(@PathVariable Long projectId, @PathVariable Long requirementId,
+            @PathVariable Long findingId,
+            @Valid @RequestBody com.semes.reqops.domain.requirement.dto.RequirementDto.DecisionRequest request) {
+        return requirementService.decide(projectId, requirementId, findingId, request);
+    }
+
     /** 확정 — 확정 화면 3단계. 합의 기록이 없으면 409. */
     @PostMapping("/{requirementId}/confirm")
     public DetailResponse confirm(@PathVariable Long projectId,

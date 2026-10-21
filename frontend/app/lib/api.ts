@@ -142,7 +142,11 @@ export type ReqState =
   | "REVISING"
   | "ON_HOLD";
 
-/** AI 검토 결과 한 건 — 화면에서 읽기 전용으로만 보여준다. */
+export type ReviewProposal = { label: string; operation: "REPLACE" | "INSERT_BEFORE" | "INSERT_AFTER" | "DELETE";
+  before: string; after: string; start: number; end: number; needsInput: boolean };
+export type ReviewContext = { inputHash: string; existingHash: string; status: "COMPLETE" | "RULE_ONLY" | "PARTIAL" | "FAILED";
+  comparedCount: number; totalCount: number };
+/** 문맥 검토 결과와 사용자가 선택해 적용하는 편집안. */
 export type Finding = {
   id: number;
   findingType: string;
@@ -152,7 +156,12 @@ export type Finding = {
   /** 상충 유형일 때 상대 요구사항 ID. 그 외에는 null. */
   conflictReqKey: string | null;
   severity: "BLOCKING" | "ADVISORY";
-  resolutionState: "OPEN" | "RESOLVED" | "ACCEPTED_WITH_REASON";
+  resolutionState: "OPEN" | "RESOLVED" | "ACCEPTED_WITH_REASON" | "KEPT";
+  proposals?: ReviewProposal[];
+  interpretations?: string | null;
+  conflictQuote?: string | null;
+  spanStart?: number | null;
+  spanEnd?: number | null;
 };
 
 export type RequirementSummary = {
@@ -227,9 +236,10 @@ export type RequirementDetail = {
   version: string | null;
   assigneeId: number | null;
   assigneeName: string | null;
-  /** AI 제안이 이미 반영된 문장 — 확정 화면 본문에 미리 채워지는 값. */
+  /** 이번 검토 당시의 본문 스냅샷. 제안은 개별 선택으로 적용한다. */
   aiDraftContent: string;
   aiEngine: string;
+  reviewContext?: ReviewContext | null;
   findings: Finding[];
   /** 가장 최근 합의 기록. 없으면 null — 이 값이 null 이면 확정할 수 없다. */
   consensus: Consensus | null;
@@ -331,7 +341,7 @@ export function recordConsensus(
 export function confirmRequirement(
   projectId: number,
   requirementId: number,
-  input: { userId: number; content: string; title?: string; consensusId?: number; blockingDecisionReason?: string },
+  input: { userId: number; content: string; title?: string; consensusId?: number; blockingDecisionReason?: string; decisions?: { findingId: number; action: string; reason: string }[] },
 ): Promise<RequirementDetail> {
   return postJson<RequirementDetail>(
     `/api/projects/${projectId}/requirements/${requirementId}/confirm`,
@@ -521,3 +531,12 @@ export const saveJiraTarget = (projectId: number, id: number | null, input: Jira
 export const deleteJiraTarget = (projectId: number, id: number, userId: number) => request<void>(`/api/projects/${projectId}/jira/targets/${id}?userId=${userId}`, { method: "DELETE" });
 export const listJiraIssueLinks = (projectId: number, requirementId: number, userId: number) => getJson<JiraIssueLink[]>(`/api/projects/${projectId}/jira/requirements/${requirementId}/links?userId=${userId}`);
 export const openJiraIssue = (projectId: number, requirementId: number, issueId: number, userId: number, targetId: number) => postJson<JiraIssueLink>(`/api/projects/${projectId}/jira/requirements/${requirementId}/issues/${issueId}/open`, { userId, targetId });
+
+export function keepReviewFinding(projectId: number, requirementId: number, findingId: number, userId: number, content: string, reason?: string): Promise<RequirementDetail> {
+  return postJson(`/api/projects/${projectId}/requirements/${requirementId}/findings/${findingId}/decision`, { userId, content, action: "KEEP", reason });
+}
+
+export type ReviewEditDecision = { action: "APPLY" | "UNDO"; content: string; resultContent: string; proposalIndex: number; start: number; end: number };
+export function recordReviewEdit(projectId: number, requirementId: number, findingId: number, userId: number, input: ReviewEditDecision): Promise<RequirementDetail> {
+  return postJson(`/api/projects/${projectId}/requirements/${requirementId}/findings/${findingId}/decision`, { userId, ...input });
+}

@@ -30,7 +30,12 @@ public final class RequirementDto {
             String suggestion,
             String conflictReqKey,
             String severity,
-            String resolutionState
+            String resolutionState,
+            List<com.semes.reqops.global.ai.AiAnalyzeDto.Proposal> proposals,
+            String interpretations,
+            String conflictQuote,
+            Integer spanStart,
+            Integer spanEnd
     ) {}
 
     /** 목록 행. */
@@ -69,6 +74,7 @@ public final class RequirementDto {
             String assigneeName,
             String aiDraftContent,
             String aiEngine,
+            com.semes.reqops.global.ai.AiAnalyzeDto.ReviewContext reviewContext,
             List<FindingResponse> findings,
             ConsensusResponse consensus,
             boolean canConfirm,
@@ -122,8 +128,19 @@ public final class RequirementDto {
             @NotBlank String content,
             @Size(max = 200) String title,
             Long consensusId,
-            @Size(max = 1000) String blockingDecisionReason
-    ) {}
+            @Size(max = 1000) String blockingDecisionReason,
+            List<@jakarta.validation.Valid FindingDecision> decisions
+    ) {
+        public ConfirmRequest(Long userId, String content, String title, Long consensusId, String reason) {
+            this(userId, content, title, consensusId, reason, List.of());
+        }
+    }
+
+    public record FindingDecision(@NotNull Long findingId, @NotBlank String action,
+                                  @Size(max = 1000) String reason) {}
+    public record DecisionRequest(@NotNull Long userId, @NotBlank String action,
+                                  @NotBlank String content, @Size(max = 1000) String reason,
+                                  Integer proposalIndex, Integer start, Integer end, String resultContent) {}
 
     /** 보류 — 고객 협의가 더 필요해 확정을 미룬다. */
     public record HoldRequest(
