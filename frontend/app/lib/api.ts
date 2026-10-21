@@ -509,3 +509,15 @@ export function confirmArtifact(
     input,
   );
 }
+
+// Jira project registrations belong to one ReqOps project and are shared with its members.
+export type JiraTarget = { id: number; baseUrl: string; jiraProjectKey: string; displayName: string; issueTypeId: string | null; revision: number };
+export type JiraTargetInput = Omit<JiraTarget, "id" | "revision"> & { userId: number; expectedRevision?: number };
+export type JiraIssueLink = { targetId: number; devIssueId: number; jiraIssueKey: string; url: string; created: boolean };
+export const listJiraTargets = (projectId: number, userId: number) => getJson<JiraTarget[]>(`/api/projects/${projectId}/jira/targets?userId=${userId}`);
+export const saveJiraTarget = (projectId: number, id: number | null, input: JiraTargetInput) => id === null
+  ? postJson<JiraTarget>(`/api/projects/${projectId}/jira/targets`, input)
+  : patchJson<JiraTarget>(`/api/projects/${projectId}/jira/targets/${id}`, input);
+export const deleteJiraTarget = (projectId: number, id: number, userId: number) => request<void>(`/api/projects/${projectId}/jira/targets/${id}?userId=${userId}`, { method: "DELETE" });
+export const listJiraIssueLinks = (projectId: number, requirementId: number, userId: number) => getJson<JiraIssueLink[]>(`/api/projects/${projectId}/jira/requirements/${requirementId}/links?userId=${userId}`);
+export const openJiraIssue = (projectId: number, requirementId: number, issueId: number, userId: number, targetId: number) => postJson<JiraIssueLink>(`/api/projects/${projectId}/jira/requirements/${requirementId}/issues/${issueId}/open`, { userId, targetId });

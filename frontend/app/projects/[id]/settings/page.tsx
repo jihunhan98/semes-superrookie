@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Header from "../../../components/Header";
 import ProjectSidebar from "../../../components/ProjectSidebar";
 import MembersCard from "../../../components/MembersCard";
+import JiraProjectsCard from "../../../components/JiraProjectsCard";
 import { getProject, updateProject, type ProjectDetail } from "../../../lib/api";
 import { getCurrentUser } from "../../../lib/session";
 
@@ -89,7 +90,7 @@ export default function ProjectSettingsPage() {
         <main className="main">
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>프로젝트 설정</h1>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 1000, marginTop: 18 }}>
+          <div className="project-settings-grid">
             <div className="setcard">
               <div className="seth">🗂️ 기본 정보</div>
               <div className="setb">
@@ -123,6 +124,7 @@ export default function ProjectSettingsPage() {
             </div>
 
             <MembersCard projectId={detail.id} isOwner={isOwner} members={detail.members} initialToken={detail.token} />
+            <JiraProjectsCard projectId={detail.id} userId={getCurrentUser()!.id} isOwner={isOwner} />
           </div>
         </main>
       </div>

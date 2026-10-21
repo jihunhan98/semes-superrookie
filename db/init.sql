@@ -237,3 +237,4 @@ COMMENT ON COLUMN dev_issue_artifacts.engine   IS '판정 경로: llm-api(사내
 -- @db/migrations/V002__agent_expand.sql
 -- @db/migrations/V004__agent_constraints.sql
 -- @db/migrations/V005__review_trace_guards.sql
+-- @db/migrations/V006__jira_projects.sql
