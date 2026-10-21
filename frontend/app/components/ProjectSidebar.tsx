@@ -1,3 +1,9 @@
+"use client";
+
+import {useEffect,useState} from "react";
+import {usePathname} from "next/navigation";
+import {getGlossarySummary} from "../lib/api";
+import {getCurrentUser} from "../lib/session";
 import Link from "next/link";
 import { colorFor } from "../lib/colors";
 
@@ -20,7 +26,7 @@ const ARTIFACTS_ICON = (
   <path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0Z" />
 );
 
-type NavKey = "home" | "requirements" | "artifacts" | "settings";
+type NavKey = "home" | "requirements" | "artifacts" | "settings" | "glossary";
 
 export default function ProjectSidebar({
   projectId,
@@ -31,6 +37,14 @@ export default function ProjectSidebar({
   projectName: string;
   active: NavKey;
 }) {
+  const [pending,setPending]=useState<number|null>(null);
+  const pathname=usePathname();
+  useEffect(()=>{
+    let cancelled=false;
+    const refresh=()=>{const user=getCurrentUser();if(user)getGlossarySummary(projectId,user.id).then(v=>{if(!cancelled)setPending(v.pendingCount);}).catch(()=>{});};
+    refresh();window.addEventListener("focus",refresh);window.addEventListener("reqops:glossary-updated",refresh);
+    return ()=>{cancelled=true;window.removeEventListener("focus",refresh);window.removeEventListener("reqops:glossary-updated",refresh);};
+  },[projectId,pathname]);
   return (
     <aside className="side">
       <Link href={`/projects/${projectId}`} className="pj">
@@ -67,6 +81,10 @@ export default function ProjectSidebar({
         산출물
       </Link>
 
+      <Link href={`/projects/${projectId}/glossary`} className={`nav${active === "glossary" ? " on" : ""}`}>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3"><path d="M2 2h5l1 1 1-1h5v12H9l-1 1-1-1H2zM8 3v12"/></svg>
+        용어사전 {pending!=null&&pending>0&&<span className="glossary-nav-badge" aria-label={`확인할 용어 ${pending}개`}>{pending}</span>}
+      </Link>
       <div className="nl">프로젝트</div>
       <Link href={`/projects/${projectId}/settings`} className={`nav${active === "settings" ? " on" : ""}`}>
         <svg viewBox="0 0 16 16" fill="currentColor">

@@ -22,7 +22,7 @@ class AiJobWorkerTest {
         RequirementAiDraftRepository drafts = stub(RequirementAiDraftRepository.class);
         AiTask task = new AiTask(1L, "legacy-task", "IMPACT", "{\"operation\":\"impact\",\"projectId\":1}");
         when(jobs.claim("local-worker")).thenReturn(task);
-        new AiJobWorker(stub(com.semes.reqops.domain.requirement.service.ReviewAnalysisStore.class), jobs, artifacts, new ObjectMapper(), ai, requirements, findings, drafts).runOne();
+        new AiJobWorker(stub(com.semes.reqops.domain.knowledge.RequirementReviewRunner.class), jobs, artifacts, new ObjectMapper(), ai, requirements, findings, drafts).runOne();
         verify(jobs).succeeded(isNull(), contains("ignored"));
         verify(jobs, never()).failed(any(), any(), any());
         verifyNoInteractions(artifacts, ai, requirements, findings, drafts);

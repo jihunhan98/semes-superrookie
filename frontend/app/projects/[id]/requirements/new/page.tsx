@@ -109,7 +109,7 @@ export default function RequirementNewPage() {
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 2px" }}>새 요구사항 등록</h1>
           <p className="psub" style={{ marginBottom: 12 }}>
-            등록하면 AI가 내용과 관련 요구사항의 영향을 검토합니다.
+            등록과 동시에 AI가 프로젝트 용어를 정리하고, 구체화할 내용을 질문합니다.
           </p>
 
           <div className="regcard">
@@ -168,7 +168,7 @@ export default function RequirementNewPage() {
 
           <div className="regfoot">
             <button className="btn prim" onClick={onSubmit} disabled={saving}>
-              {saving ? "⏳ 등록 중…" : "등록하고 AI 검토"}
+              {saving ? "⏳ 등록 중…" : "등록하고 질문 확인"}
             </button>
             <button
               className="btn"
@@ -189,7 +189,7 @@ export default function RequirementNewPage() {
                 <div>
                   <div className="load-t">요구사항을 저장하고 AI가 초기 검토를 하고 있습니다…</div>
                   <div className="load-sub">
-                    완료되면 접수 상태로 등록되고, 상세 화면에서 바로 AI 참고 의견을 확인할 수 있습니다.
+                    완료되면 접수 상태로 등록되고, 질문 화면에서 선택하거나 입력할 수 있으며, 새 용어는 용어사전에서 확인할 수 있습니다.
                   </div>
                 </div>
               </div>

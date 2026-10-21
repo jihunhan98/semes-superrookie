@@ -70,6 +70,9 @@ public class RequirementService {
     private final UserRepository userRepository;
     private final AiClient aiClient;
     private final ReviewAnalysisStore reviewStore;
+    private final com.semes.reqops.domain.knowledge.RequirementReviewRunner reviewRunner;
+    private final com.semes.reqops.domain.knowledge.GlossaryService glossaryService;
+    private final com.semes.reqops.domain.knowledge.ClarificationStore clarificationStore;
     private final BundleService bundleService;
     private final AiJobService aiJobService;
     private final ReviewItemRepository reviewItemRepository;
@@ -199,9 +202,7 @@ public class RequirementService {
         requirementRepository.findLockedById(requirementId).orElseThrow();
         // 과거 확정에서 수용 근거가 연결된 finding은 감사 이력으로 보존한다.
         // 현재 분석의 미해결 항목만 교체해야 review_items FK와 사용자 결정이 유지된다.
-        List<AiAnalyzeDto.Existing> existing = reviewStore.existing(projectId, requirementId);
-        AiAnalyzeDto.Response ai = aiClient.analyzeDiff(req.content(), r.getContent(), req.reason(), existing);
-        reviewStore.save(requirementId, req.content(), ai, existing, false);
+        reviewRunner.run(projectId, requirementId, req.content(), r.getContent(), req.reason(), false);
 
         // 목록에서 "지금 손대는 중"으로 보이게 한다. 버전은 재확정 전까지 그대로.
         r.startRevision();
@@ -255,8 +256,15 @@ public class RequirementService {
         if (!reviewStore.existingHash(reviewStore.existing(projectId, requirementId)).equals(context.existingHash())) {
             throw new ApiErrors.Conflict("다른 요구사항이 변경되었습니다. 최신 내용으로 다시 검토해주세요.");
         }
+        if (context.glossaryHash() == null || !context.glossaryHash().equals(glossaryService.hash(glossaryService.forAnalysis(projectId)))) {
+            throw new ApiErrors.Conflict("용어사전이 변경되었거나 아직 참고하지 않은 검토입니다. 최신 용어로 다시 검토해주세요.");
+        }
         if ("FAILED".equals(context.status()) || "PARTIAL".equals(context.status())) {
             throw new ApiErrors.Conflict("검토가 완료되지 않았습니다. AI 재검토를 다시 실행해주세요.");
+        }
+
+        if (clarificationStore.openCount(requirementId) > 0) {
+            throw new ApiErrors.Conflict("답변할 질문이 남아 있습니다. 답변하거나 추후 결정으로 남겨주세요.");
         }
 
         RequirementConsensus consensus = req.consensusId() == null

@@ -24,6 +24,9 @@ class RequirementReviewGuardTest {
     @Mock RequirementFindingRepository findingRepository;
     @Mock com.semes.reqops.domain.review.repository.ReviewItemRepository reviewItemRepository;
     @Mock com.semes.reqops.domain.review.repository.UserDecisionRepository userDecisionRepository;
+    @Mock com.semes.reqops.domain.knowledge.GlossaryService glossaryService;
+    @Mock com.semes.reqops.domain.knowledge.ClarificationStore clarificationStore;
+    @Mock RequirementConsensusRepository consensusRepository;
     @InjectMocks RequirementService service;
     void member() {
         when(membershipRepository.findByUserIdAndProjectId(7L,1L)).thenReturn(Optional.of(mock(Membership.class)));
@@ -50,6 +53,32 @@ class RequirementReviewGuardTest {
         when(reviewStore.existingHash(List.of())).thenReturn("new");
         ApiErrors.Conflict error=assertThrows(ApiErrors.Conflict.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
         assertTrue(error.getMessage().contains("다른 요구사항"));
+    }
+    void freshReview(String glossaryHash) {
+        member();
+        when(reviewStore.context(null)).thenReturn(new ReviewContext(ReviewAnalysisStore.hash("본문"),"existing","COMPLETE",0,0,glossaryHash,0));
+        when(reviewStore.existing(1L,2L)).thenReturn(List.of());
+        when(reviewStore.existingHash(List.of())).thenReturn("existing");
+        when(glossaryService.forAnalysis(1L)).thenReturn(List.of());
+        when(glossaryService.hash(List.of())).thenReturn("current");
+    }
+    @Test void changedGlossaryRequiresFreshAnalysis() {
+        freshReview("old");
+        var error=assertThrows(ApiErrors.Conflict.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
+        assertTrue(error.getMessage().contains("용어사전"));
+    }
+    @Test void openQuestionMustBeAnsweredOrDeferredBeforeConfirmation() {
+        freshReview("current");
+        when(clarificationStore.openCount(2L)).thenReturn(1L);
+        var error=assertThrows(ApiErrors.Conflict.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
+        assertTrue(error.getMessage().contains("추후 결정"));
+        verifyNoInteractions(consensusRepository);
+    }
+    @Test void noOpenQuestionsContinuesToCustomerConsensus() {
+        freshReview("current");
+        when(clarificationStore.openCount(2L)).thenReturn(0L);
+        when(consensusRepository.findFirstByRequirementIdOrderByIdDesc(2L)).thenReturn(Optional.empty());
+        assertThrows(ApiErrors.ConsensusRequired.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
     }
     RequirementService decisionSetup(String content, com.semes.reqops.global.ai.AiAnalyzeDto.Proposal proposal) {
         member();

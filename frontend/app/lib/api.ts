@@ -145,7 +145,7 @@ export type ReqState =
 export type ReviewProposal = { label: string; operation: "REPLACE" | "INSERT_BEFORE" | "INSERT_AFTER" | "DELETE";
   before: string; after: string; start: number; end: number; needsInput: boolean };
 export type ReviewContext = { inputHash: string; existingHash: string; status: "COMPLETE" | "RULE_ONLY" | "PARTIAL" | "FAILED";
-  comparedCount: number; totalCount: number };
+  comparedCount: number; totalCount: number; glossaryHash?: string; newTermCount?: number };
 /** 문맥 검토 결과와 사용자가 선택해 적용하는 편집안. */
 export type Finding = {
   id: number;
@@ -540,3 +540,15 @@ export type ReviewEditDecision = { action: "APPLY" | "UNDO"; content: string; re
 export function recordReviewEdit(projectId: number, requirementId: number, findingId: number, userId: number, input: ReviewEditDecision): Promise<RequirementDetail> {
   return postJson(`/api/projects/${projectId}/requirements/${requirementId}/findings/${findingId}/decision`, { userId, ...input });
 }
+
+export type GlossaryUsage = { requirementId: number; reqKey: string; quote: string };
+export type ProjectTerm = { id: number; name: string; definition: string; aiDefinition: string; status: "PENDING"|"CONFIRMED"|"DISMISSED"; revision: number; usages: GlossaryUsage[] };
+export type GlossaryView = { terms: ProjectTerm[]; pendingCount: number };
+export type ClarificationQuestion = { id: number; category: string; question: string; sourceText: string; options: string[]; status: "OPEN"|"DEFERRED"|"ANSWERED"; answer: string|null; replacement: string|null; note: string|null };
+export type RefinementView = { exists: boolean; revision: number; content: string; status: "ANALYZING"|"READY"|"PARTIAL"|"FAILED"; questions: ClarificationQuestion[]; pendingTerms: number; newTermCount: number; termStatus: "COMPLETE"|"RULE_ONLY"|"FAILED"; dictionaryChanged: boolean };
+export function getGlossary(projectId:number,userId:number):Promise<GlossaryView>{return getJson(`/api/projects/${projectId}/glossary?userId=${userId}`);}
+export function getGlossarySummary(projectId:number,userId:number):Promise<{pendingCount:number}>{return getJson(`/api/projects/${projectId}/glossary/summary?userId=${userId}`);}
+export function reviewGlossaryTerm(projectId:number,term:ProjectTerm,userId:number):Promise<GlossaryView>{return patchJson(`/api/projects/${projectId}/glossary/${term.id}`,{userId,revision:term.revision,name:term.name,definition:term.definition,status:term.status});}
+export function getRefinement(projectId:number,requirementId:number,userId:number):Promise<RefinementView>{return getJson(`/api/projects/${projectId}/requirements/${requirementId}/refinement?userId=${userId}`);}
+export function answerClarification(projectId:number,requirementId:number,questionId:number,userId:number,revision:number,answer:string):Promise<RefinementView>{return postJson(`/api/projects/${projectId}/requirements/${requirementId}/clarifications/${questionId}/answer`,{userId,revision,answer});}
+export function deferClarification(projectId:number,requirementId:number,questionId:number,userId:number,revision:number,note:string):Promise<RefinementView>{return postJson(`/api/projects/${projectId}/requirements/${requirementId}/clarifications/${questionId}/defer`,{userId,revision,note});}

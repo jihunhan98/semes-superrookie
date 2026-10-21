@@ -27,7 +27,7 @@ import time
 import urllib.error
 import urllib.request
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 import artifacts
@@ -97,6 +97,13 @@ class ExistingRequirement(BaseModel):
     version: str | None = None
 
 
+class GlossaryTerm(BaseModel):
+    id: int | None = None
+    name: str
+    definition: str
+    status: str = "PENDING"
+
+
 class AnalyzeRequest(BaseModel):
     content: str = Field(..., description="검토할 요구사항 본문")
     # 변경 전 본문도 현재 본문 전체와 함께 문맥으로 검토한다.
@@ -104,6 +111,7 @@ class AnalyzeRequest(BaseModel):
     reason: str | None = Field(None, description="수정 사유")
     # 상충 검출용 — 같은 프로젝트의 기존 요구사항
     existing: list[ExistingRequirement] = Field(default_factory=list)
+    glossary: list[GlossaryTerm] = Field(default_factory=list)
 
 
 class FindingOut(BaseModel):
@@ -118,6 +126,8 @@ class FindingOut(BaseModel):
     conflictQuote: str | None = None
     spanStart: int | None = None
     spanEnd: int | None = None
+    questionText: str = ""
+    options: list[str] = Field(default_factory=list)
 
 
 class AnalyzeResponse(BaseModel):
@@ -130,6 +140,8 @@ class AnalyzeResponse(BaseModel):
     elapsedMs: int
     reviewStatus: str = "RULE_ONLY"
     reviewedCount: int = 0
+    terms: list[dict] = Field(default_factory=list)
+    termStatus: str = "RULE_ONLY"
 
 
 class SplitRequest(BaseModel):
@@ -235,9 +247,15 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     if ANALYZE_DELAY > 0:
         time.sleep(ANALYZE_DELAY)
 
-    import review
+    import review, intake
+    glossary = [t.model_dump() for t in req.glossary]
     existing = [e.model_dump() for e in req.existing]
-    findings = review.detect(req.content, existing)
+    term_context = _user_msg(req.content, req.reason, req.existing)
+    if req.baseContent: term_context += "\n변경 전 본문 전체:\n" + req.baseContent
+    terms, term_status = intake.extract_terms(req.content, glossary, PROVIDER, _parse_json, term_context)
+    effective_glossary = glossary + [dict(id=None, name=t['name'], definition=t['definition'], status='PENDING') for t in terms]
+    confirmed_definitions = "\n".join(t['definition'] for t in glossary if t['status']=='CONFIRMED')
+    findings = review.detect(req.content, existing, confirmed_definitions)
     invalid = any(len(f.target_span) > 500 for f in findings)
     findings = [f for f in findings if len(f.target_span) <= 500]
     engine, status, reviewed = "rule", "RULE_ONLY", 0
@@ -257,6 +275,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 user = _user_msg(req.content, req.reason, [ExistingRequirement(**e) for e in batch])
                 if req.baseContent:
                     user += "\n변경 전 본문 전체:\n" + req.baseContent
+                user += intake.glossary_text(effective_glossary)
                 raw = PROVIDER.generate(_SYSTEM_PROMPT, user)
                 parsed = _parse_json(raw)
                 if not isinstance(parsed.get("findings"), list):
@@ -280,9 +299,10 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         engine = PROVIDER.name if successes else "rule"
         status = "COMPLETE" if successes == len(batches) and not invalid else "PARTIAL"
     if invalid: status = "PARTIAL"
-    return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in review.dedupe(findings)],
+    findings = intake.attach_questions(review.dedupe(findings), effective_glossary)
+    return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in findings],
         draftContent=req.content, engine=engine, scope="full-context",
-        elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewedCount=reviewed)
+        elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewedCount=reviewed, terms=terms, termStatus=term_status)
 
 
 @app.post("/split", response_model=SplitResponse)
@@ -422,7 +442,7 @@ _SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 
 JSON만 반환한다. 문제 없으면 {"findings":[]}.
 {"findings":[{"findingType":"수치·판단 기준 불명확|수행 주체 불명확|동작 조건 불명확|예외 처리 누락|기존 요구사항과 상충",
 "targetSpan":"현재 본문의 유일한 완전한 문장 또는 절 원문","reason":"실제 문제와 근거","suggestion":"선택 안내",
-"interpretations":"구체적인 해석과 결과 차이","conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
+"interpretations":"구체적인 해석과 결과 차이","questionText":"사용자에게 묻는 구체적인 질문","options":["선택 가능한 답변 후보"],"conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
 "proposals":[{"label":"제안 적용","operation":"REPLACE|INSERT_BEFORE|INSERT_AFTER|DELETE","after":"수정된 본문"}]}]}
 상충이면 conflictReqKey와 conflictQuote에 기존 요구사항 ID와 정확한 인용, sameCondition에 동일 조건 근거를 명시한다.
 """
@@ -616,3 +636,26 @@ def validate_artifact(req: ArtifactValidationRequest):
     errors += validation.numeric_concerns(content, '\n'.join(sources.values()))
     content.setdefault('legacyExtras',{})['quality']={'status':'NEEDS_REVIEW' if errors else 'GROUNDED','concerns':errors}
     return {'valid':not errors,'content':content,'concerns':errors}
+
+
+class ClarificationAnswerRequest(BaseModel):
+    content: str
+    targetSpan: str
+    question: str
+    answer: str = Field(min_length=1, max_length=4000)
+    proposals: list[dict] = Field(default_factory=list)
+    glossary: list[GlossaryTerm] = Field(default_factory=list)
+
+
+@app.post('/clarify-answer')
+def clarify_answer(req: ClarificationAnswerRequest):
+    import intake
+    if not req.targetSpan or req.targetSpan not in req.content:
+        raise HTTPException(status_code=409, detail='질문 대상 문장이 변경되었습니다.')
+    try:
+        replacement=intake.answer_replacement(req.content,req.targetSpan,req.question,req.answer,
+            req.proposals,[t.model_dump() for t in req.glossary],PROVIDER,_parse_json)
+        if replacement==req.targetSpan: raise ValueError('답변을 반영해 문장을 구체화하지 못했습니다. 답변을 확인해주세요.')
+        return {'replacement':replacement}
+    except Exception as error:
+        raise HTTPException(status_code=422,detail=str(error))

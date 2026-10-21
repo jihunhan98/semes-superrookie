@@ -20,6 +20,8 @@ public class ReviewAnalysisStore {
     private final RequirementFindingRepository findings;
     private final RequirementAiDraftRepository drafts;
     private final ObjectMapper mapper;
+    private final com.semes.reqops.domain.knowledge.GlossaryService glossary;
+    private final com.semes.reqops.domain.knowledge.ClarificationStore clarifications;
 
     public static String hash(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
@@ -53,15 +55,21 @@ public class ReviewAnalysisStore {
     }
     @Transactional
     public void save(Long id, String content, Response response, List<Existing> existing, boolean initialOnly) {
-        requirements.findLockedById(id).orElseThrow(() -> new ApiErrors.RequirementNotFound(id));
+        save(id, content, response, existing, initialOnly, null);
+    }
+    @Transactional
+    public void save(Long id, String content, Response response, List<Existing> existing, boolean initialOnly, String expectedGlossaryHash) {
+        var requirement = requirements.findLockedById(id).orElseThrow(() -> new ApiErrors.RequirementNotFound(id));
         RequirementAiDraft latest = drafts.findFirstByRequirementIdOrderByIdDesc(id).orElse(null);
         // An initial queued analysis must not replace a newer user-triggered review.
         if (initialOnly && latest != null && latest.getReviewData() != null) return;
+        var imported = glossary.importCandidates(requirement.getProjectId(), id, content, response.terms(), expectedGlossaryHash);
         ReviewContext previous = context(latest);
         Set<String> kept = new HashSet<>();
         for (RequirementFinding old : findings.findByRequirementIdOrderByIdAsc(id)) {
             if ("KEPT".equals(old.getResolutionState())) {
                 if (previous != null && Objects.equals(previous.existingHash(), existingHash(existing))
+                    && Objects.equals(previous.glossaryHash(), imported.hash())
                     && Objects.equals(old.getInputHash(), hash(content))) {
                     kept.add(ReviewFindingTypes.normalize(old.getFindingType()) + ":" + old.getSpanStart() + ":" + old.getConflictReqKey() + ":" + old.getReason());
                 }
@@ -73,6 +81,7 @@ public class ReviewAnalysisStore {
             }
         }
         String analysis = UUID.randomUUID().toString(), inputHash = hash(content);
+        List<Finding> active = new ArrayList<>();
         for (Finding f : response.findings() == null ? List.<Finding>of() : response.findings()) {
             String category = ReviewFindingTypes.normalize(f.findingType());
             if (category == null) continue;
@@ -96,7 +105,9 @@ public class ReviewAnalysisStore {
                     && f.conflictQuote() != null && !f.conflictQuote().isBlank() && r.content().contains(f.conflictQuote()));
             String severity = groundedConflict && "BLOCKING".equals(f.severity()) ? "BLOCKING" : "ADVISORY";
             Finding checked = new Finding(category, f.targetSpan(), f.reason(), f.suggestion(),
-                f.conflictReqKey(), severity, safe, f.interpretations(), f.conflictQuote(), start, end);
+                f.conflictReqKey(), severity, safe, f.interpretations(), f.conflictQuote(), start, end,
+                f.questionText(), f.options() == null ? List.of() : f.options());
+            active.add(checked);
             RequirementFinding entity = new RequirementFinding(id, checked.findingType(), checked.targetSpan(),
                 checked.reason(), checked.suggestion(), checked.conflictReqKey(), analysis, start, end, inputHash);
             entity.setReviewData(severity, json(checked));
@@ -106,7 +117,9 @@ public class ReviewAnalysisStore {
         RequirementAiDraft draft = new RequirementAiDraft(id, content, response.engine());
         draft.setReviewData(json(new ReviewContext(inputHash, existingHash(existing),
             response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
-            response.reviewedCount() == null ? 0 : response.reviewedCount(), existing.size())));
+            response.reviewedCount() == null ? 0 : response.reviewedCount(), existing.size(), imported.hash(), imported.newCount())));
         drafts.save(draft);
+        clarifications.reconcile(id, content, active, response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
+            imported.newCount(), response.termStatus(), imported.hash());
     }
 }

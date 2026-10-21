@@ -32,7 +32,7 @@ stop-all.bat     종료 — 8001 / 8080 / 3000 포트를 물고 있는 프로세
 
 ## 1. DB (Oracle)
 
-처음 설치하는 빈 DB에는 `db/baseline-init.sql`을 실행한다. 기존 DB의 이번 요구사항 검토 변경분은 `db/init.sql`을 DBeaver의 SQL 스크립트 실행으로 한 번 실행한다. V007과 같은 내용이므로 둘 중 하나만 실행한다. Jira 테이블이 아직 없으면 V006도 별도로 실행한다.
+처음 설치하는 빈 DB에는 `db/baseline-init.sql`과 필요한 후속 마이그레이션을 순서대로 적용한다. V007까지 적용된 기존 DB의 이번 질문·용어사전 변경분은 `db/init.sql`을 DBeaver의 SQL 스크립트 실행으로 한 번 실행한다. V008과 같은 내용이므로 둘 중 하나만 실행한다. 이전 본문 검토 테이블이 없으면 V007을 먼저, Jira 테이블이 없으면 V006을 먼저 적용한다. [이번 변경 상세](docs/registration-questions-and-glossary.md).
 
 1. DBA(SYSTEM) 계정으로 접속 → 파일 상단 **스키마 생성** 부분 실행 (`REQOPS` 사용자 생성)
 2. `REQOPS` 계정으로 접속 → **테이블 생성** 부분 실행 (`USERS`, `PROJECTS`, `MEMBERSHIPS`, `PROJECT_TOKENS`, `REQUIREMENTS`, `REQUIREMENT_FINDINGS`, `REQUIREMENT_AI_DRAFTS`)

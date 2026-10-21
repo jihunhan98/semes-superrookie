@@ -78,7 +78,7 @@ export default function RequirementCompare({ baseline, value, findings, onChange
     <div className="compare-columns">
       <section className="compare-source"><div className="compare-pane-heading"><b>검토 기준 본문</b><small>읽기 전용 · 이번 분석 당시 내용</small></div><pre><MarkedReviewText value={baseline} ranges={finding && finding.spanStart!=null && finding.spanEnd!=null ? [{start:finding.spanStart,end:finding.spanEnd}]:[]} /></pre></section>
       <div className="compare-transfer"><div><button className="btn sm" onClick={()=>detail.current?.scrollIntoView({block:"center",behavior:"smooth"})}>제안<br/>선택 ↓</button>{applied?<button className="btn sm" disabled={disabled||saving} onClick={undo}>← 되돌리기</button>:<button className="btn prim sm" disabled={disabled||saving||!finding?.proposals?.length||anchor?.stale||finding?.resolutionState==="KEPT"} onClick={()=>apply(0)}>적용 →</button>}</div></div>
-      <section className="compare-result"><div className="compare-pane-heading"><b>확정될 본문</b><small>직접 수정 가능 · 변경 후 다시 검토</small></div><ReviewTextEditor ref={editor} value={value} disabled={disabled||saving} onChange={edit} ranges={[...state.applied,...state.manual]} /></section>
+      <section className="compare-result"><div className="compare-pane-heading"><b>확정될 본문</b><small>직접 수정 가능 · 변경 후 다시 검토</small></div><ReviewTextEditor label="비교 화면의 확정될 본문" ref={editor} value={value} disabled={disabled||saving} onChange={edit} ranges={[...state.applied,...state.manual]} /></section>
     </div>
     {slots.length>0 && <div className="compare-inputs"><b>입력할 위치</b>{slots.map(s=><button key={s.start} className="btn sm" onClick={()=>editor.current?.focusRange(s.start,s.end)}>{s.label}</button>)}</div>}
     <div className="compare-proposals" ref={detail}>

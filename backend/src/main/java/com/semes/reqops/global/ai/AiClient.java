@@ -61,6 +61,11 @@ public class AiClient {
         return call(new AiAnalyzeDto.Request(content, baseContent, reason, existing), content);
     }
 
+    public AiAnalyzeDto.Response analyzeWithGlossary(String content, String base, String reason,
+            List<AiAnalyzeDto.Existing> existing, List<AiAnalyzeDto.GlossaryTerm> glossary) {
+        return call(new AiAnalyzeDto.Request(content, base, reason, existing, glossary), content);
+    }
+
     /**
      * "이슈 나누기" 화면의 AI 초안 — 확정 요구사항을 개발 이슈 후보 N개로 나눈다.
      *

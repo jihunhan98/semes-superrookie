@@ -15,10 +15,13 @@ class ReviewAnalysisStoreTest {
     RequirementRepository requirements = stub(RequirementRepository.class);
     RequirementFindingRepository findings = stub(RequirementFindingRepository.class);
     RequirementAiDraftRepository drafts = stub(RequirementAiDraftRepository.class);
-    ReviewAnalysisStore store = new ReviewAnalysisStore(requirements, findings, drafts, new ObjectMapper());
+    com.semes.reqops.domain.knowledge.GlossaryService glossary = stub(com.semes.reqops.domain.knowledge.GlossaryService.class);
+    com.semes.reqops.domain.knowledge.ClarificationStore clarifications = stub(com.semes.reqops.domain.knowledge.ClarificationStore.class);
+    ReviewAnalysisStore store = new ReviewAnalysisStore(requirements, findings, drafts, new ObjectMapper(), glossary, clarifications);
     ReviewAnalysisStoreTest() {
         when(requirements.findLockedById(1L)).thenReturn(Optional.of(stub(Requirement.class)));
         when(findings.findByRequirementIdOrderByIdAsc(1L)).thenReturn(List.of());
+        when(glossary.importCandidates(any(), any(), any(), any(), any())).thenReturn(new com.semes.reqops.domain.knowledge.GlossaryService.ImportResult(0, "glossary"));
     }
     @Test void repeatedTextWithoutExactLocationIsNotExecutable() {
         String text = "동일 문장. 동일 문장.";

@@ -38,12 +38,14 @@ class Finding:
     conflict_quote: str | None = None
     span_start: int = 0
     span_end: int = 0
+    question_text: str = ''
+    options: list[str] = field(default_factory=list)
 
     def to_dict(self):
         return dict(findingType=self.finding_type, targetSpan=self.target_span,
                     reason=self.reason, suggestion=self.suggestion, conflictReqKey=self.conflict_req_key,
                     severity=self.severity, proposals=self.proposals, interpretations=self.interpretations,
-                    conflictQuote=self.conflict_quote, spanStart=self.span_start, spanEnd=self.span_end)
+                    conflictQuote=self.conflict_quote, spanStart=self.span_start, spanEnd=self.span_end, questionText=self.question_text, options=self.options)
 
 
 def make(content, text, offset, kind, reason, suggestion, after=None, **kwargs):
@@ -56,7 +58,7 @@ def make(content, text, offset, kind, reason, suggestion, after=None, **kwargs):
                    span_start=utf16(content[:offset]), span_end=utf16(content[:offset + len(text)]), **kwargs)
 
 
-def detect(content: str, existing: list[dict] | None = None):
+def detect(content: str, existing: list[dict] | None = None, definitions: str = ""):
     existing = existing or []
     result = []
     known = {r['reqKey'].casefold(): r for r in existing}
@@ -65,7 +67,8 @@ def detect(content: str, existing: list[dict] | None = None):
             continue
         refs = rules._REQ_REFERENCE.findall(text)
         reference_text = '\n'.join(known[r.casefold()]['content'] for r in refs if r.casefold() in known)
-        other_context = content[:offset] + content[offset + len(text):] + '\n' + reference_text
+        other_context = content[:offset] + content[offset + len(text):] + '\n' + reference_text + '\n' + definitions
+        context_text = '\n'.join([content, reference_text, definitions])
         logic = re.search(r'([A-Za-z가-힣0-9_]+)\s*또는\s*([A-Za-z가-힣0-9_]+)\s*및\s*([A-Za-z0-9_]+|[가-힣]+?)(?=이면|일 때|인 경우|\s|[,.])', text)
         if logic and not re.search(r'모두|중 하나|괄호|\(', text):
             a, b, c = logic.groups()
@@ -94,13 +97,13 @@ def detect(content: str, existing: list[dict] | None = None):
                 continue
             if re.search(re.escape(phrase) + r'.{0,80}(정의|기준|란|의미|=)', other_context):
                 continue
-            if phrase in ('가용한 AMR', '가용 AMR') and re.search(r'IDLE|가용.{0,50}(정의|상태|SOC|SoC)', content + reference_text):
+            if phrase in ('가용한 AMR', '가용 AMR') and re.search(r'가용[^.\n]{0,80}(?:IDLE|정의|상태|SOC|SoC)', context_text):
                 continue
-            if phrase == 'SoC 최소값' and re.search(r'(?:SoC|SOC|배터리).{0,30}\d+\s*%', content + reference_text):
+            if phrase == 'SoC 최소값' and re.search(r'(?:SoC|SOC|배터리).{0,25}\d+\s*%\s*(?:이상|초과)|(?:SoC|SOC|배터리).{0,20}최소.{0,12}\d+\s*%', context_text):
                 continue
-            if phrase == '가장 가까운' and re.search(r'경로거리|직선거리|맨해튼|거리 기준', content + reference_text):
+            if phrase == '가장 가까운' and re.search(r'경로거리|직선거리|맨해튼|거리 기준', context_text):
                 continue
-            if phrase in ('즉시', '신속히', '주기적으로', '가능한 한 빠르게') and re.search(r'\d+\s*(ms|초|분)', content + reference_text):
+            if phrase in ('즉시', '신속히', '주기적으로', '가능한 한 빠르게') and re.search(r'\d+\s*(ms|초|분)', context_text):
                 continue
             replacements = {'SoC 최소값': '⟦최소 SOC(%): 입력 필요⟧',
                             '주기적으로': '⟦주기(ms): 입력 필요⟧마다',
@@ -117,10 +120,10 @@ def detect(content: str, existing: list[dict] | None = None):
             if '맨해튼 거리' in text and not any(x in content for x in ('작업 시작 위치', '요청 위치', '목적지', '도착 위치')):
                 result.append(make(content, text, offset, rules.T_QUANT, '거리 계산의 출발점과 도착점이 없어 같은 거리값을 재현할 수 없습니다.',
                     '거리 계산의 양 끝점을 입력하세요.', text.replace('맨해튼 거리', '⟦출발 위치: 입력 필요⟧와 ⟦도착 위치: 입력 필요⟧ 사이의 맨해튼 거리')))
-            if '선택한다' in text and not re.search(r'후보가 없|AMR이 없|대기|재시도|매칭 실패', content + reference_text):
+            if '선택한다' in text and not re.search(r'후보가 없|AMR이 없|대기|재시도|매칭 실패', context_text):
                 result.append(make(content, text, offset, rules.T_BOUNDARY, '조건을 만족하는 AMR이 한 대도 없을 때 매칭 요청의 결과가 정의되지 않았습니다.',
                     '후보가 없을 때의 동작을 정하세요.', text + ' 후보가 없으면 ⟦매칭 실패/대기 정책: 입력 필요⟧에 따른다.'))
-        if 'SoC 높은 순' in text and not re.search(r'동률|같으면|동일하면|같은 경우', content + reference_text):
+        if 'SoC 높은 순' in text and not re.search(r'동률|같으면|동일하면|같은 경우', context_text):
             result.append(make(content, text, offset, rules.T_BOUNDARY, '거리와 SoC가 모두 같을 때 최종 선택 기준이 없습니다.',
                 '동률 처리 기준을 입력하세요.', text + ' 동률이면 ⟦최종 선택 기준: 입력 필요⟧으로 정한다.'))
     result.extend(soc_conflicts(content, existing))
@@ -204,6 +207,8 @@ def model_findings(raw: dict, content: str, existing: list[dict]):
                  str(row.get('suggestion', ''))[:1000], interpretations=str(row['interpretations']),
                  conflict_req_key=conflict_key, conflict_quote=quote,
                  severity='BLOCKING' if other and (other.get('state') == 'CONFIRMED' or bool(other.get('version'))) and row['findingType'] == rules.T_CONFLICT else 'ADVISORY')
+        f.question_text = str(row.get('questionText') or '')[:1000]
+        f.options = [str(x)[:1000] for x in row.get('options', []) if isinstance(x, str)][:8]
         evidence = content + '\n' + (quote or '')
         for p in row.get('proposals', [])[:4]:
             operation = p.get('operation', 'REPLACE')

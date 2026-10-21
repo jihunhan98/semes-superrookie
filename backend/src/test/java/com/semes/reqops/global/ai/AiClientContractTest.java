@@ -17,6 +17,28 @@ class AiClientContractTest {
 
     @Test
     @EnabledIfSystemProperty(named = "ai.live", matches = "true")
+    void registrationQuestionsAndGlossaryCrossTheHttpBoundary() {
+        AiClient client = new AiClient("http://127.0.0.1:8001", 30000);
+        var response = client.analyzeWithGlossary(
+                "Task Step은 VCS에서 수행하는 단계다. 필요 시 작업을 재할당한다.",
+                null, null, List.of(), List.of(new AiAnalyzeDto.GlossaryTerm(
+                        1L, "Task Step", "태스크 수행 단계. ASSIGNED, MOVE_TO_LOAD 상태가 있다.", "CONFIRMED")));
+        assertNotEquals("unavailable", response.engine());
+        assertNotNull(response.terms());
+        assertTrue(response.terms().stream().noneMatch(t -> "Task Step".equals(t.name())));
+        assertTrue(response.terms().stream().anyMatch(t -> "VCS".equals(t.name())));
+        var question = response.findings().stream()
+                .filter(f -> "동작 조건 불명확".equals(f.findingType())).findFirst().orElseThrow();
+        assertTrue(question.questionText().contains("어떤 상황"));
+        assertTrue(question.options().contains("MOVE_TO_LOAD 상태가 되었을 때"));
+        var answer = client.insight("/clarify-answer", java.util.Map.of(
+                "content", "필요 시 작업을 재할당한다.", "targetSpan", "필요 시 작업을 재할당한다.",
+                "question", question.questionText(), "answer", "AMR 통신 장애가 발생했을 때"));
+        assertEquals("AMR 통신 장애가 발생했을 때 작업을 재할당한다.", answer.get("replacement"));
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "ai.live", matches = "true")
     void analyzeFull_모호표현과_상충을_찾고_draft를_돌려준다() {
         AiClient client = new AiClient("http://127.0.0.1:8001", 30000);
 
