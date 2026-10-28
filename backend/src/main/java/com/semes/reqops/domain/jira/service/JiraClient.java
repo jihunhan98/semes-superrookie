@@ -18,6 +18,19 @@ public class JiraClient {
     public JiraClient(@Value("${JIRA_BASE_URL:}")String base,@Value("${JIRA_API_TOKEN:}")String token,ObjectMapper mapper){
         this.configuredBase=base.isBlank()?"":JiraAddress.normalize(base);this.token=token;this.mapper=mapper;
     }
+    public JsonNode readIssue(String base,String key){
+        if(configuredBase.isBlank()||token.isBlank())throw new ApiErrors.Conflict("Jira 인증 연결이 설정되지 않았습니다.");
+        if(!JiraAddress.normalize(base).equals(configuredBase))throw new ApiErrors.Conflict("Jira 인증 연결 주소와 다릅니다.");
+        if(!key.matches("[A-Za-z][A-Za-z0-9_]*-[0-9]+"))throw new ApiErrors.BadRequest("Jira 이슈 키가 올바르지 않습니다.");
+        try{
+            var request=HttpRequest.newBuilder(URI.create(base+"/rest/api/2/issue/"+key+"?fields=summary,status,issuelinks"))
+                .timeout(Duration.ofSeconds(15)).header("Authorization","Bearer "+token).header("Accept","application/json").GET().build();
+            var response=client.send(request,HttpResponse.BodyHandlers.ofString());
+            if(response.statusCode()!=200)throw new ApiErrors.Conflict("Jira 연결 이슈를 조회하지 못했습니다. (HTTP "+response.statusCode()+")");
+            return mapper.readTree(response.body());
+        }catch(ApiErrors.Conflict e){throw e;}catch(InterruptedException e){Thread.currentThread().interrupt();throw new ApiErrors.Conflict("Jira 조회가 중단되었습니다.");}
+        catch(Exception e){throw new ApiErrors.Conflict("Jira 연결 이슈를 조회하지 못했습니다. 연결 상태를 확인해주세요.");}
+    }
     public String create(String base,Map<String,Object> fields){
         // Only the configured Jira origin can receive the server-side credential.
         if(configuredBase.isBlank()||token.isBlank())throw new ApiErrors.Conflict("Jira 인증 연결이 아직 설정되지 않았습니다. 프로젝트 등록은 저장되어 있습니다. 관리자에게 Jira 연결 설정을 요청해주세요.");

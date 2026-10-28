@@ -1,128 +1,13 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import {useParams,useRouter} from "next/navigation";
 import Header from "../../../components/Header";
 import ProjectSidebar from "../../../components/ProjectSidebar";
-import {
-  getProject,
-  listRequirements,
-  type ProjectDetail,
-  type ReqState,
-  type RequirementSummary,
-} from "../../../lib/api";
-import { getCurrentUser } from "../../../lib/session";
-
-/** 요구사항 목록(화면 1)과 같은 상태 점 색. */
-const STATE_COLOR: Record<ReqState, string> = {
-  RECEIVED: "#9aa5b1",
-  IN_REVIEW: "#d4a72c",
-  PENDING_CONSENSUS: "#8250df",
-  CONFIRMED: "#1f883d",
-  REVISING: "#0969da",
-  ON_HOLD: "#cf222e",
-};
-
-export default function ArtifactsPage() {
-  const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const projectId = Number(params.id);
-
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [rows, setRows] = useState<RequirementSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    if (!Number.isFinite(projectId)) return;
-
-    Promise.all([getProject(projectId, user.id), listRequirements(projectId, user.id)])
-      .then(([p, reqs]) => {
-        setProject(p);
-        setRows(reqs);
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "요구사항을 불러오지 못했습니다."));
-  }, [projectId, router]);
-
-  if (error) {
-    return (
-      <div className="appshell">
-        <Header />
-        <main className="main">
-          <p className="lmsg err">{error}</p>
-        </main>
-      </div>
-    );
-  }
-
-  if (!project || !rows) {
-    return (
-      <div className="appshell">
-        <Header />
-        <main className="main">
-          <div className="placeholder">불러오는 중…</div>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="appshell">
-      <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-      <div className="body">
-        {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
-        <main className="main">
-          <div className="rqtoolbar">
-            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
-              산출물 <span style={{ color: "var(--muted)", fontWeight: 600, fontSize: 16 }}>{rows.length}</span>
-            </h1>
-          </div>
-
-          {rows.length === 0 ? (
-            <div className="placeholder">아직 등록된 요구사항이 없습니다.</div>
-          ) : (
-            <div className="rqlist">
-              {rows.map((r) =>
-                r.state === "CONFIRMED" ? (
-                  <Link key={r.id} className="rqrow" href={`/projects/${projectId}/artifacts/${r.id}`}>
-                    <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
-                    <span className="rmid">{r.reqKey}</span>
-                    <span className="rtit">{r.content}</span>
-                    <span className="rt">
-                      <span className="tagv">🏷 v{r.version}</span>
-                      <span className="rasg">{r.assigneeName ?? "—"}</span>
-                    </span>
-                  </Link>
-                ) : (
-                  <div key={r.id} className="rqrow" style={{ cursor: "default" }}>
-                    <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
-                    <span className="rmid">{r.reqKey}</span>
-                    <span className="rtit">{r.content}</span>
-                    <span className="rt">
-                      <span
-                        className="lbl"
-                        style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}
-                      >
-                        {r.stateLabel}
-                      </span>
-                      <span className="rasg">{r.assigneeName ?? "—"}</span>
-                      <span style={{ fontSize: 12, color: "var(--faint)", width: 78, textAlign: "right" }}>
-                        확정 후 가능
-                      </span>
-                    </span>
-                  </div>
-                ),
-              )}
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+import {getProject,listRequirements,listDevIssues,type ProjectDetail,type RequirementSummary,type DevIssue} from "../../../lib/api";
+import {getCurrentUser} from "../../../lib/session";
+type Group={requirement:RequirementSummary;issues:DevIssue[];error?:string};
+export default function ArtifactsPage(){const {id}=useParams<{id:string}>(),router=useRouter(),projectId=Number(id);const [project,setProject]=useState<ProjectDetail|null>(null),[groups,setGroups]=useState<Group[]|null>(null),[error,setError]=useState("");
+useEffect(()=>{let active=true;const user=getCurrentUser();if(!user){router.replace('/login');return;}Promise.all([getProject(projectId,user.id),listRequirements(projectId,user.id)]).then(async([p,rs])=>{const rows=await Promise.all(rs.map(async requirement=>{try{return {requirement,issues:await listDevIssues(projectId,requirement.id,user.id)};}catch(e){return {requirement,issues:[],error:e instanceof Error?e.message:'이슈 조회 실패'};}}));if(active){setProject(p);setGroups(rows);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[projectId,router]);
+return <div className="appshell"><Header projectName={project?.name}/><div className="body">{project&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}<main className="main"><h1>산출물 · 개발 이슈 {groups?.reduce((n,g)=>n+g.issues.length,0)??''}</h1><p>요구사항에서 도출한 개발 이슈와 연결된 이슈를 확인합니다.</p>{error&&<p role="alert">{error}</p>}{!groups&&!error&&<p>불러오는 중…</p>}{groups?.map(({requirement:r,issues,error})=><section className="setcard" key={r.id} style={{padding:20,marginBottom:16}}><p>원본: <Link href={`/projects/${projectId}/requirements/${r.id}`}>{r.reqKey}</Link> · 요구사항 상태: {r.stateLabel}</p>{error?<p className="lmsg err">{error}</p>:issues.length?<><Link className="btn" href={`/projects/${projectId}/requirements/${r.id}/review`}>검토·확정 현황 보기 →</Link>{issues.map(issue=><p key={issue.id}><Link href={`/projects/${projectId}/requirements/${r.id}/issues/${issue.id}`}>{issue.issueKey} · {issue.title} →</Link></p>)}</>:<><p>아직 도출된 개발 이슈가 없습니다.</p><Link className="btn" href={`/projects/${projectId}/requirements/${r.id}/${r.state==='CONFIRMED'?'issues':'edit'}`}>{r.state==='CONFIRMED'?'개발 이슈 도출':'요구사항 검토·확정하기'} →</Link></>}</section>)}</main></div></div>;
 }

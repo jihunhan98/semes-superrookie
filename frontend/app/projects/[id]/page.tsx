@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../components/Header";
 import ProjectSidebar from "../../components/ProjectSidebar";
+import JiraOverview from "../../components/JiraOverview";
 import MembersCard from "../../components/MembersCard";
 import { getProject, listRequirements, type ProjectDetail, type RequirementSummary } from "../../lib/api";
 import { getCurrentUser } from "../../lib/session";
@@ -86,22 +87,6 @@ export default function ProjectHomePage() {
             <div className="metric-card amber"><span>확인 필요</span><b>{needsAttention}</b><small>AI 검출 항목 있음</small></div>
           </section>
 
-          <section className="project-workflow-card">
-            <div className="section-heading compact">
-              <div><span className="section-kicker">ACTIVE FLOW</span><h2>요구사항 처리 흐름</h2></div>
-              <Link href={`/projects/${detail.id}/requirements`}>전체 요구사항 →</Link>
-            </div>
-            <div className="project-flow">
-              <div><span>1</span><b>등록</b><small>원문 저장</small></div>
-              <i>→</i>
-              <div><span>2</span><b>검출·합의</b><small>고객 확인</small></div>
-              <i>→</i>
-              <div><span>3</span><b>도출</b><small>이슈·산출물</small></div>
-              <i>→</i>
-              <div><span>4</span><b>검토·확정</b><small>이력 고정</small></div>
-            </div>
-          </section>
-
           <div className="project-info-grid">
             <div className="setcard">
               <div className="seth">프로젝트 정보</div>
@@ -109,6 +94,7 @@ export default function ProjectHomePage() {
                 <div className="frow"><span className="k">프로젝트명</span><span>{detail.name}</span></div>
                 <div className="frow"><span className="k">고객사</span><span>{detail.customer || "—"}</span></div>
                 <div className="frow"><span className="k">설명</span><span>{detail.description || "—"}</span></div>
+                <JiraOverview projectId={projectId} />
                 {isOwner && <div style={{ marginTop: 12 }}><Link className="btn sm" href={`/projects/${detail.id}/settings`}>프로젝트 설정</Link></div>}
               </div>
             </div>
