@@ -1,5 +1,7 @@
 # ReqOps — 요구사항 검토 및 산출물 관리
 
+> **AI 요청 전체 설명:** [화면별 URL·UI 사진·서버→AI 흐름·실제 프롬프트 전문](docs/ai-request-flow.md) — 현재 실행 코드 기준 전체 호출 지도.
+
 > 등록 즉시 AI 질문과 프로젝트 용어사전을 정리합니다. 답변을 본문에 반영하거나 추후 결정으로 남기고, AI가 추정한 용어를 수정·확정할 수 있습니다. [새 기능·적용 방법](docs/registration-questions-and-glossary.md)
 > V007까지 적용된 기존 DB에서는 **이번 V008 변경분만 있는 `db/init.sql`**을 한 번 실행한 뒤 백엔드와 AI 서버, 프론트를 다시 시작하세요. V008과 init.sql은 같으므로 둘 중 하나만 실행합니다. 이전 검토 기능의 V007이 아직 없으면 먼저 적용해주세요.
 > Jira 연결 설정은 [설정·사용 방법](docs/jira-integration.md)을 참고하세요. 아직 Jira 테이블이 없는 DB에만 `db/migrations/V006__jira_projects.sql`을 별도로 적용하세요.
