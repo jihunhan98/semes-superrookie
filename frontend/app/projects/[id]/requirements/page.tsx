@@ -29,10 +29,9 @@ const STATE_COLOR: Record<ReqState, string> = {
 type StateFilter = "ALL" | "OPEN" | "CONFIRMED";
 
 function workflowStage(row: RequirementSummary) {
-  if (row.state === "CONFIRMED") return { number: 4, label: "도출 준비" };
+  if (row.state === "CONFIRMED") return { number: 3, label: "도출 준비" };
   if (row.state === "RECEIVED") return { number: 1, label: "등록" };
-  if (row.state === "PENDING_CONSENSUS" || row.state === "ON_HOLD") return { number: 3, label: "합의" };
-  return { number: 2, label: "검출·수정" };
+  return { number: 2, label: "검출·합의" };
 }
 
 export default function RequirementListPage() {
@@ -139,7 +138,6 @@ export default function RequirementListPage() {
             </Link>
           </section>
 
-          <section className="setcard" style={{padding:20,marginBottom:20}}><h2>등록 → 검출 → 합의 → 도출 준비</h2><p>등록: 본문 저장 · 검출: AI 결과 확인과 수정 · 합의: 고객 결정 기록 · 도출 준비: 요구사항 확정</p><p>목록의 단계는 저장된 업무 상태에 따른 안내입니다. AI 검토 완료 여부는 요구사항 상세에서 확인하세요. 보류는 합의가 더 필요한 상태이며, 고객 합의 대기는 합의 기록 저장 후 확정 전 상태입니다.</p></section>
           <section className="requirement-metrics" aria-label="요구사항 현황">
             <div><span>전체</span><b>{counts.all}</b></div>
             <div><span>진행 중</span><b>{counts.open}</b></div>

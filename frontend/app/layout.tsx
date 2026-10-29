@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AssistantPanel from "./components/AssistantPanel";
 
 export const metadata: Metadata = {
   title: "요구사항 엔지니어링",
@@ -14,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}<AssistantPanel /></body>
+      <body>{children}</body>
     </html>
   );
 }

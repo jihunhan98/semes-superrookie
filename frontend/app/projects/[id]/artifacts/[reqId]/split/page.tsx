@@ -100,8 +100,6 @@ export default function IssueSplitPage() {
       .then(async ([p, r]) => {
         setProject(p);
         setReq(r);
-        const savedIssues = await listDevIssues(projectId, requirementId, user.id);
-        if (savedIssues.length) { router.replace(`/projects/${projectId}/requirements/${requirementId}/review`); return; }
         if (r.state !== "CONFIRMED") return; // 아래 화면에서 안내만 하고 더 부르지 않는다.
 
         // 이미 나눠 놓은 이슈가 있으면 그걸 이어서 고치고, 없으면 AI 초안부터 받는다.

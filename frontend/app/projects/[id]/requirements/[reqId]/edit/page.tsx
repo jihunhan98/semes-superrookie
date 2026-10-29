@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../components/Header";
-import {openAssistant} from "../../../../../components/AssistantPanel";
 import Modal from "../../../../../components/Modal";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
@@ -76,7 +75,7 @@ export default function RequirementEditPage() {
     const user=getCurrentUser();if(!user)return;let cancelled=false;
     const timer=setInterval(()=>{const epoch=operation.current;Promise.all([getRequirement(projectId,requirementId,user.id),getRefinement(projectId,requirementId,user.id)]).then(([updated,ref])=>{
       if(cancelled||operationPending.current||epoch!==operation.current)return;
-      if(ref.exists || updated.reviewContext){setRequirement(updated);setRefinement(ref);setAnalysisContent(updated.aiDraftContent);if(!draftEdited.current)setDraft(ref.exists?ref.content:updated.aiDraftContent);window.dispatchEvent(new Event('reqops:glossary-updated'));}
+      if(ref.exists){setRequirement(updated);setRefinement(ref);setAnalysisContent(updated.aiDraftContent);if(!draftEdited.current)setDraft(ref.content);window.dispatchEvent(new Event('reqops:glossary-updated'));}
     }).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:"등록 검토 상태를 불러오지 못했습니다.");});},1500);
     return ()=>{cancelled=true;clearInterval(timer);};
   },[requirement?.id,requirement?.reviewContext,refinement?.exists,projectId,requirementId]);
@@ -92,17 +91,11 @@ export default function RequirementEditPage() {
     try{sessionStorage.setItem(draftKey,JSON.stringify({source:updated.content,text:ref.content,revision:ref.revision}));}catch{}
     window.dispatchEvent(new Event('reqops:glossary-updated'));
   }
-  async function analyze(request = prompt){
+  async function analyze(){
     const user=getCurrentUser();if(!user||!draft.trim())return;setAnalyzing(true);setError(null);operation.current++;operationPending.current=true;
-    try{const updated=await diffAnalyzeRequirement(projectId,requirementId,{userId:user.id,content:draft,reason:request.trim()});const ref=await getRefinement(projectId,requirementId,user.id);acceptServer(updated,ref);}
+    try{const updated=await diffAnalyzeRequirement(projectId,requirementId,{userId:user.id,content:draft,reason:prompt.trim()});const ref=await getRefinement(projectId,requirementId,user.id);acceptServer(updated,ref);}
     catch(e){setError(e instanceof Error?e.message:"AI 검토에 실패했습니다.");}finally{setAnalyzing(false);operationPending.current=false;}
   }
-  useEffect(()=>{
-    const context=(event:Event)=>{(event as CustomEvent).detail.draft=draft;};
-    const review=(event:Event)=>{if(!analyzing&&!busy&&!initialAnalysis&&draft.trim())analyze((event as CustomEvent).detail.message||"");};
-    window.addEventListener('reqops:assistant-context',context);window.addEventListener('reqops:assistant-review',review);
-    return()=>{window.removeEventListener('reqops:assistant-context',context);window.removeEventListener('reqops:assistant-review',review);};
-  });
   async function answerQuestion(id:number,answer:string){
     const user=getCurrentUser();if(!user||!refinement)return;setBusy(true);setAnswering(true);setError(null);operation.current++;operationPending.current=true;
     try{const ref=await answerClarification(projectId,requirementId,id,user.id,refinement.revision,answer);const updated=await getRequirement(projectId,requirementId,user.id);acceptServer(updated,ref);}
@@ -157,8 +150,8 @@ export default function RequirementEditPage() {
     {sidebarOpen&&<ProjectSidebar projectId={projectId} projectName={project.name} active="requirements"/>}
     <main className="main requirement-review-page compare-review-page" aria-busy={!!aiLoadingMessage}><WorkflowStepper step={2}/>
       <div className="crumb"><Link href={`/projects/${projectId}/requirements`}>요구사항</Link> / <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement.reqKey}</Link> / 검토·수정</div>
-      <section className="stage-heading"><div><span className="section-kicker">2단계 · {requirement.reqKey}</span><h1>검출 결과를 확인하고 요구사항을 수정하세요</h1><p>알고 있는 내용은 답변하고, 아직 정하지 못한 내용은 추후 결정으로 남겨두세요.</p></div><button className="btn" onClick={()=>setSidebarOpen(v=>!v)}>{sidebarOpen?"본문 넓게 보기":"메뉴 펼치기"}</button></section>
-      <div className="review-prompt"><b>검출 → 수정 → 요구사항 확정</b><button className="btn" onClick={openAssistant}>AI에게 질문하기</button><button className="btn" disabled={analyzing||busy||initialAnalysis||!draft.trim()} onClick={()=>analyze()}>AI 재검토</button></div>
+      <section className="stage-heading"><div><span className="section-kicker">2단계 · {requirement.reqKey}</span><h1>AI 질문에 답하며 요구사항을 정리하세요</h1><p>알고 있는 내용은 답변하고, 아직 정하지 못한 내용은 추후 결정으로 남겨두세요.</p></div><button className="btn" onClick={()=>setSidebarOpen(v=>!v)}>{sidebarOpen?"본문 넓게 보기":"메뉴 펼치기"}</button></section>
+      <section className="review-prompt"><div><b>추가 검토 요청</b><span>선택 입력</span></div><input disabled={analyzing||busy} value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="예: 기존 SOC 기준과 적용 조건을 비교해주세요"/><button className="btn" disabled={analyzing||busy||initialAnalysis||!draft.trim()} onClick={analyze}>{analyzing?"전체 문맥 검토 중…":"AI 재검토"}</button></section>
       {aiLoadingMessage&&<AiLoadingNotice message={aiLoadingMessage}/>}
       {!aiLoadingMessage&&<div className={`compare-coverage ${needsReview?"pending":""}`} role="status"><b>{analyzing?"현재 본문 전체와 기존 요구사항을 검토하고 있습니다.":coverage}</b><span>{draft!==analysisContent?"본문이 변경되었습니다. 수정 후 재검토가 필요합니다.":context?.status==="RULE_ONLY"?"규칙으로 확인할 수 있는 항목만 검토했습니다. 의미에 따른 상충을 모두 확인한 상태는 아닙니다.":"제안 적용은 선택 사항입니다. 직접 수정한 본문은 재검토해도 유지됩니다."}</span></div>}
       {refinement&&(refinement.pendingTerms>0||refinement.newTermCount>0)&&<div className="intake-glossary-alert"><div><b>{refinement.newTermCount>0?`새 용어 ${refinement.newTermCount}개를 용어사전에 등록했습니다.`:`확인할 용어가 ${refinement.pendingTerms}개 있습니다.`}</b><span>AI가 유추한 의미입니다. 용어 이름·내용·사용된 요구사항을 확인하고 수정해주세요.</span></div><Link className="btn" href={`/projects/${projectId}/glossary`}>용어 확인하기 →</Link></div>}
@@ -166,8 +159,8 @@ export default function RequirementEditPage() {
       {!aiLoadingMessage&&refinement?.dictionaryChanged&&<p className="question-review-needed">용어 정의가 바뀌었습니다. 새 정의를 참고하도록 AI 재검토를 실행해주세요.</p>}
       {recovery&&<div className="intake-recovery"><span>이 탭에 이전 편집 내용이 남아 있습니다.</span><button className="btn sm" disabled={busy||analyzing} onClick={()=>{changeDraft(recovery);setRecovery(null);}}>이전 편집 복원</button><button className="btn sm" onClick={()=>setRecovery(null)}>닫기</button></div>}
       {!aiLoadingMessage&&refinement?.exists&&refinement.content!==analysisContent&&<div className="intake-recovery"><span>다른 창에서 본문이나 질문이 변경되었습니다. 현재 편집은 유지했습니다.</span><button className="btn sm" disabled={busy||analyzing} onClick={loadServer}>서버의 최신 본문 불러오기</button></div>}
-      <div className="intake-workspace"><details><summary>추가 확인 질문 {openQuestions}건 · 답변 또는 추후 결정</summary><RequirementQuestions data={refinement} disabled={busy||!!aiLoadingMessage} dirty={questionDirty} loadingMessage={aiLoadingMessage} onAnswer={answerQuestion} onDefer={deferQuestion} storageKey={`${draftKey}:answers`}/></details><section className="intake-current-body"><header><div><span className="section-kicker">작성 중인 요구사항</span><h2>답변을 반영한 본문</h2><p>파란 부분은 최근 반영한 변경입니다. 직접 수정한 후에는 AI 재검토를 실행해주세요.</p></div></header><ReviewTextEditor ref={mainEditor} value={draft} ranges={recent} onChange={changeDraft} disabled={busy||!!aiLoadingMessage}/></section></div>
-      <details className="intake-advanced" open><summary>AI 검토 결과 {requirement.findings.length}건 · 원문과 수정안</summary>
+      <div className="intake-workspace"><RequirementQuestions data={refinement} disabled={busy||!!aiLoadingMessage} dirty={questionDirty} loadingMessage={aiLoadingMessage} onAnswer={answerQuestion} onDefer={deferQuestion} storageKey={`${draftKey}:answers`}/><section className="intake-current-body"><header><div><span className="section-kicker">작성 중인 요구사항</span><h2>답변을 반영한 본문</h2><p>파란 부분은 최근 반영한 변경입니다. 직접 수정한 후에는 AI 재검토를 실행해주세요.</p></div></header><ReviewTextEditor ref={mainEditor} value={draft} ranges={recent} onChange={changeDraft} disabled={busy||!!aiLoadingMessage}/></section></div>
+      <details className="intake-advanced"><summary>원문·수정안 비교해서 직접 편집하기</summary>
       <RequirementCompare key={`${context?.inputHash??"legacy"}:${requirement.findings.map(f=>f.id).join(",")}`} baseline={analysisContent} value={draft} findings={requirement.findings} onChange={changeDraft} onKeep={keep} onEditDecision={recordEdit} disabled={analyzing||busy} storageKey={`${draftKey}:compare`}/>
       </details>
       {error&&<p className="lmsg err" role="alert">{error}</p>}

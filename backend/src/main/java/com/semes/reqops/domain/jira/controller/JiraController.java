@@ -14,6 +14,5 @@ public class JiraController {
     @PatchMapping("/targets/{id}") public TargetResponse update(@PathVariable Long projectId,@PathVariable Long id,@Valid @RequestBody TargetInput input){return service.save(projectId,id,input);}
     @DeleteMapping("/targets/{id}") @ResponseStatus(HttpStatus.NO_CONTENT) public void delete(@PathVariable Long projectId,@PathVariable Long id,@RequestParam Long userId){service.delete(projectId,id,userId);}
     @GetMapping("/requirements/{requirementId}/links") public List<IssueLinkResponse> links(@PathVariable Long projectId,@PathVariable Long requirementId,@RequestParam Long userId){return service.issueLinks(projectId,requirementId,userId);}
-    @GetMapping("/requirements/{requirementId}/issues/{issueId}/incoming") public List<java.util.Map<String,Object>> incoming(@PathVariable Long projectId,@PathVariable Long requirementId,@PathVariable Long issueId,@RequestParam Long userId){return service.incoming(projectId,requirementId,issueId,userId);}
     @PostMapping("/requirements/{requirementId}/issues/{issueId}/open") public IssueLinkResponse open(@PathVariable Long projectId,@PathVariable Long requirementId,@PathVariable Long issueId,@Valid @RequestBody OpenRequest input){return service.open(projectId,requirementId,issueId,input);}
 }

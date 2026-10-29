@@ -1,6 +1,0 @@
-"use client";
-import {useState} from "react";
-import {http} from "../lib/http";
-import {getCurrentUser} from "../lib/session";
-type Incoming={sourceKey:string;key:string;title:string;state:string;relation:string;url:string};
-export default function IncomingIssues({projectId,requirementId,issueId}:{projectId:number;requirementId:number;issueId:number}){const [rows,setRows]=useState<Incoming[]|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");async function load(){const u=getCurrentUser();if(!u||busy)return;setBusy(true);setError("");try{setRows(await http<Incoming[]>(`/api/projects/${projectId}/jira/requirements/${requirementId}/issues/${issueId}/incoming?userId=${u.id}`));}catch(e){setError(e instanceof Error?e.message:'조회 실패');}finally{setBusy(false);}}return <section style={{marginTop:16}}><button className="btn sm" disabled={busy} onClick={load}>{busy?'연결 이슈 조회 중…':rows?'역방향 연결 이슈 새로고침':'역방향 연결 이슈 보기'}</button>{error&&<p className="lmsg err" role="alert">{error}</p>}{rows?.length===0&&<p>연결된 Jira 이슈가 없거나 역방향으로 연결된 이슈가 없습니다.</p>}{rows?.map((r,i)=><p key={i}><a href={r.url} target="_blank" rel="noopener noreferrer">{r.key} · {r.title} ↗</a> · {r.state} · {r.sourceKey} {r.relation}</p>)}</section>}

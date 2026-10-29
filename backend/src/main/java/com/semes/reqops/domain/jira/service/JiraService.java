@@ -81,27 +81,6 @@ public class JiraService {
         var saved=links.saveAndFlush(new JiraIssueLink(target.getId(),issueId,key));
         return link(target,saved,true);
     }
-    @Transactional(readOnly=true)
-    public List<Map<String,Object>> incoming(Long projectId,Long requirementId,Long issueId,Long userId){
-        member(projectId,userId,false);requirement(projectId,requirementId);
-        issues.findById(issueId).filter(i->i.getRequirementId().equals(requirementId)).orElseThrow(()->new ApiErrors.DevIssueNotFound(issueId.toString()));
-        List<Map<String,Object>> result=new ArrayList<>();
-        for(var target:targets.findByProjectIdOrderByIdAsc(projectId)){
-            var saved=links.findByTargetIdAndDevIssueId(target.getId(),issueId);
-            if(saved.isEmpty())continue;
-            var source=saved.get().getJiraIssueKey();
-            var node=client.readIssue(target.getBaseUrl(),source);
-            for(var relation:node.path("fields").path("issuelinks")){
-                var incoming=relation.path("inwardIssue");
-                if(incoming.isMissingNode())continue;
-                String key=incoming.path("key").asText();
-                if(!key.matches("[A-Za-z][A-Za-z0-9_]*-[0-9]+"))continue;
-                result.add(Map.of("sourceKey",source,"key",key,"title",incoming.path("fields").path("summary").asText(),
-                    "state",incoming.path("fields").path("status").path("name").asText(),"relation",relation.path("type").path("inward").asText(),"url",target.getBaseUrl()+"/browse/"+key));
-            }
-        }
-        return result;
-    }
     private String label(ArtifactType type){return switch(type){case VOC->"SWVOC";case FUNCTIONAL->"기능 요구사항";case NONFUNCTIONAL->"비기능 요구사항";case DETAIL_DESIGN->"Detail Design";};}
     private com.semes.reqops.domain.requirement.entity.Requirement requirement(Long projectId,Long id){return requirements.findById(id).filter(r->r.getProjectId().equals(projectId)).orElseThrow(()->new ApiErrors.RequirementNotFound(id));}
     private JiraTarget target(Long projectId,Long id){return targets.findByIdAndProjectId(id,projectId).orElseThrow(()->new ApiErrors.BadRequest("등록된 Jira 프로젝트를 찾을 수 없습니다."));}
