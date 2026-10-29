@@ -25,6 +25,11 @@ def heading(text: str) -> bool:
     return not re.search(r"한다|된다|해야|하면|이면|시킨다|합니다|처리하|전환하|기록하|선택하|재시도|수행하|설정하|포함하|보고하|기다린다|허용", text)
 
 
+def scope_note(text: str) -> bool:
+    """Scope and administrative agreements are not executable behaviour."""
+    return bool(re.search(r'(?:범위.{0,20}(?:제외|포함하지|해당하지)|별도(?:로)?\s*협의|본 문서.{0,20}(?:다루지|제외)|out of scope)', text, re.I))
+
+
 @dataclass
 class Finding:
     finding_type: str
@@ -63,7 +68,7 @@ def detect(content: str, existing: list[dict] | None = None, definitions: str = 
     result = []
     known = {r['reqKey'].casefold(): r for r in existing}
     for text, offset in sentences(content):
-        if heading(text):
+        if heading(text) or scope_note(text):
             continue
         refs = rules._REQ_REFERENCE.findall(text)
         reference_text = '\n'.join(known[r.casefold()]['content'] for r in refs if r.casefold() in known)
@@ -132,7 +137,7 @@ def detect(content: str, existing: list[dict] | None = None, definitions: str = 
 
 def soc_policies(content):
     for text, offset in sentences(content):
-        if heading(text):
+        if heading(text) or scope_note(text):
             continue
         m = re.search(r'(?:SOC|SoC|배터리(?: 잔량)?).{0,12}?(\d+(?:\.\d+)?)\s*%\s*(이상|초과|이하|미만)', text)
         scope = '매칭' if re.search(r'매칭|후보', text) else ('충전' if '충전' in text else None)
@@ -191,7 +196,7 @@ def model_findings(raw: dict, content: str, existing: list[dict]):
         if row['findingType'] is None:
             continue
         span = row.get('targetSpan', '')
-        if not span or len(span) > 500 or content.count(span) != 1 or heading(span):
+        if not span or len(span) > 500 or content.count(span) != 1 or heading(span) or scope_note(span):
             continue
         if row.get('findingType') not in rules.ALL_TYPES or not row.get('interpretations'):
             continue

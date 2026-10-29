@@ -105,9 +105,8 @@ export default function IssueSplitPage() {
         // 이미 나눠 놓은 이슈가 있으면 그걸 이어서 고치고, 없으면 AI 초안부터 받는다.
         const existing = await listDevIssues(projectId, requirementId, user.id);
         if (existing.length > 0) {
-          setCandidates(
-            existing.map((i) => ({ clientId: `saved-${i.id}`, title: i.title, quote: i.quote ?? "" })),
-          );
+          router.replace(`/projects/${projectId}/requirements/${requirementId}/review`);
+          return;
         } else {
           const preview = await previewIssueSplit(projectId, requirementId, { userId: user.id, reason: "" });
           setCandidates(preview.issues.map((i) => ({ clientId: newClientId(), title: i.title, quote: i.quote })));

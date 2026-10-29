@@ -39,6 +39,9 @@ export default function RequirementEditPage() {
   const [prompt,setPrompt]=useState(""); const [sidebarOpen,setSidebarOpen]=useState(true);
   const [busy,setBusy]=useState(false); const [analyzing,setAnalyzing]=useState(false);
   const [answering,setAnswering]=useState(false);
+  const [reviewDialog,setReviewDialog]=useState<"questions"|"findings"|null>(null);
+  const [reviewedContent,setReviewedContent]=useState<string|null>(null);
+  const promptedReview=useRef<string>("");
   const operation=useRef(0); const operationPending=useRef(false);
   const [error,setError]=useState<string|null>(null); const [confirmOpen,setConfirmOpen]=useState(false);
   const [method,setMethod]=useState(METHODS[0]); const [contact,setContact]=useState("");
@@ -84,16 +87,16 @@ export default function RequirementEditPage() {
     const refresh=()=>{const user=getCurrentUser();const epoch=operation.current;if(user&&!operationPending.current)getRefinement(projectId,requirementId,user.id).then(ref=>{if(!cancelled&&epoch===operation.current&&!operationPending.current)setRefinement(ref);}).catch(()=>{});};
     window.addEventListener("focus",refresh);return()=>{cancelled=true;window.removeEventListener("focus",refresh);};
   },[projectId,requirementId]);
-  function changeDraft(text:string){draftEdited.current=true;setDraft(text);if(requirement){try{sessionStorage.setItem(draftKey,JSON.stringify({source:requirement.content,text,revision:refinement?.revision}));}catch{}}}
+  function changeDraft(text:string){setReviewedContent(null);draftEdited.current=true;setDraft(text);if(requirement){try{sessionStorage.setItem(draftKey,JSON.stringify({source:requirement.content,text,revision:refinement?.revision}));}catch{}}}
   function acceptServer(updated:RequirementDetail,ref:RefinementView){
     const change=changedRange(draft,ref.content);setRecent(change.text?[{start:change.start,end:change.start+change.text.length}]:[]);
     setRequirement(updated);setRefinement(ref);setAnalysisContent(updated.aiDraftContent);setDraft(ref.content);draftEdited.current=false;setBlockingDecisionReason({});
     try{sessionStorage.setItem(draftKey,JSON.stringify({source:updated.content,text:ref.content,revision:ref.revision}));}catch{}
     window.dispatchEvent(new Event('reqops:glossary-updated'));
   }
-  async function analyze(){
+  async function analyze(finalReview=false){
     const user=getCurrentUser();if(!user||!draft.trim())return;setAnalyzing(true);setError(null);operation.current++;operationPending.current=true;
-    try{const updated=await diffAnalyzeRequirement(projectId,requirementId,{userId:user.id,content:draft,reason:prompt.trim()});const ref=await getRefinement(projectId,requirementId,user.id);acceptServer(updated,ref);}
+    try{const updated=await diffAnalyzeRequirement(projectId,requirementId,{userId:user.id,content:draft,reason:prompt.trim()});const ref=await getRefinement(projectId,requirementId,user.id);acceptServer(updated,ref);setReviewDialog(finalReview?"findings":ref.questions.some(q=>q.status==="OPEN")?"questions":"findings");}
     catch(e){setError(e instanceof Error?e.message:"AI 검토에 실패했습니다.");}finally{setAnalyzing(false);operationPending.current=false;}
   }
   async function answerQuestion(id:number,answer:string){
@@ -143,29 +146,49 @@ export default function RequirementEditPage() {
       router.push(`/projects/${projectId}/requirements/${requirementId}/issues`);
     }catch(e){setError(e instanceof Error?e.message:"확정하지 못했습니다.");}finally{setBusy(false);}
   }
-  const confirmDisabledReason=aiLoadingMessage?"AI 처리가 끝나면 확정할 수 있습니다.":busy?"저장 중입니다.":!draft.trim()?"본문을 입력해주세요.":missing?`본문의 미입력 표시 ${missing}곳을 채우고 다시 검토해주세요.`:needsReview?"현재 본문과 용어사전으로 AI 재검토를 완료해주세요.":openQuestions>0?`답변할 질문 ${openQuestions}건에 답하거나 추후 결정으로 남겨주세요.`:"";
+  const confirmDisabledReason=reviewedContent!==draft?"AI 검토 결과를 확인하고 검토 완료를 눌러주세요.":aiLoadingMessage?"AI 처리가 끝나면 확정할 수 있습니다.":busy?"저장 중입니다.":!draft.trim()?"본문을 입력해주세요.":missing?`본문의 미입력 표시 ${missing}곳을 채우고 다시 검토해주세요.`:needsReview?"현재 본문과 용어사전으로 AI 재검토를 완료해주세요.":openQuestions>0?`답변할 질문 ${openQuestions}건에 답하거나 추후 결정으로 남겨주세요.`:"";
+  useEffect(()=>{
+    if(aiLoadingMessage||!refinement?.exists||!context||needsReview)return;
+    const key=context.inputHash+":"+requirement?.id;
+    if(promptedReview.current===key)return;
+    promptedReview.current=key;
+    setReviewDialog(current=>current??(openQuestions?"questions":"findings"));
+  },[aiLoadingMessage,refinement?.exists,context?.inputHash,needsReview,openQuestions,requirement?.id]);
   if(!project||!requirement)return <div className="appshell"><Header/><main className="main"><p>{error??"요구사항을 불러오는 중…"}</p></main></div>;
-  const coverage=context?.status==="COMPLETE"?`기존 요구사항 ${context.comparedCount}/${context.totalCount}건 AI 검토 완료`:context?.status==="RULE_ONLY"?`규칙 검토 완료 · 기존 요구사항 ${context.totalCount}건 전달 · AI 문맥 검토 미완료`:context?.status==="PARTIAL"?`부분 검토 · 기존 요구사항 ${context.comparedCount}/${context.totalCount}건 AI 검토`:"AI 검토를 실행해주세요";
   return <div className="appshell"><Header projectName={project.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/><div className="body">
     {sidebarOpen&&<ProjectSidebar projectId={projectId} projectName={project.name} active="requirements"/>}
     <main className="main requirement-review-page compare-review-page" aria-busy={!!aiLoadingMessage}><WorkflowStepper step={2}/>
       <div className="crumb"><Link href={`/projects/${projectId}/requirements`}>요구사항</Link> / <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement.reqKey}</Link> / 검토·수정</div>
-      <section className="stage-heading"><div><span className="section-kicker">2단계 · {requirement.reqKey}</span><h1>AI 질문에 답하며 요구사항을 정리하세요</h1><p>알고 있는 내용은 답변하고, 아직 정하지 못한 내용은 추후 결정으로 남겨두세요.</p></div><button className="btn" onClick={()=>setSidebarOpen(v=>!v)}>{sidebarOpen?"본문 넓게 보기":"메뉴 펼치기"}</button></section>
-      <section className="review-prompt"><div><b>추가 검토 요청</b><span>선택 입력</span></div><input disabled={analyzing||busy} value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="예: 기존 SOC 기준과 적용 조건을 비교해주세요"/><button className="btn" disabled={analyzing||busy||initialAnalysis||!draft.trim()} onClick={analyze}>{analyzing?"전체 문맥 검토 중…":"AI 재검토"}</button></section>
+      <section className="stage-heading"><div><span className="section-kicker">2단계 · {requirement.reqKey}</span><h1>요구사항 검토·수정</h1><p>알고 있는 내용은 답변하고, 아직 정하지 못한 내용은 추후 결정으로 남겨두세요.</p></div><button className="btn" onClick={()=>setSidebarOpen(v=>!v)}>{sidebarOpen?"본문 넓게 보기":"메뉴 펼치기"}</button></section>
+      <section className="review-prompt"><div><b>추가 검토 요청</b><span>선택 입력</span></div><input disabled={analyzing||busy} value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="예: 기존 SOC 기준과 적용 조건을 비교해주세요"/><button className="btn" disabled={analyzing||busy||initialAnalysis||!draft.trim()} onClick={()=>analyze()}>{analyzing?"전체 문맥 검토 중…":"AI 재검토"}</button></section>
       {aiLoadingMessage&&<AiLoadingNotice message={aiLoadingMessage}/>}
-      {!aiLoadingMessage&&<div className={`compare-coverage ${needsReview?"pending":""}`} role="status"><b>{analyzing?"현재 본문 전체와 기존 요구사항을 검토하고 있습니다.":coverage}</b><span>{draft!==analysisContent?"본문이 변경되었습니다. 수정 후 재검토가 필요합니다.":context?.status==="RULE_ONLY"?"규칙으로 확인할 수 있는 항목만 검토했습니다. 의미에 따른 상충을 모두 확인한 상태는 아닙니다.":"제안 적용은 선택 사항입니다. 직접 수정한 본문은 재검토해도 유지됩니다."}</span></div>}
+
       {refinement&&(refinement.pendingTerms>0||refinement.newTermCount>0)&&<div className="intake-glossary-alert"><div><b>{refinement.newTermCount>0?`새 용어 ${refinement.newTermCount}개를 용어사전에 등록했습니다.`:`확인할 용어가 ${refinement.pendingTerms}개 있습니다.`}</b><span>AI가 유추한 의미입니다. 용어 이름·내용·사용된 요구사항을 확인하고 수정해주세요.</span></div><Link className="btn" href={`/projects/${projectId}/glossary`}>용어 확인하기 →</Link></div>}
       {!aiLoadingMessage&&refinement?.termStatus==="FAILED"&&<p className="lmsg err">AI 용어 추출을 완료하지 못했습니다. 문맥 규칙으로 만든 후보를 확인하거나 AI 재검토를 실행해주세요.</p>}
       {!aiLoadingMessage&&refinement?.dictionaryChanged&&<p className="question-review-needed">용어 정의가 바뀌었습니다. 새 정의를 참고하도록 AI 재검토를 실행해주세요.</p>}
       {recovery&&<div className="intake-recovery"><span>이 탭에 이전 편집 내용이 남아 있습니다.</span><button className="btn sm" disabled={busy||analyzing} onClick={()=>{changeDraft(recovery);setRecovery(null);}}>이전 편집 복원</button><button className="btn sm" onClick={()=>setRecovery(null)}>닫기</button></div>}
       {!aiLoadingMessage&&refinement?.exists&&refinement.content!==analysisContent&&<div className="intake-recovery"><span>다른 창에서 본문이나 질문이 변경되었습니다. 현재 편집은 유지했습니다.</span><button className="btn sm" disabled={busy||analyzing} onClick={loadServer}>서버의 최신 본문 불러오기</button></div>}
-      <div className="intake-workspace"><RequirementQuestions data={refinement} disabled={busy||!!aiLoadingMessage} dirty={questionDirty} loadingMessage={aiLoadingMessage} onAnswer={answerQuestion} onDefer={deferQuestion} storageKey={`${draftKey}:answers`}/><section className="intake-current-body"><header><div><span className="section-kicker">작성 중인 요구사항</span><h2>답변을 반영한 본문</h2><p>파란 부분은 최근 반영한 변경입니다. 직접 수정한 후에는 AI 재검토를 실행해주세요.</p></div></header><ReviewTextEditor ref={mainEditor} value={draft} ranges={recent} onChange={changeDraft} disabled={busy||!!aiLoadingMessage}/></section></div>
+      <section className="intake-current-body"><header><div><span className="section-kicker">작성 중인 요구사항</span><h2>요구사항 본문</h2><p>본문을 수정한 뒤 AI 검토를 실행하세요. 필요한 도메인 지식은 팝업에서 질문합니다.</p></div></header><ReviewTextEditor ref={mainEditor} value={draft} ranges={recent} onChange={changeDraft} disabled={busy||!!aiLoadingMessage}/></section>
+      {!aiLoadingMessage&&refinement?.exists&&<section className="review-result-summary"><div><b>AI 검토 결과</b><p>{openQuestions?`핵심 질문 ${openQuestions}건에 답하거나 추후 검토로 남겨주세요.`:"질문 답변과 본문을 바탕으로 검토 결과를 확인해주세요."}</p></div><button className="btn prim" disabled={busy} onClick={()=>setReviewDialog(openQuestions?"questions":"findings")}>검토 결과 확인</button></section>}
       <details className="intake-advanced"><summary>원문·수정안 비교해서 직접 편집하기</summary>
       <RequirementCompare key={`${context?.inputHash??"legacy"}:${requirement.findings.map(f=>f.id).join(",")}`} baseline={analysisContent} value={draft} findings={requirement.findings} onChange={changeDraft} onKeep={keep} onEditDecision={recordEdit} disabled={analyzing||busy} storageKey={`${draftKey}:compare`}/>
       </details>
       {error&&<p className="lmsg err" role="alert">{error}</p>}
       <footer className="stage-action-bar"><div><b>답변할 질문 {openQuestions}건 · 추후 결정 {deferredQuestions}건</b><span>{confirmDisabledReason||`추후 결정 항목은 보존하며, 고객 합의 후 v${requirement.nextVersion}으로 확정합니다.`}</span></div><button className="btn" onClick={hold} disabled={busy||analyzing}>보류</button><button className="btn prim" title={confirmDisabledReason||"고객 합의 정보를 입력합니다."} disabled={!!confirmDisabledReason} onClick={()=>{setError(null);setConfirmOpen(true);}}>요구사항 확정</button></footer>
     </main></div>
+    {reviewDialog&&<Modal title={reviewDialog==="questions"?"1차 검토 · 도메인 지식 확인":"최종 검토 · 확인이 필요한 항목"} wide onClose={()=>{if(!busy&&!analyzing)setReviewDialog(null);}}>
+      {aiLoadingMessage?<AiLoadingNotice message={aiLoadingMessage}/>:reviewDialog==="questions"?<>
+        <p>구현과 판단에 필요한 핵심 정보만 확인합니다. 선택지를 누르거나 직접 입력해주세요. 지금 필요하지 않은 질문은 나중에 결정할 수 있습니다.</p>
+        <RequirementQuestions data={refinement} disabled={busy} dirty={questionDirty} onAnswer={answerQuestion} onDefer={deferQuestion} storageKey={`${draftKey}:answers`}/>
+        <div className="modal-actions"><button className="btn" onClick={()=>setReviewDialog(null)}>본문 수정</button><button className="btn prim" disabled={busy||openQuestions>0} onClick={()=>analyze(true)}>답변과 본문으로 최종 검토</button></div>
+      </>:<>
+        <p>AI가 지적한 내용과 근거를 확인하세요. 수정할 항목은 본문에서 고친 뒤 재검토하고, 현재 적용하지 않을 제안은 원문 유지로 기록하세요.</p>
+        <RequirementCompare key={context?.inputHash} baseline={analysisContent} value={draft} findings={requirement.findings} onChange={changeDraft} onKeep={keep} onEditDecision={recordEdit} disabled={busy||analyzing} storageKey={`${draftKey}:final`}/>
+        {!requirement.findings.some(f=>f.resolutionState==="OPEN")&&<p className="question-notice">현재 추가로 지적된 항목이 없습니다. 본문을 확인한 후 검토를 완료해주세요.</p>}
+        <div className="modal-actions">{openQuestions>0&&<button className="btn" onClick={()=>setReviewDialog("questions")}>추가 확인 질문에 답변</button>}<button className="btn" onClick={()=>setReviewDialog(null)}>본문으로 돌아가 수정</button><button className="btn prim" disabled={busy||needsReview||openQuestions>0} onClick={()=>{setReviewedContent(draft);setReviewDialog(null);}}>검토 완료</button></div>
+      </>}
+      {error&&<p className="lmsg err" role="alert">{error}</p>}
+    </Modal>}
     {confirmOpen&&<Modal title="고객 합의 기록 및 요구사항 확정" icon="✓" wide onClose={()=>!busy&&setConfirmOpen(false)}>
       <div className="consensus-dialog-intro"><b>검토한 현재 본문으로 고객 합의를 기록합니다.</b>{deferredQuestions>0&&<p>추후 결정 {deferredQuestions}건은 미결정 상태로 남습니다. 기존 요구사항과의 상충 항목은 별도 고객 결정 근거를 입력해주세요.</p>}<span>합의 기록과 최종 본문은 버전 이력에 함께 보존됩니다.</span></div>
       <div className="consensus-dialog-grid"><label><span>합의 방법</span><select value={method} onChange={e=>setMethod(e.target.value)}>{METHODS.map(m=><option key={m}>{m}</option>)}</select></label><label><span>고객 담당자</span><input value={contact} onChange={e=>setContact(e.target.value)}/></label><label><span>합의일</span><input type="date" value={agreedOn} onChange={e=>setAgreedOn(e.target.value)}/></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} onChange={e=>setAgreement(e.target.value)}/></label>

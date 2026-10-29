@@ -152,3 +152,16 @@ def test_old_llm_labels_merge_and_removed_reference_is_ignored(monkeypatch):
     body=analyze('REQ-12에 따라 처리한다. 응답이 없으면 재시도한다.')
     assert body['reviewStatus']=='COMPLETE'
     assert all(f['findingType']=='수치·판단 기준 불명확' for f in body['findings'])
+
+
+def test_scope_exclusions_do_not_generate_execution_questions():
+    text = '스텝 정의 자체의 생성,수정,삭제는 본 문서 범위에서 제외하며, 필요 시 별도로 협의한다.'
+    assert review.detect(text) == []
+    assert review.model_findings({'findings': [{'findingType': '동작 조건 불명확', 'targetSpan': text, 'reason': '필요 시 조건 누락', 'interpretations': '협의 조건 차이'}]}, text, []) == []
+
+
+def test_scope_note_does_not_hide_an_operational_issue_in_next_sentence():
+    text = '스텝 정의 관리는 본 문서 범위에서 제외한다. 응답이 없으면 재시도한다.'
+    findings = review.detect(text)
+    assert any('응답' in f.target_span for f in findings)
+    assert all('범위' not in f.target_span for f in findings)
