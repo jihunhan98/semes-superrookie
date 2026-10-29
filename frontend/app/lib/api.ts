@@ -144,7 +144,7 @@ export type ReqState =
 
 export type ReviewProposal = { label: string; operation: "REPLACE" | "INSERT_BEFORE" | "INSERT_AFTER" | "DELETE";
   before: string; after: string; start: number; end: number; needsInput: boolean };
-export type ReviewContext = { inputHash: string; existingHash: string; status: "COMPLETE" | "RULE_ONLY" | "PARTIAL" | "FAILED";
+export type ReviewContext = { inputHash: string; existingHash: string; status: "COMPLETE" | "RULE_ONLY" | "PARTIAL" | "FAILED" | "USER_REVIEWED";
   comparedCount: number; totalCount: number; glossaryHash?: string; newTermCount?: number };
 /** 문맥 검토 결과와 사용자가 선택해 적용하는 편집안. */
 export type Finding = {
@@ -552,3 +552,8 @@ export function reviewGlossaryTerm(projectId:number,term:ProjectTerm,userId:numb
 export function getRefinement(projectId:number,requirementId:number,userId:number):Promise<RefinementView>{return getJson(`/api/projects/${projectId}/requirements/${requirementId}/refinement?userId=${userId}`);}
 export function answerClarification(projectId:number,requirementId:number,questionId:number,userId:number,revision:number,answer:string):Promise<RefinementView>{return postJson(`/api/projects/${projectId}/requirements/${requirementId}/clarifications/${questionId}/answer`,{userId,revision,answer});}
 export function deferClarification(projectId:number,requirementId:number,questionId:number,userId:number,revision:number,note:string):Promise<RefinementView>{return postJson(`/api/projects/${projectId}/requirements/${requirementId}/clarifications/${questionId}/defer`,{userId,revision,note});}
+
+export type ProposalDecision = { findingId:number; action:"APPLY"|"EDIT"|"EXCLUDE"; proposalIndex?:number; replacement?:string; reason?:string };
+export function completeProposalReview(projectId:number,requirementId:number,input:{userId:number;inputHash:string;content:string;manualContent:boolean;decisions:ProposalDecision[]}):Promise<RequirementDetail>{
+  return postJson(`/api/projects/${projectId}/requirements/${requirementId}/complete-review`,input);
+}

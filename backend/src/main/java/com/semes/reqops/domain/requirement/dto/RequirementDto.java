@@ -138,6 +138,13 @@ public final class RequirementDto {
 
     public record FindingDecision(@NotNull Long findingId, @NotBlank String action,
                                   @Size(max = 1000) String reason) {}
+    /** User decisions for the entire current AI analysis, bound to its input hash. */
+    public record CompleteReviewRequest(@NotNull Long userId, @NotBlank String inputHash,
+            @NotBlank String content, boolean manualContent,
+            @NotNull List<@NotNull @jakarta.validation.Valid ProposalDecision> decisions) {}
+    public record ProposalDecision(@NotNull Long findingId, @NotBlank String action,
+            Integer proposalIndex, @Size(max=12000) String replacement, @Size(max=1000) String reason) {}
+
     public record DecisionRequest(@NotNull Long userId, @NotBlank String action,
                                   @NotBlank String content, @Size(max = 1000) String reason,
                                   Integer proposalIndex, Integer start, Integer end, String resultContent) {}

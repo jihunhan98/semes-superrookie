@@ -46,6 +46,8 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.HexFormat;
 import java.util.UUID;
@@ -263,8 +265,8 @@ public class RequirementService {
             throw new ApiErrors.Conflict("검토가 완료되지 않았습니다. AI 재검토를 다시 실행해주세요.");
         }
 
-        if (clarificationStore.openCount(requirementId) > 0) {
-            throw new ApiErrors.Conflict("답변할 질문이 남아 있습니다. 답변하거나 추후 결정으로 남겨주세요.");
+        if (!"USER_REVIEWED".equals(context.status())) {
+            throw new ApiErrors.Conflict("AI 변경 제안의 적용·직접 수정·제외 결정을 저장한 뒤 확정해주세요.");
         }
 
         RequirementConsensus consensus = req.consensusId() == null
@@ -323,6 +325,48 @@ public class RequirementService {
         bundleService.start(requirementId, savedVersion.getId(), req.userId());
 
         return detail(projectId, requirementId, req.userId());
+    }
+
+    @Transactional
+    public DetailResponse completeReview(Long projectId, Long requirementId,
+            com.semes.reqops.domain.requirement.dto.RequirementDto.CompleteReviewRequest req) {
+        requireMember(projectId,req.userId());
+        Requirement r=findInProject(projectId,requirementId);
+        requirementRepository.findLockedById(requirementId).orElseThrow();
+        var latest=aiDraftRepository.findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
+        var context=reviewStore.context(latest);
+        if(context==null || latest==null || !context.inputHash().equals(req.inputHash()))
+            throw new ApiErrors.Conflict("AI 검토 결과가 변경되었습니다. 새 결과를 확인해주세요.");
+        if(List.of("FAILED","PARTIAL").contains(context.status()))
+            throw new ApiErrors.Conflict("AI 분석을 완료하지 못했습니다. 다시 분석해주세요.");
+        if(!context.existingHash().equals(reviewStore.existingHash(reviewStore.existing(projectId,requirementId)))
+                || !Objects.equals(context.glossaryHash(),glossaryService.hash(glossaryService.forAnalysis(projectId))))
+            throw new ApiErrors.Conflict("다른 요구사항이나 용어가 변경되었습니다. 다시 분석해주세요.");
+        var active=findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
+            .filter(f->List.of("OPEN","KEPT").contains(f.getResolutionState())).toList();
+        if(active.stream().anyMatch(f->!Objects.equals(f.getInputHash(),context.inputHash())))
+            throw new ApiErrors.Conflict("이전 분석 항목이 섞여 있습니다. 다시 분석해주세요.");
+        var choices=ProposalReview.validate(latest.getDraftContent(),req.content(),req.manualContent(),active,
+                req.decisions(),f->reviewStore.response(f).proposals());
+        for(var f:active) {
+            var d=choices.get(f.getId());
+            // Excluded confirmed conflicts still require the customer's explicit reason at confirmation.
+            if("EXCLUDE".equals(d.action()) && "BLOCKING".equals(f.getSeverity())) f.keepOriginal();
+            else f.resolve();
+            findingRepository.save(f);
+            ReviewItem item=reviewItemRepository.save(new ReviewItem(requirementId,f.getId(),f.getFindingType(),
+                f.getReason(),reviewStore.json(Map.of("targetSpan",f.getTargetSpan(),"analysisInputHash",req.inputHash())),
+                sha256(requirementId+":"+f.getId()+":proposal:"+UUID.randomUUID())));
+            Map<String,Object> audit=new LinkedHashMap<>();audit.put("decision",d);audit.put("finalContent",req.content());
+            audit.put("manualContent",req.manualContent());
+            userDecisionRepository.save(new UserDecision(item.getId(),d.action(),reviewStore.json(audit),d.reason(),req.userId()));
+        }
+        var reviewed=new RequirementAiDraft(requirementId,req.content(),latest.getEngine());
+        reviewed.setReviewData(reviewStore.json(new AiAnalyzeDto.ReviewContext(ReviewAnalysisStore.hash(req.content()),
+            context.existingHash(),"USER_REVIEWED",context.comparedCount(),context.totalCount(),context.glossaryHash(),context.newTermCount())));
+        aiDraftRepository.saveAndFlush(reviewed);
+        clarificationStore.reconcile(requirementId,req.content(),List.of(),"USER_REVIEWED",0,"COMPLETE",context.glossaryHash());
+        return detail(projectId,requirementId,req.userId());
     }
 
     @Transactional

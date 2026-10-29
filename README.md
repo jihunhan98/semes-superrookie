@@ -1,5 +1,7 @@
 # ReqOps — 요구사항 검토 및 산출물 관리
 
+> **최신 요구사항 검토:** [AI 변경 이유·수정안 적용/직접 수정/제외와 고객 합의 확정](docs/proposal-review.md)
+
 > **AI 요청 전체 설명:** [화면별 URL·UI 사진·서버→AI 흐름·실제 프롬프트 전문](docs/ai-request-flow.md) — 현재 실행 코드 기준 전체 호출 지도.
 
 > 등록 즉시 AI 질문과 프로젝트 용어사전을 정리합니다. 답변을 본문에 반영하거나 추후 결정으로 남기고, AI가 추정한 용어를 수정·확정할 수 있습니다. [새 기능·적용 방법](docs/registration-questions-and-glossary.md)

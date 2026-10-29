@@ -105,6 +105,7 @@ public class RequirementFinding {
         this.suggestionData = data;
     }
     public void supersede() { this.resolutionState = "SUPERSEDED"; }
+    public void resolve() { this.resolutionState = "RESOLVED"; }
     public void keepOriginal() { this.resolutionState = "KEPT"; }
     public void acceptWithReason() { this.resolutionState = "ACCEPTED_WITH_REASON"; }
     public LocalDateTime getCreatedAt() { return createdAt; }

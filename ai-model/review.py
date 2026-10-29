@@ -222,10 +222,15 @@ def model_findings(raw: dict, content: str, existing: list[dict]):
                 continue
             if operation != 'DELETE' and not after.strip():
                 continue
-            # Proposed numeric policies must exist in the sources or be explicit input markers.
+            # New numerical candidates remain proposals and are explicitly labeled for user approval.
             new_numbers = re.findall(r'\d+(?:\.\d+)?', MARKER.sub('', after))
-            if any(n not in re.findall(r'\d+(?:\.\d+)?', evidence) for n in new_numbers):
-                continue
+            numeric_candidate = any(n not in re.findall(r'\d+(?:\.\d+)?', evidence) for n in new_numbers)
+            if numeric_candidate:
+                # Candidates are allowed only as explicit user-reviewed proposals, never source facts.
+                p = dict(p, label='AI 제안값 · 사용자 확인: ' + str(p.get('label', '수정안')))
+                notice = 'AI 제안값은 원문에서 확인된 수치가 아니므로 적용 전에 사용자가 검토해야 합니다.'
+                if notice not in f.interpretations:
+                    f.interpretations += '\n' + notice
             if len(after) > 6000:
                 continue
             f.proposals.append(dict(label=str(p.get('label', '제안 적용'))[:100],

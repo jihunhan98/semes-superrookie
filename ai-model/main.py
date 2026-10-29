@@ -289,6 +289,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     batches.append(batch)
     if PROVIDER.enabled:
         successes = 0
+        model_results = []
         for batch in batches:
             try:
                 user = _user_msg(req.content, req.reason, [ExistingRequirement(**e) for e in batch])
@@ -311,6 +312,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                         or rules.normalize_type(row.get("findingType")) is None):
                         invalid = True
                 findings.extend(validated)
+                model_results.extend(validated)
                 reviewed += len(batch)
                 successes += 1
             except ProviderError as error:
@@ -319,6 +321,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 log.warning("요구사항 검토 배치 실패; 규칙 검토 결과를 유지합니다.")
         engine = PROVIDER.name if successes else "rule"
         status = "COMPLETE" if successes == len(batches) and not invalid else "PARTIAL"
+        if status == "COMPLETE":
+            findings = model_results  # A successful contextual review supersedes mechanical fallback questions.
     if invalid: status = "PARTIAL"
     findings = intake.attach_questions(review.dedupe(findings), effective_glossary)
     return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in findings],
@@ -460,7 +464,10 @@ _SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 
 제목, 목차, 단순 나열의 '및', '등', 문체는 검출하지 않는다. 전체 본문, 용어 정의, 참조를 먼저 확인한다.
 정의된 기준을 다시 누락으로 지적하지 않는다. 같은 대상·속성·조건·시점인지 확인해야 상충이다.
 버전이 없는 초안은 공식 확정 기준이 아니다. 버전이 있으면 전달된 본문은 마지막 확정본이며 수정 중 상태여도 기존 확정 기준으로 비교한다. 현재 본문과 기존 요구사항을 모두 읽고 변경 전후와 삭제도 검토한다.
-숫자·주체·업무 정책을 만들어 확정하지 않는다. 근거 없는 값은 ⟦항목명: 입력 필요⟧로 표시한다.
+각 지적마다 1) 변경 대상으로 삼은 구체적 이유와 구현·시험 결과의 차이, 2) 바로 적용 가능한 완성된 수정 문장을 반드시 제시한다. 질문으로 되묻는 대신 수정안을 제안한다.
+기존 본문과 용어·관련 요구사항에 이미 있는 수치와 정책을 우선 사용한다. 일반적인 대기시간·재시도 횟수 등 미정 기준은 문맥에 맞는 합리적인 후보 수치를 제안하고, reason 또는 interpretations에 선정 이유와 'AI 제안값 · 사용자 확인 필요'를 명시한다. 예를 들어 통신 응답의 대기시간과 재시도 정책을 제안할 때 시간 단위, 횟수, 실패 동작을 함께 쓴다.
+미정 수치 후보는 확정 사실이 아니며 사용자가 적용·수정·제외를 결정한다. 안전 한계·장비 물리 제약처럼 자료 없이 적절한 값을 정할 수 없는 항목은 구체적으로 필요한 기준을 설명하고 입력 필요 표시를 둔다.
+이미 명시된 수치·주체·업무 정책은 제멋대로 바꾸지 않는다. 상충 해결에는 실제 다른 요구사항의 기준을 근거로 제안한다. proposals에는 최소 한 개의 수정문과 그 선택 이유를 제공한다.
 제안은 설명이 아니라 그대로 넣을 문장이다. 교체/앞뒤 삽입/삭제를 구분하고 대안은 따로 제시한다.
 문제마다 서로 다른 해석과 결과 차이를 interpretations에 구체적으로 쓴다.
 JSON만 반환한다. 문제 없으면 {"findings":[]}.

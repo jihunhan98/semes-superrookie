@@ -67,16 +67,15 @@ class RequirementReviewGuardTest {
         var error=assertThrows(ApiErrors.Conflict.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
         assertTrue(error.getMessage().contains("용어사전"));
     }
-    @Test void openQuestionMustBeAnsweredOrDeferredBeforeConfirmation() {
+    @Test void proposalDecisionsMustBeSavedBeforeConfirmation() {
         freshReview("current");
-        when(clarificationStore.openCount(2L)).thenReturn(1L);
         var error=assertThrows(ApiErrors.Conflict.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
-        assertTrue(error.getMessage().contains("추후 결정"));
+        assertTrue(error.getMessage().contains("결정을 저장"));
         verifyNoInteractions(consensusRepository);
     }
-    @Test void noOpenQuestionsContinuesToCustomerConsensus() {
+    @Test void savedUserReviewContinuesToCustomerConsensus() {
         freshReview("current");
-        when(clarificationStore.openCount(2L)).thenReturn(0L);
+        when(reviewStore.context(null)).thenReturn(new ReviewContext(ReviewAnalysisStore.hash("본문"),"existing","USER_REVIEWED",0,0,"current",0));
         when(consensusRepository.findFirstByRequirementIdOrderByIdDesc(2L)).thenReturn(Optional.empty());
         assertThrows(ApiErrors.ConsensusRequired.class,()->service.confirm(1L,2L,new ConfirmRequest(7L,"본문","제목",null,null)));
     }

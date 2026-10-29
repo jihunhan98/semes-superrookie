@@ -101,10 +101,12 @@ def test_bad_llm_location_is_not_executable_and_is_reported(monkeypatch):
     assert body['reviewStatus'] == 'PARTIAL'
 
 
-def test_model_cannot_insert_unfounded_numeric_policy():
+def test_model_can_offer_numeric_candidates_only_as_explicit_user_reviewed_proposals():
     rows = review.model_findings({'findings':[{'targetSpan':'응답이 없으면 재시도한다.', 'findingType':'시간·일정 모호',
             'interpretations':'타임아웃 시간이 다르면 재시도 시점이 달라진다.', 'proposals':[{'after':'1초 후 3회 재시도한다.'}]}]}, '응답이 없으면 재시도한다.', [])
-    assert rows and not rows[0].proposals
+    assert rows and rows[0].proposals
+    assert "사용자 확인" in rows[0].proposals[0]["label"]
+    assert "원문에서 확인된 수치가 아니" in rows[0].interpretations
 
 
 def test_existing_batches_are_complete_not_truncated(monkeypatch):
@@ -165,3 +167,15 @@ def test_scope_note_does_not_hide_an_operational_issue_in_next_sentence():
     findings = review.detect(text)
     assert any('응답' in f.target_span for f in findings)
     assert all('범위' not in f.target_span for f in findings)
+
+
+def test_successful_contextual_review_does_not_readd_mechanical_fallback_questions(monkeypatch):
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            return '{"terms":[]}' if '핵심 도메인 용어만' in system else '{"findings":[]}'
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('응답이 없으면 재시도한다.')
+    assert body['reviewStatus'] == 'COMPLETE'
+    assert body['findings'] == []

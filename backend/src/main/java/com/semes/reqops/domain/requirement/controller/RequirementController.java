@@ -73,6 +73,12 @@ public class RequirementController {
      * <p>이 기록이 있어야만 확정할 수 있다. 합의할 때마다 새로 쌓이고,
      * 확정은 가장 마지막 기록을 근거로 삼는다.
      */
+    @PostMapping("/{requirementId}/complete-review")
+    public DetailResponse completeReview(@PathVariable Long projectId, @PathVariable Long requirementId,
+            @Valid @RequestBody com.semes.reqops.domain.requirement.dto.RequirementDto.CompleteReviewRequest request) {
+        return requirementService.completeReview(projectId, requirementId, request);
+    }
+
     @PostMapping("/{requirementId}/consensus")
     public DetailResponse recordConsensus(@PathVariable Long projectId,
                                           @PathVariable Long requirementId,
