@@ -27,6 +27,7 @@ class RequirementReviewGuardTest {
     @Mock com.semes.reqops.domain.knowledge.GlossaryService glossaryService;
     @Mock com.semes.reqops.domain.knowledge.ClarificationStore clarificationStore;
     @Mock RequirementConsensusRepository consensusRepository;
+    @Mock RequirementVersionRepository versionRepository;
     @InjectMocks RequirementService service;
     void member() {
         when(membershipRepository.findByUserIdAndProjectId(7L,1L)).thenReturn(Optional.of(mock(Membership.class)));

@@ -105,7 +105,7 @@ public final class RequirementDto {
             String usedForVersion
     ) {}
 
-    /** 합의 기록 요청 — 이 기록이 있어야만 확정할 수 있다. */
+    /** 변경한 본문의 합의 기록 요청. 등록·기존 확정 본문 유지 시 재입력하지 않는다. */
     public record ConsensusRequest(
             @NotNull Long userId,
             @NotBlank @Size(max = 40) String method,

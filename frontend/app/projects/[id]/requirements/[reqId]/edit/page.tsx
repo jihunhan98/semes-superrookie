@@ -8,6 +8,8 @@ import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import Modal from "../../../../../components/Modal";
+import ConsensusDocumentPreview from "../../../../../components/ConsensusDocumentPreview";
+import {hasRequirementChanges} from "../../../../../lib/review/consensus.mjs";
 import RequirementReviewDocument from "../../../../../components/RequirementReviewDocument";
 import RequirementProposalCards from "../../../../../components/RequirementProposalCards";
 import {composeProposals} from "../../../../../lib/review/proposals.mjs";
@@ -22,7 +24,7 @@ export default function RequirementEditPage(){
  const [project,setProject]=useState<ProjectDetail|null>(null),[requirement,setRequirement]=useState<RequirementDetail|null>(null),[refinement,setRefinement]=useState<RefinementView|null>(null);
  const [choices,setChoices]=useState<Record<number,ProposalDecision>>({}),[selectedId,setSelectedId]=useState<number|null>(null),[dirtyDraft,setDirtyDraft]=useState(false);
  const [busy,setBusy]=useState(false),[analyzing,setAnalyzing]=useState(false),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState("");
- const [sidebarOpen,setSidebarOpen]=useState(true),[prompt,setPrompt]=useState(""),[confirmOpen,setConfirmOpen]=useState(false);
+ const [sidebarOpen,setSidebarOpen]=useState(true),[prompt,setPrompt]=useState(""),[confirmOpen,setConfirmOpen]=useState(false),[readerExpanded,setReaderExpanded]=useState(false);
  const [method,setMethod]=useState(METHODS[0]),[contact,setContact]=useState(""),[agreedOn,setAgreedOn]=useState(today()),[agreement,setAgreement]=useState(""),[versionTitle,setVersionTitle]=useState("");
  const [blockingDecisionReason,setBlockingDecisionReason]=useState<Record<number,string>>({});
  const operation=useRef(0),pending=useRef(false),mounted=useRef(true);
@@ -30,6 +32,7 @@ export default function RequirementEditPage(){
  const findings=requirement?.findings??[];
  const composed=useMemo(()=>composeProposals(baseline,findings,choices),[baseline,findings,choices]);
  const draft=composed.content;
+ const contentChanged=hasRequirementChanges(requirement?.content??"",draft);
  const reviewed=requirement?.reviewContext?.status==='USER_REVIEWED'&&draft===baseline&&!refinement?.dictionaryChanged;
  const initialAnalysis=!!requirement&&!requirement.reviewContext;
  const loading=initialAnalysis||analyzing;
@@ -59,8 +62,18 @@ export default function RequirementEditPage(){
    catch(e){setError(e instanceof Error?e.message:'AI 분석에 실패했습니다.');}finally{pending.current=false;setAnalyzing(false);}
  }
  async function finishReview(){const user=getCurrentUser();if(!user||!requirement?.reviewContext||pending.current||dirtyDraft||composed.error)return;operation.current++;pending.current=true;setBusy(true);setError(null);
-   try{const r=await completeProposalReview(projectId,requirementId,{userId:user.id,inputHash:requirement.reviewContext.inputHash,content:draft,manualContent:false,decisions:findings.map(f=>choices[f.id])});const ref=await getRefinement(projectId,requirementId,user.id);accept(r,ref);setNotice('선택한 수정·제외 결정과 최종 본문을 저장했습니다.');setConfirmOpen(true);}
+   try{const r=await completeProposalReview(projectId,requirementId,{userId:user.id,inputHash:requirement.reviewContext.inputHash,content:draft,manualContent:false,decisions:findings.map(f=>choices[f.id])});const ref=await getRefinement(projectId,requirementId,user.id);accept(r,ref);setNotice('선택한 수정·원문 유지 결정과 최종 본문을 저장했습니다.');await confirmReviewedOrOpen(r,user.id);}
    catch(e){setError(e instanceof Error?e.message:'검토 결정을 저장하지 못했습니다.');}finally{pending.current=false;setBusy(false);}
+ }
+ async function confirmReviewedOrOpen(r:RequirementDetail,userId:number){
+   if(hasRequirementChanges(r.content,r.aiDraftContent)){setReaderExpanded(false);setConfirmOpen(true);return;}
+   await confirmRequirement(projectId,requirementId,{userId,content:r.aiDraftContent,title:r.version?'변경 없이 확정':'등록 본문 그대로 확정'});
+   try{sessionStorage.removeItem(storageKey);}catch{}
+   router.push(`/projects/${projectId}/requirements/${requirementId}/issues`);
+ }
+ async function continueReviewed(){const user=getCurrentUser();if(!user||!requirement||!reviewed||pending.current||dirtyDraft)return;
+   operation.current++;pending.current=true;setBusy(true);setError(null);
+   try{await confirmReviewedOrOpen(requirement,user.id);}catch(e){setError(e instanceof Error?e.message:'확정하지 못했습니다.');}finally{pending.current=false;setBusy(false);}
  }
  async function agreeAndConfirm(){const user=getCurrentUser();if(!user||!reviewed)return;
    if(!contact.trim()||!agreement.trim()||!versionTitle.trim()||!agreedOn){setError('고객사·담당자, 합의일, 합의 내용, 변경 요약을 입력해주세요.');return;}
@@ -84,21 +97,21 @@ export default function RequirementEditPage(){
  {!loading&&requirement.aiEngine==='rule'&&<p className="lmsg">현재는 규칙 검토 결과입니다. AI 문맥 검토 결과가 필요하면 AI 다시 분석을 실행해주세요.</p>}
  <div className={styles.workspace}><section className={styles.reviewColumn}><div className={styles.columnHeading}><div><ReviewIcon name="sparkles" size={17}/><h2>AI 변경 제안</h2><span>{findings.length}</span></div><small>제안을 선택하고 아래 본문에서 변경 결과를 확인하세요</small></div>
  {!loading&&!reviewed&&(!incomplete||findings.length>0)&&<RequirementProposalCards key={`${requirement.reviewContext?.inputHash}:${findings.map(f=>f.id).join(",")}`} findings={findings} choices={choices} selectedId={selectedId} onSelect={setSelectedId} onDirtyChange={setDirtyDraft} onChange={(id,d)=>{setNotice('');setChoices(prev=>({...prev,[id]:d}));}} disabled={busy||incomplete}/>}
- {reviewed&&<div className="proposal-review-saved" role="status"><b>변경 제안 검토를 완료했습니다.</b><p>선택한 수정안과 제외 결정을 저장했습니다. 아래 최종 본문으로 고객 합의를 기록합니다.</p></div>}
+ {reviewed&&<div className="proposal-review-saved" role="status"><b>변경 제안 검토를 완료했습니다.</b><p>선택한 수정안과 제외 결정을 저장했습니다. {contentChanged?'변경한 최종 본문으로 고객 합의를 기록합니다.':'등록·기존 확정 본문과 같아 추가 고객 합의 없이 확정할 수 있습니다.'}</p></div>}
  </section>
  <RequirementReviewDocument baseline={baseline} content={draft} findings={findings} choices={choices} ranges={composed.ranges} selectedId={selectedId} onSelect={id=>{setSelectedId(id);document.querySelector('[data-review-card]')?.scrollIntoView({behavior:'smooth',block:'start'});}} reqKey={requirement.reqKey} error={composed.error}/>
  </div>
  {dirtyDraft&&<p className={styles.pendingDraft} role="status">작성 중인 수정 문장이 있습니다. 해당 항목의 ‘직접 수정한 문장 반영’을 누르거나 취소해주세요.</p>}
  {error&&<p className="lmsg err" role="alert">{error}</p>}{notice&&<p className="lmsg" role="status">{notice}</p>}
- <footer className={`stage-action-bar ${styles.actionBar}`}><div className={styles.footerText}><span className={styles.footerCheck}><ReviewIcon name={unresolved&&!reviewed?'clock':'check'} size={19}/></span><div><b>{reviewed?'고객 합의 후 확정':`검토 결정 ${findings.length-unresolved}/${findings.length}`}</b><span>{reviewed?'합의일과 고객 담당자, 합의 내용을 기록해주세요.':disabledReason||'선택한 내용을 저장하고 고객 합의를 기록합니다.'}</span></div></div><button className="btn" disabled={busy||loading} onClick={hold}>보류</button><button className="btn prim" disabled={busy||loading||(!reviewed&&!!disabledReason)} title={reviewed?'고객 합의를 기록합니다.':disabledReason} onClick={()=>{setError(null);if(reviewed)setConfirmOpen(true);else finishReview();}}>{busy?'검토 결정 저장 중…':'요구사항 확정'}</button></footer>
+ <footer className={`stage-action-bar ${styles.actionBar}`}><div className={styles.footerText}><span className={styles.footerCheck}><ReviewIcon name={unresolved&&!reviewed?'clock':'check'} size={19}/></span><div><b>{reviewed?(contentChanged?'고객 합의 후 확정':'본문 변경 없이 확정'):`검토 결정 ${findings.length-unresolved}/${findings.length}`}</b><span>{reviewed?(contentChanged?'합의일과 고객 담당자, 합의 내용을 기록해주세요.':'본문이 바뀌지 않아 추가 고객 합의 없이 다음 단계로 이동합니다.'):disabledReason||(contentChanged?'선택한 내용을 저장하고 고객 합의를 기록합니다.':'등록 본문을 유지하면 추가 고객 합의 없이 확정합니다.')}</span></div></div><button className="btn" disabled={busy||loading} onClick={hold}>보류</button><button className="btn prim" disabled={busy||loading||(!reviewed&&!!disabledReason)} title={reviewed?(contentChanged?'고객 합의를 기록합니다.':'본문 변경 없이 확정합니다.'):disabledReason} onClick={()=>{setError(null);if(reviewed)continueReviewed();else finishReview();}}>{busy?'요구사항 처리 중…':'요구사항 확정'}</button></footer>
  </main></div>
- {confirmOpen&&<Modal title="고객 합의 기록 및 요구사항 확정" wide onClose={()=>{if(!busy)setConfirmOpen(false);}}>
+ {confirmOpen&&<Modal title="고객 합의 기록 및 요구사항 확정" wide className={styles.consensusModal} onClose={()=>{if(!busy){setConfirmOpen(false);setReaderExpanded(false);}}}>
  <div className={styles.consensusIntro}><span><ReviewIcon name="check" size={20}/></span><div><b>최종 본문으로 고객 합의 내용을 기록합니다.</b><p>언제, 고객사 누구와, 어떤 방법으로 무엇을 합의했는지 남겨주세요.</p></div></div>
- <div className={`consensus-dialog-grid ${styles.consensusGrid}`}><label><span>합의 방법</span><select value={method} disabled={busy} onChange={e=>setMethod(e.target.value)}>{METHODS.map(m=><option key={m}>{m}</option>)}</select></label><label><span>고객사·담당자</span><input value={contact} disabled={busy} onChange={e=>setContact(e.target.value)} placeholder="예: 고객사 / 담당자 이름"/></label><label><span>합의일</span><input type="date" value={agreedOn} disabled={busy} onChange={e=>setAgreedOn(e.target.value)}/></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} disabled={busy} onChange={e=>setAgreement(e.target.value)}/></label>
+ <div className={`${styles.consensusWorkspace} ${readerExpanded?styles.consensusReading:""}`}><div className={styles.consensusForm} hidden={readerExpanded}><div className={`consensus-dialog-grid ${styles.consensusGrid}`}><label><span>합의 방법</span><select value={method} disabled={busy} onChange={e=>setMethod(e.target.value)}>{METHODS.map(m=><option key={m}>{m}</option>)}</select></label><label><span>고객사·담당자</span><input value={contact} disabled={busy} onChange={e=>setContact(e.target.value)} placeholder="예: 고객사 / 담당자 이름"/></label><label><span>합의일</span><input type="date" value={agreedOn} disabled={busy} onChange={e=>setAgreedOn(e.target.value)}/></label><label className="wide"><span>합의 내용</span><textarea rows={4} value={agreement} disabled={busy} onChange={e=>setAgreement(e.target.value)}/></label>
  {blocking.map(f=><label className="wide" key={f.id}><span>필수 확인 항목 수용 근거 · {f.findingType}</span><small>{f.reason}</small><textarea value={blockingDecisionReason[f.id]??''} maxLength={1000} disabled={busy} onChange={e=>setBlockingDecisionReason(prev=>({...prev,[f.id]:e.target.value}))} placeholder="기존 확정 요구사항과 상충하는 제안을 제외한 고객 합의 근거"/></label>)}
  <label className="wide"><span>변경 요약 · 버전 이력 제목</span><input value={versionTitle} maxLength={200} disabled={busy} onChange={e=>setVersionTitle(e.target.value)}/></label>
  <div className={`wide consensus-attachment ${styles.attachment}`}><span>합의 자료</span><button className="btn" type="button" disabled title="파일 첨부 기능 준비 중"><ReviewIcon name="attachment" size={15}/>파일 첨부</button><small>첨부 기능 준비 중 · 현재는 버튼 UI만 제공됩니다.</small></div></div>
- <div className="consensus-snapshot"><span>합의할 최종 본문</span><p>{draft}</p></div>{error&&<p className="lmsg err" role="alert">{error}</p>}
- <div className="modal-actions"><button className="btn" disabled={busy} onClick={()=>setConfirmOpen(false)}>취소</button><button className="btn prim" disabled={busy} onClick={agreeAndConfirm}>{busy?'확정 중…':'합의 기록 후 확정'}</button></div>
+ </div><ConsensusDocumentPreview content={draft} expanded={readerExpanded} onToggle={()=>setReaderExpanded(v=>!v)} disabled={busy}/></div>{error&&<p className="lmsg err" role="alert">{error}</p>}
+ <div className={`modal-actions ${styles.consensusActions}`}><button className="btn" disabled={busy} onClick={()=>setConfirmOpen(false)}>취소</button><button className="btn prim" disabled={busy} onClick={agreeAndConfirm}>{busy?'확정 중…':'합의 기록 후 확정'}</button></div>
  </Modal>}</div>;
 }

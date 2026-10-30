@@ -33,7 +33,7 @@ public class RequirementVersion {
     @Column(nullable = false)
     private String content;
 
-    /** 근거가 된 합의 기록. */
+    /** 근거가 된 합의 기록. 등록 본문을 변경 없이 최초 확정한 경우 null. */
     @Column(name = "consensus_id")
     private Long consensusId;
 

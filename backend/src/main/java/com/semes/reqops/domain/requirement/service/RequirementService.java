@@ -161,10 +161,10 @@ public class RequirementService {
                 .map(c -> toConsensusResponse(c, versionEntities))
                 .orElse(null);
 
-        // 확정 가능 조건: 아직 확정에 쓰이지 않은 합의 기록이 있을 것.
-        // "확정 전"이 아니라 "미사용 합의"를 기준으로 삼는 이유 — 확정본 수정은 이미
-        // 확정된 요구사항을 다시 확정하므로, 확정 여부로 막으면 수정 확정이 불가능해진다.
-        boolean canConfirm = consensus != null && isUnusedConsensus(consensus.id(), lastVersion);
+        // The registered/current confirmed body already represents the customer's
+        // agreement. Only changes to that body need a new consensus record.
+        boolean canConfirm = normalizeLines(draft).equals(normalizeLines(r.getContent()))
+                || (consensus != null && isUnusedConsensus(consensus.id(), lastVersion));
 
         return new DetailResponse(
                 r.getId(), r.getProjectId(), r.getReqKey(), r.getContent(),
@@ -239,14 +239,14 @@ public class RequirementService {
     /**
      * 확정 — 합의된 본문을 확정본으로 삼고 버전을 부여한다. 최초 확정과 재확정 공통.
      *
-     * <p>아직 확정에 쓰이지 않은 합의 기록이 없으면 거부한다. 화면에서도 버튼이
-     * 비활성화되지만, API 단에서도 막아야 "합의 없이 확정된 요구사항"이 만들어지지 않는다.
+     * <p>등록·기존 확정 본문을 그대로 유지하면 합의를 다시 입력하지 않는다.
+     * 본문을 변경한 경우에는 미사용 합의와 합의 당시 본문의 일치를 확인한다.
      */
     @Transactional
     public DetailResponse confirm(Long projectId, Long requirementId, ConfirmRequest req) {
         requireMember(projectId, req.userId());
         Requirement r = findInProject(projectId, requirementId);
-        requirementRepository.findLockedById(requirementId).orElseThrow();
+        r = requirementRepository.findLockedById(requirementId).orElseThrow();
         if (req.content().contains("⟦") || req.content().contains("⟧")) {
             throw new ApiErrors.Conflict("본문에 입력이 필요한 항목이 남아 있습니다. 표시된 값을 채워주세요.");
         }
@@ -269,26 +269,33 @@ public class RequirementService {
             throw new ApiErrors.Conflict("AI 변경 제안의 적용·직접 수정·제외 결정을 저장한 뒤 확정해주세요.");
         }
 
-        RequirementConsensus consensus = req.consensusId() == null
-                ? consensusRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
-                    .orElseThrow(ApiErrors.ConsensusRequired::new)
-                : consensusRepository.findById(req.consensusId())
-                    .filter(c -> c.getRequirementId().equals(requirementId))
-                    .orElseThrow(ApiErrors.ConsensusRequired::new);
-
+        boolean contentChanged = !normalizeLines(r.getContent()).equals(normalizeLines(req.content()));
         RequirementVersion lastVersion = versionRepository
                 .findFirstByRequirementIdOrderByIdDesc(requirementId).orElse(null);
-        // 같은 합의로 두 번 확정하면 두 번째 버전은 근거 없이 올라간 셈이 된다.
-        if (!isUnusedConsensus(consensus.getId(), lastVersion)) {
-            throw new ApiErrors.ConsensusRequired();
-        }
-        if (!normalizeLines(consensus.getAgreedContent()).equals(normalizeLines(req.content()))) {
-            throw new ApiErrors.Conflict("합의 당시 본문과 확정하려는 본문이 다릅니다. 변경된 본문으로 다시 합의해주세요.");
+        RequirementConsensus consensus = null;
+        if (contentChanged) {
+            consensus = req.consensusId() == null
+                    ? consensusRepository.findFirstByRequirementIdOrderByIdDesc(requirementId)
+                        .orElseThrow(ApiErrors.ConsensusRequired::new)
+                    : consensusRepository.findById(req.consensusId())
+                        .filter(c -> c.getRequirementId().equals(requirementId))
+                        .orElseThrow(ApiErrors.ConsensusRequired::new);
+            if (!isUnusedConsensus(consensus.getId(), lastVersion)) {
+                throw new ApiErrors.ConsensusRequired();
+            }
+            if (!normalizeLines(consensus.getAgreedContent()).equals(normalizeLines(req.content()))) {
+                throw new ApiErrors.Conflict("합의 당시 본문과 확정하려는 본문이 다릅니다. 변경된 본문으로 다시 합의해주세요.");
+            }
         }
 
         List<RequirementFinding> openBlocking = findingRepository.findByRequirementIdOrderByIdAsc(requirementId).stream()
                 .filter(f -> ReviewFindingTypes.normalize(f.getFindingType()) != null && "BLOCKING".equals(f.getSeverity()) && List.of("OPEN", "KEPT").contains(f.getResolutionState())).toList();
         String decisionReason = blankToNull(req.blockingDecisionReason());
+        if (!contentChanged && decisionReason == null) {
+            // Record the explicit decision to retain the previously agreed body;
+            // do not invent a meeting, contact, date, or new customer agreement.
+            decisionReason = "등록·기존 확정 본문을 변경하지 않고 유지했습니다.";
+        }
         Map<Long, String> reasons = req.decisions() == null ? Map.of() : req.decisions().stream()
             .filter(d -> "ACCEPT_WITH_REASON".equals(d.action()) && blankToNull(d.reason()) != null)
             .collect(Collectors.toMap(com.semes.reqops.domain.requirement.dto.RequirementDto.FindingDecision::findingId,
@@ -311,17 +318,23 @@ public class RequirementService {
                     item.getId(), "ACCEPT_WITH_REASON", req.content(), reasons.getOrDefault(finding.getId(), decisionReason), req.userId()));
         }
 
+        // Reopening or retrying an unchanged confirmed requirement must preserve
+        // its version, bundle, saved issues, artifacts, and Jira connections.
+        if (!contentChanged && lastVersion != null) {
+            r.confirm(req.content(), lastVersion.getVersion());
+            requirementRepository.save(r);
+            return detail(projectId, requirementId, req.userId());
+        }
+
         String version = nextVersionOf(requirementId);
-        // 화면에서 받은 수정 사유가 그대로 이력 제목이 된다. title 이 비어 오는 경우는
-        // 화면상으론 없지만(수정 사유가 필수라 항상 채워짐), API 를 직접 호출하는 경우를
-        // 대비해 방어적으로 기본값을 넣어둔다.
-        String title = blankToNull(req.title()) == null ? "최초 확정" : req.title().trim();
+        String title = blankToNull(req.title()) == null
+                ? (contentChanged ? "최초 확정" : "등록 본문 그대로 확정") : req.title().trim();
 
         r.confirm(req.content(), version);
         requirementRepository.save(r);
 
         RequirementVersion savedVersion = versionRepository.save(new RequirementVersion(
-                requirementId, version, title, req.content(), consensus.getId(), req.userId()));
+                requirementId, version, title, req.content(), consensus == null ? null : consensus.getId(), req.userId()));
         bundleService.start(requirementId, savedVersion.getId(), req.userId());
 
         return detail(projectId, requirementId, req.userId());

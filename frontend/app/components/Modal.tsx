@@ -3,13 +3,14 @@
 import { useEffect, type ReactNode } from "react";
 
 export default function Modal({
-  title, icon, onClose, children, wide,
+  title, icon, onClose, children, wide, className,
 }: {
   title: string;
   icon?: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  className?: string;
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -27,7 +28,7 @@ export default function Modal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={wide ? "modal-card wide" : "modal-card"}
+        className={`${wide ? "modal-card wide" : "modal-card"} ${className ?? ""}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

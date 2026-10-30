@@ -63,14 +63,14 @@ public final class ApiErrors {
     }
 
     /**
-     * 고객 합의 기록 없이 확정을 시도함 → 409
+     * 변경한 본문을 고객 합의 기록 없이 확정하려는 경우 → 409
      *
      * <p>화면에서도 버튼이 비활성화되지만, API 단에서도 막아야 "합의 없이 확정된
      * 요구사항"이 만들어지지 않는다.
      */
     public static class ConsensusRequired extends RuntimeException {
         public ConsensusRequired() {
-            super("고객 합의 기록이 있어야 확정할 수 있습니다.");
+            super("변경한 본문은 고객 합의 기록 후 확정할 수 있습니다.");
         }
     }
 
