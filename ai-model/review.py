@@ -1,10 +1,58 @@
 """Contextual findings and precise, opt-in edits. Offsets on the wire are UTF-16."""
 from __future__ import annotations
 import re
+import json
 from dataclasses import dataclass, field
 import rules
 
 MARKER = re.compile(r"⟦[^⟧]+⟧")
+
+
+def parse_findings_response(raw: str, parse_json):
+    """Accept explicit no-issue answers without treating an absent answer as success."""
+    text = raw.strip()
+    unfenced = re.sub(r'^```(?:json)?\s*|\s*```$', '', text, flags=re.I).strip()
+    try:
+        value = json.loads(unfenced)
+    except (ValueError, TypeError):
+        value = parse_json(text)
+    if isinstance(value, list):
+        # Some models omit the object wrapper when there are zero findings.
+        if not value:
+            return {'findings': []}
+        if all(isinstance(row, dict) and 'targetSpan' in row for row in value):
+            return {'findings': value}
+    if isinstance(value, dict) and 'findings' in value:
+        if value['findings'] is None:
+            return dict(value, findings=[])
+        if isinstance(value['findings'], list):
+            return value
+    # Only explicit, standalone no-issue statements count. Blank, {}, broken JSON,
+    # and generic success messages require a structured retry, never a clean bill.
+    normalized = re.sub(r'[\s.!。]', '', unfenced).casefold()
+    if normalized in {
+        '수정할사항이없습니다', '수정할사항없음', '수정사항없음', '수정사항이없습니다',
+        '검토항목이없습니다', '검토항목없음', '변경할사항이없습니다', '문제없음', '문제가없습니다',
+        'nofindings', 'noissues', 'noissuesfound', 'nochangesneeded',
+    }:
+        return {'findings': []}
+    raise ValueError('검토 결과 목록 누락 또는 형식 오류')
+
+
+def generate_findings(provider, system: str, user: str, parse_json):
+    """Retry an absent/malformed answer once, preserving all review context."""
+    from providers.base import ProviderError
+    for attempt in range(2):
+        try:
+            raw = provider.generate(system, user)
+            return parse_findings_response(raw, parse_json)
+        except ProviderError as error:
+            if attempt or error.code != 'INVALID_RESPONSE':
+                raise
+        except (ValueError, TypeError, AttributeError):
+            if attempt:
+                raise
+        system += '\n응답 형식을 다시 확인하세요. JSON 객체만 반환하세요. 수정할 문제가 없으면 반드시 {"findings":[]}를 반환하세요. 빈 응답이나 설명 문장을 반환하지 마세요.'
 
 
 def utf16(text: str) -> int:

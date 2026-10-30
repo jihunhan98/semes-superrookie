@@ -20,3 +20,25 @@ test('overlapping changes and stale source are rejected instead of overwriting u
  assert.match(composeProposals(f.targetSpan,[f,{...f,id:2}],{1:{action:'APPLY'},2:{action:'EDIT',replacement:'수정'}}).error,/겹칩니다/);
  assert.match(composeProposals('다른 본문',[f],{1:{action:'APPLY'}}).error,/위치/);
 });
+
+test('zero findings is a valid unchanged document',()=>{
+ const result=composeProposals('정상 본문',[],{});
+ assert.equal(result.content,'정상 본문');assert.equal(result.error,null);assert.deepEqual(result.ranges,[]);
+});
+test('result highlights follow preceding edits and retain original finding identities',()=>{
+ const baseline='😀 첫 문장. 다음 문장.';
+ const rows=[{id:1,targetSpan:'첫 문장.',spanStart:3,spanEnd:8},{id:2,targetSpan:'다음 문장.',spanStart:9,spanEnd:15}];
+ const result=composeProposals(baseline,rows,{1:{action:'EDIT',replacement:'수정한 첫 번째 문장.'}});
+ for(const r of result.ranges){assert.equal(result.content.slice(r.start,r.end),r.id===1?'수정한 첫 번째 문장.':'다음 문장.');}
+ assert.equal(result.ranges[0].kind,'manual');assert.equal(result.ranges[1].kind,'pending');
+});
+test('insertions and deletions highlight their resulting positions without losing later anchors',()=>{
+ for(const operation of ['INSERT_BEFORE','INSERT_AFTER','DELETE']){
+  const baseline='첫 문장. 다음 문장.';
+  const rows=[{id:1,targetSpan:'첫 문장.',spanStart:0,spanEnd:5,proposals:[{operation,after:'추가 문장.'}]},{id:2,targetSpan:'다음 문장.',spanStart:6,spanEnd:12}];
+  const result=composeProposals(baseline,rows,{1:{action:'APPLY',proposalIndex:0}});
+  const [changed,next]=result.ranges;
+  assert.equal(result.content.slice(changed.start,changed.end),operation==='DELETE'?'':operation==='INSERT_BEFORE'?'추가 문장.\n':'\n추가 문장.');
+  assert.equal(result.content.slice(next.start,next.end),'다음 문장.');
+ }
+});

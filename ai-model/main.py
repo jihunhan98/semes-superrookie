@@ -275,7 +275,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     effective_glossary = glossary + [dict(id=None, name=t['name'], definition=t['definition'], status='PENDING') for t in terms]
     confirmed_definitions = "\n".join(t['definition'] for t in glossary if t['status']=='CONFIRMED')
     findings = review.detect(req.content, existing, confirmed_definitions)
-    invalid = any(len(f.target_span) > 500 for f in findings)
+    rule_invalid = any(len(f.target_span) > 500 for f in findings)
+    invalid = False
     findings = [f for f in findings if len(f.target_span) <= 500]
     engine, status, reviewed = "rule", "RULE_ONLY", 0
     # Every batch contains the entire current document; no source is silently dropped.
@@ -296,10 +297,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 if req.baseContent:
                     user += "\n변경 전 본문 전체:\n" + req.baseContent
                 user += intake.glossary_text(effective_glossary)
-                raw = PROVIDER.generate(_SYSTEM_PROMPT, user)
-                parsed = _parse_json(raw)
-                if not isinstance(parsed.get("findings"), list):
-                    raise ValueError("검토 결과 목록 누락")
+                parsed = review.generate_findings(PROVIDER, _SYSTEM_PROMPT, user, _parse_json)
                 validated = review.model_findings(parsed, req.content, batch)
                 for row in parsed["findings"]:
                     if isinstance(row, dict) and row.get("findingType") == rules.T_REFERENCE:
@@ -323,7 +321,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         status = "COMPLETE" if successes == len(batches) and not invalid else "PARTIAL"
         if status == "COMPLETE":
             findings = model_results  # A successful contextual review supersedes mechanical fallback questions.
-    if invalid: status = "PARTIAL"
+    if invalid or (rule_invalid and not PROVIDER.enabled): status = "PARTIAL"
     findings = intake.attach_questions(review.dedupe(findings), effective_glossary)
     return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in findings],
         draftContent=req.content, engine=engine, scope="full-context",

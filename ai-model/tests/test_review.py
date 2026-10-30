@@ -179,3 +179,67 @@ def test_successful_contextual_review_does_not_readd_mechanical_fallback_questio
     body = analyze('응답이 없으면 재시도한다.')
     assert body['reviewStatus'] == 'COMPLETE'
     assert body['findings'] == []
+
+
+import pytest
+
+
+@pytest.mark.parametrize('raw', ['{"findings":[]}', '[]', '```json\n[]\n```', '{"findings":null}', '수정할 사항이 없습니다.', 'No issues found.'])
+def test_explicit_empty_review_variants_are_complete(monkeypatch, raw):
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            return '{"terms":[]}' if '핵심 도메인 용어만' in system else raw
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('서버는 현재 상태를 표시한다.')
+    assert body['reviewStatus'] == 'COMPLETE'
+    assert body['findings'] == []
+    assert body['engine'] == 'test'
+
+
+@pytest.mark.parametrize('raw', ['', '{}', 'null', '{"findings":', '분석을 완료했습니다.'])
+def test_missing_or_broken_review_retries_with_full_context(monkeypatch, raw):
+    calls = []
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            calls.append((system, user))
+            return raw if len(calls) == 1 else '{"findings":[]}'
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    text = '서버는 현재 상태를 표시한다.'
+    body = analyze(text, [{'reqKey':'REQ-01','content':'기존 기준'}])
+    assert body['reviewStatus'] == 'COMPLETE' and body['findings'] == []
+    assert len(calls) == 2
+    assert calls[0][1] == calls[1][1]
+    assert text in calls[1][1] and 'REQ-01' in calls[1][1]
+
+
+def test_repeated_empty_upstream_response_is_not_misreported_as_clean(monkeypatch):
+    from providers.base import ProviderError
+    calls = []
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            calls.append(user)
+            raise ProviderError('INVALID_RESPONSE', False, 'empty model response')
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('서버는 현재 상태를 표시한다.')
+    assert len(calls) == 2
+    assert body['reviewStatus'] == 'PARTIAL'
+
+
+def test_clean_model_review_supersedes_overlong_rule_fallback(monkeypatch):
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            return '{"terms":[]}' if '핵심 도메인 용어만' in system else '{"findings":[]}'
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('서버는 ' + '현재 상태 ' * 100 + '응답이 없으면 재시도한다.')
+    assert body['reviewStatus'] == 'COMPLETE'
+    assert body['findings'] == []
