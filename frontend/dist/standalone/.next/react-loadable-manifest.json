@@ -4,7 +4,7 @@
     "files": [
       "static/chunks/26d302b2.df9dff02e4b91c76.js",
       "static/chunks/ea233666.7617ee88eb2aeb71.js",
-      "static/chunks/1559.b007bc0af74621f9.js"
+      "static/chunks/1559.655b2d67648530ab.js"
     ]
   },
   "node_modules/@mermaid-js/parser/dist/mermaid-parser.core.mjs -> ./chunks/mermaid-parser.core/architecture-7GRP2DOG.mjs": {
@@ -291,12 +291,12 @@
     ]
   },
   "node_modules/mermaid/dist/mermaid.core.mjs -> ./chunks/mermaid.core/pegDiagram-XKGWAZYB.mjs": {
-    "id": 5966,
+    "id": 3380,
     "files": [
       "static/chunks/3a7aa434.1a3653f4eb200276.js",
       "static/chunks/830.7419740d30dbd570.js",
       "static/chunks/9389.209cf9af3a685191.js",
-      "static/chunks/5966.bf80b1a95ab86049.js"
+      "static/chunks/5966.7d8eede7b8640674.js"
     ]
   },
   "node_modules/mermaid/dist/mermaid.core.mjs -> ./chunks/mermaid.core/pieDiagram-E7YTZNPT.mjs": {
