@@ -52,4 +52,20 @@ class ReviewAnalysisStoreTest {
         assertEquals(store.existingHash(List.of(a,b)),store.existingHash(List.of(b,a)));
         assertNotEquals(store.existingHash(List.of(a)),store.existingHash(List.of(new Existing("REQ-A","내용 A","REVISING","1.0.0"))));
     }
+    @Test void partialReviewWarningsSurvivePersistence() {
+        store.save(1L,"본문",new Response(List.of(),"본문","rule","full-context",0,
+                "PARTIAL",2,List.of(),"COMPLETE",List.of("INVALID_FINDING")),List.of(),false);
+        ArgumentCaptor<RequirementAiDraft> cap=ArgumentCaptor.forClass(RequirementAiDraft.class);
+        verify(drafts).save(cap.capture());
+        ReviewContext context=store.context(cap.getValue());
+        assertEquals("PARTIAL",context.status());
+        assertEquals(List.of("INVALID_FINDING"),context.reviewWarnings());
+    }
+    @Test void oldStoredReviewsWithoutWarningsRemainReadable() {
+        RequirementAiDraft draft=new RequirementAiDraft(1L,"본문","rule");
+        draft.setReviewData("{\"inputHash\":\"input\",\"existingHash\":\"existing\",\"status\":\"PARTIAL\",\"comparedCount\":0,\"totalCount\":0}");
+        assertNotNull(store.context(draft));
+        assertEquals("PARTIAL",store.context(draft).status());
+    }
+
 }

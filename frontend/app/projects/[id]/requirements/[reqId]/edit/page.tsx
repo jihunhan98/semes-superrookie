@@ -13,6 +13,7 @@ import {hasRequirementChanges} from "../../../../../lib/review/consensus.mjs";
 import RequirementReviewDocument from "../../../../../components/RequirementReviewDocument";
 import RequirementProposalCards from "../../../../../components/RequirementProposalCards";
 import {composeProposals} from "../../../../../lib/review/proposals.mjs";
+import {analysisNotice} from "../../../../../lib/review/analysis.mjs";
 import {placeholders} from "../../../../../lib/review/edits.mjs";
 import {getProject,getRequirement,getRefinement,diffAnalyzeRequirement,completeProposalReview,recordConsensus,confirmRequirement,holdRequirement,type ProjectDetail,type RequirementDetail,type RefinementView,type ProposalDecision} from "../../../../../lib/api";
 import {getCurrentUser} from "../../../../../lib/session";
@@ -91,12 +92,12 @@ export default function RequirementEditPage(){
  <section className={styles.summary} aria-label="검토 현황"><div><span className={`${styles.metricIcon} ${styles.metricBlue}`}><ReviewIcon name="file" size={20}/></span><div><span>검토 항목</span><b>{findings.length}<small>건</small></b></div></div><div><span className={`${styles.metricIcon} ${styles.metricGreen}`}><ReviewIcon name="check" size={20}/></span><div><span>결정 완료</span><b>{reviewed?findings.length:findings.length-unresolved}<small>건</small></b></div></div><div><span className={`${styles.metricIcon} ${styles.metricAmber}`}><ReviewIcon name="clock" size={20}/></span><div><span>확인 필요</span><b>{reviewed?0:unresolved}<small>건</small></b></div></div></section>
  <section className={styles.reanalyze}><span className={styles.reanalyzeIcon}><ReviewIcon name="sparkles" size={18}/></span><label htmlFor="additional-review"><b>추가 검토 요청</b><span>선택 사항</span></label><input id="additional-review" value={prompt} disabled={busy||loading} onChange={e=>setPrompt(e.target.value)} placeholder="예: 매칭 조건과 예외 처리를 중점적으로 검토해주세요"/><button className={styles.secondaryButton} disabled={busy||analyzing||dirtyDraft||!!composed.error||!draft.trim()} onClick={analyze}><ReviewIcon name="refresh" size={15}/>{analyzing?'AI 분석 중…':'AI 다시 분석'}</button></section>
  {loading&&<div className="ai-review-loading" role="status"><span className="ai-review-spinner"/><div><b>AI가 변경이 필요한 이유와 수정안을 분석하고 있습니다.</b><p>동작 조건·수치·판단 기준, 수행 주체·중요 예외, 기존 요구사항과의 상충을 확인합니다. 완료되면 아래에 제안이 표시됩니다.</p></div></div>}
- {!loading&&incomplete&&<p className="lmsg err" role="alert">AI 분석을 완료하지 못했습니다. 입력 내용은 유지됩니다. AI 다시 분석을 실행해주세요.</p>}
+ {!loading&&incomplete&&<p className="lmsg err" role="alert">{analysisNotice(requirement)}</p>}
  {refinement?.dictionaryChanged&&<p className="lmsg err">용어 정의가 변경되었습니다. 최신 정의로 다시 분석해주세요.</p>}
  {refinement&&refinement.newTermCount>0&&<p className="lmsg">프로젝트 용어를 {refinement.newTermCount}개 정리했습니다. <Link href={`/projects/${projectId}/glossary`}>용어사전 확인</Link></p>}
  {!loading&&requirement.aiEngine==='rule'&&<p className="lmsg">현재는 규칙 검토 결과입니다. AI 문맥 검토 결과가 필요하면 AI 다시 분석을 실행해주세요.</p>}
  <div className={styles.workspace}><section className={styles.reviewColumn}><div className={styles.columnHeading}><div><ReviewIcon name="sparkles" size={17}/><h2>AI 변경 제안</h2><span>{findings.length}</span></div><small>제안을 선택하고 아래 본문에서 변경 결과를 확인하세요</small></div>
- {!loading&&!reviewed&&(!incomplete||findings.length>0)&&<RequirementProposalCards key={`${requirement.reviewContext?.inputHash}:${findings.map(f=>f.id).join(",")}`} findings={findings} choices={choices} selectedId={selectedId} onSelect={setSelectedId} onDirtyChange={setDirtyDraft} onChange={(id,d)=>{setNotice('');setChoices(prev=>({...prev,[id]:d}));}} disabled={busy||incomplete}/>}
+ {!loading&&!reviewed&&(!incomplete||findings.length>0)&&<RequirementProposalCards key={`${requirement.reviewContext?.inputHash}:${findings.map(f=>f.id).join(",")}`} findings={findings} choices={choices} selectedId={selectedId} onSelect={setSelectedId} onDirtyChange={setDirtyDraft} onChange={(id,d)=>{setNotice('');setChoices(prev=>({...prev,[id]:d}));}} disabled={busy||analyzing}/>}
  {reviewed&&<div className="proposal-review-saved" role="status"><b>변경 제안 검토를 완료했습니다.</b><p>선택한 수정안과 제외 결정을 저장했습니다. {contentChanged?'변경한 최종 본문으로 고객 합의를 기록합니다.':'등록·기존 확정 본문과 같아 추가 고객 합의 없이 확정할 수 있습니다.'}</p></div>}
  </section>
  <RequirementReviewDocument baseline={baseline} content={draft} findings={findings} choices={choices} ranges={composed.ranges} selectedId={selectedId} onSelect={id=>{setSelectedId(id);document.querySelector('[data-review-card]')?.scrollIntoView({behavior:'smooth',block:'start'});}} reqKey={requirement.reqKey} error={composed.error}/>

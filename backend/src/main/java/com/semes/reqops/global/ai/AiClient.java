@@ -206,8 +206,8 @@ public class AiClient {
             if (res == null) {
                 return unavailable(fallbackContent);
             }
-            log.info("AI 검토 완료 — engine={} scope={} findings={}",
-                    res.engine(), res.scope(),
+            log.info("AI 검토 응답 — engine={} scope={} status={} warnings={} findings={}",
+                    res.engine(), res.scope(), res.reviewStatus(), res.reviewWarnings(),
                     res.findings() == null ? 0 : res.findings().size());
             return res;
         } catch (Exception e) {

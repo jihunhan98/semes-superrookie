@@ -145,7 +145,7 @@ export type ReqState =
 export type ReviewProposal = { label: string; operation: "REPLACE" | "INSERT_BEFORE" | "INSERT_AFTER" | "DELETE";
   before: string; after: string; start: number; end: number; needsInput: boolean };
 export type ReviewContext = { inputHash: string; existingHash: string; status: "COMPLETE" | "RULE_ONLY" | "PARTIAL" | "FAILED" | "USER_REVIEWED";
-  comparedCount: number; totalCount: number; glossaryHash?: string; newTermCount?: number };
+  comparedCount: number; totalCount: number; glossaryHash?: string; newTermCount?: number; reviewWarnings?: string[] };
 /** 문맥 검토 결과와 사용자가 선택해 적용하는 편집안. */
 export type Finding = {
   id: number;

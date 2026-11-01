@@ -243,3 +243,63 @@ def test_clean_model_review_supersedes_overlong_rule_fallback(monkeypatch):
     body = analyze('서버는 ' + '현재 상태 ' * 100 + '응답이 없으면 재시도한다.')
     assert body['reviewStatus'] == 'COMPLETE'
     assert body['findings'] == []
+
+
+def test_invalid_finding_retries_before_partial_with_same_context(monkeypatch):
+    calls = []
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            calls.append(user)
+            if len(calls) == 1:
+                return json.dumps({'findings':[{'targetSpan':'입력에 없는 구절', 'findingType':main.rules.T_TIME, 'interpretations':'차이'}]})
+            return '{"findings":[]}'
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('서버는 상태를 표시한다.')
+    assert body['reviewStatus'] == 'COMPLETE'
+    assert body['reviewWarnings'] == []
+    assert len(calls) == 2 and calls[0] == calls[1]
+
+
+def test_partial_response_exposes_validation_reason_with_http_200(monkeypatch):
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            return json.dumps({'findings':[{'targetSpan':'없는 구절', 'findingType':main.rules.T_TIME}]})
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze('서버는 응답이 없으면 재시도한다.')
+    assert body['reviewStatus'] == 'PARTIAL'
+    assert body['reviewWarnings'] == ['INVALID_FINDING']
+    assert body['findings'][0]['proposals']
+
+
+def test_timeout_response_exposes_reason(monkeypatch):
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, *args): raise TimeoutError()
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    assert analyze('서버는 상태를 표시한다.')['reviewWarnings'] == ['TIMEOUT']
+
+
+def test_partial_validation_retains_valid_model_proposals(monkeypatch):
+    text = '서버는 작업을 처리한다.'
+    class Provider:
+        enabled = True
+        name = 'test'
+        def generate(self, system, user):
+            if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            return json.dumps({'findings':[
+                {'targetSpan':text, 'findingType':main.rules.T_TIME,
+                 'reason':'처리시간 미정', 'interpretations':'처리시간에 따라 시험 결과가 달라진다.',
+                 'proposals':[{'after':'서버는 1초 이내에 작업을 처리한다.'}]},
+                {'targetSpan':'없는 구절', 'findingType':main.rules.T_TIME}]})
+    monkeypatch.setattr(main, 'PROVIDER', Provider())
+    body = analyze(text)
+    assert body['reviewStatus'] == 'PARTIAL'
+    assert body['reviewWarnings'] == ['INVALID_FINDING']
+    assert any(f['proposals'][0]['after'] == '서버는 1초 이내에 작업을 처리한다.' for f in body['findings'])

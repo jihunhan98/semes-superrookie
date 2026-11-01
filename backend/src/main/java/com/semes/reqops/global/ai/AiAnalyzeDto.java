@@ -30,7 +30,10 @@ public final class AiAnalyzeDto {
         }
     }
     public record Response(List<Finding> findings, String draftContent, String engine, String scope,
-                           Integer elapsedMs, String reviewStatus, Integer reviewedCount, List<TermCandidate> terms, String termStatus) {
+                           Integer elapsedMs, String reviewStatus, Integer reviewedCount, List<TermCandidate> terms, String termStatus, List<String> reviewWarnings) {
+        public Response(List<Finding> findings,String draft,String engine,String scope,Integer elapsed,String status,Integer count,List<TermCandidate> terms,String termStatus){
+            this(findings,draft,engine,scope,elapsed,status,count,terms,termStatus,List.of());
+        }
         public Response(List<Finding> findings,String draft,String engine,String scope,Integer elapsed,String status,Integer count){
             this(findings,draft,engine,scope,elapsed,status,count,List.of(),"unavailable".equals(engine)?"FAILED":"RULE_ONLY");
         }
@@ -39,7 +42,10 @@ public final class AiAnalyzeDto {
         }
     }
     public record ReviewContext(String inputHash, String existingHash, String status,
-                                int comparedCount, int totalCount, String glossaryHash, int newTermCount) {
+                                int comparedCount, int totalCount, String glossaryHash, int newTermCount, List<String> reviewWarnings) {
+        public ReviewContext(String inputHash,String existingHash,String status,int comparedCount,int totalCount,String glossaryHash,int newTermCount){
+            this(inputHash,existingHash,status,comparedCount,totalCount,glossaryHash,newTermCount,List.of());
+        }
         public ReviewContext(String inputHash,String existingHash,String status,int comparedCount,int totalCount){
             this(inputHash,existingHash,status,comparedCount,totalCount,null,0);
         }

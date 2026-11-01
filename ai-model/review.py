@@ -39,20 +39,64 @@ def parse_findings_response(raw: str, parse_json):
     raise ValueError('검토 결과 목록 누락 또는 형식 오류')
 
 
-def generate_findings(provider, system: str, user: str, parse_json):
+def generate_findings(provider, system: str, user: str, parse_json, validate=None):
     """Retry an absent/malformed answer once, preserving all review context."""
     from providers.base import ProviderError
     for attempt in range(2):
         try:
             raw = provider.generate(system, user)
-            return parse_findings_response(raw, parse_json)
+            parsed = parse_findings_response(raw, parse_json)
+            if validate is not None:
+                validate(parsed)
+            return parsed
         except ProviderError as error:
             if attempt or error.code != 'INVALID_RESPONSE':
                 raise
         except (ValueError, TypeError, AttributeError):
             if attempt:
                 raise
-        system += '\n응답 형식을 다시 확인하세요. JSON 객체만 반환하세요. 수정할 문제가 없으면 반드시 {"findings":[]}를 반환하세요. 빈 응답이나 설명 문장을 반환하지 마세요.'
+        system += '\ntargetSpan은 현재 본문에 한 번만 등장하는 500자 이내 원문을 그대로 인용하고, interpretations와 유효한 proposals를 포함하세요. 응답 형식을 다시 확인하세요. JSON 객체만 반환하세요. 수정할 문제가 없으면 반드시 {"findings":[]}를 반환하세요. 빈 응답이나 설명 문장을 반환하지 마세요.'
+
+
+class FindingValidationError(ValueError):
+    def __init__(self, findings):
+        super().__init__('INVALID_FINDING')
+        self.findings = findings
+
+
+def validate_findings(raw, content, existing):
+    """Retry unusable rows, retaining valid suggestions if the retry also fails."""
+    valid, invalid = [], False
+    for row in raw['findings']:
+        if isinstance(row, dict) and row.get('findingType') == rules.T_REFERENCE:
+            continue
+        if not isinstance(row, dict) or not isinstance(row.get('targetSpan'), str):
+            invalid = True
+            continue
+        span = row['targetSpan']
+        if not span or span not in content:
+            invalid = True
+            continue
+        if heading(span) or scope_note(span):
+            continue
+        if len(span) > 500 or content.count(span) != 1 or not row.get('interpretations'):
+            invalid = True
+            continue
+        proposals = row.get('proposals', [])
+        if not isinstance(proposals, list) or any(not isinstance(p, dict) for p in proposals):
+            invalid = True
+            continue
+        try:
+            checked = model_findings({'findings': [row]}, content, existing)
+        except (ValueError, TypeError, AttributeError):
+            invalid = True
+            continue
+        if not checked or (proposals and not checked[0].proposals):
+            invalid = True
+            continue
+        valid.extend(checked)
+    if invalid:
+        raise FindingValidationError(valid)
 
 
 def utf16(text: str) -> int:

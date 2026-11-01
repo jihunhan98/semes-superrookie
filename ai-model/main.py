@@ -157,6 +157,7 @@ class AnalyzeResponse(BaseModel):
     scope: str  # full | diff
     elapsedMs: int
     reviewStatus: str = "RULE_ONLY"
+    reviewWarnings: list[str] = Field(default_factory=list)
     reviewedCount: int = 0
     terms: list[dict] = Field(default_factory=list)
     termStatus: str = "RULE_ONLY"
@@ -276,7 +277,7 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
     confirmed_definitions = "\n".join(t['definition'] for t in glossary if t['status']=='CONFIRMED')
     findings = review.detect(req.content, existing, confirmed_definitions)
     rule_invalid = any(len(f.target_span) > 500 for f in findings)
-    invalid = False
+    warnings = []
     findings = [f for f in findings if len(f.target_span) <= 500]
     engine, status, reviewed = "rule", "RULE_ONLY", 0
     # Every batch contains the entire current document; no source is silently dropped.
@@ -297,35 +298,40 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 if req.baseContent:
                     user += "\n변경 전 본문 전체:\n" + req.baseContent
                 user += intake.glossary_text(effective_glossary)
-                parsed = review.generate_findings(PROVIDER, _SYSTEM_PROMPT, user, _parse_json)
+                parsed = review.generate_findings(PROVIDER, _SYSTEM_PROMPT, user, _parse_json,
+                    lambda result: review.validate_findings(result, req.content, batch))
                 validated = review.model_findings(parsed, req.content, batch)
-                for row in parsed["findings"]:
-                    if isinstance(row, dict) and row.get("findingType") == rules.T_REFERENCE:
-                        continue
-                    if not isinstance(row, dict) or not row.get("targetSpan") or row["targetSpan"] not in req.content:
-                        invalid = True
-                    elif not review.heading(row["targetSpan"]) and (
-                        not row.get("interpretations") or len(row["targetSpan"]) > 500
-                        or req.content.count(row["targetSpan"]) != 1
-                        or rules.normalize_type(row.get("findingType")) is None):
-                        invalid = True
                 findings.extend(validated)
                 model_results.extend(validated)
                 reviewed += len(batch)
                 successes += 1
             except ProviderError as error:
+                warnings.append(error.code)
                 log.warning('AI review failed stage=%s code=%s upstreamStatus=%s; keeping rule results',error.stage,error.code,error.upstream_status)
+            except review.FindingValidationError as error:
+                findings.extend(error.findings)
+                warnings.append('INVALID_FINDING')
+                log.warning("AI review finding validation failed; keeping rule results")
+            except (ValueError, TypeError, AttributeError):
+                warnings.append('INVALID_RESPONSE')
+                log.warning("AI review response validation failed; keeping rule results")
+            except TimeoutError:
+                warnings.append('TIMEOUT')
+                log.warning("AI review timed out; keeping rule results")
             except Exception:
+                warnings.append('BATCH_FAILED')
                 log.warning("요구사항 검토 배치 실패; 규칙 검토 결과를 유지합니다.")
         engine = PROVIDER.name if successes else "rule"
-        status = "COMPLETE" if successes == len(batches) and not invalid else "PARTIAL"
+        status = "COMPLETE" if successes == len(batches) else "PARTIAL"
         if status == "COMPLETE":
             findings = model_results  # A successful contextual review supersedes mechanical fallback questions.
-    if invalid or (rule_invalid and not PROVIDER.enabled): status = "PARTIAL"
+    if rule_invalid and not PROVIDER.enabled:
+        status = "PARTIAL"
+        warnings.append("SOURCE_TOO_LONG")
     findings = intake.attach_questions(review.dedupe(findings), effective_glossary)
     return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in findings],
         draftContent=req.content, engine=engine, scope="full-context",
-        elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewedCount=reviewed, terms=terms, termStatus=term_status)
+        elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewWarnings=list(dict.fromkeys(warnings)), reviewedCount=reviewed, terms=terms, termStatus=term_status)
 
 
 @app.post("/split", response_model=SplitResponse)

@@ -117,7 +117,7 @@ public class ReviewAnalysisStore {
         RequirementAiDraft draft = new RequirementAiDraft(id, content, response.engine());
         draft.setReviewData(json(new ReviewContext(inputHash, existingHash(existing),
             response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
-            response.reviewedCount() == null ? 0 : response.reviewedCount(), existing.size(), imported.hash(), imported.newCount())));
+            response.reviewedCount() == null ? 0 : response.reviewedCount(), existing.size(), imported.hash(), imported.newCount(), response.reviewWarnings() == null ? List.of() : response.reviewWarnings())));
         drafts.save(draft);
         clarifications.reconcile(id, content, List.of(), response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
             imported.newCount(), response.termStatus(), imported.hash());
