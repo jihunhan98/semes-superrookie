@@ -296,17 +296,17 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         input_hash = hashlib.sha256(req.content.encode('utf-8')).hexdigest()[:12]
         log.info('AI review started analysisId=%s inputHash=%s existingCount=%s batches=%s',
                  analysis_id, input_hash, len(existing), len(batches))
+        targets = review.source_targets(req.content)
         successes = 0
         model_results = []
         for batch_index, batch in enumerate(batches, 1):
             try:
-                user = _user_msg(req.content, req.reason, [ExistingRequirement(**e) for e in batch])
-                if req.baseContent:
-                    user += "\n변경 전 본문 전체:\n" + req.baseContent
+                user = _review_user_msg(req.content, req.reason, batch, targets, req.baseContent)
                 user += intake.glossary_text(effective_glossary)
                 parsed = review.generate_findings(PROVIDER, _SYSTEM_PROMPT, user, _parse_json,
                     lambda result: review.validate_findings(result, req.content, batch),
-                    diagnostic_context={'analysisId': analysis_id, 'batch': batch_index})
+                    diagnostic_context={'analysisId': analysis_id, 'batch': batch_index},
+                    prepare=lambda result: review.bind_source_targets(result, targets, req.content, batch))
                 validated = review.model_findings(parsed, req.content, batch)
                 findings.extend(validated)
                 model_results.extend(validated)
@@ -485,13 +485,37 @@ _SYSTEM_PROMPT = """당신은 요구사항의 구현 결과와 시험 결과가 
 이미 명시된 수치·주체·업무 정책은 제멋대로 바꾸지 않는다. 상충 해결에는 실제 다른 요구사항의 기준을 근거로 제안한다. proposals에는 최소 한 개의 수정문과 그 선택 이유를 제공한다.
 제안은 설명이 아니라 그대로 넣을 문장이다. 교체/앞뒤 삽입/삭제를 구분하고 대안은 따로 제시한다.
 문제마다 서로 다른 해석과 결과 차이를 interpretations에 구체적으로 쓴다.
-JSON만 반환한다. 문제 없으면 {"findings":[]}.
-{"findings":[{"findingType":"수치·판단 기준 불명확|수행 주체 불명확|동작 조건 불명확|예외 처리 누락|기존 요구사항과 상충",
-"targetSpan":"현재 본문의 유일한 완전한 문장 또는 절 원문","reason":"실제 문제와 근거","suggestion":"선택 안내",
-"interpretations":"구체적인 해석과 결과 차이","questionText":"사용자에게 묻는 구체적인 질문","options":["선택 가능한 답변 후보"],"conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
-"proposals":[{"label":"제안 적용","operation":"REPLACE|INSERT_BEFORE|INSERT_AFTER|DELETE","after":"수정된 본문"}]}]}
-상충이면 conflictReqKey와 conflictQuote에 기존 요구사항 ID와 정확한 인용, sameCondition에 동일 조건 근거를 명시한다.
+출력 규격:
+- findingType은 아래 허용값 중 정확히 하나의 문자열이다. 여러 값을 결합하거나 배열로 보내지 않는다. 구분자 |, /, 쉼표로 타입을 묶지 않는다.
+  · 수치·판단 기준 불명확
+  · 수행 주체 불명확
+  · 동작 조건 불명확
+  · 예외 처리 누락
+  · 기존 요구사항과 상충
+- 같은 원문에 동작 조건 문제와 예외 처리 문제가 각각 있으면 findings에 객체를 두 개 만들고 각 객체에 단일 타입을 지정한다. 두 항목은 같은 targetId를 사용할 수 있다.
+- operation도 정확히 하나의 문자열이다. 허용값은 REPLACE, INSERT_BEFORE, INSERT_AFTER, DELETE이다. 교체는 REPLACE, 앞 삽입은 INSERT_BEFORE, 뒤 삽입은 INSERT_AFTER, 삭제는 DELETE를 사용한다.
+- 수정할 위치는 요청 JSON의 targetSpans에서 targetId 하나를 선택한다. targetId는 T0001처럼 전달된 값을 그대로 복사한다. 존재하지 않는 ID를 만들지 않는다.
+- 원문은 서버가 targetId로 복원하므로 targetSpan을 새로 작성하거나 요약하지 않는다. currentRequirement가 현재 등록 본문이며, 다른 요구사항과 변경 전 본문·용어사전은 비교 근거다. 그 내용을 수정 대상 원문으로 사용하지 않는다.
+- targetSpans의 text에 표현된 문제만 그 targetId로 지적한다. 수정문은 proposals의 after에만 작성한다.
+- 모든 항목에 interpretations(서로 다른 해석과 구현·시험 결과 차이)를 반드시 포함한다. null이나 빈 문자열로 보내지 않는다.
+- 아래 JSON은 구조 예시다. targetId는 실제 요청 목록에서 고르고 reason, suggestion, interpretations, after는 실제 검토 내용으로 채운다.
+JSON 객체만 반환한다. 문제 없으면 {"findings":[]}.
+{"findings":[{"findingType":"수치·판단 기준 불명확","targetId":"T0001",
+"reason":"실제 문제와 근거","suggestion":"선택 안내","interpretations":"구체적인 해석과 결과 차이",
+"questionText":"사용자에게 묻는 구체적인 질문","options":["선택 가능한 답변 후보"],
+"conflictReqKey":null,"conflictQuote":null,"sameCondition":null,
+"proposals":[{"label":"제안 적용","operation":"REPLACE","after":"수정된 본문"}]}]}
+상충이면 conflictReqKey와 conflictQuote에 해당 배치의 기존 요구사항 ID와 정확한 인용, sameCondition에 동일 조건 근거를 명시한다.
 """
+
+
+def _review_user_msg(content, reason, existing, targets, base_content=None):
+    """Keep the editable source separate from reference documents and generated text."""
+    payload = {'currentRequirement': content, 'targetSpans': targets,
+               'existingRequirements': existing, 'reason': reason}
+    if base_content:
+        payload['변경 전 본문 전체'] = base_content
+    return '검토 입력 JSON. 수정 대상은 currentRequirement이며 위치는 targetSpans의 targetId로 선택하세요.\n' + json.dumps(payload, ensure_ascii=False)
 
 
 def _post_json(url: str, payload: dict, timeout: float, headers: dict | None = None) -> dict:

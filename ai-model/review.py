@@ -44,13 +44,15 @@ def parse_findings_response(raw: str, parse_json):
     raise ValueError('검토 결과 목록 누락 또는 형식 오류')
 
 
-def generate_findings(provider, system: str, user: str, parse_json, validate=None, diagnostic_context=None):
+def generate_findings(provider, system: str, user: str, parse_json, validate=None, diagnostic_context=None, prepare=None):
     """Retry an absent/malformed answer once, preserving all review context."""
     from providers.base import ProviderError
     for attempt in range(2):
         try:
             raw = provider.generate(system, user)
             parsed = parse_findings_response(raw, parse_json)
+            if prepare is not None:
+                parsed = prepare(parsed)
             if validate is not None:
                 validate(parsed)
             return parsed
@@ -65,10 +67,63 @@ def generate_findings(provider, system: str, user: str, parse_json, validate=Non
                     issue['findingIndex'], issue['code'], json.dumps(issue, ensure_ascii=False))
             if attempt:
                 raise
+            system += '\n직전 응답의 검증 실패 항목입니다. 원래 검토 문맥을 유지하고 해당 필드를 규격에 맞춰 다시 작성하세요: ' + json.dumps(error.issues, ensure_ascii=False)
         except (ValueError, TypeError, AttributeError):
             if attempt:
                 raise
-        system += '\ntargetSpan은 현재 본문에 한 번만 등장하는 500자 이내 원문을 그대로 인용하고, interpretations와 유효한 proposals를 포함하세요. 응답 형식을 다시 확인하세요. JSON 객체만 반환하세요. 수정할 문제가 없으면 반드시 {"findings":[]}를 반환하세요. 빈 응답이나 설명 문장을 반환하지 마세요.'
+        system += '\nfindingType과 operation은 허용값 각각 하나만 사용하세요. |로 값을 묶지 마세요. targetId는 전달된 targetSpans 목록에서 그대로 선택하세요. 원문 인용 방식으로 응답한다면 targetSpan은 현재 본문에 한 번만 등장하는 500자 이내 원문을 그대로 복사하세요. interpretations와 유효한 proposals를 포함하세요. 응답 형식을 다시 확인하세요. JSON 객체만 반환하세요. 수정할 문제가 없으면 반드시 {"findings":[]}를 반환하세요. 빈 응답이나 설명 문장을 반환하지 마세요.'
+
+
+def source_targets(content):
+    """Build exact source excerpts; the model selects IDs instead of retyping text."""
+    targets, seen = [], set()
+    for text, offset in sentences(content):
+        for relative in ([0] if len(text) <= 500 else range(0, len(text), 400)):
+            start, end = offset + relative, offset + min(relative + 500, len(text))
+            # Add original context to disambiguate repeated short sentences.
+            while content.count(content[start:end]) > 1 and end - start < 500:
+                remaining = 500 - (end - start)
+                left = min(start, min(20, remaining))
+                right = min(len(content) - end, min(20, remaining - left))
+                if not left and not right:
+                    break
+                start, end = start - left, end + right
+            span = content[start:end]
+            if (start, end) not in seen:
+                seen.add((start, end))
+                targets.append({'targetId': f'T{len(targets) + 1:04}', 'text': span})
+            if relative + 500 >= len(text):
+                break
+    return targets
+
+
+def bind_source_targets(raw, targets, content=None, existing=None):
+    """Resolve only known IDs to exact source text; never fuzzy-match model prose."""
+    source = {row['targetId']: row['text'] for row in targets}
+    rows, row_indices, issues = [], [], []
+    for index, row in enumerate(raw['findings'], 1):
+        if not isinstance(row, dict) or 'targetId' not in row:
+            rows.append(row)  # Exact-quote clients retain the existing validation path.
+            row_indices.append(index)
+            continue
+        target_id = row['targetId']
+        if not isinstance(target_id, str) or target_id not in source:
+            issues.append({'findingIndex': index, 'code': 'TARGET_ID_UNKNOWN', 'field': 'targetId',
+                           'targetId': _preview(target_id), 'availableTargetCount': len(source)})
+            continue
+        rows.append(dict(row, targetSpan=source[target_id]))
+        row_indices.append(index)
+    if issues:
+        valid = []
+        if content is not None:
+            try:
+                validate_findings({'findings': rows}, content, existing or [])
+                valid = model_findings({'findings': rows}, content, existing or [])
+            except FindingValidationError as error:
+                valid = error.findings
+                issues.extend(dict(issue, findingIndex=row_indices[issue['findingIndex'] - 1]) for issue in error.issues)
+        raise FindingValidationError(valid, issues)
+    return dict(raw, findings=rows)
 
 
 class FindingValidationError(ValueError):
