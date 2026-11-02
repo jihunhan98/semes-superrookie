@@ -2,8 +2,13 @@
 from __future__ import annotations
 import re
 import json
+import logging
+import unicodedata
+from difflib import SequenceMatcher
 from dataclasses import dataclass, field
 import rules
+
+log = logging.getLogger("ai-model.review")
 
 MARKER = re.compile(r"⟦[^⟧]+⟧")
 
@@ -39,7 +44,7 @@ def parse_findings_response(raw: str, parse_json):
     raise ValueError('검토 결과 목록 누락 또는 형식 오류')
 
 
-def generate_findings(provider, system: str, user: str, parse_json, validate=None):
+def generate_findings(provider, system: str, user: str, parse_json, validate=None, diagnostic_context=None):
     """Retry an absent/malformed answer once, preserving all review context."""
     from providers.base import ProviderError
     for attempt in range(2):
@@ -52,6 +57,14 @@ def generate_findings(provider, system: str, user: str, parse_json, validate=Non
         except ProviderError as error:
             if attempt or error.code != 'INVALID_RESPONSE':
                 raise
+        except FindingValidationError as error:
+            context = diagnostic_context or {}
+            for issue in error.issues:
+                log.warning('AI review finding rejected analysisId=%s batch=%s attempt=%s finding=%s code=%s details=%s',
+                    context.get('analysisId', 'unknown'), context.get('batch', 'unknown'), attempt + 1,
+                    issue['findingIndex'], issue['code'], json.dumps(issue, ensure_ascii=False))
+            if attempt:
+                raise
         except (ValueError, TypeError, AttributeError):
             if attempt:
                 raise
@@ -59,44 +72,129 @@ def generate_findings(provider, system: str, user: str, parse_json, validate=Non
 
 
 class FindingValidationError(ValueError):
-    def __init__(self, findings):
+    def __init__(self, findings, issues=None):
         super().__init__('INVALID_FINDING')
         self.findings = findings
+        self.issues = issues or []
+
+
+def _preview(value, limit=180):
+    if value is None:
+        return None
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+    return text[:limit] + ('…' if len(text) > limit else '')
+
+
+def _target_mismatch_details(span, content):
+    # Diagnostic comparisons only: they never change matching or acceptance.
+    compact = lambda text: re.sub(r'\s+', '', text)
+    match = SequenceMatcher(None, span[:500], content[:20000]).find_longest_match()
+    start = max(0, match.b - match.a)
+    return {
+        'targetSpanPreview': _preview(span),
+        'closestSourcePreview': _preview(content[start:start + min(len(span) + 40, 220)]),
+        'exactOccurrences': content.count(span),
+        'matchesIgnoringWhitespace': bool(compact(span)) and compact(span) in compact(content),
+        'matchesAfterUnicodeNFC': unicodedata.normalize('NFC', span) in unicodedata.normalize('NFC', content),
+    }
+
+
+def _model_filter_details(row, content, existing):
+    """Describe the existing model_findings guards without changing them."""
+    category = rules.normalize_type(row.get('findingType'))
+    if category is None or category not in rules.ALL_TYPES:
+        return 'FINDING_TYPE_UNSUPPORTED', {'findingType': _preview(row.get('findingType'))}
+    key = row.get('conflictReqKey')
+    other = next((r for r in existing if r['reqKey'] == key), None)
+    quote = row.get('conflictQuote')
+    if key and not other:
+        return 'CONFLICT_REQUIREMENT_NOT_IN_BATCH', {'conflictReqKey': _preview(key), 'availableReqKeys': [r['reqKey'] for r in existing]}
+    if key and not quote:
+        return 'CONFLICT_QUOTE_MISSING', {'conflictReqKey': _preview(key)}
+    if key and quote not in other['content']:
+        return 'CONFLICT_QUOTE_NOT_FOUND', {'conflictReqKey': _preview(key), **_target_mismatch_details(quote, other['content'])}
+    if category == rules.T_CONFLICT and not other:
+        return 'CONFLICT_REQUIREMENT_MISSING', {'conflictReqKey': _preview(key)}
+    if category == rules.T_CONFLICT and not row.get('sameCondition'):
+        return 'CONFLICT_SAME_CONDITION_MISSING', {'conflictReqKey': _preview(key)}
+    return 'MODEL_FINDING_FILTERED', {}
+
+
+def _proposal_filter_details(proposals):
+    details = []
+    for index, proposal in enumerate(proposals[:4], 1):
+        operation, after = proposal.get('operation', 'REPLACE'), str(proposal.get('after', ''))
+        if operation not in ('REPLACE', 'INSERT_BEFORE', 'INSERT_AFTER', 'DELETE'):
+            code = 'PROPOSAL_OPERATION_UNSUPPORTED'
+        elif operation != 'DELETE' and not after.strip():
+            code = 'PROPOSAL_AFTER_EMPTY'
+        elif len(after) > 6000:
+            code = 'PROPOSAL_AFTER_TOO_LONG'
+        else:
+            code = 'PROPOSAL_FILTERED'
+        details.append({'proposalIndex': index, 'code': code, 'operation': _preview(operation), 'afterLength': len(after)})
+    return details
 
 
 def validate_findings(raw, content, existing):
-    """Retry unusable rows, retaining valid suggestions if the retry also fails."""
-    valid, invalid = [], False
-    for row in raw['findings']:
+    """Original validation decisions, with the precise rejection reasons attached."""
+    valid, invalid, issues = [], False, []
+    def reject(index, row, code, field=None, **details):
+        issue = {'findingIndex': index, 'code': code, 'field': field}
+        if isinstance(row, dict):
+            issue.update(findingType=_preview(row.get('findingType')), targetSpanPreview=_preview(row.get('targetSpan')))
+        issue.update(details)
+        issues.append(issue)
+
+    for index, row in enumerate(raw['findings'], 1):
         if isinstance(row, dict) and row.get('findingType') == rules.T_REFERENCE:
             continue
         if not isinstance(row, dict) or not isinstance(row.get('targetSpan'), str):
             invalid = True
+            reject(index, row, 'FINDING_NOT_OBJECT' if not isinstance(row, dict) else 'TARGET_SPAN_NOT_STRING',
+                   'finding' if not isinstance(row, dict) else 'targetSpan', actualType=type(row).__name__ if not isinstance(row, dict) else type(row.get('targetSpan')).__name__)
             continue
         span = row['targetSpan']
         if not span or span not in content:
             invalid = True
+            reject(index, row, 'TARGET_SPAN_EMPTY' if not span else 'TARGET_SPAN_NOT_FOUND', 'targetSpan',
+                   **(_target_mismatch_details(span, content) if span else {}))
             continue
         if heading(span) or scope_note(span):
             continue
         if len(span) > 500 or content.count(span) != 1 or not row.get('interpretations'):
             invalid = True
+            if len(span) > 500:
+                reject(index, row, 'TARGET_SPAN_TOO_LONG', 'targetSpan', actualLength=len(span), maximumLength=500)
+            if content.count(span) != 1:
+                reject(index, row, 'TARGET_SPAN_NOT_UNIQUE', 'targetSpan', exactOccurrences=content.count(span))
+            if not row.get('interpretations'):
+                reject(index, row, 'INTERPRETATIONS_MISSING', 'interpretations', actualType=type(row.get('interpretations')).__name__)
             continue
         proposals = row.get('proposals', [])
         if not isinstance(proposals, list) or any(not isinstance(p, dict) for p in proposals):
             invalid = True
+            reject(index, row, 'PROPOSALS_NOT_ARRAY' if not isinstance(proposals, list) else 'PROPOSAL_NOT_OBJECT', 'proposals',
+                   actualType=type(proposals).__name__, itemTypes=[type(p).__name__ for p in proposals] if isinstance(proposals, list) else [])
             continue
         try:
             checked = model_findings({'findings': [row]}, content, existing)
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as error:
             invalid = True
+            reject(index, row, 'MODEL_FINDING_EXCEPTION', exceptionType=type(error).__name__, exceptionMessage=_preview(str(error)),
+                   fieldTypes={key: type(value).__name__ for key, value in row.items()})
             continue
         if not checked or (proposals and not checked[0].proposals):
             invalid = True
+            if not checked:
+                code, details = _model_filter_details(row, content, existing)
+                reject(index, row, code, **details)
+            else:
+                reject(index, row, 'NO_VALID_PROPOSALS', 'proposals', proposals=_proposal_filter_details(proposals))
             continue
         valid.extend(checked)
     if invalid:
-        raise FindingValidationError(valid)
+        raise FindingValidationError(valid, issues)
 
 
 def utf16(text: str) -> int:

@@ -21,6 +21,8 @@ engine="unavailable"은 이 서버가 내려주는 값이 아니다. 이 서버 
 from __future__ import annotations
 
 import json
+import hashlib
+import uuid
 import logging
 import os
 import time
@@ -290,16 +292,21 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         size += len(row["content"])
     batches.append(batch)
     if PROVIDER.enabled:
+        analysis_id = uuid.uuid4().hex[:12]
+        input_hash = hashlib.sha256(req.content.encode('utf-8')).hexdigest()[:12]
+        log.info('AI review started analysisId=%s inputHash=%s existingCount=%s batches=%s',
+                 analysis_id, input_hash, len(existing), len(batches))
         successes = 0
         model_results = []
-        for batch in batches:
+        for batch_index, batch in enumerate(batches, 1):
             try:
                 user = _user_msg(req.content, req.reason, [ExistingRequirement(**e) for e in batch])
                 if req.baseContent:
                     user += "\n변경 전 본문 전체:\n" + req.baseContent
                 user += intake.glossary_text(effective_glossary)
                 parsed = review.generate_findings(PROVIDER, _SYSTEM_PROMPT, user, _parse_json,
-                    lambda result: review.validate_findings(result, req.content, batch))
+                    lambda result: review.validate_findings(result, req.content, batch),
+                    diagnostic_context={'analysisId': analysis_id, 'batch': batch_index})
                 validated = review.model_findings(parsed, req.content, batch)
                 findings.extend(validated)
                 model_results.extend(validated)
@@ -311,7 +318,9 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
             except review.FindingValidationError as error:
                 findings.extend(error.findings)
                 warnings.append('INVALID_FINDING')
-                log.warning("AI review finding validation failed; keeping rule results")
+                log.warning('AI review finding validation failed; keeping rule results analysisId=%s batch=%s existingCount=%s validFindings=%s rejectedChecks=%s codes=%s',
+                    analysis_id, batch_index, len(batch), len(error.findings), len(error.issues),
+                    ','.join(issue['code'] for issue in error.issues))
             except (ValueError, TypeError, AttributeError):
                 warnings.append('INVALID_RESPONSE')
                 log.warning("AI review response validation failed; keeping rule results")
@@ -323,6 +332,8 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
                 log.warning("요구사항 검토 배치 실패; 규칙 검토 결과를 유지합니다.")
         engine = PROVIDER.name if successes else "rule"
         status = "COMPLETE" if successes == len(batches) else "PARTIAL"
+        log.info('AI review finished analysisId=%s status=%s acceptedBatches=%s/%s comparedCount=%s/%s warnings=%s',
+                 analysis_id, status, successes, len(batches), reviewed, len(existing), ','.join(warnings))
         if status == "COMPLETE":
             findings = model_results  # A successful contextual review supersedes mechanical fallback questions.
     if rule_invalid and not PROVIDER.enabled:

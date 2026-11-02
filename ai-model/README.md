@@ -154,3 +154,38 @@ ai-model/
 `intake.py`가 중요 용어 추출·질문 구성·답변 반영을 담당한다. CONFIRMED만 확정 정책으로 참고하고 PENDING은 추정으로 전달한다. DISMISSED는 뜻을 제공하지 않고 재등록 방지 이름만 전달한다. [사용 흐름·제약·DB 적용](../docs/registration-questions-and-glossary.md).
 
 용어 추출에는 `/analyze.projectContext`의 프로젝트 이름·설명을 사용한다. 핵심 도메인 개념만 선정하며 일반 IT 약어·UI 단어·개별 상태값은 제외한다. 모델은 중요도 HIGH·kind·domainReason을 함께 반환해야 하며 새 후보는 최대 5개다. [선별 기준과 AI 오류 진단](../docs/registration-questions-and-glossary.md).
+
+## `AI review finding validation failed` 원인 추적
+
+해당 경고는 모델 응답을 받은 뒤 `review.validate_findings`가 항목을 거절한 경로다. 바로 앞의 `AI review finding rejected` 로그에 정확한 조건을 남긴다. 검증 기준, 재시도 횟수, `PARTIAL` 판정, 완료 건수, 응답 JSON, 규칙 결과 유지 동작은 변경하지 않았다.
+
+```text
+AI review started analysisId=... inputHash=... existingCount=17 batches=1
+AI review finding rejected analysisId=... batch=1 attempt=1 finding=2 code=INTERPRETATIONS_MISSING details={...}
+AI review finding rejected analysisId=... batch=1 attempt=2 finding=2 code=INTERPRETATIONS_MISSING details={...}
+AI review finding validation failed; keeping rule results analysisId=... batch=1 existingCount=17 validFindings=... rejectedChecks=... codes=INTERPRETATIONS_MISSING
+AI review finished analysisId=... status=PARTIAL acceptedBatches=0/1 comparedCount=0/17 warnings=INVALID_FINDING
+```
+
+`analysisId`가 같으면 한 분석 요청이다. `batch`, `attempt`, `finding`은 각각 1부터 시작하는 배치·시도·모델 응답 항목 번호다. `finding`은 DB의 finding ID가 아니다. 실제 원인은 `code`와 `details`로 구분한다.
+
+| code | 검사에서 거절한 이유 |
+| --- | --- |
+| FINDING_NOT_OBJECT / TARGET_SPAN_NOT_STRING | 항목 객체 또는 원문 문자열 필드 형식 오류 |
+| TARGET_SPAN_EMPTY / TARGET_SPAN_NOT_FOUND | 원문 인용이 비었거나 입력 본문에 정확히 존재하지 않음 |
+| TARGET_SPAN_TOO_LONG | 인용 구절이 기존 500자 제한을 초과함 |
+| TARGET_SPAN_NOT_UNIQUE | 같은 구절이 본문에 여러 번 등장함 |
+| INTERPRETATIONS_MISSING | 판단 근거인 `interpretations` 필드가 없거나 비었음 |
+| PROPOSALS_NOT_ARRAY / PROPOSAL_NOT_OBJECT | 수정안 배열 또는 배열 내부 객체 형식 오류 |
+| FINDING_TYPE_UNSUPPORTED | 허용되지 않는 검출 유형 |
+| CONFLICT_REQUIREMENT_NOT_IN_BATCH / CONFLICT_REQUIREMENT_MISSING | 상충 대상으로 지정한 요구사항이 해당 요청에 없거나 누락됨 |
+| CONFLICT_QUOTE_MISSING / CONFLICT_QUOTE_NOT_FOUND | 상충 인용이 없거나 대상 요구사항 원문과 정확히 일치하지 않음 |
+| CONFLICT_SAME_CONDITION_MISSING | 같은 조건에서 상충한다는 `sameCondition` 근거 누락 |
+| MODEL_FINDING_EXCEPTION | 필드 처리 중 예외. `exceptionType`, `exceptionMessage`, `fieldTypes` 참조 |
+| NO_VALID_PROPOSALS | 수정안이 모두 필터링됨. `proposals[].code`로 잘못된 operation·빈 after·6000자 초과 구분 |
+
+원문 불일치에는 AI가 인용한 구절과 가까운 원문 일부를 최대 180자까지 기록한다. `matchesIgnoringWhitespace`, `matchesAfterUnicodeNFC`는 차이 분석에만 쓰고 검증 통과 여부에는 영향을 주지 않는다. 전체 프롬프트·원문 전문·서비스 인증 설정은 기록하지 않는다.
+
+원문이 일치해도 판단 근거 누락만으로 `PARTIAL`, `0/17`, `INVALID_FINDING`이 발생하는 재현 테스트를 추가했다. 이 재현은 실제 사내 요청의 원인을 단정하지 않는다. 실제 실패 조건은 갱신된 AI 서버의 같은 `analysisId`에 속한 `finding rejected` 로그로 확인한다.
+
+Windows `run-all.bat` 사용 시 **ReqOps - AI 서버 (8001)** 콘솔을 확인한다. 이 변경은 AI 서버만 재시작하면 적용되며 DB 변경·프런트 재빌드·추가 Python 패키지 설치가 필요하지 않다.
