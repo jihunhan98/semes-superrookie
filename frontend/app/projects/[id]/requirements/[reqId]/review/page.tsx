@@ -1,111 +1,77 @@
 "use client";
-
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import Modal from "../../../../../components/Modal";
-import ArtifactDocument from "../../../../../components/ArtifactDocument";
+import {useEffect,useRef,useState} from "react";
+import {useParams,useRouter,useSearchParams} from "next/navigation";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
-import { devId } from "../../../../../lib/identifiers";
-import { confirmBundle, retryJob } from "../../../../../lib/api/v2";
-import { getArtifact, type ArtifactDetail, type ArtifactTypeSlug, getProject, getRequirement, listJiraTargets, listJiraIssueLinks, openJiraIssue, type JiraTarget, type JiraIssueLink, type ProjectDetail, type RequirementDetail, type User } from "../../../../../lib/api";
-import { useBundle } from "../../../../../lib/hooks/useBundle";
-import { getCurrentUser } from "../../../../../lib/session";
-
-const ARTIFACT_LABELS = { voc: "SWVOC", functional: "기능 요구사항", nonfunctional: "비기능 요구사항", "detail-design": "Detail Design" };
-export default function ReviewPage() {
-  const params = useParams<{ id: string; reqId: string }>(), router = useRouter(), search = useSearchParams();
-  const projectId = Number(params.id), requirementId = Number(params.reqId);
-  const [user, setUser] = useState<User | null>(null), [project, setProject] = useState<ProjectDetail | null>(null), [requirement, setRequirement] = useState<RequirementDetail | null>(null);
-  const [targets, setTargets] = useState<JiraTarget[]>([]), [targetId, setTargetId] = useState<number | null>(null), [links, setLinks] = useState<JiraIssueLink[]>([]);
-  const [jiraLoading, setJiraLoading] = useState(true), [jiraError, setJiraError] = useState<string | null>(null), [opening, setOpening] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false), [notice, setNotice] = useState<string | null>(null), [sidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedIssue,setSelectedIssue]=useState<number|null>(null);
-  const [document,setDocument]=useState<ArtifactDetail|null>(null);
-  const [documentTitle,setDocumentTitle]=useState<string|null>(null);
-  const [documentError,setDocumentError]=useState<string|null>(null);
-  const documentRequest=useRef(0);
-  async function viewArtifact(issueKey:string,type:ArtifactTypeSlug,title:string){
-    if(!user)return;
-    const request=++documentRequest.current;
-    setDocumentTitle(title);setDocument(null);setDocumentError(null);
-    try{const saved=await getArtifact(projectId,requirementId,issueKey,type,user.id);if(request===documentRequest.current)setDocument(saved);}
-    catch(cause){if(request===documentRequest.current)setDocumentError(cause instanceof Error?cause.message:"산출물을 불러오지 못했습니다.");}
-  }
-  const creationInFlight = useRef(false);
-  const { data, error, reload } = useBundle(projectId, requirementId, user?.id);
-  const target = targets.find(item => item.id === targetId);
-  useEffect(() => { const compact = window.matchMedia("(max-width: 760px)"); const sync = () => setSidebarOpen(!compact.matches); sync(); compact.addEventListener("change", sync); return () => compact.removeEventListener("change", sync); }, []);
-  useEffect(() => {
-    let active = true;
-    const current = getCurrentUser(); if (!current) { router.replace("/login"); return; } setUser(current);
-    Promise.all([getProject(projectId, current.id), getRequirement(projectId, requirementId, current.id)]).then(([p, r]) => { if (active) { setProject(p); setRequirement(r); } }).catch(cause => { if (active) setNotice(cause.message); });
-    setJiraLoading(true); setJiraError(null);
-    Promise.all([listJiraTargets(projectId, current.id), listJiraIssueLinks(projectId, requirementId, current.id)]).then(([items, savedLinks]) => {
-      if (!active) return; setTargets(items); setLinks(savedLinks);
-      let saved = 0; try { saved = Number(sessionStorage.getItem(`reqops:jira-target:${projectId}`)); } catch { /* Storage is optional. */ }
-      setTargetId(items.find(item => item.id === saved)?.id ?? items[0]?.id ?? null);
-    }).catch(cause => { if (active) setJiraError(cause.message); }).finally(() => { if (active) setJiraLoading(false); });
-    return () => { active = false; };
-  }, [projectId, requirementId, router]);
-  useEffect(()=>{
-    if(!data||!user)return;
-    const issue=data.issues.find(item=>String(item.id)===search.get("issue")||item.issueKey===search.get("issueKey"));
-    if(!issue)return;
-    const type=search.get("artifact") as ArtifactTypeSlug|null;
-    if(type&&Object.prototype.hasOwnProperty.call(ARTIFACT_LABELS,type)&&issue.artifacts.some(doc=>doc.type===type))viewArtifact(issue.issueKey,type,`${devId(issue.id)} · ${ARTIFACT_LABELS[type]}`);
-    else setSelectedIssue(issue.id);
-  },[data?.id,user?.id,search]);
-  function selectTarget(id: number) { setTargetId(id); setNotice(null); try { sessionStorage.setItem(`reqops:jira-target:${projectId}`, String(id)); } catch { /* Storage is optional. */ } }
-  async function createAndOpen(issueId: number) {
-    if (!user || !target || creationInFlight.current) return;
-    creationInFlight.current = true; setOpening(issueId); setNotice(null);
-    // Reserve the tab while handling the click so popup blockers do not drop the Jira page.
-    const tab = window.open("about:blank", "_blank"); if (tab) tab.opener = null;
-    try {
-      const result = await openJiraIssue(projectId, requirementId, issueId, user.id, target.id);
-      const expected = new URL(target.baseUrl);
-      const url = new URL(result.url);
-      if (url.origin !== expected.origin || !url.pathname.startsWith(`${expected.pathname.replace(/\/$/, "")}/browse/`)) throw new Error("Jira 이슈 주소가 등록한 서버와 다릅니다.");
-      setLinks(current => [...current.filter(item => item.targetId !== result.targetId || item.devIssueId !== issueId), result]);
-      if (tab && !tab.closed) tab.location.replace(result.url);
-      setNotice(`${result.jiraIssueKey} ${result.created ? "이슈를 생성했습니다." : "이슈가 이미 연결되어 있습니다."} 아래 Jira 링크에서 확인할 수 있습니다.`);
-    } catch (cause) { if (tab && !tab.closed) tab.close(); setNotice(cause instanceof Error ? cause.message : "Jira 이슈를 생성하지 못했습니다."); }
-    finally { creationInFlight.current = false; setOpening(null); }
-  }
-  async function finish() {
-    if (!data || !user || busy) return; setBusy(true); setNotice(null);
-    try { await confirmBundle(projectId, requirementId, user.id, data.revision, crypto.randomUUID()); await reload(); setNotice("개발 이슈와 산출물을 전체 확정했습니다."); }
-    catch (cause) { setNotice(cause instanceof Error ? cause.message : "전체 확정하지 못했습니다."); }
-    finally { setBusy(false); }
-  }
-  async function retryGeneration() {
-    if (!data?.generation || !user || busy) return; setBusy(true); setNotice(null);
-    try { await retryJob(data.generation.id, user.id); await reload(); setNotice("실패한 산출물만 다시 생성합니다."); }
-    catch (cause) { setNotice(cause instanceof Error ? cause.message : "재시도하지 못했습니다."); }
-    finally { setBusy(false); }
-  }
-  if (error && !data) return <main className="main"><p className="lmsg err">{error}</p></main>;
-  if (!data || !project || !requirement) return <main className="main"><p role="status">산출물을 불러오는 중…</p>{notice && <p className="lmsg err">{notice}</p>}</main>;
-  const incomplete = data.state === "GENERATING" || Boolean(data.generation && (data.generation.failed > 0 || data.generation.pending > 0));
-  return <div className="appshell"><Header projectName={project.name} onToggleSidebar={() => setSidebarOpen(open => !open)} /><div className="body">{sidebarOpen && <ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts" />}<main className="main review-workspace jira-review-workspace">
-    <WorkflowStepper step={4} />
-    <section className="review-header"><div><span className="section-kicker">4단계</span><h1>산출물 · Jira 등록</h1><p>{requirement.reqKey} · 확정본 v{requirement.version}</p></div><div className="generation-summary"><div><b>{incomplete ? "산출물 생성 확인 필요" : data.state === "CONFIRMED" ? "전체 확정 완료" : "산출물 생성 완료"}</b><small>{data.generation ? `${data.generation.succeeded}/${data.generation.total} 생성 · 실패 ${data.generation.failed} · 대기 ${data.generation.pending}` : `${data.issues.length}개 이슈 · 산출물 ${data.issues.flatMap(item => item.artifacts).length}개`}</small></div>{Boolean(data.generation?.failed) && <button className="btn sm" disabled={busy} onClick={retryGeneration}>실패만 재시도</button>}</div></section>
-    <section className="jira-destination" aria-labelledby="jira-destination-heading"><div><h2 id="jira-destination-heading">등록할 Jira 프로젝트</h2><p>개발 이슈 하나에 산출물 4종을 담아 등록하고, 실제 Jira 이슈 페이지를 새 탭으로 엽니다.</p></div><Link className="btn sm" href={`/projects/${projectId}/settings`}>프로젝트 설정</Link>
-      {jiraLoading ? <p role="status">Jira 프로젝트를 불러오는 중…</p> : jiraError ? <p className="lmsg err" role="alert">{jiraError}</p> : targets.length ? <label className="jira-target-select">대상 프로젝트<select aria-label="등록할 Jira 프로젝트" disabled={opening !== null} value={targetId ?? ""} onChange={event => selectTarget(Number(event.target.value))}>{targets.map(item => <option key={item.id} value={item.id}>{item.displayName} ({item.jiraProjectKey}) · {new URL(item.baseUrl).host}</option>)}</select></label> : <p className="jira-settings-empty">프로젝트 설정에서 Jira 프로젝트를 먼저 등록해주세요.</p>}
-      {target && <p className="jira-settings-note">{target.baseUrl}{!target.issueTypeId && " · 프로젝트 설정에서 이슈 유형 ID를 입력하면 이슈를 생성할 수 있습니다."}</p>}
-      <p className="jira-settings-note">생성 버튼을 누르면 실제 Jira 이슈가 등록됩니다. 이미 연결한 이슈는 다시 생성하지 않고 기존 페이지를 엽니다. 생성 후 변경사항은 자동으로 동기화되지 않습니다.</p>
-    </section>
-    <section className="jira-review-list" aria-label="개발 이슈와 산출물 목록"><div className="jira-list-heading"><h2>개발 이슈 및 산출물</h2><span>{data.issues.length}개 이슈 · 이슈별 산출물 4종</span></div>
-      {!data.issues.length && <p className="placeholder">개발 이슈가 없습니다.</p>}
-      {data.issues.map(item => { const linked = links.find(link => link.targetId === targetId && link.devIssueId === item.id); return <article className={`jira-issue-group${String(item.id) === search.get("issue") || item.issueKey === search.get("issueKey") ? " jira-issue-selected" : ""}`} key={item.id}><div className="jira-issue-row"><span className="jira-type-icon" aria-hidden="true">✓</span><div className="jira-row-title"><button className="btn sm" onClick={()=>setSelectedIssue(item.id)}>{devId(item.id)} · {item.title}</button></div>{linked ? <a className="btn prim sm" href={linked.url} target="_blank" rel="noopener noreferrer">{linked.jiraIssueKey} · Jira에서 열기 ↗</a> : <button className="btn prim sm" onClick={() => createAndOpen(item.id)} disabled={!target?.issueTypeId || jiraLoading || opening !== null || incomplete || item.artifacts.length !== 4}>{opening === item.id ? "Jira 이슈 생성 중…" : "Jira 이슈 생성 후 열기 ↗"}</button>}</div><div className="jira-artifact-list">{Object.entries(ARTIFACT_LABELS).map(([type, label]) => <div key={type} className="jira-artifact-row"><span className="jira-document-icon" aria-hidden="true">≡</span><button className="btn sm" disabled={!item.artifacts.some(doc=>doc.type===type)} onClick={()=>viewArtifact(item.issueKey,type as ArtifactTypeSlug,`${devId(item.id)} · ${label}`)}>{label} 열기</button><span className="jira-artifact-location">{item.artifacts.some(doc => doc.type === type) ? linked ? "Jira 이슈 설명에 포함" : "생성 시 Jira 이슈 설명에 포함" : "생성 대기"}</span></div>)}</div></article>; })}
-    </section>
-    {error && <p className="lmsg err" role="alert">{error}</p>}{notice && <p className="lmsg" role="status">{notice}</p>}
-    <footer className="bundle-confirm-bar"><div><b>ReqOps 산출물 전체 확정</b><span>개별 검토·저장 없이 현재 내용으로 확정합니다. Jira 등록은 위 버튼으로 진행합니다.</span></div><button className="btn prim" disabled={busy || opening !== null || !data.issues.length || data.state === "CONFIRMED" || incomplete} onClick={finish}>{data.state === "CONFIRMED" ? "전체 확정됨" : incomplete ? "생성 완료 대기 중" : busy ? "확정 중…" : "전체 확정"}</button></footer>
-  </main></div>
-  {selectedIssue!==null&&<Modal title="개발 이슈" wide onClose={()=>setSelectedIssue(null)}>{data.issues.filter(item=>item.id===selectedIssue).map(item=><div key={item.id}><h2>{devId(item.id)} · {item.title}</h2><ArtifactDocument content={{"요구사항 근거":item.quote,"현상":item.symptom,"개선 요구":item.improvementReq,"변경 범위":item.changeScope,"제약 조건":item.constraintsNote,"변경 전":item.beforeState,"변경 후":item.afterState}}/><div className="modal-actions">{item.artifacts.map(doc=><button key={doc.id} className="btn" onClick={()=>{setSelectedIssue(null);viewArtifact(item.issueKey,doc.type,`${devId(item.id)} · ${ARTIFACT_LABELS[doc.type]}`);}}>{ARTIFACT_LABELS[doc.type]} 열기</button>)}</div></div>)}</Modal>}
-  {documentTitle&&<Modal title={documentTitle} wide onClose={()=>{documentRequest.current++;setDocumentTitle(null);}}>{documentError?<p className="lmsg err" role="alert">{documentError}</p>:document?<><p>{document.state==="CONFIRMED"?"확정본":"저장된 초안"} · {document.updatedAt}</p><ArtifactDocument content={document.content}/></>:<p role="status">저장된 산출물을 불러오는 중…</p>}</Modal>}
-  </div>;
+import ReviewIcon from "../../../../../components/ReviewIcon";
+import ArtifactDocument from "../../../../../components/ArtifactDocument";
+import ArtifactRichText from "../../../../../components/ArtifactRichText";
+import {ARTIFACT_TYPES} from "../../../../../lib/artifacts/document.mjs";
+import {devId} from "../../../../../lib/identifiers";
+import {confirmBundle,retryJob} from "../../../../../lib/api/v2";
+import {getArtifact,getProject,getRequirement,type ArtifactDetail,type ArtifactTypeSlug,type ProjectDetail,type RequirementDetail,type User} from "../../../../../lib/api";
+import {useBundle} from "../../../../../lib/hooks/useBundle";
+import {getCurrentUser} from "../../../../../lib/session";
+import styles from "../../../../../components/ArtifactReviewPage.module.css";
+type Tab='issue'|ArtifactTypeSlug;
+function validTab(value:string|null):Tab{return ARTIFACT_TYPES.some(item=>item.type===value)?value as ArtifactTypeSlug:'issue';}
+function date(value:string|null|undefined){return value?value.replace('T',' ').slice(0,16):'—';}
+export default function ReviewPage(){
+ const params=useParams<{id:string;reqId:string}>(),router=useRouter(),search=useSearchParams();
+ const projectId=Number(params.id),requirementId=Number(params.reqId),query=search.toString();
+ const [user,setUser]=useState<User|null>(null),[project,setProject]=useState<ProjectDetail|null>(null),[requirement,setRequirement]=useState<RequirementDetail|null>(null);
+ const [sidebarOpen,setSidebarOpen]=useState(true),[selectedIssue,setSelectedIssue]=useState<number|null>(null),[activeTab,setActiveTab]=useState<Tab>(validTab(search.get('artifact'))),[filter,setFilter]=useState('');
+ const [busy,setBusy]=useState(false),[notice,setNotice]=useState<{error:boolean;text:string}|null>(null),[retry,setRetry]=useState(0);
+ const [loaded,setLoaded]=useState<{key:string;document:ArtifactDetail|null;error:string|null}|null>(null);
+ const cache=useRef(new Map<string,ArtifactDetail>()),pending=useRef(false);
+ const {data,error,reload}=useBundle(projectId,requirementId,user?.id);
+ const requested=data?.issues.find(item=>String(item.id)===search.get('issue')||item.issueKey===search.get('issueKey'));
+ const issue=data?.issues.find(item=>item.id===selectedIssue)??requested??data?.issues[0];
+ const summary=issue?.artifacts.find(item=>item.type===activeTab);
+ const documentKey=issue&&summary&&activeTab!=='issue'?`${projectId}:${requirementId}:${issue.id}:${summary.id}:${activeTab}:${summary.revision}`:'';
+ const doc=loaded?.key===documentKey?loaded:null;
+ useEffect(()=>{setSelectedIssue(null);setActiveTab(validTab(new URLSearchParams(query).get('artifact')));},[projectId,requirementId,query]);
+ useEffect(()=>{const media=window.matchMedia('(max-width:900px)');const sync=()=>setSidebarOpen(!media.matches);sync();media.addEventListener('change',sync);return()=>media.removeEventListener('change',sync);},[]);
+ useEffect(()=>{let active=true;const current=getCurrentUser();if(!current){router.replace('/login');return;}setUser(current);Promise.all([getProject(projectId,current.id),getRequirement(projectId,requirementId,current.id)]).then(([p,r])=>{if(active){setProject(p);setRequirement(r);}}).catch(cause=>{if(active)setNotice({error:true,text:cause.message});});return()=>{active=false;};},[projectId,requirementId,router]);
+ useEffect(()=>{
+  if(!documentKey||!issue||!user||activeTab==='issue')return;let active=true;const saved=cache.current.get(documentKey);
+  if(saved){setLoaded({key:documentKey,document:saved,error:null});return;}
+  setLoaded({key:documentKey,document:null,error:null});
+  getArtifact(projectId,requirementId,issue.issueKey,activeTab,user.id).then(document=>{cache.current.set(documentKey,document);if(active)setLoaded({key:documentKey,document,error:null});}).catch(cause=>{if(active)setLoaded({key:documentKey,document:null,error:cause instanceof Error?cause.message:'산출물을 불러오지 못했습니다.'});});
+  return()=>{active=false;};
+ },[documentKey,projectId,requirementId,issue?.issueKey,user?.id,activeTab,retry]);
+ async function finish(){if(!data||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{await confirmBundle(projectId,requirementId,user.id,data.revision,crypto.randomUUID());await reload();setNotice({error:false,text:'개발 이슈와 산출물을 전체 확정했습니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'전체 확정하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
+ async function retryGeneration(){if(!data?.generation||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{await retryJob(data.generation.id,user.id);await reload();setNotice({error:false,text:'실패한 산출물을 다시 생성합니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'재시도하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
+ const count=data?.issues.reduce((n,item)=>n+ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length,0)??0;
+ const expected=(data?.issues.length??0)*4,confirmed=data?.state==='CONFIRMED';
+ const incomplete=data?.state==='GENERATING'||Boolean(data?.generation&&(data.generation.failed>0||data.generation.pending>0))||count<expected;
+ const visible=data?.issues.filter(item=>`${devId(item.id)} ${item.title}`.toLowerCase().includes(filter.toLowerCase()))??[];
+ const position=data?.issues.findIndex(item=>item.id===issue?.id)??0;
+ const activeLabel=ARTIFACT_TYPES.find(type=>type.type===activeTab);
+ function chooseIssue(id:number){setSelectedIssue(id);setActiveTab('issue');}
+ return <div className="appshell"><Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/><div className="body">{sidebarOpen&&project&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}<main className={`main ${styles.page}`}>
+ <WorkflowStepper step={4}/><nav className={styles.breadcrumb} aria-label="현재 위치"><Link href={`/projects/${projectId}/requirements`}>요구사항</Link><span>/</span><Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><b>산출물 검토</b></nav>
+ <header className={styles.heading}><div><div className={styles.eyebrow}><ReviewIcon name="file" size={13}/><span>REVIEW & CONFIRM</span><i/>{requirement?.reqKey??'—'}{requirement?.version&&<span>v{requirement.version}</span>}</div><h1>산출물 검토</h1><p>개발 이슈별 문서와 설계 흐름을 확인하고, 최종 산출물을 확정합니다.</p></div><span className={`${styles.status} ${incomplete?styles.pending:''}`}><ReviewIcon name={incomplete?'clock':'check'} size={14}/>{!data?'불러오는 중':confirmed?'전체 확정 완료':incomplete?'산출물 생성 확인 필요':'검토 준비 완료'}</span></header>
+ {!data||!project||!requirement?<div className={styles.loading} role={error||notice?.error?'alert':'status'}>{error??notice?.text??'산출물과 개발 이슈를 불러오는 중입니다.'}</div>:<>
+ <section className={styles.metrics} aria-label="산출물 현황"><div><span className={styles.metricIcon}><ReviewIcon name="file" size={21}/></span><div><span>개발 이슈</span><b>{data.issues.length}<small>개</small></b></div></div><div><span className={`${styles.metricIcon} ${styles.blue}`}><ReviewIcon name="diagram" size={21}/></span><div><span>생성된 산출물</span><b>{count}<small>/ {expected}개</small></b></div></div><div><span className={`${styles.metricIcon} ${styles.green}`}><ReviewIcon name={confirmed?'check':'edit'} size={21}/></span><div><span>현재 단계</span><b className={styles.metricText}>{confirmed?'확정 완료':incomplete?'생성 확인':'내용 검토'}<small>{confirmed?'확정본':'4종 문서'}</small></b></div></div></section>
+ {incomplete&&<div className={styles.generation} role="status"><ReviewIcon name={data.generation?.failed?'alert':'clock'} size={18}/><div><b>{data.generation?.failed?'일부 산출물 생성에 실패했습니다.':data.state==='GENERATING'?'산출물을 준비하고 있습니다.':'아직 생성되지 않은 산출물이 있습니다.'}</b><p>생성된 문서는 아래에서 확인할 수 있습니다.{data.generation?` 생성 ${data.generation.succeeded} · 대기 ${data.generation.pending} · 실패 ${data.generation.failed}`:''}</p></div>{Boolean(data.generation?.failed)&&<button className={styles.secondary} disabled={busy} onClick={retryGeneration}><ReviewIcon name="refresh" size={14}/>실패만 재시도</button>}</div>}
+ <div className={styles.workspace}><aside className={styles.navigator} aria-label="개발 이슈 목록"><div className={styles.navHeading}><div><ReviewIcon name="file" size={15}/><h2>개발 이슈</h2><span>{data.issues.length}</span></div><p>이슈를 선택해 산출물을 확인하세요.</p></div><label className={styles.search}><ReviewIcon name="search" size={15}/><input value={filter} onChange={e=>setFilter(e.target.value)} aria-label="개발 이슈 검색" placeholder="이슈 제목 또는 ID 검색"/></label><div className={styles.issueList}>
+ {visible.map(item=>{const ready=ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length;return <button key={item.id} type="button" className={`${styles.issueItem} ${issue?.id===item.id?styles.selected:''}`} aria-current={issue?.id===item.id?'true':undefined} onClick={()=>chooseIssue(item.id)}><div className={styles.issueMeta}><span>{devId(item.id)}</span><small>{ready}/4 생성</small></div><h3>{item.title}</h3><div className={styles.docDots}>{ARTIFACT_TYPES.map(type=><span key={type.type} className={item.artifacts.some(doc=>doc.type===type.type)?styles.dotReady:''}><i/>{type.short}</span>)}</div><ReviewIcon name="chevron" size={15}/></button>;})}
+ {!visible.length&&<p className={styles.navEmpty}>{data.issues.length?'검색 결과가 없습니다.':'아직 개발 이슈가 없습니다.'}</p>}</div><div className={styles.navFoot}><span><i/>생성된 문서</span><span>{count}개 문서</span></div></aside>
+ <section className={styles.reader} aria-label="개발 이슈 및 산출물 상세">{issue?<>
+ <header className={styles.readerHead}><div className={styles.readerMeta}><span>{devId(issue.id)}</span><i/><span>{requirement.reqKey}</span><span className={styles.readerState}>{confirmed?'확정본':'검토용 초안'}</span></div><h2>{issue.title}</h2><p>요구사항에서 나눈 개발 범위와 관련 산출물을 한곳에서 검토합니다.</p></header>
+ <div className={styles.tabs} role="tablist" aria-label="산출물 선택" onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const buttons=Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]'));const index=buttons.indexOf(event.target as HTMLButtonElement);const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].focus();buttons[next].click();}}>{[{type:'issue',label:'개발 이슈'},...ARTIFACT_TYPES].map(type=><button type="button" role="tab" id={`tab-${type.type}`} key={type.type} tabIndex={activeTab===type.type?0:-1} aria-selected={activeTab===type.type} aria-controls="artifact-reader-panel" onClick={()=>setActiveTab(type.type as Tab)}><ReviewIcon name={type.type==='detail-design'?'diagram':'file'} size={14}/>{type.label}{type.type!=='issue'&&<i className={issue.artifacts.some(doc=>doc.type===type.type)?styles.tabReady:''}/>}</button>)}</div>
+ <div className={styles.paper} role="tabpanel" id="artifact-reader-panel" aria-labelledby={`tab-${activeTab}`}>
+ {activeTab==='issue'?<><div className={styles.paperTitle}><span className={styles.paperIcon}><ReviewIcon name="file" size={20}/></span><div><h3>개발 이슈 개요</h3><p>구현할 내용과 변경 범위를 확인합니다.</p></div></div><ArtifactDocument key={`issue-${issue.id}`} content={{symptom:issue.symptom,improvementReq:issue.improvementReq,changeScope:issue.changeScope,constraintsNote:issue.constraintsNote}}/><div className={styles.comparison}><section><span>AS-IS</span><h4>변경 전</h4>{issue.beforeState?<ArtifactRichText text={issue.beforeState}/>:<p className={styles.muted}>작성된 내용이 없습니다.</p>}</section><section><span>TO-BE</span><h4>변경 후</h4>{issue.afterState?<ArtifactRichText text={issue.afterState}/>:<p className={styles.muted}>작성된 내용이 없습니다.</p>}</section></div><div className={styles.issueDates}><span>생성일 <b>{date(issue.createdAt)}</b></span><span>목표일 <b>{date(issue.dueOn)}</b></span></div></>:<>
+ <div className={styles.paperTitle}><span className={styles.paperIcon}><ReviewIcon name={activeTab==='detail-design'?'diagram':'file'} size={21}/></span><div><h3>{activeLabel?.label}</h3><p>{activeLabel?.description}</p></div>{doc?.document&&<span className={styles.savedDate}>저장 {date(doc.document.updatedAt)}</span>}</div>
+ {!summary?<div className={styles.documentEmpty}><ReviewIcon name="clock" size={30}/><h4>산출물이 아직 준비되지 않았습니다.</h4><p>생성이 완료되면 이 탭에서 내용을 확인할 수 있습니다.</p></div>:doc?.error?<div className={styles.documentEmpty} role="alert"><ReviewIcon name="alert" size={28}/><h4>산출물을 불러오지 못했습니다.</h4><p>{doc.error}</p><button className={styles.secondary} onClick={()=>{cache.current.delete(documentKey);setRetry(v=>v+1);}}>다시 불러오기</button></div>:!doc?.document?<div className={styles.documentLoading} role="status"><span/>문서를 불러오는 중입니다.</div>:<ArtifactDocument key={documentKey} content={doc.document.content}/>}</>}
+ <details className={styles.source}><summary><ReviewIcon name="attachment" size={14}/>요구사항 근거<span>{requirement.reqKey}</span></summary><div>{issue.quote?<blockquote>{issue.quote}</blockquote>:<p className={styles.muted}>연결된 원문 구절이 없습니다.</p>}<details><summary>확정 요구사항 전체 보기</summary><ArtifactRichText text={requirement.content}/></details></div></details>
+ </div><footer className={styles.readerFoot}><span>개발 이슈 {position+1} / {data.issues.length}</span><div><button className={styles.secondary} disabled={position<=0} onClick={()=>chooseIssue(data.issues[position-1].id)}>이전 이슈</button><button className={styles.secondary} disabled={position>=data.issues.length-1} onClick={()=>chooseIssue(data.issues[position+1].id)}>다음 이슈<ReviewIcon name="arrow" size={13}/></button></div></footer>
+ </>:<div className={styles.documentEmpty}><ReviewIcon name="file" size={35}/><h3>검토할 개발 이슈가 없습니다.</h3><p>요구사항에서 개발 이슈와 산출물을 먼저 생성해주세요.</p><Link className={styles.secondary} href={`/projects/${projectId}/requirements/${requirementId}/issues`}>개발 이슈 도출로 이동<ReviewIcon name="arrow" size={14}/></Link></div>}</section></div>
+ {error&&<p className={`${styles.message} ${styles.messageError}`} role="alert">{error}</p>}{notice&&<p className={`${styles.message} ${notice.error?styles.messageError:''}`} role={notice.error?'alert':'status'}>{notice.text}</p>}
+ <footer className={styles.confirmBar}><span className={styles.confirmIcon}><ReviewIcon name={confirmed?'check':'file'} size={20}/></span><div><b>{confirmed?'개발 이슈와 산출물을 확정했습니다.':'검토한 내용으로 산출물을 확정합니다.'}</b><p>{confirmed?'확정 후에도 이 화면에서 모든 문서를 확인할 수 있습니다.':incomplete?'모든 산출물의 생성이 완료되면 전체 확정할 수 있습니다.':`${data.issues.length}개 개발 이슈와 ${count}개 산출물의 현재 내용을 함께 확정합니다.`}</p></div><button className={styles.primary} disabled={busy||!data.issues.length||confirmed||incomplete} onClick={finish}><ReviewIcon name="check" size={15}/>{confirmed?'전체 확정됨':busy?'확정 중…':'전체 확정'}</button></footer>
+ </>}
+ </main></div></div>;
 }

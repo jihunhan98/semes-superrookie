@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import ReviewIcon from "./ReviewIcon";
+import styles from "./MermaidDiagram.module.css";
 
 type CopyState = "idle" | "copied" | "downloaded" | "error";
 
@@ -87,14 +89,19 @@ export default function MermaidDiagram({
   const [error, setError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const [expanded, setExpanded] = useState(false);
+  const [zoom,setZoom]=useState(1);
+  const dialogRef=useRef<HTMLDivElement>(null);
 
   // 확대 보기가 떠 있는 동안은 뒤 페이지가 스크롤되지 않게 한다.
   useEffect(() => {
     if (!expanded) return;
     const prev = document.body.style.overflow;
+    const focused=document.activeElement as HTMLElement|null;
     document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
     return () => {
       document.body.style.overflow = prev;
+      focused?.focus();
     };
   }, [expanded]);
 
@@ -111,10 +118,11 @@ export default function MermaidDiagram({
     let cancelled = false;
     setSvg(null);
     setError(null);
+    setZoom(1);
 
     import("mermaid").then(async (mod) => {
       const mermaid = mod.default;
-      mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "strict" });
+      mermaid.initialize({ startOnLoad: false, theme: "base", securityLevel: "strict", fontFamily:"Pretendard, Segoe UI, sans-serif", themeVariables:{primaryColor:"#f0f5fd",primaryTextColor:"#344e70",primaryBorderColor:"#a7bedc",lineColor:"#8199b7",secondaryColor:"#f6f9fd",tertiaryColor:"#f5f8fc",actorBkg:"#edf3fc",actorBorder:"#9fb8d8",actorTextColor:"#344e70",signalColor:"#6e89aa",signalTextColor:"#49627f",noteBkgColor:"#f4f7fc",noteBorderColor:"#c9d7e9",noteTextColor:"#637c9b",fontSize:"13px"} });
       try {
         // 문법 검사만 먼저 한다 — parse()는 DOM을 건드리지 않아서, 코드가 잘못됐을 때
         // render()가 (실패 도중) 우리 카드 밖 document.body에 남겨두는 임시/에러
@@ -157,69 +165,12 @@ export default function MermaidDiagram({
     setTimeout(() => setCopyState("idle"), 1800);
   }
 
-  if (error) {
-    return <p className="lmsg err" style={{ marginBottom: 0 }}>{error}</p>;
-  }
-
-  const copyLabel =
-    copyState === "copied" ? "복사됨" : copyState === "downloaded" ? "다운로드됨"
-      : copyState === "error" ? "실패" : "복사";
-
-  return (
-    <div>
-      {(label || svg) && (
-        <div className="seqblockhd">
-          {label}
-          {svg && (
-            <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
-              {copyable && (
-                <button type="button" className="btn sm" onClick={handleCopy}>
-                  {copyLabel}
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn sm"
-                onClick={() => setExpanded(true)}
-                aria-label="크게 보기"
-                title="크게 보기"
-              >
-                🔍
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-      {!svg ? (
-        <div className="placeholder" style={{ padding: "18px 0" }}>다이어그램 그리는 중…</div>
-      ) : (
-        <>
-          {/* eslint-disable-next-line react/no-danger */}
-          <div
-            ref={containerRef}
-            className="mermaidbox"
-            style={{ cursor: "zoom-in" }}
-            onClick={() => setExpanded(true)}
-            dangerouslySetInnerHTML={{ __html: svg }}
-          />
-          {expanded && (
-            <div className="mmdlightbox" onClick={() => setExpanded(false)}>
-              <div className="mmdlightbox-panel" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="mmdlightbox-close"
-                  onClick={() => setExpanded(false)}
-                  aria-label="닫기"
-                >
-                  ✕
-                </button>
-                {/* eslint-disable-next-line react/no-danger */}
-                <div className="mmdlightbox-body" dangerouslySetInnerHTML={{ __html: svg }} />
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+  if (error) return <div className={styles.error} role="alert"><ReviewIcon name="alert" size={17}/><div><b>다이어그램을 표시하지 못했습니다.</b><p>{error}</p><details><summary>저장된 다이어그램 코드 확인</summary><pre>{code}</pre></details></div></div>;
+  const copyLabel=copyState==='copied'?'복사됨':copyState==='downloaded'?'저장됨':copyState==='error'?'복사 실패':'이미지 복사';
+  const controls=<div className={styles.controls}><button type="button" disabled={!svg||zoom<=.5} onClick={()=>setZoom(v=>Math.max(.5,v-.25))} aria-label="다이어그램 축소"><ReviewIcon name="minus" size={14}/></button><button type="button" disabled={!svg} onClick={()=>setZoom(1)} title="화면에 맞춤">{Math.round(zoom*100)}%</button><button type="button" disabled={!svg||zoom>=2} onClick={()=>setZoom(v=>Math.min(2,v+.25))} aria-label="다이어그램 확대"><ReviewIcon name="plus" size={14}/></button></div>;
+  return <div className={styles.diagram}>
+   <div className={styles.toolbar}><span><ReviewIcon name="diagram" size={15}/>{label??'다이어그램'}</span><div>{controls}{copyable&&<button type="button" className={styles.textButton} disabled={!svg} onClick={handleCopy}>{copyLabel}</button>}<button type="button" className={styles.textButton} disabled={!svg} onClick={()=>setExpanded(true)} aria-label="다이어그램 크게 보기"><ReviewIcon name="expand" size={14}/><span>크게 보기</span></button></div></div>
+   {!svg?<div className={styles.loading} role="status"><span/>다이어그램을 그리는 중입니다.</div>:<div className={styles.viewport} aria-label={label??'다이어그램'} tabIndex={0}><div ref={containerRef} className={styles.drawing} style={{width:`${zoom*100}%`}} dangerouslySetInnerHTML={{__html:svg}}/></div>}
+   {expanded&&svg&&<div className={styles.overlay} onClick={()=>setExpanded(false)}><div className={styles.lightbox} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label??'다이어그램 크게 보기'} onClick={e=>e.stopPropagation()}><div className={styles.toolbar}><span><ReviewIcon name="diagram" size={17}/>{label??'다이어그램'}</span><div>{controls}<button type="button" className={styles.textButton} onClick={()=>setExpanded(false)} aria-label="확대 보기 닫기"><ReviewIcon name="close" size={17}/></button></div></div><div className={styles.fullViewport} tabIndex={0}><div className={styles.drawing} style={{width:`${zoom*100}%`}} dangerouslySetInnerHTML={{__html:svg}}/></div><footer>확대 후 스크롤하여 전체 흐름을 확인하세요. Esc 키로 닫을 수 있습니다.</footer></div></div>}
+  </div>;
 }
