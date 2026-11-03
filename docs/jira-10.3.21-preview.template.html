@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>VCS-142 · AMR 후보 선정 및 우선순위 | Jira 10.3.21 기준 예시</title>
+<!-- Generated from jira-10.3.21-preview.template.html. Official AUI 9.12.0 and jQuery 3.7.1 are embedded for offline use. -->
+<style id="aui-official-css">/* AUI_CSS */</style>
+<style>
+:root{--ink:#172b4d;--muted:#626f86;--border:#dfe1e6;--surface:#f4f5f7;--blue:#0052cc}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;font-size:14px;line-height:1.55;background:#fff}button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:var(--blue)}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #4c9aff;outline-offset:3px}[hidden]{display:none!important}
+.skip{position:absolute;top:-60px;left:20px;z-index:500;background:#fff;padding:10px}.skip:focus{top:8px}
+.topbar{height:56px;display:flex;align-items:center;gap:26px;padding:0 24px;border-bottom:1px solid var(--border);background:#fff}.wordmark{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:600;letter-spacing:-.8px;white-space:nowrap}.jira-mark{width:24px;height:24px;background:#0052cc;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.toplinks{display:flex;gap:24px;color:#42526e}.global-search{margin-left:auto;display:flex;align-items:center;gap:8px}.global-search .text{width:210px}.avatar{display:inline-flex;justify-content:center;align-items:center;width:30px;height:30px;border-radius:50%;background:#deebff;color:#0747a6;font-size:12px;font-weight:600;flex-shrink:0}.avatar.gray{background:#ebecf0;color:#42526e}.version-strip{display:flex;align-items:center;gap:10px;padding:7px 24px;background:#f4f5f7;border-bottom:1px solid var(--border);font-size:12px;color:#505f79}.version-strip button{margin-left:auto}
+.layout{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:calc(100vh - 96px)}.sidebar{background:#f4f5f7;border-right:1px solid var(--border);padding:26px 14px}.project{display:flex;align-items:center;gap:12px;padding:0 10px 27px}.project-icon{width:36px;height:36px;display:grid;place-items:center;background:#0052cc;color:#fff;border-radius:4px;font-size:13px;font-weight:700}.project strong{display:block}.muted{color:var(--muted)}.small{font-size:12px}.sidebar h2{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#6b778c;margin:18px 10px 7px}.side-item{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:10px 12px;color:#42526e;border:0;background:transparent;text-align:left;border-radius:3px}.side-item.selected{background:#e4e8ee;color:#0052cc;font-weight:600}.side-icon{width:18px;text-align:center}.sidebar .scope-note{font-size:12px;line-height:1.7;margin:25px 10px;padding-top:18px;border-top:1px solid var(--border)}
+main{padding:26px 32px 0;min-width:0}.breadcrumbs{display:flex;align-items:center;gap:9px;font-size:14px;color:#6b778c;margin-bottom:12px}.issue-heading{display:flex;align-items:flex-start;gap:13px}.type-icon{display:inline-grid;place-items:center;background:#4bade8;color:#fff;width:24px;height:24px;border-radius:3px;margin-top:5px}.issue-heading h1{font-size:25px;line-height:1.4;font-weight:500;margin:0 0 18px;letter-spacing:-.45px}.issue-heading .key{margin-left:auto;white-space:nowrap;font-size:12px;color:#6b778c;padding-top:8px}.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:26px}.toolbar .push-right{margin-left:auto}.toolbar .aui-button .aui-icon{margin-right:4px}.status-menu{display:inline-flex}.content-grid{display:grid;grid-template-columns:minmax(0,1fr) 266px;gap:38px}.main-column{min-width:0}.section-title{font-size:16px;font-weight:600;padding-bottom:8px;border-bottom:1px solid var(--border);margin:0 0 15px}.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 25px;margin-bottom:28px}.fact{display:grid;grid-template-columns:104px 1fr;align-items:baseline;gap:8px}.fact dt{color:#6b778c}.fact dd{margin:0;min-width:0}.fact .aui-label{margin:0 5px 4px 0}.priority{color:#d04437;font-size:18px;vertical-align:middle;margin-right:5px}.doc-intro{margin:15px 0 22px;line-height:1.8}.doc-intro p{margin:0 0 10px}.doc-section{margin:25px 0}.doc-section h3{font-size:15px;font-weight:600;margin:0 0 10px}.doc-section p{line-height:1.85;margin:0 0 9px}.doc-section ul,.doc-section ol{padding-left:22px;margin:0;line-height:1.9}.quote{border-left:3px solid #c1c7d0;background:#f4f5f7;padding:14px 18px;margin:12px 0;color:#42526e;line-height:1.85}.doc-table{width:100%;margin:12px 0!important}.doc-table td,.doc-table th{vertical-align:top;line-height:1.7;overflow-wrap:anywhere}.doc-table th{white-space:normal}.doc-table td:first-child{min-width:74px}.right-column h2{font-size:16px;font-weight:600;border-bottom:1px solid var(--border);padding-bottom:8px;margin:0 0 16px}.right-column section{margin-bottom:28px}.people-line{display:flex;gap:10px;align-items:center;margin:6px 0 18px}.people-line .avatar{width:26px;height:26px}.meta-pair{margin:0 0 15px}.meta-pair dt{color:#6b778c;font-size:12px;margin-bottom:5px}.meta-pair dd{margin:0;line-height:1.7}.right-column .aui-label{margin:0 4px 5px 0}.doc-link{display:block;margin:7px 0;font-size:13px}.tab-heading{margin:22px 0 10px;font-size:19px;font-weight:500}.subtext{font-size:12px;color:#6b778c;margin:0 0 18px}.diagram-wrap{border:1px solid var(--border);border-radius:3px;padding:14px;background:#fafbfc;margin:14px 0}.sequence{display:block;width:100%;height:auto;min-width:430px}.diagram-scroll{overflow:auto}.sequence text{font-family:inherit;font-size:12px;fill:#344563}.sequence .actor{fill:#fff;stroke:#c1c7d0}.sequence .life{stroke:#c1c7d0;stroke-dasharray:5 5}.sequence .message{stroke:#4c9aff;stroke-width:1.5}.sequence .band{fill:#e9f2ff;stroke:#b3d4ff}.diagram-caption{font-size:12px;color:#626f86;margin-top:7px}.requirement-card{border:1px solid var(--border);border-radius:3px;padding:16px;margin-top:24px}.requirement-card h3{font-size:14px;margin:0 0 8px}.requirement-card p{margin:0;line-height:1.85}.activity{margin-top:30px}.activity-entry{display:flex;gap:12px;margin:18px 0}.activity-entry p{margin:0 0 5px;white-space:pre-wrap;overflow-wrap:anywhere}.activity-meta{font-size:12px;color:#6b778c}.comment-form{margin-top:18px}.comment-form textarea{width:100%;min-height:90px;resize:vertical}.comment-form .buttons-container{margin-top:10px}.empty{color:#6b778c;margin:20px 0}.footer{font-size:11px;color:#6b778c;text-align:center;border-top:1px solid #ebecf0;padding:20px 0;margin-top:36px;line-height:1.8}.demo-heading{font-weight:600}.aui-dialog2-content p{line-height:1.8}.aui-dialog2-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f5f7;padding:14px;font-size:13px}.aui-dialog2-content .text,.aui-dialog2-content .textarea{max-width:none;width:100%}.aui-dialog2-content textarea{min-height:150px;resize:vertical}.aui-dialog2-content .field-group{padding-left:0!important}.aui-dialog2-content .field-group label{position:static!important;float:none!important;margin:0 0 5px!important;display:block!important;text-align:left!important;width:auto!important}.aui-dialog2-content form.aui{margin:0}.about-table td{word-break:break-word}#runtime-error{margin:20px;padding:20px;border:1px solid #de350b;color:#bf2600;background:#ffebe6}noscript p{padding:20px;background:#fffae6}.mobile-title{display:none}.doc-tabs>.tabs-menu{display:flex;flex-wrap:wrap;gap:0}.doc-tabs>.tabs-menu:before{bottom:0}.doc-tabs>.tabs-menu>li{float:none}.doc-tabs .tabs-pane{padding-top:2px}.comment-form .field-group{padding-left:0!important}.comment-form label{position:static!important;display:block!important;float:none!important;text-align:left!important;margin-bottom:7px!important;width:auto!important}.aui-message{max-width:100%}.overview-note{margin-top:15px}.mini-icon{display:inline-block;width:14px;height:14px;background:#4bade8;border-radius:2px;color:white;font-size:11px;text-align:center;line-height:14px}.readonly-name{color:#42526e}.table-scroll{overflow-x:auto}.dialog-title-version{font-size:12px;color:#6b778c;margin-top:4px}.edit-note{font-size:12px;color:#6b778c}.status-history{padding-left:20px;line-height:1.9}.body-copy{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(min-width:1600px){main{padding-right:50px}.content-grid{grid-template-columns:minmax(0,1fr) 300px;gap:48px}.main-column{max-width:1140px}}
+@media(max-width:1100px){.toplinks{display:none}.layout{grid-template-columns:185px minmax(0,1fr)}main{padding:24px}.content-grid{grid-template-columns:minmax(0,1fr) 225px;gap:24px}.fact{grid-template-columns:85px 1fr}.facts{gap:12px}.issue-heading h1{font-size:22px}}
+@media(max-width:850px){.sidebar{display:none}.layout{display:block}.content-grid{grid-template-columns:1fr}.right-column{display:grid;grid-template-columns:1fr 1fr;gap:22px}.right-column section{margin:0}.global-search{display:none}.version-strip{padding:8px 16px;flex-wrap:wrap}.version-strip button{margin-left:0}.topbar{padding:0 16px}.issue-heading .key{display:none}main{padding:22px 18px 0}.toolbar .push-right{margin-left:0}}
+@media(max-width:520px){.facts{grid-template-columns:1fr}.right-column{grid-template-columns:1fr}.issue-heading h1{font-size:21px}.doc-tabs>.tabs-menu{gap:0}.doc-tabs>.tabs-menu>li>a{padding:9px!important;font-size:12px}.topbar{gap:15px}.toolbar{gap:6px}.version-strip{font-size:11px}.aui-dialog2{max-width:calc(100vw - 24px)!important}.fact{grid-template-columns:105px 1fr}}
+@media print{.topbar,.sidebar,.version-strip,.toolbar,.comment-form{display:none}.layout,.content-grid{display:block}main{padding:0}.tabs-pane{display:block!important}.right-column{margin-top:20px}.doc-tabs>.tabs-menu{display:none}.footer{margin-top:20px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#issue-title">본문으로 건너뛰기</a>
+<header class="topbar" aria-label="Jira 예시 화면 상단">
+ <div class="wordmark"><span class="jira-mark" aria-hidden="true"></span>Jira Software</div>
+ <div class="toplinks" aria-hidden="true"><span>대시보드</span><span>프로젝트</span><span>이슈</span><span>보드</span></div>
+ <button class="aui-button aui-button-primary" id="open-source">요구사항 보기</button>
+ <div class="global-search"><span class="muted small">VCS · 예시 프로젝트</span><span class="avatar" aria-label="예시 사용자">SW</span></div>
+</header>
+<div class="version-strip"><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-inprogress">화면 예시</span><span><strong>Jira Data Center 10.3.21 기준</strong> · 사내 커스텀 양식 미확인</span><button class="aui-button aui-button-link" id="open-about">버전·구성 확인</button></div>
+<div id="runtime-error" role="alert" hidden></div>
+<noscript><p>탭·편집·댓글 예시를 사용하려면 JavaScript를 켜주세요. 이 파일은 서버 없이 동작합니다.</p></noscript>
+<div class="layout">
+ <aside class="sidebar" aria-label="예시 프로젝트 정보">
+  <div class="project"><span class="project-icon">VCS</span><div><strong>Vehicle Control System</strong><span class="muted small">소프트웨어 프로젝트</span></div></div>
+  <h2>프로젝트 탐색</h2>
+  <div class="side-item"><span class="side-icon" aria-hidden="true">▤</span>요약</div>
+  <div class="side-item selected" aria-current="page"><span class="side-icon" aria-hidden="true">☑</span>이슈</div>
+  <div class="side-item"><span class="side-icon" aria-hidden="true">▦</span>보드</div>
+  <div class="side-item"><span class="side-icon" aria-hidden="true">▥</span>보고서</div>
+  <h2>연결된 산출물</h2>
+  <button class="side-item" data-go-tab="#swvoc">SWVOC</button>
+  <button class="side-item" data-go-tab="#functional">기능 요구사항</button>
+  <button class="side-item" data-go-tab="#nonfunctional">비기능 요구사항</button>
+  <button class="side-item" data-go-tab="#design">상세 설계</button>
+  <p class="scope-note">이슈·문서·담당자는 설명용 데이터입니다. 탭, 상태 변경, 편집, 댓글을 직접 눌러볼 수 있습니다.</p>
+ </aside>
+ <main id="main-content">
+  <nav class="breadcrumbs" aria-label="탐색 경로"><span>Vehicle Control System</span><span aria-hidden="true">/</span><a href="#issue-title">VCS-142</a></nav>
+  <div class="issue-heading"><span class="type-icon" aria-label="작업">✓</span><h1 id="issue-title" tabindex="-1">AMR 후보 선정 및 우선순위</h1><span class="key">VCS-142</span></div>
+  <div class="toolbar" aria-label="이슈 작업">
+   <button class="aui-button" id="edit-issue"><span class="aui-icon aui-icon-small aui-iconfont-edit" aria-hidden="true"></span>편집</button>
+   <button class="aui-button" id="focus-comment">댓글 추가</button>
+   <div class="status-menu"><button class="aui-button aui-dropdown2-trigger" aria-controls="status-options" aria-haspopup="true" id="status-trigger">진행 중</button></div>
+   <button class="aui-button aui-button-link" id="jump-documents">산출물 4종 보기</button>
+   <span class="push-right muted small" id="save-hint">이 브라우저 화면에서만 변경됩니다</span>
+  </div>
+  <div class="content-grid">
+   <div class="main-column">
+    <section aria-labelledby="details-heading">
+     <h2 class="section-title" id="details-heading">상세 정보</h2>
+     <dl class="facts">
+      <div class="fact"><dt>유형:</dt><dd><span class="mini-icon" aria-hidden="true">✓</span> 작업</dd></div>
+      <div class="fact"><dt>해결:</dt><dd id="resolution">미해결</dd></div>
+      <div class="fact"><dt>우선순위:</dt><dd><span class="priority" aria-hidden="true">↑</span>높음</dd></div>
+      <div class="fact"><dt>상태:</dt><dd><span id="issue-status" class="aui-lozenge aui-lozenge-subtle aui-lozenge-inprogress">진행 중</span></dd></div>
+      <div class="fact"><dt>수정 버전:</dt><dd>미정</dd></div>
+      <div class="fact"><dt>영향 버전:</dt><dd>미정</dd></div>
+      <div class="fact"><dt>컴포넌트:</dt><dd>AMR Matching</dd></div>
+      <div class="fact"><dt>레이블:</dt><dd><span class="aui-label">VCS</span><span class="aui-label">AMR</span></dd></div>
+     </dl>
+    </section>
+    <section aria-label="개발 이슈와 산출물" id="documents">
+     <div class="aui-tabs horizontal-tabs doc-tabs" id="document-tabs">
+      <ul class="tabs-menu">
+       <li class="menu-item active-tab"><a href="#development">개발 이슈</a></li>
+       <li class="menu-item"><a href="#swvoc">SWVOC</a></li>
+       <li class="menu-item"><a href="#functional">기능 요구사항</a></li>
+       <li class="menu-item"><a href="#nonfunctional">비기능 요구사항</a></li>
+       <li class="menu-item"><a href="#design">상세 설계</a></li>
+      </ul>
+      <div class="tabs-pane active-pane" id="development">
+       <h2 class="tab-heading">설명</h2><p class="subtext">원문 근거, 변경 범위, 완료 조건을 개발 이슈에 함께 정리합니다.</p>
+       <div class="doc-section"><h3>현상</h3><p>고객은 여러 AMR 후보가 있을 때의 선정 기준과 선정 결과의 추적 가능성을 요구하고 있습니다. 기존 구현의 구체적인 동작은 제공되지 않았으므로 확인이 필요합니다.</p></div>
+       <div class="doc-section"><h3>개선 요구</h3><p id="improvement-copy" class="body-copy">VCS는 IDLE 상태이고 SOC 기준을 만족하는 AMR을 후보로 조회한다. 후보별 경로 거리를 비교해 가장 가까운 AMR을 선택하고, 거리가 같으면 SOC가 높은 AMR을 선택한다.</p></div>
+       <div class="doc-section"><h3>변경 범위</h3><ul><li>AMR 상태·SOC에 따른 후보 필터링</li><li>경로 거리 오름차순, 동일 거리에서 SOC 내림차순 정렬</li><li>선택 결과와 선정 근거를 이력 기록 기능에 전달</li></ul></div>
+       <div class="doc-section"><h3>제약 조건·확인 사항</h3><div class="aui-message aui-message-warning"><p class="title"><strong>원문에 없는 기준은 확정하지 않았습니다</strong></p><p>SOC 임계값, 거리 산정 방식, 거리·SOC가 모두 같은 경우의 우선순위, 후보가 없는 경우의 처리는 고객 확인이 필요합니다.</p></div></div>
+       <div class="doc-section"><h3>변경 전 / 변경 후</h3><table class="aui doc-table"><thead><tr><th scope="col">구분</th><th scope="col">내용</th></tr></thead><tbody><tr><th scope="row">변경 전</th><td>기존 매칭 로직·소스 미제공. 현재 동작 확인 필요.</td></tr><tr><th scope="row">변경 후</th><td>IDLE·SOC 적합 후보에서 최단 거리 우선 선택. 동일 거리이면 SOC가 높은 후보 선택.</td></tr></tbody></table></div>
+       <div class="doc-section"><h3>완료 조건</h3><ol><li>IDLE 상태가 아닌 AMR은 후보에서 제외된다.</li><li>SOC 기준을 만족하지 못하는 AMR은 후보에서 제외된다.</li><li>최단 거리 후보가 선정되며, 동일 거리에서는 SOC가 높은 후보가 선정된다.</li><li>미정 기준·예외는 합의 후 해당 테스트에 반영한다.</li></ol></div>
+       <div class="requirement-card"><h3>도출 근거 · REQ-011</h3><p>“후보별 경로 거리를 계산하고, 최단 거리 우선으로 선택하되 동일 거리이면 SOC가 높은 AMR을 선택한다.”</p><p class="small muted">이슈로 묶은 이유: 후보 필터링과 우선순위 비교는 하나의 선정 결과를 만드는 연속 동작입니다. 이력 저장은 별도 이슈 VCS-143의 책임으로 나눴습니다. 이 분할은 설명용 예시입니다.</p></div>
+      </div>
+      <div class="tabs-pane" id="swvoc">
+       <h2 class="tab-heading">SWVOC · 고객 요청</h2><p class="subtext">VOC-011 · 개발 이슈 VCS-142에 연결된 예시 문서</p>
+       <table class="aui doc-table"><tbody><tr><th scope="row">요청자</th><td>고객 담당자 · 예시</td></tr><tr><th scope="row">대상</th><td>VCS / AMR 매칭</td></tr><tr><th scope="row">요청 목적</th><td>작업할 AMR의 선정 기준을 명확히 하고 결과를 추적한다.</td></tr><tr><th scope="row">고객 요청</th><td>IDLE·SOC 조건에 적합한 AMR 중 최단 거리 우선으로 선정하고, 동일 거리에서는 SOC가 높은 AMR을 선택한다.</td></tr><tr><th scope="row">특이 사항</th><td>SOC 임계값, 거리 산정 방식, 무후보·완전 동률 처리는 확인 필요.</td></tr><tr><th scope="row">합의 상태</th><td><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-moved">예시 · 미확정</span></td></tr></tbody></table>
+       <div class="doc-section"><h3>원문과 연결</h3><blockquote class="quote">REQ-011의 후보 선정 범위를 VCS-142로 연결합니다. 선정 결과와 근거의 영속 저장은 VCS-143에서 다룹니다.</blockquote></div>
+      </div>
+      <div class="tabs-pane" id="functional">
+       <h2 class="tab-heading">기능 요구사항</h2><p class="subtext">FR-011 · 후보 조회와 우선순위 선정</p>
+       <div class="doc-section"><h3>개요·선행 조건</h3><p>VCS가 매칭 요청을 수신하면 현재 AMR 상태와 SOC, 후보별 경로 거리를 이용해 한 대의 AMR을 선정합니다. AMR 상태 정보와 SOC 기준이 사용 가능해야 합니다.</p></div>
+       <div class="table-scroll"><table class="aui doc-table"><thead><tr><th scope="col">시나리오</th><th scope="col">조건</th><th scope="col">기대 동작</th></tr></thead><tbody><tr><td>기본 흐름</td><td>적합 후보가 여러 대이며 거리가 서로 다름</td><td>경로 거리가 가장 짧은 AMR 선정</td></tr><tr><td>대안 흐름</td><td>경로 거리가 같은 후보가 여러 대</td><td>SOC가 높은 AMR 선정</td></tr><tr><td>조건 제외</td><td>IDLE 상태가 아니거나 SOC 기준 미충족</td><td>해당 AMR을 후보에서 제외</td></tr><tr><td>예외 · 확인 필요</td><td>적합 후보 0대</td><td>재시도·대기·실패 응답 정책 합의 필요</td></tr><tr><td>예외 · 확인 필요</td><td>경로 거리와 SOC가 모두 같음</td><td>추가 우선순위 정책 합의 필요</td></tr></tbody></table></div>
+       <div class="doc-section"><h3>검증 예시</h3><p class="small muted">아래 SOC 기준 30%와 거리 값은 테스트 설명용 가정이며 고객 확정 수치가 아닙니다.</p><table class="aui doc-table"><thead><tr><th scope="col">AMR</th><th scope="col">상태</th><th scope="col">SOC</th><th scope="col">거리</th><th scope="col">판정</th></tr></thead><tbody><tr><td>AMR-A</td><td>IDLE</td><td>60%</td><td>120 m</td><td>선정 · 동일 거리에서 높은 SOC</td></tr><tr><td>AMR-B</td><td>IDLE</td><td>40%</td><td>120 m</td><td>후보</td></tr><tr><td>AMR-C</td><td>BUSY</td><td>80%</td><td>50 m</td><td>제외 · 상태 부적합</td></tr><tr><td>AMR-D</td><td>IDLE</td><td>20%</td><td>60 m</td><td>제외 · SOC 기준 미충족</td></tr></tbody></table></div>
+      </div>
+      <div class="tabs-pane" id="nonfunctional">
+       <h2 class="tab-heading">비기능 요구사항</h2><p class="subtext">NFR-011 · 고객 근거와 추가 확인 사항을 구분합니다.</p>
+       <table class="aui doc-table"><thead><tr><th scope="col">분류</th><th scope="col">기준</th><th scope="col">근거·확인 사항</th></tr></thead><tbody><tr><td>성능</td><td><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-moved">미정</span></td><td>원문에 응답 시간 기준 없음. 목표 시간과 동시 요청 수 확인 필요.</td></tr><tr><td>정보 최신성</td><td><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-moved">미정</span></td><td>AMR 상태·SOC의 최대 허용 경과 시간 확인 필요.</td></tr><tr><td>추적성</td><td>선정 결과와 선정 근거 기록</td><td>REQ-011에 명시. 저장은 VCS-143에서 수행하며 전달 데이터의 정합성 확인 필요.</td></tr><tr><td>이력 보존</td><td><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-moved">미정</span></td><td>보관 기간·조회 권한·삭제 정책은 원문에 없음.</td></tr><tr><td>신뢰성</td><td><span class="aui-lozenge aui-lozenge-subtle aui-lozenge-moved">미정</span></td><td>거리 조회 실패, 상태 변경, 중복 요청에 대한 동작 확인 필요.</td></tr></tbody></table>
+       <div class="aui-message aui-message-info overview-note"><p>예시 문서에 임의의 성능 수치를 확정 요구사항으로 넣지 않았습니다. 검토·합의 후 측정 가능한 기준으로 채웁니다.</p></div>
+      </div>
+      <div class="tabs-pane" id="design">
+       <h2 class="tab-heading">상세 설계</h2><p class="subtext">DD-011 · 아래 클래스명과 흐름은 설계 예시이며 실제 코드 분석 결과가 아닙니다.</p>
+       <div class="doc-section"><h3>설계 개요</h3><p>후보 조회, 거리 조회, 우선순위 비교를 분리하고 선정 결과를 이력 기록 기능에 전달합니다. 예외 정책은 합의 후 추가합니다.</p></div>
+       <table class="aui doc-table"><thead><tr><th scope="col">예시 클래스</th><th scope="col">책임</th><th scope="col">입력 / 출력</th></tr></thead><tbody><tr><td><code>MatchingService</code></td><td>선정 흐름 조정</td><td>매칭 요청 / 선정 결과</td></tr><tr><td><code>CandidateProvider</code></td><td>IDLE·SOC 조건 조회</td><td>SOC 기준 / 후보 목록</td></tr><tr><td><code>DistanceProvider</code></td><td>후보별 경로 거리 조회</td><td>후보·목적지 / 거리</td></tr><tr><td><code>PriorityPolicy</code></td><td>거리·SOC 우선순위 비교</td><td>후보 목록 / 선정 AMR</td></tr></tbody></table>
+       <div class="doc-section"><h3>변경 전 흐름</h3><p>기존 소스와 실행 결과가 없어 AS-IS 시퀀스는 확인 필요입니다.</p></div>
+       <div class="doc-section"><h3>변경 후 · 후보 선정 시퀀스 예시</h3>
+        <div class="diagram-wrap"><div class="diagram-scroll"><svg class="sequence" viewBox="0 0 700 395" role="img" aria-labelledby="sequence-title sequence-desc"><title id="sequence-title">후보 선정 시퀀스 예시</title><desc id="sequence-desc">MatchingService가 CandidateProvider에서 IDLE·SOC 적합 후보를 받고, DistanceProvider에서 거리를 조회한 뒤 PriorityPolicy로 최단 거리 및 SOC 우선순위를 적용합니다. 무후보와 완전 동률 정책은 확인이 필요합니다.</desc><defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0L7 3L0 6Z" fill="#4c9aff"/></marker></defs><rect class="actor" x="10" y="10" width="155" height="38" rx="3"/><rect class="actor" x="185" y="10" width="155" height="38" rx="3"/><rect class="actor" x="360" y="10" width="155" height="38" rx="3"/><rect class="actor" x="535" y="10" width="155" height="38" rx="3"/><text x="87" y="34" text-anchor="middle">MatchingService</text><text x="262" y="34" text-anchor="middle">CandidateProvider</text><text x="437" y="34" text-anchor="middle">DistanceProvider</text><text x="612" y="34" text-anchor="middle">PriorityPolicy</text><path class="life" d="M87 48V375M262 48V375M437 48V375M612 48V375"/><path class="message" marker-end="url(#arrow)" d="M87 95H258"/><text x="172" y="84" text-anchor="middle">IDLE·SOC 적합 후보 조회</text><path class="message" marker-end="url(#arrow)" d="M262 135H91" stroke-dasharray="4 3"/><text x="172" y="125" text-anchor="middle">후보 목록</text><path class="message" marker-end="url(#arrow)" d="M87 180H433"/><text x="262" y="169" text-anchor="middle">후보별 경로 거리 조회</text><path class="message" marker-end="url(#arrow)" d="M437 220H91" stroke-dasharray="4 3"/><text x="262" y="210" text-anchor="middle">거리 정보</text><path class="message" marker-end="url(#arrow)" d="M87 265H608"/><text x="350" y="254" text-anchor="middle">거리 오름차순 → 동일 거리에서 SOC 내림차순</text><path class="message" marker-end="url(#arrow)" d="M612 305H91" stroke-dasharray="4 3"/><text x="350" y="295" text-anchor="middle">선정 AMR + 선정 근거</text><rect class="band" x="15" y="334" width="670" height="42" rx="3"/><text x="350" y="359" text-anchor="middle">무후보·거리/SOC 완전 동률 정책 확인 필요 → 이력 저장은 VCS-143에서 처리</text></svg></div><div class="diagram-caption">이 그림은 문서 안에 포함된 SVG입니다. 오프라인에서도 표시됩니다.</div></div>
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="activity" aria-labelledby="activity-heading">
+     <h2 class="section-title" id="activity-heading">활동</h2>
+     <div class="aui-tabs horizontal-tabs" id="activity-tabs"><ul class="tabs-menu"><li class="menu-item active-tab"><a href="#comments">댓글</a></li><li class="menu-item"><a href="#history">변경 이력</a></li></ul>
+      <div class="tabs-pane active-pane" id="comments"><div id="comment-list"><div class="activity-entry"><span class="avatar gray" aria-hidden="true">검토</span><div><p><strong>검토 담당자</strong> <span class="activity-meta">예시 댓글</span></p><p>SOC 기준과 후보가 없는 경우의 처리 정책을 확인한 뒤 완료 조건을 확정해주세요.</p></div></div></div>
+       <form class="aui comment-form" id="comment-form"><div class="field-group"><label for="comment-input">댓글 추가</label><textarea class="textarea" id="comment-input" required maxlength="2000" placeholder="검토 의견을 입력하세요. 화면을 새로 열면 초기화됩니다."></textarea></div><div class="buttons-container"><button class="aui-button aui-button-primary" type="submit">추가</button></div></form>
+      </div><div class="tabs-pane" id="history"><ul class="status-history" id="history-list"><li>예시 이슈 생성 · 상태: 진행 중</li></ul></div>
+     </div>
+    </section>
+   </div>
+   <aside class="right-column" aria-label="이슈 추가 정보">
+    <section><h2>사람</h2><dl><div class="meta-pair"><dt>담당자:</dt><dd class="people-line"><span class="avatar" aria-hidden="true">SW</span><span>SW 개발 담당자 <span class="muted small">· 예시</span></span></dd></div><div class="meta-pair"><dt>보고자:</dt><dd class="people-line"><span class="avatar gray" aria-hidden="true">고객</span><span>고객 담당자 <span class="muted small">· 예시</span></span></dd></div></dl></section>
+    <section><h2>날짜</h2><dl><div class="meta-pair"><dt>생성:</dt><dd>2026-11-03 · 예시</dd></div><div class="meta-pair"><dt>업데이트:</dt><dd id="updated-date">2026-11-03 · 예시</dd></div></dl></section>
+    <section><h2>요구사항 연결</h2><dl><div class="meta-pair"><dt>근거 요구사항:</dt><dd><button class="aui-button aui-button-link" id="source-side">REQ-011 · AMR 매칭 기준</button></dd></div><div class="meta-pair"><dt>관련 개발 이슈:</dt><dd>VCS-143 · 선정 이력 기록<span class="muted small"> (예시 참조)</span></dd></div></dl></section>
+    <section><h2>연결 문서</h2><a href="#swvoc" class="doc-link" data-go-tab="#swvoc">VOC-011 · SWVOC</a><a href="#functional" class="doc-link" data-go-tab="#functional">FR-011 · 기능 요구사항</a><a href="#nonfunctional" class="doc-link" data-go-tab="#nonfunctional">NFR-011 · 비기능 요구사항</a><a href="#design" class="doc-link" data-go-tab="#design">DD-011 · 상세 설계</a></section>
+   </aside>
+  </div>
+  <footer class="footer">Atlassian Jira 10.3.21 기준의 독립 HTML 예시 · 실제 Jira 실행 화면이 아닙니다.<br>AUI 9.12.0 공식 컴포넌트 사용 · 회사 양식·필드·테마와의 일치 여부는 별도 확인이 필요합니다.</footer>
+ </main>
+</div>
+<aui-dropdown-menu id="status-options"><aui-section label="상태 변경 · 화면 예시"><aui-item-link href="#" data-status="todo">해야 할 일</aui-item-link><aui-item-link href="#" data-status="progress">진행 중</aui-item-link><aui-item-link href="#" data-status="done">완료</aui-item-link></aui-section></aui-dropdown-menu>
+<section id="edit-dialog" class="aui-dialog2 aui-dialog2-large aui-layer" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title" hidden>
+ <header class="aui-dialog2-header"><h2 class="aui-dialog2-header-main" id="edit-dialog-title">이슈 편집 · VCS-142</h2><button class="aui-close-button" type="button" aria-label="닫기"></button></header>
+ <div class="aui-dialog2-content"><p class="edit-note">이 HTML 화면에만 반영됩니다. 서버 전송·저장은 하지 않습니다.</p><form class="aui" id="edit-form"><div class="field-group"><label for="edit-title">요약 <span aria-hidden="true">*</span></label><input class="text" id="edit-title" type="text" required maxlength="160" autofocus></div><div class="field-group"><label for="edit-description">개선 요구 <span aria-hidden="true">*</span></label><textarea class="textarea" id="edit-description" required maxlength="6000"></textarea></div></form></div>
+ <footer class="aui-dialog2-footer"><div class="aui-dialog2-footer-actions"><button class="aui-button aui-button-primary" type="submit" form="edit-form">업데이트</button><button class="aui-button aui-button-link" data-close="#edit-dialog">취소</button></div></footer>
+</section>
+<section id="source-dialog" class="aui-dialog2 aui-dialog2-large aui-layer" role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
+ <header class="aui-dialog2-header"><h2 class="aui-dialog2-header-main" id="source-dialog-title">REQ-011 · AMR 매칭 기준</h2><button class="aui-close-button" type="button" aria-label="닫기"></button></header>
+ <div class="aui-dialog2-content"><p class="small muted">고객 요구사항 원문 · 설명용 예시</p><blockquote class="quote">VCS는 IDLE 상태이며 SOC 기준을 만족하는 AMR 후보를 조회한다. 후보별 경로 거리를 계산하고, 최단 거리 우선으로 선택하되 동일 거리이면 SOC가 높은 AMR을 선택한다. VCS는 선택 결과와 선정 근거를 매칭 이력으로 기록한다.</blockquote><table class="aui doc-table"><thead><tr><th scope="col">개발 이슈</th><th scope="col">책임 범위</th></tr></thead><tbody><tr><td>VCS-142 · 현재 화면</td><td>후보 필터링, 거리 비교, 우선순위 선정</td></tr><tr><td>VCS-143 · 참조</td><td>선택 결과·선정 근거의 이력 저장</td></tr></tbody></table><p>SOC 임계값·예외 정책은 미정입니다. 회사 요구사항 또는 실제 AI 응답을 인용한 데이터가 아닙니다.</p></div>
+ <footer class="aui-dialog2-footer"><div class="aui-dialog2-footer-actions"><button class="aui-button aui-button-primary" data-close="#source-dialog">닫기</button></div></footer>
+</section>
+<section id="about-dialog" class="aui-dialog2 aui-dialog2-large aui-layer" role="dialog" aria-modal="true" aria-labelledby="about-dialog-title" hidden>
+ <header class="aui-dialog2-header"><h2 class="aui-dialog2-header-main" id="about-dialog-title">버전·구성 정보</h2><button class="aui-close-button" type="button" aria-label="닫기"></button></header>
+ <div class="aui-dialog2-content"><table class="aui doc-table about-table"><tbody><tr><th scope="row">대상 제품</th><td>Jira Software Data Center 10.3.21</td></tr><tr><th scope="row">공식 UI 라이브러리</th><td>@atlassian/aui 9.12.0 · 실행 버전: <strong id="aui-runtime-version">확인 중</strong></td></tr><tr><th scope="row">보조 라이브러리</th><td>jQuery 3.7.1</td></tr><tr><th scope="row">공식 컴포넌트</th><td>Button, Tabs, Table, Lozenge, Message, Form, Dropdown 2, Dialog 2, Icon</td></tr><tr><th scope="row">직접 구성한 부분</th><td>프로젝트·이슈 레이아웃, 문서 4종 양식, 예시 데이터, SVG 다이어그램, 화면 안의 편집·댓글 동작</td></tr></tbody></table>
+ <p>Jira 10.3 계열의 AUI 9.12 안내를 기준으로 라이브러리를 고정했습니다. 회사 10.3.21에 포함된 정확한 AUI 패치 버전은 확인하지 않았습니다. <strong>Jira 제품 버전과 AUI 버전은 서로 다른 번호입니다.</strong></p><p>버전 번호만으로 사내 플러그인, 워크플로, 커스텀 필드, 화면 구성, 문서 템플릿을 알 수 없습니다. 이 예시는 해당 설정을 재현했다고 주장하지 않습니다.</p>
+ <p>CSS·JavaScript·아이콘 폰트가 이 파일 안에 포함되어 있습니다. npm 설치·CDN·Jira 로그인 없이 열 수 있습니다. 라이브러리 원문·라이선스 고지는 파일 내부와 함께 제공한 문서에 있습니다.</p>
+ <p><a href="https://confluence.atlassian.com/jirasoftware/jira-software-10-3-x-release-notes-1472790887.html" target="_blank" rel="noopener noreferrer">Jira 10.3 공식 릴리스 안내</a> · <a href="https://aui.atlassian.com/aui/9.12/docs/dialog2.html" target="_blank" rel="noopener noreferrer">AUI 9.12 공식 문서</a></p></div>
+ <footer class="aui-dialog2-footer"><div class="aui-dialog2-footer-actions"><button class="aui-button aui-button-primary" data-close="#about-dialog">닫기</button></div></footer>
+</section>
+<script>/* JQUERY_JS */</script>
+<script>/* AUI_JS */</script>
+<script>
+(function(){
+ 'use strict';
+ if(!window.AJS||!AJS.dialog2||!AJS.tabs){const e=document.getElementById('runtime-error');e.hidden=false;e.textContent='공식 AUI 라이브러리를 초기화하지 못했습니다. 원본 HTML을 다시 다운로드해 열어주세요.';return;}
+ AJS.toInit(function(){
+  const $id=id=>document.getElementById(id);
+  const open=id=>AJS.dialog2(id).show();
+  const go=selector=>{AJS.tabs.change(document.querySelector('#document-tabs .tabs-menu a[href="'+selector+'"]'));$id('documents').scrollIntoView({behavior:'smooth',block:'start'});};
+  let status='progress';
+  const labels={todo:'해야 할 일',progress:'진행 중',done:'완료'};
+  const classes={todo:'',progress:' aui-lozenge-inprogress',done:' aui-lozenge-success'};
+  const record=message=>{const li=document.createElement('li');li.textContent=message;$id('history-list').append(li);$id('updated-date').textContent='방금 · 이 화면에서 수정';};
+  $id('aui-runtime-version').textContent=String(AJS.version||'9.12.0');
+  $id('open-about').addEventListener('click',()=>open('#about-dialog'));
+  ['open-source','source-side'].forEach(id=>$id(id).addEventListener('click',()=>open('#source-dialog')));
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>AJS.dialog2(b.dataset.close).hide()));
+  document.querySelectorAll('[data-go-tab]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();go(b.dataset.goTab);}));
+  $id('jump-documents').addEventListener('click',()=>go('#swvoc'));
+  document.querySelectorAll('[data-status]').forEach(b=>b.addEventListener('click',e=>{
+   e.preventDefault();const next=b.dataset.status;if(next===status)return;
+   const previous=labels[status];status=next;$id('status-trigger').textContent=labels[next];
+   $id('issue-status').textContent=labels[next];$id('issue-status').className='aui-lozenge aui-lozenge-subtle'+classes[next];
+   $id('resolution').textContent=next==='done'?'완료 (화면 예시)':'미해결';record('상태 변경: '+previous+' → '+labels[next]);
+   $id('save-hint').textContent='상태 변경됨 · 화면을 다시 열면 초기화됩니다';
+  }));
+  $id('edit-issue').addEventListener('click',()=>{$id('edit-title').value=$id('issue-title').textContent;$id('edit-description').value=$id('improvement-copy').textContent;open('#edit-dialog');});
+  $id('edit-form').addEventListener('submit',e=>{
+   e.preventDefault();const title=$id('edit-title').value.trim(),description=$id('edit-description').value.trim();
+   if(!title||!description){const field=!title?$id('edit-title'):$id('edit-description');field.setCustomValidity('공백만 입력할 수 없습니다.');field.reportValidity();return;}
+   $id('issue-title').textContent=title;$id('improvement-copy').textContent=description;document.title='VCS-142 · '+title+' | Jira 10.3.21 기준 예시';
+   record('요약·개선 요구 편집');$id('save-hint').textContent='편집 내용 반영됨 · 이 화면에서만 유지됩니다';AJS.dialog2('#edit-dialog').hide();
+  });
+  ['edit-title','edit-description','comment-input'].forEach(id=>$id(id).addEventListener('input',()=>{$id(id).setCustomValidity('');}));
+  $id('focus-comment').addEventListener('click',()=>{AJS.tabs.change(document.querySelector('a[href="#comments"]'));$id('comment-input').scrollIntoView({behavior:'smooth',block:'center'});$id('comment-input').focus({preventScroll:true});});
+  $id('comment-form').addEventListener('submit',e=>{
+   e.preventDefault();const input=$id('comment-input'),value=input.value.trim();if(!value){input.setCustomValidity('댓글 내용을 입력해주세요.');input.reportValidity();return;}
+   const entry=document.createElement('div');entry.className='activity-entry';
+   const avatar=document.createElement('span');avatar.className='avatar';avatar.textContent='SW';avatar.setAttribute('aria-hidden','true');
+   const body=document.createElement('div'),meta=document.createElement('p'),strong=document.createElement('strong'),text=document.createElement('p');
+   strong.textContent='SW 개발 담당자';meta.append(strong,document.createTextNode(' · 방금 · 화면 예시'));text.textContent=value;body.append(meta,text);entry.append(avatar,body);$id('comment-list').append(entry);
+   input.value='';record('검토 댓글 추가');$id('save-hint').textContent='댓글 추가됨 · 이 화면에서만 유지됩니다';
+  });
+  document.documentElement.dataset.previewReady='true';
+ });
+})();
+</script>
+<!-- THIRD_PARTY_NOTICES -->
+</body>
+</html>
