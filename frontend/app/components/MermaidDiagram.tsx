@@ -111,7 +111,13 @@ export default function MermaidDiagram({
   useEffect(() => {
     if (!expanded) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setExpanded(false);
+      if (e.key === "Escape") { setExpanded(false); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusable=Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex="0"]'));
+      if (!focusable.length) { e.preventDefault(); dialogRef.current.focus(); return; }
+      const first=focusable[0],last=focusable[focusable.length-1];
+      if (e.shiftKey && (document.activeElement===first || document.activeElement===dialogRef.current)) {e.preventDefault();last.focus();}
+      else if (!e.shiftKey && document.activeElement===last) {e.preventDefault();first.focus();}
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -176,7 +182,7 @@ export default function MermaidDiagram({
 
   if (error) return <div className={styles.error} role="alert"><ReviewIcon name="alert" size={17}/><div><b>다이어그램을 표시하지 못했습니다.</b><p>{error}</p><details><summary>저장된 다이어그램 코드 확인</summary><pre>{code}</pre></details></div></div>;
   const copyLabel=copyState==='copied'?'복사됨':copyState==='downloaded'?'저장됨':copyState==='error'?'복사 실패':'이미지 복사';
-  const controls=<div className={styles.controls}><button type="button" disabled={!svg||zoom<=.5} onClick={()=>setZoom(v=>Math.max(.5,v-.25))} aria-label="다이어그램 축소"><ReviewIcon name="minus" size={14}/></button><button type="button" disabled={!svg} onClick={()=>setZoom(1)} title="화면에 맞춤">{Math.round(zoom*100)}%</button><button type="button" disabled={!svg||zoom>=2} onClick={()=>setZoom(v=>Math.min(2,v+.25))} aria-label="다이어그램 확대"><ReviewIcon name="plus" size={14}/></button></div>;
+  const controls=<div className={styles.controls}><button type="button" disabled={!svg||zoom<=.5} onClick={()=>setZoom(v=>Math.max(.5,v-.25))} aria-label="다이어그램 축소"><ReviewIcon name="minus" size={14}/></button><button type="button" disabled={!svg} onClick={()=>setZoom(1)} title="화면에 맞춤">{Math.round(zoom*100)}%</button><button type="button" disabled={!svg||zoom>=2.5} onClick={()=>setZoom(v=>Math.min(2.5,v+.25))} aria-label="다이어그램 확대"><ReviewIcon name="plus" size={14}/></button></div>;
   return <div className={`${styles.diagram} ${appearance==='jira'?styles.jira:''}`}>
    <div className={styles.toolbar}><span><ReviewIcon name="diagram" size={15}/>{label??'다이어그램'}</span><div>{controls}{copyable&&<button type="button" className={styles.textButton} disabled={!svg} onClick={handleCopy}>{copyLabel}</button>}<button type="button" className={styles.textButton} disabled={!svg} onClick={()=>setExpanded(true)} aria-label="다이어그램 크게 보기"><ReviewIcon name="expand" size={14}/><span>크게 보기</span></button></div></div>
    {!svg?<div className={styles.loading} role="status"><span/>다이어그램을 그리는 중입니다.</div>:<div className={styles.viewport} aria-label={label??'다이어그램'} tabIndex={0}><div ref={containerRef} className={styles.drawing} style={{width:`${zoom*100}%`,maxWidth:appearance==='jira'&&naturalWidth?`${naturalWidth*zoom}px`:undefined}} dangerouslySetInnerHTML={{__html:svg}}/></div>}

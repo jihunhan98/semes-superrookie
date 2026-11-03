@@ -42,3 +42,28 @@
 @media(max-width:700px){.documentTabs>.tabs{padding-left:18px!important;padding-right:18px!important}}
 @media(max-width:700px){.page :global(.workflow-steps){display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:11px 16px;overflow:visible}.page :global(.workflow-steps li){font-size:10px!important;min-width:0}}
 .navigationCollapsed{grid-template-columns:1fr}.navigationCollapsed>.navigator{display:none}
+
+/* Approved common-shell document layout. */
+.page{min-width:0!important;padding:24px 28px 48px!important;background:#f6f8fa;color:#1f2328}
+.page :global(.workflow-steps){border:0;background:transparent;padding:0 0 18px}
+.breadcrumb{padding:0;margin:4px 0 16px}.heading{padding:0;margin:0 0 20px}.heading h1{font-size:26px;font-weight:600;color:#1f2328}
+.workspace,.workspaceWide,.navigationCollapsed{display:block;min-height:0;border:1px solid #d8dee4;border-radius:10px;background:#fff;overflow:hidden}
+.navigator{position:static;top:auto;min-height:0;border:0;border-bottom:1px solid #d8dee4;background:#fafbfc;border-radius:0}
+.navigatorToggle{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 22px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;overflow-wrap:anywhere}
+.navigatorToggle span{white-space:nowrap;font-size:12px;font-weight:400;color:#0969da}
+.navigatorContent{display:block;padding:0 18px 14px}
+.navHeading{padding:0 0 10px}.search{margin:0 0 10px;max-width:320px}
+.issueList{display:flex;flex-wrap:wrap;gap:8px;max-height:240px;min-height:0;padding:0;overflow:auto}
+.issueItem{flex:1 1 190px;max-width:280px;min-height:0;margin:0;border:1px solid #d8dee4;border-left:3px solid transparent;background:#fff}
+.issueItem.selected{border-color:#bfdbfe;border-left-color:#2563eb;background:#eff6ff}
+.reader{border:0;container-type:inline-size}.readerHead{padding:22px 26px 0}.readerHead h2{font-size:24px;font-weight:600;color:#1f2328;margin-bottom:14px}
+.readerBody{grid-template-columns:minmax(0,1fr) 215px;gap:0;padding:0}.paper{padding:26px 30px;min-width:0}
+.issueInfo{padding:26px 20px;border-left:1px solid #e2e8f0;background:#fafbfc}
+.tabs{padding:0 26px;gap:24px;border-bottom:1px solid #d8dee4}.tabs>li>a[aria-selected=true]:after{display:block;background:#0969da}
+.documentTabs>.tabs{padding-left:26px!important;padding-right:26px!important}
+.readerFoot{padding:15px 26px}.confirmBar{margin-top:18px;border:1px solid #d8dee4;border-radius:8px}
+.workspaceWide .navigator{display:none}.workspaceWide .readerBody{max-width:none;grid-template-columns:1fr}.workspaceWide .issueInfo{display:none}
+@media(max-width:1100px){.readerBody{grid-template-columns:1fr}.issueInfo{border-left:0;border-top:1px solid #d8dee4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.issueInfo section{margin:0}.page{padding:20px!important}}
+@media(max-width:650px){.page{padding:14px!important}.readerHead{padding:18px 16px 0}.readerBody{padding:0}.paper{padding:20px 16px}.issueInfo{padding:20px 16px;grid-template-columns:1fr}.tabs{padding:0 16px}.documentTabs>.tabs{padding-left:16px!important;padding-right:16px!important}.navigatorToggle{padding:12px 16px}.readerFoot{padding:12px 16px}.issueList{display:block}.issueItem{max-width:none;width:100%;margin:0 0 6px}.heading{flex-wrap:wrap}}
+.navigationCollapsed>.navigator{display:block}
+.workspaceWide>.navigator{display:none}

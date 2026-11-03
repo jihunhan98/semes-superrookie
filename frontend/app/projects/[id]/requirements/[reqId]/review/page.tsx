@@ -3,6 +3,7 @@ import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import {useParams,useRouter,useSearchParams} from "next/navigation";
 import Header from "../../../../../components/Header";
+import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import ReviewIcon from "../../../../../components/ReviewIcon";
 import ArtifactDocument from "../../../../../components/ArtifactDocument";
@@ -66,6 +67,7 @@ export default function ReviewPage(){
  return <div className={`appshell ${frame.frame}`}>
   <Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/>
   <div className="body">
+   {sidebarOpen&&project&&!wide&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}
    <main className={`main jira-dc-ui ${styles.page}`}>
     <WorkflowStepper step={4} completed={confirmed}/>
     <nav className={styles.breadcrumb} aria-label="현재 위치">
@@ -85,7 +87,7 @@ export default function ReviewPage(){
       {Boolean(data.generation?.failed)&&<button className="aui-button" disabled={busy} onClick={retryGeneration}>실패한 산출물 재시도</button>}
      </div>}
      <div className={`${styles.workspace} ${wide?styles.workspaceWide:''} ${!sidebarOpen?styles.navigationCollapsed:''}`}>
-      <aside className={styles.navigator} aria-label="개발 이슈 목록">
+      <details className={styles.navigator} aria-label="개발 이슈 목록"><summary className={styles.navigatorToggle}>개발 이슈 선택 · {issue?`${devId(issue.id)} ${issue.title}`:"이슈 없음"} <span>펼치기 / 접기</span></summary><div className={styles.navigatorContent}>
        <div className={styles.navHeading}><h2>개발 이슈 <span className="aui-badge">{data.issues.length}</span></h2><p>이슈별 문서 4종</p></div>
        <label className={styles.search}><ReviewIcon name="search" size={16}/><input value={filter} onChange={e=>setFilter(e.target.value)} aria-label="개발 이슈 검색" placeholder="ID 또는 제목 검색"/></label>
        <div className={styles.issueList}>
@@ -98,7 +100,7 @@ export default function ReviewPage(){
         })}
         {!visible.length&&<p className={styles.navEmpty}>{data.issues.length?'검색 결과가 없습니다.':'아직 개발 이슈가 없습니다.'}</p>}
        </div>
-      </aside>
+      </div></details>
       <section className={styles.reader} aria-label="개발 이슈 및 산출물 상세">
        {issue?<>
         <header className={styles.readerHead}>

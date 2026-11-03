@@ -17,3 +17,9 @@
 /* Jira description typography: keep the form in one continuous document. */
 .document{gap:25px}.section>h3{font-size:14px!important;font-weight:600!important;line-height:1.6!important;padding:0!important;margin:0 0 10px!important;border:0;color:#172b4d}.richText{font-size:14px;line-height:1.8}.sectionHint{font-size:12px;line-height:1.7}.comparison{border-color:#dfe1e6;border-radius:3px}.comparison>section,.comparison>section+section{background:#fff;padding:16px 18px}.comparison h4{font-size:13px;font-weight:600;margin-bottom:10px}.scenario{border-color:#dfe1e6;border-radius:3px}.scenarioHead{padding:13px 16px;background:#f4f5f7}.scenarioHead h4{font-size:13px}.scenarios{gap:22px}.formTable th{width:114px;background:#fafbfc;font-size:12px;color:#626f86}.formTable td{font-size:14px}.formTable td,.formTable th{padding:14px 16px!important}.note{background:#fffbe6;color:#626f86;font-size:12px}.emptyValue{font-size:13px}.diagramCard{border-radius:3px}.extra{font-size:12px}.flowTabs{gap:8px}
 @media(max-width:600px){.formTable th{width:84px}.formTable td,.formTable th{padding:12px!important}.comparison>section{padding:15px}.richText{font-size:14px}}
+
+.diagramComparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.diagramColumn{min-width:0;border:1px solid #d8dee4;border-radius:6px;padding:16px}
+.diagramColumn>h4{font-size:14px;margin:0 0 12px;color:#334155}
+.diagramColumn .diagramCard{min-width:0}.diagramColumn .diagramEmpty p{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:1100px){.diagramComparison{grid-template-columns:1fr}}

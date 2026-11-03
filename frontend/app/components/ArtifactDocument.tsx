@@ -1,5 +1,5 @@
 "use client";
-import {useState,type ReactNode} from "react";
+import {type ReactNode} from "react";
 import ArtifactRichText from "./ArtifactRichText";
 import MermaidDiagram from "./MermaidDiagram";
 import {BUSINESS_LABELS,designDiagrams,documentScenarios,documentSections,documentValue,hasDocumentValue,supplementalFields} from "../lib/artifacts/document.mjs";
@@ -25,7 +25,6 @@ function Section({title,children}:{title:string;children:ReactNode}){
 }
 
 export default function ArtifactDocument({content,type='issue'}:{content:Record<string,unknown>;type?:DocumentType}){
- const [flow,setFlow]=useState<'before'|'after'>('after');
  const sections=documentSections(type,content) as {key:string;label:string;value:unknown}[];
  const scenarios=documentScenarios(content) as Scenario[];
  const diagrams=designDiagrams(content);
@@ -52,10 +51,16 @@ export default function ArtifactDocument({content,type='issue'}:{content:Record<
   </Section>}
   {type==='detail-design'&&<>
    <Section title="클래스 다이어그램"><div className={styles.diagramCard}>{diagrams.classes?<MermaidDiagram appearance="jira" code={diagrams.classes} label="클래스 구조" copyable/>:<div className={styles.diagramEmpty}>등록된 클래스 다이어그램이 없습니다.</div>}</div></Section>
-   <Section title="시퀀스 다이어그램">
-    <div className={styles.flowTabs} role="group" aria-label="변경 전후 시퀀스 선택">{(['before','after'] as const).map(value=><button type="button" className="aui-button" key={value} aria-pressed={flow===value} onClick={()=>setFlow(value)}>{value==='before'?'변경 전 (AS-IS)':'변경 후 (TO-BE)'}</button>)}</div>
-    {flow==='before'&&(asIsReason||applicability==='UNKNOWN'||applicability==='NOT_APPLICABLE')&&<div className="aui-message aui-message-info"><p>{typeof asIsReason==='string'?asIsReason:applicability==='NOT_APPLICABLE'?'변경 전 시퀀스는 해당 없음으로 분류되었습니다.':'변경 전 처리 흐름의 근거를 확인해주세요.'}</p></div>}
-    <div className={styles.diagramCard}>{diagrams[flow]?<MermaidDiagram appearance="jira" key={flow} code={diagrams[flow]} label={flow==='before'?'변경 전 처리 흐름':'변경 후 처리 흐름'} copyable/>:<div className={styles.diagramEmpty}>등록된 {flow==='before'?'변경 전':'변경 후'} 시퀀스 다이어그램이 없습니다.</div>}</div>
+   <Section title="변경 전·후 시퀀스 다이어그램">
+    <div className={styles.diagramComparison}>
+     <div className={styles.diagramColumn}><h4>변경 전 · As-Is</h4>
+      {applicability==='NOT_APPLICABLE'?<div className={styles.diagramEmpty}>해당 없음{typeof asIsReason==='string'&&<p>{asIsReason}</p>}</div>:<>
+       {(asIsReason||applicability==='UNKNOWN')&&<p className={styles.sectionHint}>{typeof asIsReason==='string'?asIsReason:'변경 전 적용 여부 확인 필요'}</p>}
+       <div className={styles.diagramCard}>{diagrams.before?<MermaidDiagram appearance="jira" code={diagrams.before} label="변경 전 처리 흐름" copyable/>:<div className={styles.diagramEmpty}>등록된 변경 전 시퀀스 다이어그램이 없습니다.</div>}</div>
+      </>}
+     </div>
+     <div className={styles.diagramColumn}><h4>변경 후 · To-Be</h4><div className={styles.diagramCard}>{diagrams.after?<MermaidDiagram appearance="jira" code={diagrams.after} label="변경 후 처리 흐름" copyable/>:<div className={styles.diagramEmpty}>등록된 변경 후 시퀀스 다이어그램이 없습니다.</div>}</div></div>
+    </div>
    </Section>
   </>}
   {extras.length>0&&<details className={styles.extra}><summary>추가 업무 내용</summary><div>{extras.map(item=><Section key={item.key} title={item.label}><Value value={item.value}/></Section>)}</div></details>}
