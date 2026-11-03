@@ -29,7 +29,45 @@ export function scenariosFor(content){
  return [...groups.values()];
 }
 export function designDiagrams(content){return {
- classes:classDiagramSource(content.classDiagram),
- before:cleanDiagram(content.sequenceDiagramAsIs??content.sequenceBeforeCode),
- after:cleanDiagram(content.sequenceDiagramToBe??content.sequenceAfterCode),
+ classes:classDiagramSource(documentValue(content,'classDiagram')),
+ before:cleanDiagram(documentValue(content,'sequenceDiagramAsIs',['sequenceBeforeCode'])),
+ after:cleanDiagram(documentValue(content,'sequenceDiagramToBe',['sequenceAfterCode'])),
 };}
+
+// Stable document contracts: do not let JSON property order or transport metadata
+// determine the business form. Legacy values can live under a v2 empty shell.
+export const DOCUMENT_FIELDS={
+ issue:[['symptom','현상'],['improvementReq','개선 요구'],['changeScope','변경 범위'],['constraintsNote','제약 조건'],['beforeState','변경 전'],['afterState','변경 후']],
+ voc:[['requester','요청자'],['requestContent','고객 요청 내용'],['specialNotes','특이 사항']],
+ functional:[['overview','요구사항 개요'],['constraintsNote','제약 조건']],
+ nonfunctional:[['overview','요구사항 개요'],['constraintsNote','제약 조건']],
+ 'detail-design':[['description','설계 개요']],
+};
+const aliases={overview:['description'],requestContent:['request'],specialNotes:['notes'],constraintsNote:['constraints']};
+export const BUSINESS_LABELS={title:'제목',summary:'요약',description:'개요',content:'내용',role:'수행 역할',purpose:'목적',scope:'적용 범위',requirements:'요구사항',acceptanceCriteria:'완료 기준',preconditions:'선행 조건',postconditions:'후행 조건',steps:'수행 절차',exceptions:'예외 처리',constraints:'제약 조건',name:'이름',definition:'정의',type:'유형',item:'항목',value:'값',reason:'근거',quote:'원문',reqKey:'요구사항',field:'항목',request:'고객 요청 내용',notes:'특이 사항',requester:'요청자',requestContent:'고객 요청 내용',specialNotes:'특이 사항',overview:'요구사항 개요',constraintsNote:'제약 조건',functionalRequirements:'기능 요구사항',nonFunctionalRequirements:'비기능 요구사항'};
+export const hasDocumentValue=value=>value!==null&&value!==undefined&&(typeof value!=='string'||value.trim()!=='')&&(!Array.isArray(value)||value.length>0);
+export function documentValue(content,key,alternate=aliases[key]??[]){
+ const legacy=content.legacyExtras&&typeof content.legacyExtras==='object'&&!Array.isArray(content.legacyExtras)?content.legacyExtras:{};
+ for(const source of [content,legacy])for(const name of [key,...alternate])if(hasDocumentValue(source[name]))return source[name];
+ return null;
+}
+export function documentSections(type,content){return (DOCUMENT_FIELDS[type]??[]).map(([key,label])=>({key,label,value:documentValue(content,key)}));}
+export function documentScenarios(content){
+ const direct=scenariosFor(content);
+ const legacy=content.legacyExtras&&typeof content.legacyExtras==='object'?scenariosFor(content.legacyExtras):[];
+ const canonical={BASIC:'BASIC',VARIANT:'VARIANT',EXCEPTION:'EXCEPTION','기본':'BASIC','변형':'VARIANT','대안':'VARIANT','예외':'EXCEPTION'};
+ const labels={BASIC:'기본 동작',VARIANT:'변형 동작',EXCEPTION:'예외 동작'};
+ return Object.entries(labels).map(([type,label])=>{
+  const current=direct.find(item=>canonical[item.type]===type);
+  const previous=legacy.find(item=>canonical[item.type]===type);
+  const row=current??previous;
+  if(!row)return {type,label,precondition:null,scenario:null,postcondition:null,applicability:'UNKNOWN',reason:null};
+  const merged={...row,type,label};
+  if(current&&previous&&current.applicability!=='NOT_APPLICABLE')for(const field of ['precondition','scenario','postcondition'])if(!hasDocumentValue(current[field]))merged[field]=previous[field]??null;
+  return merged;
+ });
+}
+export function supplementalFields(type,content){
+ const used=new Set((DOCUMENT_FIELDS[type]??[]).flatMap(([key])=>[key,...(aliases[key]??[])]));
+ return Object.entries(BUSINESS_LABELS).filter(([key])=>!used.has(key)&&hasDocumentValue(documentValue(content,key,[]))).map(([key,label])=>({key,label,value:documentValue(content,key,[])}));
+}
