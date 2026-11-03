@@ -1,5 +1,7 @@
 # ReqOps — 요구사항 검토 및 산출물 관리
 
+> **개발 계획:** [영향 알림·확정 단계·산출물 목록 — 클릭 가능한 HTML](docs/plans/monitoring-confirmation-artifacts-plan.html) · [요약](docs/plans/monitoring-confirmation-artifacts-plan.md). 제품 기능에는 아직 반영하지 않은 설계안입니다.
+
 > **실제 산출물 화면 개편:** [Jira 10.3.21 기준 UI·고정 양식·적용 방법](docs/artifact-review-ui.md) — 개발 이슈부터 상세 설계까지 기존 양식으로 표시하며, 폐쇄망용 프런트 배포본을 함께 제공합니다.
 
 > **Jira 10.3.21 기준 새 HTML 예시:** [다운로드·열기 안내](docs/jira-10.3.21-preview.md) · [이슈·산출물 4종 화면](docs/jira-10.3.21-issue-preview.html) — 공식 AUI 9.12.0을 포함해 설치·CDN 없이 여는 독립 파일입니다. 사내 커스텀 양식은 미확인입니다.
