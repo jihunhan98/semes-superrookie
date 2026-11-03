@@ -9,7 +9,7 @@ const css=postcss.parse(source);
 css.walkRules(rule=>{
  let parent=rule.parent;
  while(parent){if(parent.type==='atrule'&&/keyframes$/.test(parent.name))return;parent=parent.parent;}
- rule.selectors=rule.selectors.map(selector=>/^(html|body|:root)(?=[\s.#[:]|$)/.test(selector)?selector.replace(/^(html|body|:root)/,'.jira-dc-ui').replace(/\.jira-dc-ui\s+body\b/,'.jira-dc-ui'):'.jira-dc-ui '+selector);
+ rule.selectors=rule.selectors.map(selector=>/^(html|body|:root)(?=[\s.#[:]|$)/.test(selector)?selector.replace(/^(html|body|:root)/,':where(.jira-dc-ui)').replace(/:where\(\.jira-dc-ui\)\s+body\b/,':where(.jira-dc-ui)'):':where(.jira-dc-ui) '+selector);
 });
 css.walkAtRules('font-face',rule=>{
  const value=rule.toString().includes('fonts/atlassian-icons.')?'atlassian-icons':'adgs-icons';

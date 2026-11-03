@@ -9,6 +9,7 @@ import {getProject,listRequirements,type ProjectDetail,type RequirementSummary} 
 import {getCurrentUser} from "../../../lib/session";
 import "../../../components/jira/aui-9.12.0.scoped.css";
 import styles from "../../../components/ArtifactsIndex.module.css";
+import frame from "../../../components/ArtifactWorkspace.module.css";
 
 export default function ArtifactsPage(){
  const router=useRouter(),params=useParams<{id:string}>(),projectId=Number(params.id);
@@ -21,7 +22,7 @@ export default function ArtifactsPage(){
   return()=>{active=false;};
  },[projectId,router]);
  const visible=(rows??[]).filter(row=>(status==='all'||(status==='confirmed')===(row.state==='CONFIRMED'))&&`${row.reqKey} ${row.content} ${row.assigneeName??''}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <div className="appshell"><Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(value=>!value)}/><div className="body">
+ return <div className={`appshell ${frame.frame}`}><Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(value=>!value)}/><div className="body">
   {sidebarOpen&&project&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}
   <main className={`main jira-dc-ui ${styles.page}`}>
    <nav className={styles.breadcrumb} aria-label="현재 위치"><Link href={`/projects/${projectId}`}>{project?.name??'프로젝트'}</Link><span>/</span><span aria-current="page">산출물</span></nav>

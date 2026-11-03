@@ -1,8 +1,8 @@
 /** Read both saved artifact schemas without exposing transport metadata as fields. */
 export const ARTIFACT_TYPES=[
  {type:'voc',label:'SWVOC',short:'VOC',description:'고객 요청과 전달 사항'},
- {type:'functional',label:'기능 요구사항',short:'FR',description:'정상·대안·예외 시나리오'},
- {type:'nonfunctional',label:'비기능 요구사항',short:'NFR',description:'품질 기준과 제약 조건'},
+ {type:'functional',label:'기능 요구사항',short:'FR',description:'기본·변형·예외 동작 정의'},
+ {type:'nonfunctional',label:'비기능 요구사항',short:'NFR',description:'품질 기준과 동작 정의'},
  {type:'detail-design',label:'상세 설계',short:'DD',description:'구조와 변경 전·후 처리 흐름'},
 ];
 export function cleanDiagram(value){return typeof value==='string'?value.trim().replace(/^```(?:mermaid)?\s*\n?/i,'').replace(/\n?```\s*$/,'').trim():'';}

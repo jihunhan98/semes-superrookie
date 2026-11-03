@@ -11,7 +11,7 @@ const names:Record<string,string>=BUSINESS_LABELS;
 
 function Value({value,empty='작성된 내용이 없습니다.'}:{value:unknown;empty?:string}){
  if(!hasDocumentValue(value))return <span className={styles.emptyValue}>{empty}</span>;
- if(typeof value==='string')return <ArtifactRichText text={value}/>;
+ if(typeof value==='string')return <ArtifactRichText text={value} diagramAppearance="jira"/>;
  if(Array.isArray(value))return <ol className={styles.valueList}>{value.map((row,i)=><li key={i}><Value value={row}/></li>)}</ol>;
  if(typeof value==='object'&&value!==null){
   const entries=Object.entries(value).filter(([key])=>key in names);
@@ -51,11 +51,11 @@ export default function ArtifactDocument({content,type='issue'}:{content:Record<
    })}</div>
   </Section>}
   {type==='detail-design'&&<>
-   <Section title="클래스 다이어그램"><div className={styles.diagramCard}>{diagrams.classes?<MermaidDiagram code={diagrams.classes} label="클래스 구조" copyable/>:<div className={styles.diagramEmpty}>등록된 클래스 다이어그램이 없습니다.</div>}</div></Section>
+   <Section title="클래스 다이어그램"><div className={styles.diagramCard}>{diagrams.classes?<MermaidDiagram appearance="jira" code={diagrams.classes} label="클래스 구조" copyable/>:<div className={styles.diagramEmpty}>등록된 클래스 다이어그램이 없습니다.</div>}</div></Section>
    <Section title="시퀀스 다이어그램">
     <div className={styles.flowTabs} role="group" aria-label="변경 전후 시퀀스 선택">{(['before','after'] as const).map(value=><button type="button" className="aui-button" key={value} aria-pressed={flow===value} onClick={()=>setFlow(value)}>{value==='before'?'변경 전 (AS-IS)':'변경 후 (TO-BE)'}</button>)}</div>
     {flow==='before'&&(asIsReason||applicability==='UNKNOWN'||applicability==='NOT_APPLICABLE')&&<div className="aui-message aui-message-info"><p>{typeof asIsReason==='string'?asIsReason:applicability==='NOT_APPLICABLE'?'변경 전 시퀀스는 해당 없음으로 분류되었습니다.':'변경 전 처리 흐름의 근거를 확인해주세요.'}</p></div>}
-    <div className={styles.diagramCard}>{diagrams[flow]?<MermaidDiagram key={flow} code={diagrams[flow]} label={flow==='before'?'변경 전 처리 흐름':'변경 후 처리 흐름'} copyable/>:<div className={styles.diagramEmpty}>등록된 {flow==='before'?'변경 전':'변경 후'} 시퀀스 다이어그램이 없습니다.</div>}</div>
+    <div className={styles.diagramCard}>{diagrams[flow]?<MermaidDiagram appearance="jira" key={flow} code={diagrams[flow]} label={flow==='before'?'변경 전 처리 흐름':'변경 후 처리 흐름'} copyable/>:<div className={styles.diagramEmpty}>등록된 {flow==='before'?'변경 전':'변경 후'} 시퀀스 다이어그램이 없습니다.</div>}</div>
    </Section>
   </>}
   {extras.length>0&&<details className={styles.extra}><summary>추가 업무 내용</summary><div>{extras.map(item=><Section key={item.key} title={item.label}><Value value={item.value}/></Section>)}</div></details>}

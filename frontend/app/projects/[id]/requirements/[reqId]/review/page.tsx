@@ -3,7 +3,6 @@ import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import {useParams,useRouter,useSearchParams} from "next/navigation";
 import Header from "../../../../../components/Header";
-import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import ReviewIcon from "../../../../../components/ReviewIcon";
 import ArtifactDocument from "../../../../../components/ArtifactDocument";
@@ -16,6 +15,7 @@ import {useBundle} from "../../../../../lib/hooks/useBundle";
 import {getCurrentUser} from "../../../../../lib/session";
 import "../../../../../components/jira/aui-9.12.0.scoped.css";
 import styles from "../../../../../components/ArtifactReviewPage.module.css";
+import frame from "../../../../../components/ArtifactWorkspace.module.css";
 type Tab='issue'|ArtifactTypeSlug;
 function validTab(value:string|null):Tab{return ARTIFACT_TYPES.some(item=>item.type===value)?value as ArtifactTypeSlug:'issue';}
 function date(value:string|null|undefined){return value?value.replace('T',' ').slice(0,16):'—';}
@@ -63,10 +63,9 @@ export default function ReviewPage(){
  function chooseIssue(id:number){selectDocument('issue',id);}
  function showSource(){if(sourceRef.current){sourceRef.current.open=true;sourceRef.current.scrollIntoView({behavior:'smooth',block:'start'});}}
 
- return <div className="appshell">
+ return <div className={`appshell ${frame.frame}`}>
   <Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/>
   <div className="body">
-   {sidebarOpen&&project&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}
    <main className={`main jira-dc-ui ${styles.page}`}>
     <WorkflowStepper step={4}/>
     <nav className={styles.breadcrumb} aria-label="현재 위치">
@@ -74,19 +73,18 @@ export default function ReviewPage(){
      <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><span aria-current="page">검토·확정</span>
     </nav>
     <header className={styles.heading}>
-     <div><h1>산출물 검토</h1><p>개발 이슈와 산출물 4종을 확인하고 확정합니다.</p></div>
+     <div><h1>산출물 검토</h1><p>{requirement?.reqKey??'요구사항'} · 개발 이슈 {data?.issues.length??0}개 · 산출물 {count} / {expected}</p></div>
      <span className={`aui-lozenge aui-lozenge-subtle ${confirmed?'aui-lozenge-success':incomplete?'aui-lozenge-moved':'aui-lozenge-inprogress'}`}>
       {!data?'불러오는 중':confirmed?'전체 확정 완료':incomplete?'생성 확인 필요':'검토 중'}
      </span>
     </header>
     {!data||!project||!requirement?<div className={styles.loading} role={error||notice?.error?'alert':'status'}>{error??notice?.text??'산출물과 개발 이슈를 불러오는 중입니다.'}</div>:<>
-     <div className={styles.summaryLine} aria-label="산출물 현황"><span>개발 이슈 <strong>{data.issues.length}</strong></span><i/><span>산출물 <strong>{count}</strong> / {expected}</span><i/><span>요구사항 <strong>{requirement.reqKey}</strong>{requirement.version&&` · v${requirement.version}`}</span></div>
      {incomplete&&<div className={`aui-message ${data.generation?.failed?'aui-message-warning':'aui-message-info'} ${styles.generation}`} role="status">
       <div><p className="title"><strong>{data.generation?.failed?'일부 산출물 생성에 실패했습니다.':data.state==='GENERATING'?'산출물을 생성하고 있습니다.':'아직 생성되지 않은 산출물이 있습니다.'}</strong></p>
        <p>준비된 문서는 지금 열어볼 수 있습니다.{data.generation?` 생성 ${data.generation.succeeded} · 대기 ${data.generation.pending} · 실패 ${data.generation.failed}`:''}</p></div>
       {Boolean(data.generation?.failed)&&<button className="aui-button" disabled={busy} onClick={retryGeneration}>실패한 산출물 재시도</button>}
      </div>}
-     <div className={`${styles.workspace} ${wide?styles.workspaceWide:''}`}>
+     <div className={`${styles.workspace} ${wide?styles.workspaceWide:''} ${!sidebarOpen?styles.navigationCollapsed:''}`}>
       <aside className={styles.navigator} aria-label="개발 이슈 목록">
        <div className={styles.navHeading}><h2>개발 이슈 <span className="aui-badge">{data.issues.length}</span></h2><p>이슈별 문서 4종</p></div>
        <label className={styles.search}><ReviewIcon name="search" size={16}/><input value={filter} onChange={e=>setFilter(e.target.value)} aria-label="개발 이슈 검색" placeholder="ID 또는 제목 검색"/></label>
@@ -129,7 +127,7 @@ export default function ReviewPage(){
         </div>
         <div className={styles.readerBody}>
          <div className={styles.paper} role="tabpanel" id="artifact-reader-panel" aria-labelledby={`tab-${activeTab}`}>
-          <div className={styles.paperTitle}><h3>{activeTab==='issue'?'개발 이슈':activeLabel?.label}</h3><p>{activeTab==='issue'?'현상과 개선 요구, 변경 범위를 정리합니다.':activeLabel?.description}</p></div>
+          <div className={styles.paperTitle}><h3>{activeTab==='issue'?'설명':activeLabel?.label}</h3><p>{activeTab==='issue'?'현상과 개선 요구, 변경 범위를 정리합니다.':activeLabel?.description}</p></div>
           {activeTab==='issue'?<ArtifactDocument key={`issue-${issue.id}`} type="issue" content={{symptom:issue.symptom,improvementReq:issue.improvementReq,changeScope:issue.changeScope,constraintsNote:issue.constraintsNote,beforeState:issue.beforeState,afterState:issue.afterState}}/>:
            !summary?<div className={styles.documentEmpty}><ReviewIcon name="clock" size={28}/><h4>아직 생성되지 않은 산출물입니다.</h4><p>다른 문서는 계속 확인할 수 있습니다. 생성이 완료되면 이 탭에서 열어보세요.</p></div>:
            doc?.error?<div className={styles.documentEmpty} role="alert"><ReviewIcon name="alert" size={28}/><h4>산출물을 불러오지 못했습니다.</h4><p>{doc.error}</p><button className="aui-button" onClick={()=>{cache.current.delete(documentKey);setRetry(v=>v+1);}}>다시 불러오기</button></div>:

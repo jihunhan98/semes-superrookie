@@ -13,3 +13,32 @@
 @media(prefers-reduced-motion:reduce){.documentLoading>span{animation:none}}
 
 .tabs>li{list-style:none;float:none!important;margin:0!important;flex-shrink:0}.tabs>li>a{display:flex!important;text-decoration:none!important}.tabs{margin:0!important;flex-wrap:nowrap!important}.tabs:before{display:none!important}
+
+/* Flat issue navigator and full-width issue view. */
+.page{padding:0 0 0!important;background:#fff}
+.page :global(.workflow-steps){display:flex;align-items:center;gap:24px;padding:12px 28px;margin:0;border-bottom:1px solid #ebecf0;background:#fafbfc;min-height:46px;overflow-x:auto}
+.page :global(.workflow-steps li){display:flex;flex-shrink:0;gap:7px;align-items:center;font-size:11px!important;color:#626f86!important;position:static!important;min-height:0;padding:0}
+.page :global(.workflow-steps li::after){display:none!important}.page :global(.workflow-steps li span){width:19px!important;height:19px!important;border:1px solid #dfe1e6!important;background:#fff!important;color:#626f86!important;font-size:10px;line-height:1}
+.page :global(.workflow-steps li.current){color:#0052cc!important;font-weight:600}.page :global(.workflow-steps li.current span){border-color:#0052cc!important;background:#0052cc!important;color:#fff!important}
+.breadcrumb{padding:0 28px;margin:18px 0 10px;font-size:12px}
+.heading{padding:0 28px 18px;margin:0;align-items:center}.heading h1{font-size:21px;font-weight:500}.heading p{font-size:12px;margin:5px 0 0;color:#626f86}
+.workspace{grid-template-columns:252px minmax(0,1fr);gap:0;border-top:1px solid #dfe1e6;min-height:calc(100vh - 214px)}
+.navigator{border:0;border-right:1px solid #dfe1e6;border-radius:0;background:#f4f5f7;top:56px;min-height:calc(100vh - 214px);box-shadow:none}
+.navHeading{padding:22px 20px 14px}.navHeading h2{font-size:14px}.navHeading p{font-size:12px;margin-top:5px}.search{margin:0 16px 17px;border:1px solid #dfe1e6;background:#fff;padding:8px 9px;border-radius:3px}.issueList{padding:0 8px 18px;max-height:calc(100vh - 185px)}
+.issueItem{padding:14px 12px 15px;margin-bottom:3px;min-height:105px;border-radius:3px;border-left:3px solid transparent}.issueItem.selected{border-left-color:#0052cc;background:#deebff}.issueItem h3{font-size:13px!important;font-weight:500!important;margin-bottom:12px!important}.issueMeta{font-size:12px;margin-bottom:6px}.docDots>span{font-size:10px}
+.reader{border:0;border-radius:0;overflow:visible;box-shadow:none}.readerHead{padding:25px 32px 0}.readerMeta{font-size:12px;margin-bottom:13px}.readerHead h2{font-size:26px;line-height:1.4;margin:0 0 20px;font-weight:500;letter-spacing:-.4px}.readerToolbar{padding-bottom:23px;gap:9px}.savedDate{font-size:11px}
+.tabs{padding:0 32px;gap:28px;border-bottom:2px solid #dfe1e6}.tabs>li>a{font-size:14px;padding:12px 0!important;gap:7px}.tabs>li>a[aria-selected=true]:after{display:none}.documentTabs{display:block!important}
+.readerBody{grid-template-columns:minmax(0,1fr) 230px;gap:40px;padding:0 32px}.paper{padding:25px 0 32px;min-width:0}.paperTitle{padding-bottom:24px}.paperTitle h3{font-size:18px;font-weight:500}.paperTitle p{display:none}
+.issueInfo{padding:28px 0 24px}.issueInfo section{margin-bottom:29px}.issueInfo h3{font-size:14px;padding-bottom:9px;margin-bottom:15px;border-color:#dfe1e6}.issueInfo dt{font-size:12px;color:#626f86}.issueInfo dd{font-size:13px;color:#172b4d}.issueInfo dl{gap:15px}.linkedDocuments{gap:10px}
+.source{margin-top:28px}.readerFoot{background:#fff;padding:15px 32px;border-top:1px solid #ebecf0}
+.confirmBar{border:0;border-top:1px solid #dfe1e6;border-radius:0;box-shadow:0 -2px 6px #091e4208;padding:15px 28px;margin:0;bottom:0;min-height:75px}.confirmBar strong{font-size:13px;font-weight:600}.confirmBar p{font-size:12px;margin-top:3px}.confirmBar>button{min-width:116px}
+.workspaceWide{grid-template-columns:1fr}.workspaceWide .reader{max-width:none}.workspaceWide .readerBody{grid-template-columns:1fr;max-width:1150px}.workspaceWide .issueInfo{display:none}.generation{margin:0 28px 18px!important}
+@container(max-width:850px){.readerBody{grid-template-columns:1fr;gap:0}.issueInfo{grid-template-columns:repeat(2,minmax(0,1fr));padding:24px 0;border-top:1px solid #dfe1e6}.readerHead h2{font-size:24px}.tabs{gap:22px}}
+@media(max-width:950px){.workspace{grid-template-columns:218px minmax(0,1fr)}.workspaceWide{grid-template-columns:1fr}.readerHead{padding:22px 24px 0}.readerBody{padding:0 24px}.tabs{padding:0 24px;gap:20px}.readerHead h2{font-size:23px}}
+@media(max-width:700px){.workspace{display:block;min-height:0}.navigator{position:static;border-right:0;border-bottom:1px solid #dfe1e6;min-height:0}.issueList{display:flex;gap:7px;max-height:none;overflow-x:auto;padding:0 14px 14px}.issueItem{min-width:205px;max-width:205px;min-height:100px;margin:0}.navHeading{padding:15px 16px 10px}.search{margin:0 16px 12px}.page :global(.workflow-steps){padding:11px 16px;gap:16px}.breadcrumb{padding:0 16px;margin-top:15px}.heading{padding:0 16px 16px}.heading h1{font-size:21px}.readerHead{padding:23px 18px 0}.readerHead h2{font-size:23px}.tabs{padding:0 18px;gap:23px}.readerBody{padding:0 18px}.readerFoot{padding:14px 18px}.confirmBar{padding:14px 16px;gap:12px}.confirmBar>button{min-width:100px;width:auto;margin-left:auto}.confirmBar p{font-size:11px}.workspaceWide .navigator{display:none}.generation{margin:0 16px 16px!important}}
+.page :global(.workflow-steps li){flex-direction:row!important;align-items:center!important;padding:0!important}
+.documentTabs>.tabs{padding-left:32px!important;padding-right:32px!important}
+@media(max-width:950px){.documentTabs>.tabs{padding-left:24px!important;padding-right:24px!important}}
+@media(max-width:700px){.documentTabs>.tabs{padding-left:18px!important;padding-right:18px!important}}
+@media(max-width:700px){.page :global(.workflow-steps){display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:11px 16px;overflow:visible}.page :global(.workflow-steps li){font-size:10px!important;min-width:0}}
+.navigationCollapsed{grid-template-columns:1fr}.navigationCollapsed>.navigator{display:none}

@@ -39,7 +39,7 @@ JSON 속성 순서에 의존하지 않고 문서 유형별 고정 순서로 렌�
 
 ## 공식 AUI와 폐쇄망 배포
 
-공식 배포 원문은 `frontend/app/components/jira/aui-9.12.0.source.css`에 보존했다. `frontend/scripts/scope-aui.mjs`가 SHA-256을 확인한 뒤 선택자를 `.jira-dc-ui` 내부로 제한하고 폰트 URL을 로컬 파일로 바꾼다. 출력은 `aui-9.12.0.scoped.css`다. 다른 요구사항·로그인 화면에 AUI 초기 스타일이 번지지 않게 한다.
+공식 배포 원문은 `frontend/app/components/jira/aui-9.12.0.source.css`에 보존했다. `frontend/scripts/scope-aui.mjs`가 SHA-256을 확인한 뒤 선택자를 `:where(.jira-dc-ui)` 내부로 제한하고 폰트 URL을 로컬 파일로 바꾼다. `:where()`는 화면 범위를 제한하면서 선택자 우선순위를 높이지 않아, AUI의 여백 초기화가 CSS Module의 패딩을 덮지 않는다. 출력은 `aui-9.12.0.scoped.css`다. 다른 요구사항·로그인 화면에 AUI 초기 스타일이 번지지 않게 한다.
 
 Next.js의 탭·넓게 보기·재조회·확정 동작은 React가 처리한다. 전역 DOM을 수정하는 jQuery·AUI JavaScript 초기화 코드는 앱에 주입하지 않는다. AUI CSS·폰트는 서버가 로컬로 제공하며 CDN이나 npm 설치 없이 배포본에서 사용할 수 있다. 라이선스는 `frontend/public/vendor/aui-9.12.0/LICENSE.txt`에 포함했다.
 
@@ -61,6 +61,31 @@ npm run build:offline
 - 고정 양식의 빈 필드·순서·이전 스키마·명시적 제외·내부 메타데이터 비노출 회귀 검사 통과.
 - DOM 통합 검사: 5개 탭, 키보드 이동, 표·다이어그램 연결, 원문 펼침, 넓게 보기, 이슈 이동, 조회 실패·재조회, 늦은 응답, 확정 1회 호출, 확정 후 열람, 직접 링크 복원 통과. Mermaid UI는 DOM 검사에서 대역으로 분리했다.
 - 공식 AUI의 2,718개 선택자가 화면 내부로 제한되어 있음을 검사했다.
-- 이 환경의 브라우저 실행·로컬 파일 열기 제한 때문에 실제 화면 스크린샷과 시각적 배치는 확인하지 못했다.
+- Sites 관리형 미리보기에서 실제 화면 컴포넌트·CSS를 Chromium으로 확인했다. QA용 전송 계층과 데이터만 별도 fixture에서 제공하며 제품 소스에 모의 데이터를 넣지 않는다. 개발 이슈·SWVOC·기능·비기능·상세 설계 탭을 열고, 대표 본문·표·실제 Mermaid 렌더링을 확인했다.
+- 데스크톱에서 본문 패딩 32px·헤더 56px·가로 넘침 없음, 390px 프레임의 좁은 화면에서 페이지 전체 가로 넘침 없음을 확인했다.
+- 클래스 다이어그램의 원본 viewBox 너비 429px를 과도하게 확대하지 않고 표시함을 확인했다.
 
 빌드·배포본 검증 결과는 이번 커밋의 실행 결과를 따른다.
+
+
+## 디자인 깨짐 수정과 확인 화면
+
+AUI를 범위 제한할 때 붙인 `.jira-dc-ui div`가 CSS Module의 단일 클래스보다 높은 우선순위를 가져 본문과 목록의 패딩을 0으로 덮고 있었다. 범위 제한자를 `:where(.jira-dc-ui)`로 바꾸어 이 충돌을 해결했다. 공식 탭의 기본 패딩과 화면 정렬도 맞췄다.
+
+산출물 화면은 흰 상단 탐색, 개발 이슈 탐색 1개, 연속된 문서 본문, 오른쪽 상세 정보로 구성한다. 단계 표시는 작게 유지하며 모바일에서는 2열로 배치한다. 메뉴로 이슈 탐색을 접는 동작과 본문 넓게 보기의 상태를 분리하여, 모바일에서 상세 정보가 불필요하게 사라지지 않게 했다.
+
+아래는 실제 제품 컴포넌트에 설명용 데이터를 제공한 브라우저 캡처다. 사내 원본 화면이나 실제 고객 데이터를 캡처한 이미지가 아니다.
+
+### 개발 이슈
+
+![개발 이슈 화면](images/artifact-ui/issue.png)
+
+### 기능 요구사항
+
+![기능 요구사항 전체](images/artifact-ui/functional.png)
+
+### 상세 설계
+
+![상세 설계 전체](images/artifact-ui/detail-design.png)
+
+양식 항목·순서 확인용 HTML: [전체](artifact-forms.html) · [개발 이슈](artifact-forms/development-issue.html) · [SWVOC](artifact-forms/swvoc.html) · [기능](artifact-forms/functional.html) · [비기능](artifact-forms/nonfunctional.html) · [상세 설계](artifact-forms/detailed-design.html)

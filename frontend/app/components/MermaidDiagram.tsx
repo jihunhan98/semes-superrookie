@@ -77,14 +77,17 @@ export default function MermaidDiagram({
   code,
   copyable,
   label,
+  appearance = "standard",
 }: {
   code: string;
   copyable?: boolean;
   label?: string;
+  appearance?: "standard" | "jira";
 }) {
   const rawId = useId();
   const id = `mmd-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [naturalWidth,setNaturalWidth]=useState<number|null>(null);
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -117,6 +120,7 @@ export default function MermaidDiagram({
   useEffect(() => {
     let cancelled = false;
     setSvg(null);
+    setNaturalWidth(null);
     setError(null);
     setZoom(1);
 
@@ -129,7 +133,12 @@ export default function MermaidDiagram({
         // 노드가 아예 생기지 않는다(페이지 엉뚱한 곳에 오류가 떠 있던 원인).
         await mermaid.parse(code);
         const { svg: rendered } = await mermaid.render(id, code);
-        if (!cancelled) setSvg(rendered);
+        if (!cancelled) {
+          const node=new DOMParser().parseFromString(rendered,"image/svg+xml").documentElement;
+          const width=Number(node.getAttribute("viewBox")?.trim().split(/[ ,]+/)[2]);
+          setNaturalWidth(Number.isFinite(width)&&width>0?width:null);
+          setSvg(rendered);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "다이어그램을 그리지 못했습니다.");
         // render()가 실패해도 document.body에 오류 SVG를 "d" + id 라는 id로 직접
@@ -168,9 +177,9 @@ export default function MermaidDiagram({
   if (error) return <div className={styles.error} role="alert"><ReviewIcon name="alert" size={17}/><div><b>다이어그램을 표시하지 못했습니다.</b><p>{error}</p><details><summary>저장된 다이어그램 코드 확인</summary><pre>{code}</pre></details></div></div>;
   const copyLabel=copyState==='copied'?'복사됨':copyState==='downloaded'?'저장됨':copyState==='error'?'복사 실패':'이미지 복사';
   const controls=<div className={styles.controls}><button type="button" disabled={!svg||zoom<=.5} onClick={()=>setZoom(v=>Math.max(.5,v-.25))} aria-label="다이어그램 축소"><ReviewIcon name="minus" size={14}/></button><button type="button" disabled={!svg} onClick={()=>setZoom(1)} title="화면에 맞춤">{Math.round(zoom*100)}%</button><button type="button" disabled={!svg||zoom>=2} onClick={()=>setZoom(v=>Math.min(2,v+.25))} aria-label="다이어그램 확대"><ReviewIcon name="plus" size={14}/></button></div>;
-  return <div className={styles.diagram}>
+  return <div className={`${styles.diagram} ${appearance==='jira'?styles.jira:''}`}>
    <div className={styles.toolbar}><span><ReviewIcon name="diagram" size={15}/>{label??'다이어그램'}</span><div>{controls}{copyable&&<button type="button" className={styles.textButton} disabled={!svg} onClick={handleCopy}>{copyLabel}</button>}<button type="button" className={styles.textButton} disabled={!svg} onClick={()=>setExpanded(true)} aria-label="다이어그램 크게 보기"><ReviewIcon name="expand" size={14}/><span>크게 보기</span></button></div></div>
-   {!svg?<div className={styles.loading} role="status"><span/>다이어그램을 그리는 중입니다.</div>:<div className={styles.viewport} aria-label={label??'다이어그램'} tabIndex={0}><div ref={containerRef} className={styles.drawing} style={{width:`${zoom*100}%`}} dangerouslySetInnerHTML={{__html:svg}}/></div>}
-   {expanded&&svg&&<div className={styles.overlay} onClick={()=>setExpanded(false)}><div className={styles.lightbox} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label??'다이어그램 크게 보기'} onClick={e=>e.stopPropagation()}><div className={styles.toolbar}><span><ReviewIcon name="diagram" size={17}/>{label??'다이어그램'}</span><div>{controls}<button type="button" className={styles.textButton} onClick={()=>setExpanded(false)} aria-label="확대 보기 닫기"><ReviewIcon name="close" size={17}/></button></div></div><div className={styles.fullViewport} tabIndex={0}><div className={styles.drawing} style={{width:`${zoom*100}%`}} dangerouslySetInnerHTML={{__html:svg}}/></div><footer>확대 후 스크롤하여 전체 흐름을 확인하세요. Esc 키로 닫을 수 있습니다.</footer></div></div>}
+   {!svg?<div className={styles.loading} role="status"><span/>다이어그램을 그리는 중입니다.</div>:<div className={styles.viewport} aria-label={label??'다이어그램'} tabIndex={0}><div ref={containerRef} className={styles.drawing} style={{width:`${zoom*100}%`,maxWidth:appearance==='jira'&&naturalWidth?`${naturalWidth*zoom}px`:undefined}} dangerouslySetInnerHTML={{__html:svg}}/></div>}
+   {expanded&&svg&&<div className={styles.overlay} onClick={()=>setExpanded(false)}><div className={styles.lightbox} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label??'다이어그램 크게 보기'} onClick={e=>e.stopPropagation()}><div className={styles.toolbar}><span><ReviewIcon name="diagram" size={17}/>{label??'다이어그램'}</span><div>{controls}<button type="button" className={styles.textButton} onClick={()=>setExpanded(false)} aria-label="확대 보기 닫기"><ReviewIcon name="close" size={17}/></button></div></div><div className={styles.fullViewport} tabIndex={0}><div className={styles.drawing} style={{width:`${zoom*100}%`,maxWidth:appearance==='jira'&&naturalWidth?`${naturalWidth*zoom}px`:undefined}} dangerouslySetInnerHTML={{__html:svg}}/></div><footer>확대 후 스크롤하여 전체 흐름을 확인하세요. Esc 키로 닫을 수 있습니다.</footer></div></div>}
   </div>;
 }
