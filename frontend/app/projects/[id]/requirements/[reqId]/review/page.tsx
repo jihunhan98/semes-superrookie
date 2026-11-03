@@ -109,7 +109,7 @@ export default function ReviewPage(){
          <div className={styles.readerToolbar}>
           <button type="button" className="aui-button" onClick={showSource}>원문 근거</button>
           <button type="button" className="aui-button" aria-pressed={wide} onClick={()=>setWide(v=>!v)}>{wide?'기본 보기':'본문 넓게'}</button>
-          <Link className="aui-button aui-button-link" href={`/projects/${projectId}/requirements/${requirementId}/issues`}>이슈 도출 화면</Link>
+          {!confirmed&&<Link className="aui-button aui-button-link" href={`/projects/${projectId}/requirements/${requirementId}/issues`}>이슈 도출 화면</Link>}
           <span className={styles.savedDate}>{activeTab==='issue'?'개발 이슈':doc?.document?`저장 ${date(doc.document.updatedAt)}`:'산출물 문서'}</span>
          </div>
         </header>

@@ -64,6 +64,8 @@ export default function RequirementDetailPage() {
     );
   }
 
+  const completed = req.workflow?.step === 4 && req.workflow.bundleState === "CONFIRMED";
+
   return (
     <div className="appshell">
       <Header projectName={project.name} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
@@ -100,13 +102,13 @@ export default function RequirementDetailPage() {
             <div className="detail-workflow-head">
               <div>
                 <span className="section-kicker">CURRENT WORKFLOW</span>
-                <h2>{req.workflow?.bundleState === "CONFIRMED" && req.workflow.step === 4 ? "개발 이슈와 산출물 확정 완료" : req.workflow?.step === 4 ? "산출물 검토를 진행하세요" : req.state === "CONFIRMED" ? "요구사항이 확정되었습니다" : "고객 합의와 확정을 진행하세요"}</h2>
+                <h2>{completed ? "개발 이슈와 산출물 확정 완료" : req.workflow?.step === 4 ? "산출물 검토를 진행하세요" : req.state === "CONFIRMED" ? "요구사항이 확정되었습니다" : "고객 합의와 확정을 진행하세요"}</h2>
                 {req.workflow && <p>개발 이슈 {req.workflow.issueCount}개 · 산출물 {req.workflow.artifactCount} / {req.workflow.expectedArtifactCount} · {req.workflow.label}</p>}
               </div>
               <div className="detail-actions">
                 {req.state === "CONFIRMED" ? (
                   <>
-                    <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/issues`}>3단계 · 이슈 도출</Link>
+                    {!completed && <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/issues`}>3단계 · 이슈 도출</Link>}
                     <Link className="btn" href={`/projects/${project.id}/requirements/${req.id}/review`}>{req.workflow?.bundleState === "CONFIRMED" ? "확정 산출물 보기" : "4단계 · 검토"}</Link>
                   </>
                 ) : (
@@ -114,7 +116,7 @@ export default function RequirementDetailPage() {
                 )}
               </div>
             </div>
-            <WorkflowStepper step={req.workflow?.step ?? (req.state === "CONFIRMED" ? 3 : req.state === "RECEIVED" ? 1 : 2)} completed={req.workflow?.step === 4 && req.workflow.bundleState === "CONFIRMED"} />
+            <WorkflowStepper step={req.workflow?.step ?? (req.state === "CONFIRMED" ? 3 : req.state === "RECEIVED" ? 1 : 2)} completed={completed} />
           </section>
 
           <RequirementImpactPanel projectId={projectId} requirementId={requirementId} />
