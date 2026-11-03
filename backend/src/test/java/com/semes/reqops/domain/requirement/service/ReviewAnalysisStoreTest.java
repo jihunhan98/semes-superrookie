@@ -17,7 +17,7 @@ class ReviewAnalysisStoreTest {
     RequirementAiDraftRepository drafts = stub(RequirementAiDraftRepository.class);
     com.semes.reqops.domain.knowledge.GlossaryService glossary = stub(com.semes.reqops.domain.knowledge.GlossaryService.class);
     com.semes.reqops.domain.knowledge.ClarificationStore clarifications = stub(com.semes.reqops.domain.knowledge.ClarificationStore.class);
-    ReviewAnalysisStore store = new ReviewAnalysisStore(requirements, findings, drafts, new ObjectMapper(), glossary, clarifications);
+    ReviewAnalysisStore store = new ReviewAnalysisStore(requirements, findings, drafts, new ObjectMapper(), glossary, clarifications, stub(com.semes.reqops.domain.monitoring.ImpactService.class));
     ReviewAnalysisStoreTest() {
         when(requirements.findLockedById(1L)).thenReturn(Optional.of(stub(Requirement.class)));
         when(findings.findByRequirementIdOrderByIdAsc(1L)).thenReturn(List.of());

@@ -33,5 +33,7 @@ public interface DevIssueRepository extends JpaRepository<DevIssue, Long> {
     @Query("delete from DevIssue d where d.requirementId = :requirementId")
     void deleteByRequirementId(@Param("requirementId") Long requirementId);
 
+    List<DevIssue> findByRequirementIdInAndIssueStateNotOrderByDisplayOrderAsc(List<Long> requirementIds, String issueState);
+
     int countByRequirementId(Long requirementId);
 }

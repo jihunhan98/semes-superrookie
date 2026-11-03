@@ -22,6 +22,7 @@ public class ReviewAnalysisStore {
     private final ObjectMapper mapper;
     private final com.semes.reqops.domain.knowledge.GlossaryService glossary;
     private final com.semes.reqops.domain.knowledge.ClarificationStore clarifications;
+    private final com.semes.reqops.domain.monitoring.ImpactService impacts;
 
     public static String hash(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
@@ -119,6 +120,7 @@ public class ReviewAnalysisStore {
             response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
             response.reviewedCount() == null ? 0 : response.reviewedCount(), existing.size(), imported.hash(), imported.newCount(), response.reviewWarnings() == null ? List.of() : response.reviewWarnings())));
         drafts.save(draft);
+        impacts.capture(requirement, content, response, existing, existingHash(existing));
         clarifications.reconcile(id, content, List.of(), response.reviewStatus() == null ? "RULE_ONLY" : response.reviewStatus(),
             imported.newCount(), response.termStatus(), imported.hash());
     }

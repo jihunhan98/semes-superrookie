@@ -29,6 +29,7 @@ const STATE_COLOR: Record<ReqState, string> = {
 type StateFilter = "ALL" | "OPEN" | "CONFIRMED";
 
 function workflowStage(row: RequirementSummary) {
+  if (row.workflow) return {number:row.workflow.step,label:row.workflow.label};
   if (row.state === "CONFIRMED") return { number: 3, label: "도출 준비" };
   if (row.state === "RECEIVED") return { number: 1, label: "등록" };
   return { number: 2, label: "검출·합의" };

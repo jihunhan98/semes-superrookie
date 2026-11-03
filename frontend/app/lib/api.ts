@@ -164,7 +164,10 @@ export type Finding = {
   spanEnd?: number | null;
 };
 
+export type WorkflowProgress = {step:1|2|3|4;label:string;bundleState:string|null;issueCount:number;artifactCount:number;expectedArtifactCount:number};
+
 export type RequirementSummary = {
+  workflow?: WorkflowProgress;
   id: number;
   reqKey: string;
   content: string;
@@ -225,6 +228,7 @@ export type CompareResult = {
 };
 
 export type RequirementDetail = {
+  workflow?: WorkflowProgress;
   id: number;
   projectId: number;
   reqKey: string;

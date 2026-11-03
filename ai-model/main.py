@@ -163,6 +163,8 @@ class AnalyzeResponse(BaseModel):
     reviewedCount: int = 0
     terms: list[dict] = Field(default_factory=list)
     termStatus: str = "RULE_ONLY"
+    comparisons: list[dict] = Field(default_factory=list)
+    comparisonStatus: str = "FAILED"
 
 
 class SplitRequest(BaseModel):
@@ -340,7 +342,9 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
         status = "PARTIAL"
         warnings.append("SOURCE_TOO_LONG")
     findings = intake.attach_questions(review.dedupe(findings), effective_glossary)
-    return AnalyzeResponse(findings=[FindingOut(**f.to_dict()) for f in findings],
+    import monitoring
+    comparisons, comparison_status = monitoring.compare(req.content, existing, PROVIDER, _parse_json, effective_glossary, req.baseContent)
+    return AnalyzeResponse(comparisons=comparisons, comparisonStatus=comparison_status, findings=[FindingOut(**f.to_dict()) for f in findings],
         draftContent=req.content, engine=engine, scope="full-context",
         elapsedMs=int((time.monotonic()-started)*1000), reviewStatus=status, reviewWarnings=list(dict.fromkeys(warnings)), reviewedCount=reviewed, terms=terms, termStatus=term_status)
 

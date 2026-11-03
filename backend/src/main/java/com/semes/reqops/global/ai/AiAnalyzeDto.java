@@ -29,8 +29,10 @@ public final class AiAnalyzeDto {
             this(type, span, reason, suggestion, key, "ADVISORY", List.of(), null, null, null, null);
         }
     }
+    public record Comparison(String reqKey,String relation,String sourceQuote,String targetQuote,String sameCondition,String reason,String reviewQuestion) {}
     public record Response(List<Finding> findings, String draftContent, String engine, String scope,
-                           Integer elapsedMs, String reviewStatus, Integer reviewedCount, List<TermCandidate> terms, String termStatus, List<String> reviewWarnings) {
+                           Integer elapsedMs, String reviewStatus, Integer reviewedCount, List<TermCandidate> terms, String termStatus, List<String> reviewWarnings, List<Comparison> comparisons, String comparisonStatus) {
+        public Response(List<Finding> findings,String draft,String engine,String scope,Integer elapsed,String status,Integer count,List<TermCandidate> terms,String termStatus,List<String> warnings){this(findings,draft,engine,scope,elapsed,status,count,terms,termStatus,warnings,List.of(),"FAILED");}
         public Response(List<Finding> findings,String draft,String engine,String scope,Integer elapsed,String status,Integer count,List<TermCandidate> terms,String termStatus){
             this(findings,draft,engine,scope,elapsed,status,count,terms,termStatus,List.of());
         }

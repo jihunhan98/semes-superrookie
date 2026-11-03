@@ -1,3 +1,5 @@
+> **2026-11-03 구현 반영**: [영향 알림·확정 상태·산출물 목록 사용법](docs/monitoring-workflow-implementation.md). 알림 저장용 **`db/init.sql`(V009) 한 번 실행** 후 백엔드·AI 서버와 배포 프론트엔드를 갱신합니다.
+
 # ReqOps — 요구사항 검토 및 산출물 관리
 
 > **개발 계획:** [영향 알림·확정 단계·산출물 목록 — 클릭 가능한 HTML](docs/plans/monitoring-confirmation-artifacts-plan.html) · [요약](docs/plans/monitoring-confirmation-artifacts-plan.md). 제품 기능에는 아직 반영하지 않은 설계안입니다.

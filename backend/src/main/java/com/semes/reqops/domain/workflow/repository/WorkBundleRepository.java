@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface WorkBundleRepository extends JpaRepository<WorkBundle,Long> {
     Optional<WorkBundle> findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(Long requirementId, int current);
     List<WorkBundle> findByRequirementIdOrderByRevisionNoDesc(Long requirementId);
+    List<WorkBundle> findByRequirementIdInAndCurrentOrderByRevisionNoDesc(List<Long> requirementIds, int current);
     long countByRequirementId(Long requirementId);
 }

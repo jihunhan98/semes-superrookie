@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface DevIssueArtifactRepository extends JpaRepository<DevIssueArtifact, Long> {
 
+    List<DevIssueArtifact> findByDevIssueIdInOrderByArtifactTypeAsc(List<Long> issueIds);
+
     Optional<DevIssueArtifact> findByDevIssueIdAndArtifactType(Long devIssueId, ArtifactType artifactType);
     List<DevIssueArtifact> findByDevIssueIdOrderByArtifactTypeAsc(Long devIssueId);
 }

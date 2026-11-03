@@ -30,7 +30,7 @@ public class WorkBundle {
     public void supersede(){current=0; if(state!=BundleState.CONFIRMED) state=BundleState.SUPERSEDED;}
     public void issuesReady(){state=BundleState.ISSUES_READY;}
     public void generating(){state=BundleState.GENERATING;}
-    public void review(){state=BundleState.REVIEW;}
+    public void review(){if(state==BundleState.GENERATING) state=BundleState.REVIEW;}
     public void confirm(String manifest, String hash, Long actor){state=BundleState.CONFIRMED;manifestJson=manifest;validationHash=hash;confirmedBy=actor;confirmedAt=LocalDateTime.now();}
     public Long getId(){return id;} public Long getRequirementId(){return requirementId;} public Long getRequirementVersionId(){return requirementVersionId;}
     public int getRevisionNo(){return revisionNo;} public BundleState getState(){return state;} public boolean isCurrent(){return current==1;}

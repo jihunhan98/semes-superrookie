@@ -206,6 +206,7 @@ def test_missing_or_broken_review_retries_with_full_context(monkeypatch, raw):
         name = 'test'
         def generate(self, system, user):
             if '핵심 도메인 용어만' in system: return '{"terms":[]}'
+            if '각 기존 reqKey마다' in system: return '{"comparisons":[{"reqKey":"REQ-01","relation":"NONE","reason":"별도 기준입니다."}]}'
             calls.append((system, user))
             return raw if len(calls) == 1 else '{"findings":[]}'
     monkeypatch.setattr(main, 'PROVIDER', Provider())

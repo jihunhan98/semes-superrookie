@@ -1,3 +1,5 @@
+> 후속 구현: [변경 내용·적용 방법·검증 범위](../monitoring-workflow-implementation.md). 아래 문서와 HTML은 최초 계획 기록이며, 읽음 후 알림 삭제와 큰 비교 팝업은 후속 구현에서 반영했습니다.
+
 # 영향 알림·확정 단계·산출물 목록 개발 계획
 
 [클릭 가능한 전체 계획 HTML](monitoring-confirmation-artifacts-plan.html)을 다운로드해 브라우저로 열어주세요. 외부 리소스·서버 연결 없이 실행됩니다. 예시 데이터이며 실제 AI/DB 호출은 없습니다.

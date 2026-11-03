@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ImpactBell from "./ImpactBell";
 import type { User } from "../lib/api";
 import { clearCurrentUser, getCurrentUser } from "../lib/session";
 
@@ -61,6 +62,7 @@ export default function Header({
       </span>
       <span className="sp" />
       <Link href="/dashboard" className="header-project-link">프로젝트</Link>
+      <ImpactBell />
       <div className="avmenu" ref={menuRef}>
         <button className="av" title={user?.name ?? "로그인 필요"} onClick={() => setMenuOpen((v) => !v)}>
           {initial}

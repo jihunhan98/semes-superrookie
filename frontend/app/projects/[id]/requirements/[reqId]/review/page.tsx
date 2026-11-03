@@ -29,7 +29,7 @@ export default function ReviewPage(){
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState<{error:boolean;text:string}|null>(null),[retry,setRetry]=useState(0);
  const [loaded,setLoaded]=useState<{key:string;document:ArtifactDetail|null;error:string|null}|null>(null);
  const cache=useRef(new Map<string,ArtifactDetail>()),pending=useRef(false);
- const {data,error,reload}=useBundle(projectId,requirementId,user?.id);
+ const {data,error,reload,accept}=useBundle(projectId,requirementId,user?.id);
  const requested=data?.issues.find(item=>String(item.id)===search.get('issue')||item.issueKey===search.get('issueKey'));
  const issue=data?.issues.find(item=>item.id===selectedIssue)??requested??data?.issues[0];
  const summary=issue?.artifacts.find(item=>item.type===activeTab);
@@ -45,7 +45,7 @@ export default function ReviewPage(){
   getArtifact(projectId,requirementId,issue.issueKey,activeTab,user.id).then(document=>{cache.current.set(documentKey,document);if(active)setLoaded({key:documentKey,document,error:null});}).catch(cause=>{if(active)setLoaded({key:documentKey,document:null,error:cause instanceof Error?cause.message:'산출물을 불러오지 못했습니다.'});});
   return()=>{active=false;};
  },[documentKey,projectId,requirementId,issue?.issueKey,user?.id,activeTab,retry]);
- async function finish(){if(!data||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{await confirmBundle(projectId,requirementId,user.id,data.revision,crypto.randomUUID());await reload();setNotice({error:false,text:'개발 이슈와 산출물을 전체 확정했습니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'전체 확정하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
+ async function finish(){if(!data||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{const confirmed=await confirmBundle(projectId,requirementId,user.id,data.revision,crypto.randomUUID());if(confirmed.state!=='CONFIRMED')throw new Error('서버'+'에서 확정 완료 상태를 확인하지 못했습니다. 다시 조회해주세요.');accept(confirmed);setNotice({error:false,text:'개발 이슈와 산출물을 전체 확정했습니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'전체 확정하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
  async function retryGeneration(){if(!data?.generation||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{await retryJob(data.generation.id,user.id);await reload();setNotice({error:false,text:'실패한 산출물을 다시 생성합니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'재시도하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
  const count=data?.issues.reduce((n,item)=>n+ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length,0)??0;
  const expected=(data?.issues.length??0)*4,confirmed=data?.state==='CONFIRMED';
@@ -67,7 +67,7 @@ export default function ReviewPage(){
   <Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/>
   <div className="body">
    <main className={`main jira-dc-ui ${styles.page}`}>
-    <WorkflowStepper step={4}/>
+    <WorkflowStepper step={4} completed={confirmed}/>
     <nav className={styles.breadcrumb} aria-label="현재 위치">
      <Link href={`/projects/${projectId}/artifacts`}>산출물</Link><span>/</span>
      <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><span aria-current="page">검토·확정</span>

@@ -49,7 +49,8 @@ public final class RequirementDto {
             Long assigneeId,
             String assigneeName,
             int findingCount,
-            String updatedAt
+            String updatedAt,
+            com.semes.reqops.domain.workflow.service.WorkflowReadService.Progress workflow
     ) {}
 
     /**
@@ -81,7 +82,8 @@ public final class RequirementDto {
             String nextVersion,
             List<VersionResponse> versions,
             String createdAt,
-            String updatedAt
+            String updatedAt,
+            com.semes.reqops.domain.workflow.service.WorkflowReadService.Progress workflow
     ) {}
 
     /**

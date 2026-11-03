@@ -4,6 +4,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {useParams,useRouter} from "next/navigation";
 import ReviewIcon from "../../../../../components/ReviewIcon";
 import styles from "../../../../../components/RequirementReviewPage.module.css";
+import RequirementImpactPanel from "../../../../../components/RequirementImpactPanel";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import WorkflowStepper from "../../../../../components/WorkflowStepper";
@@ -95,6 +96,7 @@ export default function RequirementEditPage(){
  {!loading&&incomplete&&<p className="lmsg err" role="alert">{analysisNotice(requirement)}</p>}
  {refinement?.dictionaryChanged&&<p className="lmsg err">용어 정의가 변경되었습니다. 최신 정의로 다시 분석해주세요.</p>}
  {refinement&&refinement.newTermCount>0&&<p className="lmsg">프로젝트 용어를 {refinement.newTermCount}개 정리했습니다. <Link href={`/projects/${projectId}/glossary`}>용어사전 확인</Link></p>}
+ <RequirementImpactPanel projectId={projectId} requirementId={requirementId}/>
  {!loading&&requirement.aiEngine==='rule'&&<p className="lmsg">현재는 규칙 검토 결과입니다. AI 문맥 검토 결과가 필요하면 AI 다시 분석을 실행해주세요.</p>}
  <div className={styles.workspace}><section className={styles.reviewColumn}><div className={styles.columnHeading}><div><ReviewIcon name="sparkles" size={17}/><h2>AI 변경 제안</h2><span>{findings.length}</span></div><small>제안을 선택하고 아래 본문에서 변경 결과를 확인하세요</small></div>
  {!loading&&!reviewed&&(!incomplete||findings.length>0)&&<RequirementProposalCards key={`${requirement.reviewContext?.inputHash}:${findings.map(f=>f.id).join(",")}`} findings={findings} choices={choices} selectedId={selectedId} onSelect={setSelectedId} onDirtyChange={setDirtyDraft} onChange={(id,d)=>{setNotice('');setChoices(prev=>({...prev,[id]:d}));}} disabled={busy||analyzing}/>}

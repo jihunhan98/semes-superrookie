@@ -5,5 +5,5 @@ export function useBundle(projectId:number,requirementId:number,userId:number|un
   const reload=useCallback((signal?:AbortSignal)=>{if(!userId)return Promise.resolve();setError(null);return getCurrentBundle(projectId,requirementId,userId,signal).then(setData).catch(e=>{if(e.name!=="AbortError")setError(e.message);});},[projectId,requirementId,userId]);
   useEffect(()=>{const c=new AbortController();reload(c.signal);return()=>c.abort();},[reload]);
   useEffect(()=>{const running=data?.generation&&["QUEUED","RUNNING","RETRY_WAIT"].includes(data.generation.status);if(!data||(!running&&data.state!=="GENERATING"))return;const timer=window.setInterval(()=>reload(),2000);return()=>window.clearInterval(timer);},[data,reload]);
-  return{data,error,reload};
+  return{data,error,reload,accept:setData};
 }

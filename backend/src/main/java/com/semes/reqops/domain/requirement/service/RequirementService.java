@@ -77,6 +77,7 @@ public class RequirementService {
     private final com.semes.reqops.domain.knowledge.ClarificationStore clarificationStore;
     private final BundleService bundleService;
     private final AiJobService aiJobService;
+    private final com.semes.reqops.domain.workflow.service.WorkflowReadService workflowRead;
     private final ReviewItemRepository reviewItemRepository;
     private final UserDecisionRepository userDecisionRepository;
 
@@ -114,6 +115,7 @@ public class RequirementService {
         List<Requirement> requirements = requirementRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
         Map<Long, String> names = userNames(requirements.stream().map(Requirement::getAssigneeId).toList());
 
+        var workflow = workflowRead.load(requirements);
         return requirements.stream()
                 .map(r -> new SummaryResponse(
                         r.getId(),
@@ -126,7 +128,7 @@ public class RequirementService {
                         names.get(r.getAssigneeId()),
                         (int) findingRepository.findByRequirementIdOrderByIdAsc(r.getId()).stream()
                             .filter(f -> "OPEN".equals(f.getResolutionState()) && ReviewFindingTypes.normalize(f.getFindingType()) != null).count(),
-                        r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS)))
+                        r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS), workflow.get(r.getId()).progress()))
                 .toList();
     }
 
@@ -180,7 +182,7 @@ public class RequirementService {
                 nextVersionOf(requirementId),
                 versions,
                 r.getCreatedAt() == null ? null : r.getCreatedAt().format(TS),
-                r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS));
+                r.getUpdatedAt() == null ? null : r.getUpdatedAt().format(TS), workflowRead.load(List.of(r)).get(r.getId()).progress());
     }
 
     /**
