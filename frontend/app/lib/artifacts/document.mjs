@@ -5,7 +5,15 @@ export const ARTIFACT_TYPES=[
  {type:'nonfunctional',label:'비기능 요구사항',short:'NFR',description:'품질 기준과 동작 정의'},
  {type:'detail-design',label:'상세 설계',short:'DD',description:'구조와 변경 전·후 처리 흐름'},
 ];
-export function cleanDiagram(value){return typeof value==='string'?value.trim().replace(/^```(?:mermaid)?\s*\n?/i,'').replace(/\n?```\s*$/,'').trim():'';}
+export function cleanDiagram(value){
+ if(typeof value!=='string')return '';
+ let code=value.trim();
+ // Some saved AI responses contain literal backslash-n characters instead of
+ // line breaks. Repair those documents on read, without altering stored data or
+ // Mermaid labels in documents that already contain real line breaks.
+ if(!code.includes('\n')&&/\\(?:r\\)?n/.test(code))code=code.replace(/\\r\\n|\\n|\\r/g,'\n');
+ return code.replace(/^```(?:mermaid)?\s*\n?/i,'').replace(/\n?```\s*$/,'').trim();
+}
 export function classDiagramSource(value){
  if(typeof value==='string')return cleanDiagram(value);
  if(!Array.isArray(value))return '';

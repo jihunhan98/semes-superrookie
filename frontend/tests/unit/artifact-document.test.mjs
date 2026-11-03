@@ -7,6 +7,14 @@ test('canonical and legacy sequence fields render the same diagrams',()=>{
  assert.equal(designDiagrams({sequenceAfterCode:'```mermaid\n'+code+'\n```'}).after,code);
  assert.equal(cleanDiagram('```mermaid\nclassDiagram\n class A\n```'),'classDiagram\n class A');
 });
+test('saved diagrams with escaped line breaks render as Mermaid lines',()=>{
+ const classSource=String.raw`classDiagram\n class AMRController\n AMRController : +move()`;
+ const sequenceSource=String.raw`sequenceDiagram\r\n AMRController->>Motor: move()`;
+ assert.equal(designDiagrams({classDiagram:classSource}).classes,'classDiagram\n class AMRController\n AMRController : +move()');
+ assert.equal(designDiagrams({sequenceDiagramToBe:sequenceSource}).after,'sequenceDiagram\n AMRController->>Motor: move()');
+ assert.equal(cleanDiagram('```mermaid'+String.raw`\nsequenceDiagram\n A->>B: Go\n`+'```'),'sequenceDiagram\n A->>B: Go');
+ assert.equal(cleanDiagram('sequenceDiagram\n A->>B: literal \\n label'),'sequenceDiagram\n A->>B: literal \\n label');
+});
 test('legacy class arrays retain names and fields as a class diagram',()=>{
  const code=classDiagramSource([{name:'MatchingService',fields:['+ match(req): Result'],changed:true}]);
  assert.match(code,/classDiagram/);assert.match(code,/MatchingService/);assert.match(code,/match\(req\): Result/);
