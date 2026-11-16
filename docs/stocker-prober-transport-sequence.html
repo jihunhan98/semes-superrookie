@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stocker → Prober 반송 | newAMOS · VCS 메시지 시나리오</title>
+<style>
+:root{--ink:#18253d;--muted:#637189;--line:#dce4ee;--blue:#2563eb;--bg:#f5f7fb;--teal:#087f8c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 system-ui,-apple-system,"Malgun Gothic",sans-serif}main{max-width:1180px;margin:auto;padding:42px 24px 80px}h1{font-size:30px;letter-spacing:-1px;margin:8px 0}h2{font-size:19px;margin:0 0 18px}p{margin:7px 0}.eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--blue)}.sub{color:var(--muted)}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-top:24px;box-shadow:0 4px 18px #172b4d08}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.chip{border-radius:99px;padding:5px 12px;background:#eaf1ff;color:#214b91;font-weight:650;font-size:12px}.steps{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.step{border:1px solid #c9d9f5;background:#f1f6ff;border-radius:9px;padding:8px 12px;font-weight:750;font-size:12px}.arrow{color:#94a3b8}.diagram{overflow-x:auto;padding-bottom:8px}.diagram svg{width:100%;min-width:790px;height:auto;display:block}.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:12px 0}.sw{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:850px}th{background:#f1f5fa;text-align:left;color:#526078;font-size:12px}td,th{padding:11px 12px;border-bottom:1px solid #e8edf4;vertical-align:top}td:first-child{font-weight:750;color:#64748b}code{font-size:12px;color:#174b92;background:#eff5ff;padding:3px 6px;border-radius:5px;white-space:nowrap}.tag{font-size:11px;border-radius:5px;padding:3px 7px;background:#e7f7f4;color:#08736a;font-weight:700}.note{background:#fff9ed;border-left:4px solid #e7a536;padding:14px 18px;border-radius:7px;color:#775323}.foot{font-size:12px;color:#69758a;margin-top:16px}@media print{body{background:white}main{max-width:none;padding:10px}.panel{break-inside:avoid;box-shadow:none} .diagram svg{min-width:0}} 
+</style></head><body><main>
+<div class="eyebrow">AMR TRANSPORT / INTERFACE SCENARIO</div><h1>Stocker → Prober 반송 시나리오</h1>
+<p class="sub">newAMOS ↔ VCS 메시지 인터페이스 · AMR Step 변경 · Stocker 도킹 및 자재 출고</p>
+<div class="chips"><span class="chip">newAMOS : 작업 지시 · 설비 알림</span><span class="chip">VCS : Job 및 AMR 제어</span><span class="chip">AMR : 이동 · 도킹 · 이적재</span></div>
+<section class="panel"><h2>01. Job Step 전체 흐름</h2><div class="steps"><span class="step">ASSIGNED</span><span class="arrow">→</span><span class="step">MOVE_TO_LOAD</span><span class="arrow">→</span><span class="step">LOAD</span><span class="arrow">→</span><span class="step">MOVE_TO_UNLOAD</span><span class="arrow">→</span><span class="step">UNLOAD</span></div><p class="sub">위는 제공된 기본 Step 목록입니다. 아래 상세 시나리오에서는 Stocker 도킹 이후 MOVE_TO_UNLOAD → UNLOAD → MOVE_TO_LOAD 순서로 보고합니다.</p></section>
+<section class="panel"><h2>02. 통합 시퀀스 다이어그램</h2><div class="legend"><span><i class="sw" style="background:#2563eb"></i>요청 / 응답</span><span><i class="sw" style="background:#0891b2"></i>Step 변경</span><span><i class="sw" style="background:#d97706"></i>설비 · 자재 이벤트</span><span><i class="sw" style="background:#64748b"></i>VCS 내부 AMR 이벤트(개념)</span></div><div class="diagram" id="sequence"></div><p class="foot">AMR ↔ VCS 구간은 실제 프로토콜명이 제공되지 않아 개념적 이벤트로 표시했습니다. newAMOS ↔ VCS 메시지명은 입력된 표기를 그대로 사용했습니다.</p></section>
+<section class="panel"><h2>03. 메시지 인터페이스 정의</h2><div class="tablewrap"><table><thead><tr><th>No.</th><th>구간</th><th>송신 → 수신</th><th>메시지</th><th>의미 / 발생 조건</th></tr></thead><tbody id="messageRows"></tbody></table></div></section>
+<section class="panel"><h2>04. 단계별 업무 처리 요약</h2><div class="tablewrap"><table><thead><tr><th>단계</th><th>발생 이벤트</th><th>VCS 처리</th><th>newAMOS 연동</th></tr></thead><tbody>
+<tr><td>Job 접수</td><td>작업 지시 수신</td><td>Job 생성 및 적합 AMR 할당</td><td>ORDER 요청 / 응답</td></tr>
+<tr><td>Step 관리</td><td>AMR Job Step 변경</td><td>변경 Step 보고</td><td>STEPCHANGE 보고 / 응답</td></tr>
+<tr><td>Stocker 진입</td><td>도킹 요청 및 AMR 도킹 완료</td><td>도킹 처리 및 완료 통지</td><td>DOCKING / INFORM 메시지</td></tr>
+<tr><td>출고 알림</td><td>Stocker 자재 출고 알림</td><td>AMR에 출고 이벤트 전달</td><td>INFORM 메시지 교환</td></tr>
+<tr><td>이적재</td><td>MOVE_TO_UNLOAD → UNLOAD</td><td>Step 변경 및 완료 보고</td><td>STEPCHANGE / UNLOADCOMPLETE</td></tr>
+<tr><td>다음 이동</td><td>MOVE_TO_LOAD 전환</td><td>Step 변경 보고</td><td>STEPCHANGE 보고 / 응답</td></tr>
+</tbody></table></div></section>
+<section class="panel"><h2>05. 확인이 필요한 항목</h2><div class="note"><b>Step 및 메시지 의미 확인</b><p>① Stocker → Prober 반송에서 UNLOAD 완료 직후 MOVE_TO_LOAD로 전환하는 것이 실제 운영 규칙인지 확인이 필요합니다.</p><p>② <code>VCS_INFORM_REP</code> 및 <code>AMOS_INFORM_RPT</code>의 메시지 접미사(REP/RPT)는 일반적인 요청·보고 관례와 다르게 보일 수 있으나, 전달받은 명칭을 수정하지 않았습니다.</p><p>③ 도킹 완료와 자재 출고 알림 사이의 AMR 작업 및 LOAD Step 발생 시점은 미정의입니다.</p></div></section>
+<p class="foot">작성 기준: 제공된 Stocker → Prober 시나리오 · 메시지 필드, 타임아웃, 오류/재시도 정책은 미정의</p>
+</main><script>
+const events=[
+["newAMOS","VCS","AMOS_ORDER_REQ","Job 작업 지시","order"],
+["VCS","newAMOS","VCS_ORDER_REQ","작업 명령 수신 응답","order"],
+["VCS","AMR","Job 할당","적절한 AMR 선택","internal"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","ASSIGNED","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","ASSIGNED 수신 응답","order"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","MOVE_TO_LOAD / LOAD / MOVE_TO_UNLOAD 변경 시 각각 보고","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","각 Step 변경에 대한 응답","order"],
+["newAMOS","VCS","AMOS_DOCKING_REQ","Stocker 진입 / 도킹 요청","order"],
+["VCS","newAMOS","VCS_DOCKING_REP","도킹 요청 수신 응답","order"],
+["AMR","VCS","도킹 완료 이벤트","AMR 도킹 완료","internal"],
+["VCS","newAMOS","VCS_INFORM_REP","도킹 완료 통지","alarm"],
+["newAMOS","VCS","AMOS_INFORM_RPT","Stocker 자재 출고 알림","alarm"],
+["VCS","AMR","출고 알림 전달","AMR 이적재 진행 조건","internal"],
+["VCS","newAMOS","VCS_INFORM_RPT","출고 알림 처리 후 보고","alarm"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","MOVE_TO_UNLOAD → UNLOAD","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","UNLOAD 변경 수신 응답","order"],
+["AMR","VCS","UNLOAD 완료 이벤트","이적재 완료","internal"],
+["VCS","newAMOS","VCS_UNLOADCOMPLETE_RPT","이적재 완료 보고","alarm"],
+["newAMOS","VCS","AMOS_UNLOADCOMPLETE_REP","이적재 완료 수신 확인","order"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","MOVE_TO_LOAD","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","MOVE_TO_LOAD 변경 수신 응답","order"]
+];
+const xs={newAMOS:135,VCS:480,AMR:825},colors={order:"#2563eb",step:"#0891b2",alarm:"#d97706",internal:"#64748b"};
+const esc=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+const svg=['<svg viewBox="0 0 960 1710" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="newAMOS VCS AMR 간 메시지 시퀀스"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="context-stroke"/></marker></defs>'];
+for(const [name,x] of Object.entries(xs)){svg.push('<rect x="'+(x-88)+'" y="10" width="176" height="42" rx="9" fill="#eaf1ff" stroke="#cbdcf7"/><text x="'+x+'" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#1b3f76">'+name+'</text><line x1="'+x+'" x2="'+x+'" y1="52" y2="1670" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 6"/>');}
+const groups=[{start:0,label:"01 · Job 지시 및 Step 보고"},{start:7,label:"02 · Stocker 도킹"},{start:11,label:"03 · 자재 출고 알림"},{start:14,label:"04 · UNLOAD 및 완료 보고"},{start:19,label:"05 · 다음 Step 전환"}];
+events.forEach((e,i)=>{const y=96+i*73, [from,to,msg,desc,type]=e;const g=groups.find(g=>g.start===i);if(g){svg.push('<rect x="20" y="'+(y-36)+'" width="920" height="25" rx="6" fill="#f0f4f9"/><text x="34" y="'+(y-19)+'" font-size="12" font-weight="700" fill="#52647c">'+g.label+'</text>');}
+const x1=xs[from],x2=xs[to],c=colors[type];svg.push('<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+c+'" stroke-width="2.2" '+(type==="internal"?'stroke-dasharray="6 4"':'')+' marker-end="url(#arr)"/>');
+svg.push('<text x="'+((x1+x2)/2)+'" y="'+(y-22)+'" font-size="12.5" font-weight="700" fill="'+c+'" text-anchor="middle">'+esc(msg)+'</text><text x="'+((x1+x2)/2)+'" y="'+(y+18)+'" font-size="11.5" fill="#59687b" text-anchor="middle">'+esc(desc)+'</text>');});
+svg.push('</svg>');document.getElementById('sequence').innerHTML=svg.join('');
+document.getElementById('messageRows').innerHTML=events.filter(e=>e[4]!=="internal").map((e,i)=>{const stage=i<6?"Job / Step":i<9?"도킹":i<12?"출고 알림":i<16?"이적재 / 완료":"다음 Step";return '<tr><td>'+String(i+1).padStart(2,'0')+'</td><td>'+stage+'</td><td>'+e[0]+' → '+e[1]+'</td><td><code>'+esc(e[2])+'</code></td><td>'+esc(e[3])+(e[4]==="step"?' <span class="tag">Step 변경</span>':'')+'</td></tr>';}).join('');
+</script></body></html>
