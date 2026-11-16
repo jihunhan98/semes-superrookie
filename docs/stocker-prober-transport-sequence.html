@@ -4,22 +4,22 @@
 <style>
 :root{--ink:#18253d;--muted:#637189;--line:#dce4ee;--blue:#2563eb;--bg:#f5f7fb;--teal:#087f8c}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 system-ui,-apple-system,"Malgun Gothic",sans-serif}main{max-width:1180px;margin:auto;padding:42px 24px 80px}h1{font-size:30px;letter-spacing:-1px;margin:8px 0}h2{font-size:19px;margin:0 0 18px}p{margin:7px 0}.eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--blue)}.sub{color:var(--muted)}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-top:24px;box-shadow:0 4px 18px #172b4d08}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.chip{border-radius:99px;padding:5px 12px;background:#eaf1ff;color:#214b91;font-weight:650;font-size:12px}.steps{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.step{border:1px solid #c9d9f5;background:#f1f6ff;border-radius:9px;padding:8px 12px;font-weight:750;font-size:12px}.arrow{color:#94a3b8}.diagram{overflow-x:auto;padding-bottom:8px}.diagram svg{width:100%;min-width:650px;height:auto;display:block}.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:12px 0}.sw{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:850px}th{background:#f1f5fa;text-align:left;color:#526078;font-size:12px}td,th{padding:11px 12px;border-bottom:1px solid #e8edf4;vertical-align:top}td:first-child{font-weight:750;color:#64748b}code{font-size:12px;color:#174b92;background:#eff5ff;padding:3px 6px;border-radius:5px;white-space:nowrap}.tag{font-size:11px;border-radius:5px;padding:3px 7px;background:#e7f7f4;color:#08736a;font-weight:700}.note{background:#fff9ed;border-left:4px solid #e7a536;padding:14px 18px;border-radius:7px;color:#775323}.foot{font-size:12px;color:#69758a;margin-top:16px}@media print{body{background:white}main{max-width:none;padding:10px}.panel{break-inside:avoid;box-shadow:none} .diagram svg{min-width:0}} 
-</style></head><body><main>
+.msg-hit{cursor:pointer;outline:none}.msg-hit:hover .msg-bg,.msg-hit:focus .msg-bg{fill:#eaf2ff;stroke:#93b4ee}.msg-row{scroll-margin-top:90px}.msg-row.active{background:#dbeafe;box-shadow:inset 4px 0 #2563eb}html{scroll-behavior:smooth}</style></head><body><main>
 <div class="eyebrow">AMR TRANSPORT / INTERFACE SCENARIO</div><h1>Stocker → Prober 반송 시나리오</h1>
 <p class="sub">newAMOS ↔ VCS 메시지 인터페이스 · VCS 내부 동작 · Stocker 도킹 및 자재 출고</p>
 <div class="chips"><span class="chip">newAMOS : 작업 지시 · 설비 알림</span><span class="chip">VCS : Job 및 AMR 제어</span><span class="chip">VCS 내부 동작 : 주행 · 도킹 · 이적재 (메시지 아님)</span></div>
 <section class="panel"><h2>01. Job Step 전체 흐름</h2><div class="steps"><span class="step">ASSIGNED</span><span class="arrow">→</span><span class="step">MOVE_TO_LOAD</span><span class="arrow">→</span><span class="step">LOAD</span><span class="arrow">→</span><span class="step">MOVE_TO_UNLOAD</span><span class="arrow">→</span><span class="step">UNLOAD</span></div><p class="sub">위는 제공된 기본 Step 목록입니다. 아래 상세 시나리오의 실제 보고 순서는 ASSIGNED → MOVE_TO_UNLOAD → UNLOAD → MOVE_TO_LOAD입니다.</p></section>
-<section class="panel"><h2>02. 통합 시퀀스 다이어그램</h2><div class="legend"><span><i class="sw" style="background:#2563eb"></i>요청 / 응답</span><span><i class="sw" style="background:#0891b2"></i>Step 변경</span><span><i class="sw" style="background:#d97706"></i>설비 · 자재 이벤트</span><span><i class="sw" style="background:#64748b"></i>VCS 내부 동작 (통신 메시지 아님)</span></div><div class="diagram" id="sequence"></div><p class="foot">주행 개시, 도킹 완료, 출고 알림 수신, 이적재 완료 등은 VCS 내부 동작으로 표시하며 송수신 메시지 화살표를 사용하지 않습니다.</p></section>
-<section class="panel"><h2>03. 메시지 인터페이스 정의</h2><div class="tablewrap"><table><thead><tr><th>No.</th><th>구간</th><th>송신 → 수신</th><th>메시지</th><th>의미 / 발생 조건</th></tr></thead><tbody id="messageRows"></tbody></table></div></section>
+<section class="panel"><h2>02. 통합 시퀀스 다이어그램</h2><div class="legend"><span><i class="sw" style="background:#2563eb"></i>요청 / 응답</span><span><i class="sw" style="background:#0891b2"></i>Step 변경</span><span><i class="sw" style="background:#d97706"></i>설비 · 자재 이벤트</span><span><i class="sw" style="background:#64748b"></i>VCS 내부 동작 (통신 메시지 아님)</span></div><p style="color:#2563eb;font-size:12px;font-weight:650">메시지를 클릭하면 인터페이스 정의표의 해당 행으로 이동합니다.</p><div class="diagram" id="sequence"></div><p class="foot">주행 개시, 도킹 완료, 출고 알림 수신, 이적재 완료 등은 VCS 내부 동작으로 표시하며 송수신 메시지 화살표를 사용하지 않습니다.</p></section>
+<section class="panel" id="interface"><h2>03. 메시지 인터페이스 정의</h2><div class="tablewrap"><table><thead><tr><th>No.</th><th>구간</th><th>송신 → 수신</th><th>메시지</th><th>의미 / 발생 조건</th></tr></thead><tbody id="messageRows"></tbody></table></div></section>
 <section class="panel"><h2>04. 단계별 업무 처리 요약</h2><div class="tablewrap"><table><thead><tr><th>단계</th><th>발생 이벤트</th><th>VCS 처리</th><th>newAMOS 연동</th></tr></thead><tbody>
 <tr><td>Job 접수</td><td>작업 지시 수신</td><td>Job 생성 및 적합 AMR 할당</td><td>ORDER 요청 / 응답</td></tr>
 <tr><td>Step 관리</td><td>Job Step 변경</td><td>변경 Step 보고</td><td>STEPCHANGE 보고 / 응답</td></tr>
 <tr><td>Stocker 진입</td><td>도킹 요청 및 AMR 도킹 완료</td><td>도킹 처리 및 완료 통지</td><td>DOCKING / INFORM 메시지</td></tr>
 <tr><td>출고 알림</td><td>Stocker 자재 출고 알림</td><td>AMR에 출고 이벤트 전달</td><td>INFORM 메시지 교환</td></tr>
 <tr><td>이적재</td><td>MOVE_TO_UNLOAD → UNLOAD</td><td>Step 변경 및 완료 보고</td><td>STEPCHANGE / UNLOADCOMPLETE</td></tr>
-<tr><td>다음 이동</td><td>MOVE_TO_LOAD 전환</td><td>Step 변경 보고</td><td>STEPCHANGE 보고 / 응답</td></tr>
+<tr><td>다음 이동</td><td>MOVE_TO_LOAD 전환</td><td>Step 변경 보고</td><td>STEPCHANGE 보고 / 응답</td></tr><tr><td>Prober 도킹</td><td>도킹 완료 (요청 없음)</td><td>도킹 완료 통지</td><td>VCS_INFORM_RPT / AMOS_INFORM_REP</td></tr><tr><td>Prober LOAD</td><td>LOAD 진행 및 완료</td><td>Step 변경 및 완료 보고</td><td>STEPCHANGE / LOADCOMPLETE</td></tr><tr><td>주행 재개</td><td>MOVE_TO_UNLOAD 전환</td><td>주행 및 Step 보고</td><td>STEPCHANGE 보고 / 응답</td></tr>
 </tbody></table></div></section>
-<section class="panel"><h2>05. 확인이 필요한 항목</h2><div class="note"><b>Step 및 메시지 의미 확인</b><p>① Stocker → Prober 반송에서 UNLOAD 완료 직후 MOVE_TO_LOAD로 전환하는 것이 실제 운영 규칙인지 확인이 필요합니다.</p><p>② <code>VCS_INFORM_REP</code> 및 <code>AMOS_INFORM_RPT</code>의 메시지 접미사(REP/RPT)는 일반적인 요청·보고 관례와 다르게 보일 수 있으나, 전달받은 명칭을 수정하지 않았습니다.</p><p>③ 도킹 완료와 자재 출고 알림 사이의 AMR 작업 및 LOAD Step 발생 시점은 미정의입니다.</p></div></section>
+<section class="panel"><h2>05. 확인이 필요한 항목</h2><div class="note"><b>Step 및 메시지 의미 확인</b><p>① Stocker → Prober 반송에서 UNLOAD 완료 직후 MOVE_TO_LOAD로 전환하는 것이 실제 운영 규칙인지 확인이 필요합니다.</p><p>② <code>VCS_INFORM_REP</code> 및 <code>AMOS_INFORM_RPT</code>의 메시지 접미사(REP/RPT)는 일반적인 요청·보고 관례와 다르게 보일 수 있으나, 전달받은 명칭을 수정하지 않았습니다.</p><p>③ Prober 도킹은 별도 DOCKING 요청 없이 진행합니다. ④ LOAD 완료 응답은 전달받은 VCS_LOADCOMPLETE_REP 명칭을 그대로 사용했으며 실제 송신 측 메시지명 확인이 필요합니다.</p></div></section>
 <p class="foot">작성 기준: 제공된 Stocker → Prober 시나리오 · 메시지 필드, 타임아웃, 오류/재시도 정책은 미정의</p>
 </main><script>
 const events=[
@@ -33,7 +33,7 @@ const events=[
 ["newAMOS","VCS","AMOS_STEPCHANGE_REP","수신 응답","order"],
 ["newAMOS","VCS","AMOS_DOCKING_REQ","Stocker 도킹 요청","order"],
 ["VCS","newAMOS","VCS_DOCKING_REP","도킹 요청 응답","order"],
-["VCS","VCS","도킹 완료","AMR 도킹 완료","internal"],
+["VCS","VCS","도킹 완료","Stocker 도킹 완료","internal"],
 ["VCS","newAMOS","VCS_INFORM_REP","도킹 완료 통지","alarm"],
 ["newAMOS","VCS","AMOS_INFORM_RPT","Stocker 자재 출고 알림","alarm"],
 ["VCS","newAMOS","VCS_INFORM_RPT","출고 알림 처리 보고","alarm"],
@@ -43,20 +43,40 @@ const events=[
 ["VCS","VCS","UNLOAD 완료","AMR 이적재 완료","internal"],
 ["VCS","newAMOS","VCS_UNLOADCOMPLETE_RPT","이적재 완료 보고","alarm"],
 ["newAMOS","VCS","AMOS_UNLOADCOMPLETE_REP","수신 확인","order"],
-["VCS","VCS","주행 재개","다음 목적지 이동","internal"],
+["VCS","VCS","주행 재개","Prober 방향 이동","internal"],
 ["VCS","newAMOS","VCS_STEPCHANGE_RPT","MOVE_TO_LOAD","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","수신 응답","order"],
+["VCS","VCS","Prober 도킹 완료","도킹 요청 없음","internal"],
+["VCS","newAMOS","VCS_INFORM_RPT","Prober 도킹 완료 보고","alarm"],
+["newAMOS","VCS","AMOS_INFORM_REP","수신 응답","order"],
+["VCS","VCS","LOAD 작업 진행","AMR 적재 작업","internal"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","LOAD","step"],
+["newAMOS","VCS","AMOS_STEPCHANGE_REP","수신 응답","order"],
+["VCS","VCS","LOAD 완료","AMR 적재 완료","internal"],
+["VCS","newAMOS","VCS_LOADCOMPLETE_RPT","LOAD 완료 보고","alarm"],
+["newAMOS","VCS","VCS_LOADCOMPLETE_REP","수신 응답 (명칭 확인 필요)","order"],
+["VCS","VCS","주행 개시","Prober 출발","internal"],
+["VCS","newAMOS","VCS_STEPCHANGE_RPT","MOVE_TO_UNLOAD","step"],
 ["newAMOS","VCS","AMOS_STEPCHANGE_REP","수신 응답","order"]
 ];
-const groups=[{start:0,label:"01 · Job 지시 및 Step 보고"},{start:8,label:"02 · Stocker 도킹"},{start:12,label:"03 · 자재 출고 알림"},{start:15,label:"04 · UNLOAD 및 완료 보고"},{start:20,label:"05 · 다음 Step 전환"}];
-const esc=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-const colors={order:"#2563eb",step:"#0891b2",alarm:"#d97706",internal:"#64748b"};
-const svg=['<svg viewBox="0 0 920 2010" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="newAMOS VCS 메시지 시퀀스"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#2563eb"/></marker><marker id="arrStep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#0891b2"/></marker><marker id="arrAlarm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#d97706"/></marker></defs>'];
+const groups=[{start:0,label:"01 · Job 지시 및 Step 보고"},{start:8,label:"02 · Stocker 도킹"},{start:12,label:"03 · 자재 출고 알림"},{start:15,label:"04 · UNLOAD 및 완료 보고"},{start:20,label:"05 · Prober 이동"},{start:23,label:"06 · Prober 도킹 및 LOAD"},{start:32,label:"07 · 주행 재개"}];
+const esc=v=>v.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+const colors={order:"#2563eb",step:"#0891b2",alarm:"#d97706"};
+const H=160+events.length*79;
+let svg=['<svg viewBox="0 0 920 '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="newAMOS VCS 시퀀스"><defs>'];
+for(const [type,color] of Object.entries(colors)){svg.push('<marker id="arrow-'+type+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="'+color+'"/></marker>');}
+svg.push('</defs>');
 const xs={newAMOS:210,VCS:700};
-for(const [name,x] of Object.entries(xs)){svg.push('<rect x="'+(x-105)+'" y="20" width="210" height="48" rx="10" fill="#eaf1ff" stroke="#cbdcf7"/><text x="'+x+'" y="50" text-anchor="middle" font-size="17" font-weight="700" fill="#1b3f76">'+name+'</text><line x1="'+x+'" x2="'+x+'" y1="68" y2="1990" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 6"/>');}
-events.forEach((e,i)=>{const y=150+i*79,[from,to,msg,desc,type]=e,g=groups.find(g=>g.start===i);if(g)svg.push('<rect x="20" y="'+(y-57)+'" width="880" height="28" rx="6" fill="#eef3f9"/><text x="35" y="'+(y-38)+'" font-size="13" font-weight="700" fill="#52647c">'+g.label+'</text>');
-const c=colors[type];
+for(const [name,x] of Object.entries(xs)){svg.push('<rect x="'+(x-105)+'" y="20" width="210" height="48" rx="10" fill="#eaf1ff" stroke="#cbdcf7"/><text x="'+x+'" y="50" text-anchor="middle" font-size="17" font-weight="700" fill="#1b3f76">'+name+'</text><line x1="'+x+'" x2="'+x+'" y1="68" y2="'+(H-25)+'" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5 6"/>');}
+let count=0;
+events.forEach((e,i)=>{const y=150+i*79,[from,to,msg,desc,type]=e,g=groups.find(g=>g.start===i);
+if(g)svg.push('<rect x="20" y="'+(y-57)+'" width="880" height="28" rx="6" fill="#eef3f9"/><text x="35" y="'+(y-38)+'" font-size="13" font-weight="700" fill="#52647c">'+g.label+'</text>');
 if(type==="internal"){svg.push('<rect x="573" y="'+(y-23)+'" width="254" height="50" rx="9" fill="#f1f5f9" stroke="#cbd5e1"/><text x="700" y="'+(y-3)+'" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">'+esc(msg)+'</text><text x="700" y="'+(y+15)+'" text-anchor="middle" font-size="11" fill="#64748b">'+esc(desc)+'</text>');}
-else{const x1=xs[from],x2=xs[to],marker=type==="step"?"arrStep":type==="alarm"?"arrAlarm":"arr";svg.push('<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+c+'" stroke-width="2.3" marker-end="url(#'+marker+')"/><text x="455" y="'+(y-21)+'" text-anchor="middle" font-size="13" font-weight="700" fill="'+c+'">'+esc(msg)+'</text><text x="455" y="'+(y+20)+'" text-anchor="middle" font-size="12" fill="#52647c">'+esc(desc)+'</text>');}});
-svg.push('</svg>');document.getElementById('sequence').innerHTML=svg.join('');
-document.getElementById('messageRows').innerHTML=events.filter(e=>e[4]!=="internal").map((e,i)=>'<tr><td>'+String(i+1).padStart(2,'0')+'</td><td>'+(i<6?'Job / Step':i<8?'도킹':i<11?'출고 알림':i<15?'이적재 / 완료':'다음 Step')+'</td><td>'+e[0]+' → '+e[1]+'</td><td><code>'+esc(e[2])+'</code></td><td>'+esc(e[3])+(e[4]==="step"?' <span class="tag">Step 변경</span>':'')+'</td></tr>').join('');
+else{const id="message-"+(++count),c=colors[type];svg.push('<g class="msg-hit" tabindex="0" role="link" aria-label="'+esc(msg)+' 정의로 이동" data-target="'+id+'"><rect class="msg-bg" x="205" y="'+(y-34)+'" width="500" height="68" rx="6" fill="transparent" stroke="transparent"/><line x1="'+xs[from]+'" y1="'+y+'" x2="'+xs[to]+'" y2="'+y+'" stroke="'+c+'" stroke-width="2.3" marker-end="url(#arrow-'+type+')"/><text x="455" y="'+(y-21)+'" text-anchor="middle" font-size="13" font-weight="700" fill="'+c+'">'+esc(msg)+'</text><text x="455" y="'+(y+20)+'" text-anchor="middle" font-size="12" fill="#52647c">'+esc(desc)+'</text></g>');}});
+svg.push('</svg>');document.getElementById("sequence").innerHTML=svg.join("");
+let n=0;
+document.getElementById("messageRows").innerHTML=events.filter(e=>e[4]!=="internal").map(e=>{const id="message-"+(++n);const stage=n<=6?"Job / Step":n<=8?"Stocker 도킹":n<=11?"출고 알림":n<=15?"이적재 / 완료":n<=17?"Prober 이동":n<=19?"Prober 도킹":n<=22?"LOAD":n<=24?"LOAD 완료":"주행 재개";return '<tr id="'+id+'" class="msg-row"><td>'+String(n).padStart(2,"0")+'</td><td>'+stage+'</td><td>'+e[0]+' → '+e[1]+'</td><td><code>'+esc(e[2])+'</code></td><td>'+esc(e[3])+(e[4]==="step"?' <span class="tag">Step 변경</span>':"")+'</td></tr>';}).join("");
+function focusMessage(id){document.querySelectorAll(".msg-row.active").forEach(el=>el.classList.remove("active"));const row=document.getElementById(id);if(row){row.classList.add("active");row.scrollIntoView({behavior:"smooth",block:"center"});}}
+document.getElementById("sequence").addEventListener("click",e=>{const hit=e.target.closest(".msg-hit");if(hit)focusMessage(hit.dataset.target);});
+document.getElementById("sequence").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){const hit=e.target.closest(".msg-hit");if(hit){e.preventDefault();focusMessage(hit.dataset.target);}}});
 </script></body></html>
