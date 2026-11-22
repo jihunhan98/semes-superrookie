@@ -48,6 +48,8 @@ if defined PYEXE (
   start "ReqOps - AI 서버 (8001)" cmd /k "chcp 65001 >nul && cd /d ai-model && %PYEXE% -m uvicorn main:app --port 8001"
   rem 백엔드가 요구사항 등록 때 AI 서버를 부르므로 이쪽이 먼저 떠 있는 게 낫다.
   timeout /t 3 /nobreak >nul
+  rem 별도 창에서 서버 준비를 기다린 뒤 /analyze 요청으로 실제 검토 동작을 확인한다.
+  start "ReqOps - AI 상태 확인" cmd /k "chcp 65001 >nul && ai-model\%PYEXE% ai-model\check-startup.py"
 ) else (
   echo  [1/3] AI 서버 건너뜀         가상환경 없음
   set "SKIPPED=1"
