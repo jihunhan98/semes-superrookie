@@ -36,11 +36,15 @@ def test_known_requirement_reference_is_not_flagged():
     findings = rules.detect(text, [{"reqKey": "REQ-TA-01", "content": "SoC 높은 순"}])
     assert not any(row.finding_type == rules.T_REFERENCE for row in findings)
 
-def test_split_quotes_are_grounded():
-    content = "운영자가 조건을 설정한다. 시스템은 AMR을 선택한다."
+def test_split_fallback_keeps_related_sentences_in_one_issue(monkeypatch):
+    import main
+    from providers.rule import RuleProvider
+    monkeypatch.setattr(main, "PROVIDER", RuleProvider())
+    content = "운영자가 조건을 설정한다. 시스템은 조건에 맞는 장비를 선택한다."
     body = client.post("/split", json={"content": content}).json()
-    assert body["issues"]
-    assert all(row["quote"] in content for row in body["issues"])
+    assert body["engine"] == "rule"
+    assert len(body["issues"]) == 1
+    assert body["issues"][0]["quote"] == content
 
 
 def test_amr_matching_is_one_cohesive_issue_with_business_title():
