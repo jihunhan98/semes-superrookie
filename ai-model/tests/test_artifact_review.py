@@ -26,6 +26,36 @@ def test_evidence_quote_and_field_are_real():
     assert validation.validate_evidence({'overview':'ok','evidence':[{'reqKey':'R','quote':'fake','field':'overview'}]}, {'R':'SOC 30% 이상'})
     assert not validation.validate_evidence({'overview':'SOC 30% 이상','evidence':[{'reqKey':'R','quote':'SOC 30% 이상','field':'overview'}]}, {'R':'SOC 30% 이상'})
 
+def test_nonfunctional_recovers_omitted_evidence_from_actual_requirement(monkeypatch):
+    import main
+    source = 'AMR은 Auto 상태에서 작업을 수행한다.'
+    content = {'overview': 'Auto 상태의 AMR 작업 기준', 'constraintsNote': '별도 성능 기준은 명시되지 않음',
+               'scenarios': [{'type': kind, 'precondition': '명시되지 않음',
+                              'scenario': '명시되지 않음', 'postcondition': '명시되지 않음'}
+                             for kind in ('BASIC', 'VARIANT', 'EXCEPTION')], 'legacyExtras': {}}
+    provider = Provider(content)
+    monkeypatch.setattr(main, 'PROVIDER', provider)
+    result = main.generate_artifact(main.ArtifactGenerateRequest(
+        type='nonfunctional', reqKey='REQ-1', issueTitle='AMR 작업', issueQuote=source,
+        requirementContent=source))
+    assert result.content['evidence'] == [{'field': 'overview', 'reqKey': 'REQ-1', 'quote': source}]
+    assert '"evidence"' in main._NONFUNCTIONAL_PROMPT
+    assert main.validate_artifact(main.ArtifactValidationRequest(
+        type='nonfunctional', reqKey='REQ-1', requirementContent=source,
+        content=result.content))['valid']
+
+    # An explicit, fabricated model citation still fails instead of being replaced.
+    content['evidence'] = [{'field': 'overview', 'reqKey': 'REQ-1', 'quote': '원문에 없는 값'}]
+    with pytest.raises(HTTPException) as exc:
+        main.generate_artifact(main.ArtifactGenerateRequest(
+            type='nonfunctional', reqKey='REQ-1', requirementContent=source))
+    assert exc.value.status_code == 502
+
+def test_missing_source_cannot_be_used_to_invent_evidence():
+    content = {'overview': '품질 기준', 'evidence': []}
+    validation.attach_source_evidence(content, 'nonfunctional', 'REQ-1', '근거 없는 인용', {'REQ-1': ''})
+    assert validation.validate_evidence(content, {'REQ-1': ''})
+
 def test_coverage_flags_uncovered_text_and_missing_artifacts(monkeypatch):
     setup_provider(monkeypatch,dict(atoms=[dict(quote='SOC 30% 이상',kind='조건',issueIds=[1],artifacts=[],reason='조건')],concerns=[],approved=True))
     result=artifact_review.coverage(artifact_review.CoverageRequest(requirementContent='SOC 30% 이상. 통신 오류 시 재시도.',issues=[{'id':1,'artifacts':[]}]))

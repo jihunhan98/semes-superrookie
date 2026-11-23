@@ -32,6 +32,26 @@ def validate_evidence(content, sources):
     return errors
 
 
+def attach_source_evidence(content, type_, req_key, issue_quote, sources):
+    """Restore an omitted citation using only text present in a supplied requirement.
+
+    This links the document's scope to its source; it does not claim that an
+    unstated performance target or exception was present in the source.
+    Explicit but invalid model citations are left intact for validation to reject.
+    """
+    if 'evidence' in content and content['evidence'] not in (None, []):
+        return
+    field = {'voc': 'requestContent', 'functional': 'overview',
+             'nonfunctional': 'overview', 'detail-design': 'description'}.get(type_)
+    if not field or not content.get(field):
+        return
+    source = sources.get(req_key, '')
+    if not isinstance(source, str) or not source.strip():
+        return
+    quote = issue_quote if isinstance(issue_quote, str) and issue_quote.strip() and issue_quote in source else source.strip()[:500]
+    content['evidence'] = [{'field': field, 'reqKey': req_key, 'quote': quote}]
+
+
 def numeric_concerns(content, source):
     # Units included: 30% and 0.3% are deliberately distinct.
     pattern = r'\d+(?:\.\d+)?\s*(?:%|ms|초|분|mm|cm|m/s)(?:\s*(?:이상|이하|초과|미만))?'

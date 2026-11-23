@@ -401,6 +401,7 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
             raise ValueError("산출물의 필수 업무 내용이 비어 있습니다.")
         sources = {e.reqKey: e.content for e in req.existing}
         sources[req.reqKey] = req.requirementContent
+        validation.attach_source_evidence(content, req.type, req.reqKey, req.issueQuote, sources)
         concerns = validation.validate_evidence(content, sources)
         concerns += validation.numeric_concerns(content, "\n".join(sources.values()))
         if concerns:
@@ -605,7 +606,7 @@ JSON만 반환:
 {{"requester":"요청자 또는 제공된 요구사항에 명시되지 않음",
 "requestContent":"확정 본문의 구체적인 고객 요청",
 "specialNotes":"관련 제약·특이 사항 또는 제공된 요구사항에 명시되지 않음",
-"legacyExtras":{{}}}}"""
+"legacyExtras":{{}},"evidence":[{{"field":"requestContent","reqKey":"실제 요구사항 ID","quote":"원문 그대로의 구절"}}]}}"""
 
 _FUNCTIONAL_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 기능 요구사항 명세를 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -618,7 +619,7 @@ JSON만 반환:
 {{"type":"BASIC","precondition":"기본 동작의 선행조건","scenario":"기본 처리 흐름","postcondition":"기본 처리 결과"}},
 {{"type":"VARIANT","precondition":"변형 동작의 선행조건 또는 명시되지 않음","scenario":"변형 동작 또는 명시되지 않음","postcondition":"변형 결과 또는 명시되지 않음"}},
 {{"type":"EXCEPTION","precondition":"예외 발생 조건 또는 명시되지 않음","scenario":"예외 처리 또는 명시되지 않음","postcondition":"예외 결과 또는 명시되지 않음"}}],
-"legacyExtras":{{}}}}"""
+"legacyExtras":{{}},"evidence":[{{"field":"overview","reqKey":"실제 요구사항 ID","quote":"원문 그대로의 구절"}}]}}"""
 
 _NONFUNCTIONAL_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 비기능 요구사항을 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -631,7 +632,7 @@ JSON만 반환:
 {{"type":"BASIC","precondition":"기본 조건","scenario":"품질 기준의 기본 동작","postcondition":"기본 결과"}},
 {{"type":"VARIANT","precondition":"변형 조건 또는 명시되지 않음","scenario":"변형 동작 또는 명시되지 않음","postcondition":"변형 결과 또는 명시되지 않음"}},
 {{"type":"EXCEPTION","precondition":"예외 조건 또는 명시되지 않음","scenario":"예외 동작 또는 명시되지 않음","postcondition":"예외 결과 또는 명시되지 않음"}}],
-"legacyExtras":{{}}}}"""
+"legacyExtras":{{}},"evidence":[{{"field":"overview","reqKey":"실제 요구사항 ID","quote":"원문 그대로의 구절"}}]}}"""
 
 _DETAIL_DESIGN_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 상세 설계를 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
@@ -644,7 +645,7 @@ JSON만 반환:
 "classDiagram":"classDiagram\\n    class 업무개념 {{\\n      +근거속성\\n    }}",
 "sequenceDiagramAsIs":"sequenceDiagram\\n    participant 검토자\\n    Note over 검토자: 변경 전 처리 흐름은 제공된 자료에 명시되지 않음",
 "sequenceDiagramToBe":"sequenceDiagram\\n    participant 요청자\\n    participant 처리자\\n    요청자->>처리자: 근거가 있는 업무 동작",
-"legacyExtras":{{}}}}"""
+"legacyExtras":{{}},"evidence":[{{"field":"description","reqKey":"실제 요구사항 ID","quote":"원문 그대로의 구절"}}]}}"""
 
 _ARTIFACT_PROMPTS = {
     "voc": _VOC_PROMPT,
@@ -684,7 +685,11 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
     user += "\n대상 요구사항 ID: " + req_key
     user += "\n개발 이슈 본문:\n" + validation.checked_context({"issueContent": issue_content or {}})
     validation.checked_context(user)
-    evidence_rule = '\n모든 산출물에 evidence 배열을 추가하라: [{"field":"scenarios.0.scenario 또는 해당 JSON 필드 경로","reqKey":"실제 요구사항 ID","quote":"그 요구사항 원문 그대로"}]. 실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다. 근거에 없는 예외·경계 조건은 만들어내지 않고 요구사항에 명시되지 않았다고 서술한다.'
+    evidence_rule = ('\n위 JSON 예시의 evidence는 반드시 출력한다. field는 근거를 연결할 실제 JSON 필드 경로, '
+                     'reqKey는 입력에 있는 실제 요구사항 ID, quote는 해당 요구사항 본문에 연속으로 존재하는 원문 구절이다. '
+                     '품질 기준이 원문에 없다면 비기능 요구사항에 임의의 수치나 동작을 만들지 말고 '
+                     '명시되지 않았다고 서술한다. 이 경우 overview에는 대상 요구사항의 범위를 인용할 수 있다. '
+                     '실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다.')
     raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_] + evidence_rule + revision_rule, user)
     return _parse_json(raw)
 
