@@ -11,7 +11,7 @@ import ArtifactRichText from "../../../../../components/ArtifactRichText";
 import {ARTIFACT_TYPES} from "../../../../../lib/artifacts/document.mjs";
 import {devId} from "../../../../../lib/identifiers";
 import {confirmBundle,retryJob} from "../../../../../lib/api/v2";
-import {getArtifact,getProject,getRequirement,type ArtifactDetail,type ArtifactTypeSlug,type ProjectDetail,type RequirementDetail,type User} from "../../../../../lib/api";
+import {getArtifact,regenerateArtifact,getProject,getRequirement,type ArtifactDetail,type ArtifactTypeSlug,type ProjectDetail,type RequirementDetail,type User} from "../../../../../lib/api";
 import {useBundle} from "../../../../../lib/hooks/useBundle";
 import {getCurrentUser} from "../../../../../lib/session";
 import "../../../../../components/jira/aui-9.12.0.scoped.css";
@@ -28,6 +28,10 @@ export default function ReviewPage(){
  const [wide,setWide]=useState(false);
  const sourceRef=useRef<HTMLDetailsElement>(null);
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState<{error:boolean;text:string}|null>(null),[retry,setRetry]=useState(0);
+ const [requestDrafts,setRequestDrafts]=useState<Record<number,string>>({});
+ const [targetDrafts,setTargetDrafts]=useState<Record<number,ArtifactTypeSlug[]>>({});
+ const [requestNotice,setRequestNotice]=useState<{issueId:number;error:boolean;text:string}|null>(null);
+ const [revising,setRevising]=useState(false),[revisionProgress,setRevisionProgress]=useState('');
  const [loaded,setLoaded]=useState<{key:string;document:ArtifactDetail|null;error:string|null}|null>(null);
  const cache=useRef(new Map<string,ArtifactDetail>()),pending=useRef(false);
  const {data,error,reload,accept}=useBundle(projectId,requirementId,user?.id);
@@ -36,6 +40,8 @@ export default function ReviewPage(){
  const summary=issue?.artifacts.find(item=>item.type===activeTab);
  const documentKey=issue&&summary&&activeTab!=='issue'?`${projectId}:${requirementId}:${issue.id}:${summary.id}:${activeTab}:${summary.revision}`:'';
  const doc=loaded?.key===documentKey?loaded:null;
+ const requestText=issue?requestDrafts[issue.id]??'':'';
+ const requestTargets=issue?targetDrafts[issue.id]??(activeTab==='issue'?[]:[activeTab]):[];
  useEffect(()=>{setSelectedIssue(null);setActiveTab(validTab(new URLSearchParams(query).get('artifact')));},[projectId,requirementId,query]);
  useEffect(()=>{const media=window.matchMedia('(max-width:900px)');const sync=()=>setSidebarOpen(!media.matches);sync();media.addEventListener('change',sync);return()=>media.removeEventListener('change',sync);},[]);
  useEffect(()=>{let active=true;const current=getCurrentUser();if(!current){router.replace('/login');return;}setUser(current);Promise.all([getProject(projectId,current.id),getRequirement(projectId,requirementId,current.id)]).then(([p,r])=>{if(active){setProject(p);setRequirement(r);}}).catch(cause=>{if(active)setNotice({error:true,text:cause.message});});return()=>{active=false;};},[projectId,requirementId,router]);
@@ -51,6 +57,8 @@ export default function ReviewPage(){
  const count=data?.issues.reduce((n,item)=>n+ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length,0)??0;
  const expected=(data?.issues.length??0)*4,confirmed=data?.state==='CONFIRMED';
  const incomplete=data?.state==='GENERATING'||Boolean(data?.generation&&(data.generation.failed>0||data.generation.pending>0))||count<expected;
+ const generating=data?.state==='GENERATING'||Boolean(data?.generation&&['QUEUED','RUNNING','RETRY_WAIT'].includes(data.generation.status));
+ const unsentRequest=Object.values(requestDrafts).some(text=>Boolean(text.trim()));
  const visible=data?.issues.filter(item=>`${devId(item.id)} ${item.issueKey} ${item.title}`.toLowerCase().includes(filter.toLowerCase()))??[];
  const position=data?.issues.findIndex(item=>item.id===issue?.id)??0;
  const activeLabel=ARTIFACT_TYPES.find(type=>type.type===activeTab);
@@ -63,6 +71,48 @@ export default function ReviewPage(){
  }
  function chooseIssue(id:number){selectDocument('issue',id);}
  function showSource(){if(sourceRef.current){sourceRef.current.open=true;sourceRef.current.scrollIntoView({behavior:'smooth',block:'start'});}}
+
+ function toggleRevisionTarget(type:ArtifactTypeSlug){
+  if(!issue)return;
+  setTargetDrafts(previous=>{
+   const selected=previous[issue.id]??(activeTab==='issue'?[]:[activeTab]);
+   return {...previous,[issue.id]:selected.includes(type)?selected.filter(item=>item!==type):[...selected,type]};
+  });
+ }
+ async function requestRevision(){
+  if(!issue||!user||!data||confirmed||generating||busy||pending.current||!requestText.trim()||!requestTargets.length)return;
+  const targetIssue=issue,targets=[...requestTargets],instruction=requestText.trim();
+  pending.current=true;setBusy(true);setRevising(true);setRequestNotice(null);
+  const succeeded:ArtifactTypeSlug[]=[],failed:{type:ArtifactTypeSlug;message:string}[]=[];
+  try{
+   for(const [index,type] of targets.entries()){
+    setRevisionProgress((index+1)+'/'+targets.length+' · '+(ARTIFACT_TYPES.find(item=>item.type===type)?.label??type)+' 수정 초안 작성 중');
+    try{
+     const revised=await regenerateArtifact(projectId,requirementId,targetIssue.issueKey,type,{userId:user.id,reason:instruction});
+     const summary=targetIssue.artifacts.find(item=>item.type===type);
+     if(summary){
+      const key=[projectId,requirementId,targetIssue.id,summary.id,type,summary.revision].join(':');
+      cache.current.set(key,revised);
+      if(activeTab===type)setLoaded({key,document:revised,error:null});
+     }
+     succeeded.push(type);
+    }catch(cause){failed.push({type,message:cause instanceof Error?cause.message:'수정 요청에 실패했습니다.'});}
+   }
+   if(succeeded.length)await reload();
+   const label=(type:ArtifactTypeSlug)=>ARTIFACT_TYPES.find(item=>item.type===type)?.label??type;
+   if(failed.length){
+    setTargetDrafts(previous=>({...previous,[targetIssue.id]:failed.map(item=>item.type)}));
+    const successText=succeeded.length?succeeded.map(label).join(' · ')+' 수정 완료. ':'';
+    const failureText=failed.map(item=>label(item.type)+': '+item.message).join(' / ');
+    setRequestNotice({issueId:targetIssue.id,error:true,text:successText+failureText+' 실패한 문서는 기존 내용이 유지됐습니다.'});
+   }else{
+    setRequestDrafts(previous=>({...previous,[targetIssue.id]:''}));
+    setTargetDrafts(previous=>({...previous,[targetIssue.id]:activeTab==='issue'?[]:[activeTab]}));
+    setRequestNotice({issueId:targetIssue.id,error:false,text:succeeded.map(label).join(' · ')+' 수정 초안을 만들었습니다. 각 탭에서 확인한 뒤 전체 확정하세요.'});
+   }
+  }finally{pending.current=false;setBusy(false);setRevising(false);setRevisionProgress('');}
+ }
+
 
  return <div className={`appshell ${frame.frame}`}>
   <Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(v=>!v)}/>
@@ -135,6 +185,29 @@ export default function ReviewPage(){
            doc?.error?<div className={styles.documentEmpty} role="alert"><ReviewIcon name="alert" size={28}/><h4>산출물을 불러오지 못했습니다.</h4><p>{doc.error}</p><button className="aui-button" onClick={()=>{cache.current.delete(documentKey);setRetry(v=>v+1);}}>다시 불러오기</button></div>:
            !doc?.document?<div className={styles.documentLoading} role="status"><span/>문서를 불러오는 중입니다.</div>:<ArtifactDocument key={documentKey} type={activeTab} content={doc.document.content}/>
           }
+          {activeTab!=='issue'&&!confirmed&&doc?.document&&<section className={styles.revisionCard} aria-label="AI 산출물 수정 요청">
+           <div className={styles.revisionHeading}><span className={styles.revisionBadge}>AI</span><div><h4>AI에게 수정 요청</h4><p>현재 문서를 참고해 선택한 산출물만 다시 구성합니다.</p></div></div>
+           <form onSubmit={event=>{event.preventDefault();void requestRevision();}}>
+            <fieldset className={styles.revisionTargets} disabled={busy||generating}>
+             <legend>수정할 산출물</legend>
+             <div>{ARTIFACT_TYPES.map(type=><label key={type.type} className={requestTargets.includes(type.type as ArtifactTypeSlug)?styles.revisionTargetSelected:styles.revisionTarget}>
+              <input type="checkbox" checked={requestTargets.includes(type.type as ArtifactTypeSlug)} disabled={!issue.artifacts.some(item=>item.type===type.type)}
+               onChange={()=>toggleRevisionTarget(type.type as ArtifactTypeSlug)}/><span>{type.label}</span>
+             </label>)}</div>
+            </fieldset>
+            <label className={styles.revisionLabel} htmlFor={'revision-request-'+issue.id}>어떻게 바꿀까요?</label>
+            <textarea id={'revision-request-'+issue.id} className={styles.revisionInput} rows={4} maxLength={2000}
+             value={requestText} disabled={busy||generating}
+             onChange={event=>setRequestDrafts(previous=>({...previous,[issue.id]:event.target.value}))}
+             placeholder="예: SWVOC의 요청사항을 간결하게 바꾸고, 기능 요구사항에는 AMR이 없을 때의 예외 동작을 추가해줘."/>
+            <div className={styles.revisionFooter}><span role={revising?'status':undefined}>{revising?revisionProgress:generating?'산출물 생성이 끝나면 요청할 수 있습니다.':'원하는 문서를 선택하세요. 요청한 문서만 다시 생성됩니다.'}</span>
+             <button type="submit" className="aui-button aui-button-primary" disabled={busy||generating||!requestText.trim()||!requestTargets.length}>
+              {revising?'수정안 작성 중…':'수정안 만들기'}
+             </button>
+            </div>
+           </form>
+           {requestNotice?.issueId===issue.id&&<p className={styles.revisionFeedback+' '+(requestNotice.error?styles.revisionFeedbackError:styles.revisionFeedbackSuccess)} role={requestNotice.error?'alert':'status'}>{requestNotice.text}</p>}
+          </section>}
           <details ref={sourceRef} className={styles.source}><summary>요구사항 근거 <span>{requirement.reqKey}</span></summary><div>
            {issue.quote?<blockquote>{issue.quote}</blockquote>:<p>연결된 원문 구절이 없습니다.</p>}
            <details><summary>확정 요구사항 전체 보기</summary><ArtifactRichText text={requirement.content}/></details>
@@ -153,8 +226,8 @@ export default function ReviewPage(){
      </div>
      {error&&<p className="aui-message aui-message-error" role="alert">{error}</p>}
      {notice&&<p className={`aui-message ${notice.error?'aui-message-error':'aui-message-success'}`} role={notice.error?'alert':'status'}>{notice.text}</p>}
-     <footer className={styles.confirmBar}><div><strong>{confirmed?'개발 이슈와 산출물을 확정했습니다.':'검토한 내용으로 전체 확정합니다.'}</strong><p>{confirmed?'확정 후에도 모든 문서를 계속 열어볼 수 있습니다.':incomplete?'모든 산출물의 생성이 완료되면 전체 확정할 수 있습니다.':`${data.issues.length}개 개발 이슈와 ${count}개 산출물의 현재 내용을 함께 확정합니다.`}</p></div>
-      <button className="aui-button aui-button-primary" disabled={busy||!data.issues.length||confirmed||incomplete} onClick={finish}>{confirmed?'전체 확정됨':busy?'확정 중…':'전체 확정'}</button>
+     <footer className={styles.confirmBar}><div><strong>{confirmed?'개발 이슈와 산출물을 확정했습니다.':'검토한 내용으로 전체 확정합니다.'}</strong><p>{confirmed?'확정 후에도 모든 문서를 계속 열어볼 수 있습니다.':unsentRequest?'작성 중인 수정 요청을 보내거나 지운 뒤 확정하세요.':incomplete?'모든 산출물의 생성이 완료되면 전체 확정할 수 있습니다.':`${data.issues.length}개 개발 이슈와 ${count}개 산출물의 현재 내용을 함께 확정합니다.`}</p></div>
+      <button className="aui-button aui-button-primary" disabled={busy||!data.issues.length||confirmed||incomplete||unsentRequest} onClick={finish}>{confirmed?'전체 확정됨':busy?'확정 중…':'전체 확정'}</button>
      </footer>
     </>}
    </main>
