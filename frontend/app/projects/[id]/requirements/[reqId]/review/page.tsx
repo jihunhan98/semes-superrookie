@@ -57,6 +57,18 @@ export default function ReviewPage(){
  const expected=(data?.issues.length??0)*4,confirmed=data?.state==='CONFIRMED';
  const incomplete=data?.state==='GENERATING'||Boolean(data?.generation&&(data.generation.failed>0||data.generation.pending>0))||count<expected;
  const generating=data?.state==='GENERATING'||Boolean(data?.generation&&['QUEUED','RUNNING','RETRY_WAIT'].includes(data.generation.status));
+ async function regenerateCurrent(){
+  if(!issue||!user||!data||activeTab==='issue'||confirmed||generating||busy||pending.current)return;
+  pending.current=true;setBusy(true);setNotice(null);
+  try{
+   await regenerateArtifact(projectId,requirementId,issue.issueKey,activeTab,{userId:user.id,reason:''});
+   cache.current.clear();setLoaded(null);
+   await reload();setRetry(value=>value+1);
+   setNotice({error:false,text:'AI가 산출물을 다시 작성했습니다.'});
+  }catch(cause){
+   setNotice({error:true,text:cause instanceof Error?cause.message:'AI 산출물을 다시 생성하지 못했습니다.'});
+  }finally{pending.current=false;setBusy(false);}
+ }
  const unsentRequest=Object.values(requestDrafts).some(text=>Boolean(text.trim()));
  const visible=data?.issues.filter(item=>`${devId(item.id)} ${item.issueKey} ${item.title}`.toLowerCase().includes(filter.toLowerCase()))??[];
  const position=data?.issues.findIndex(item=>item.id===issue?.id)??0;
@@ -180,11 +192,11 @@ export default function ReviewPage(){
           <div className={styles.paperTitle}><h3>{activeTab==='issue'?'설명':activeLabel?.label}</h3><p>{activeTab==='issue'?'현상과 개선 요구, 변경 범위를 정리합니다.':activeLabel?.description}</p></div>
           {activeTab==='issue'?<ArtifactDocument key={`issue-${issue.id}`} type="issue" content={{symptom:issue.symptom,improvementReq:issue.improvementReq,changeScope:issue.changeScope,constraintsNote:issue.constraintsNote,beforeState:issue.beforeState,afterState:issue.afterState}}/>:
            !summary?<div className={styles.documentEmpty}><ReviewIcon name="clock" size={28}/><h4>아직 생성되지 않은 산출물입니다.</h4><p>다른 문서는 계속 확인할 수 있습니다. 생성이 완료되면 이 탭에서 열어보세요.</p></div>:
-           doc?.error?<div className={styles.documentEmpty} role="alert"><ReviewIcon name="alert" size={28}/><h4>산출물을 불러오지 못했습니다.</h4><p>{doc.error}</p><button className="aui-button" onClick={()=>{cache.current.delete(documentKey);setRetry(v=>v+1);}}>다시 불러오기</button></div>:
+           doc?.error?<div className={styles.documentEmpty} role="alert"><ReviewIcon name="alert" size={28}/><h4>산출물을 불러오지 못했습니다.</h4><p>{doc.error}</p><button className="aui-button" onClick={()=>{cache.current.delete(documentKey);setRetry(v=>v+1);}}>다시 불러오기</button>{!confirmed&&!generating&&<button className="aui-button aui-button-primary" disabled={busy} onClick={()=>void regenerateCurrent()}>AI로 다시 생성</button>}</div>:
            !doc?.document?<div className={styles.documentLoading} role="status"><span/>문서를 불러오는 중입니다.</div>:<ArtifactDocument key={documentKey} type={activeTab} content={doc.document.content}/>
           }
           {activeTab!=='issue'&&!confirmed&&doc?.document&&<section className={styles.revisionCard} aria-label="AI 산출물 수정 요청">
-           <div className={styles.revisionHeading}><span className={styles.revisionBadge}>AI</span><div><h4>AI에게 수정 요청</h4><p>현재 문서를 참고해 선택한 산출물만 다시 구성합니다.</p></div></div>
+           <div className={styles.revisionHeading}><span className={styles.revisionBadge}>AI</span><div><h4>AI에게 수정 요청</h4><p>현재 문서를 참고해 선택한 산출물만 다시 구성합니다.</p></div><button type="button" className="aui-button" disabled={busy||generating||!!requestText.trim()} onClick={()=>void regenerateCurrent()}>AI로 다시 생성</button></div>
            <form onSubmit={event=>{event.preventDefault();void requestRevision();}}>
             <fieldset className={styles.revisionTargets} disabled={busy||generating}>
              <legend>수정할 산출물</legend>

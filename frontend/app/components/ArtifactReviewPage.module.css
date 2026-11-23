@@ -70,7 +70,8 @@
 
 /* AI revision request in the review reader. */
 .revisionCard{margin:30px 0 0;padding:22px;border:1px solid #bfdbfe;border-radius:10px;background:linear-gradient(145deg,#f7fbff,#fff 75%);box-shadow:0 4px 18px #0969da0a}
-.revisionHeading{display:flex;align-items:flex-start;gap:13px;margin-bottom:21px}
+.revisionHeading{display:flex;align-items:flex-start;flex-wrap:wrap;gap:13px;margin-bottom:21px}
+.revisionHeading>button{margin-left:auto;white-space:nowrap}
 .revisionBadge{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:#deebff;color:#0747a6;font-size:13px;font-weight:700}
 .revisionHeading h4{margin:0 0 3px;color:#1f2328;font-size:16px;font-weight:650;line-height:1.4}
 .revisionHeading p{margin:0;color:#57606a;font-size:12px;line-height:1.6}
