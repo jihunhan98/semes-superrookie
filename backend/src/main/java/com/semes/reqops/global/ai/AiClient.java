@@ -160,10 +160,13 @@ public class AiClient {
         return generateArtifact(type,issueTitle,issueQuote,requirementContent,reason,existing,"TARGET",Map.of());
     }
     public AiArtifactDto.Response generateArtifact(String type,String issueTitle,String issueQuote,String requirementContent,String reason,List<AiAnalyzeDto.Existing> existing,String reqKey,Map<String,Object> issueContent) {
+        return generateArtifact(type,issueTitle,issueQuote,requirementContent,reason,existing,reqKey,issueContent,null);
+    }
+    public AiArtifactDto.Response generateArtifact(String type,String issueTitle,String issueQuote,String requirementContent,String reason,List<AiAnalyzeDto.Existing> existing,String reqKey,Map<String,Object> issueContent,Map<String,Object> currentContent) {
         try {
             AiArtifactDto.Response res = restClient.post()
                     .uri("/artifacts/generate")
-                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason, existing,reqKey,issueContent))
+                    .body(new AiArtifactDto.Request(type, issueTitle, issueQuote, requirementContent, reason, existing,reqKey,issueContent,currentContent))
                     .retrieve()
                     .body(AiArtifactDto.Response.class);
 
