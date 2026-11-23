@@ -53,6 +53,42 @@ def test_amr_matching_is_one_cohesive_issue_with_business_title():
     body = client.post("/split", json={"content": content}).json()
     assert body["issues"] == [{"title": "AMR 후보 선정 및 매칭 우선순위", "quote": content}]
 
+def test_artifact_revision_receives_saved_document_and_instruction(monkeypatch):
+    import json
+    import main
+
+    class RevisionProvider:
+        name = "internal"
+        enabled = True
+
+        def generate(self, system, user):
+            self.system, self.user = system, user
+            return json.dumps({
+                "requester": None,
+                "requestContent": "기존 내용을 반영한 AMR 할당 요청",
+                "specialNotes": None,
+                "legacyExtras": {},
+                "evidence": [{"field": "requestContent", "reqKey": "REQ-1",
+                              "quote": "AMR 할당 요청"}],
+            })
+
+    provider = RevisionProvider()
+    monkeypatch.setattr(main, "PROVIDER", provider)
+    response = client.post("/artifacts/generate", json={
+        "type": "voc", "issueTitle": "AMR 할당", "issueQuote": "AMR 할당 요청",
+        "requirementContent": "AMR 할당 요청", "reqKey": "REQ-1",
+        "reason": "SWVOC 문장을 간결하게 바꿔줘. 기능 요구사항에도 예외를 추가해줘.",
+        "currentContent": {"requester": None, "requestContent": "기존 내용",
+                           "specialNotes": None, "legacyExtras": {}},
+    })
+    assert response.status_code == 200
+    assert response.json()["engine"] == "internal"
+    assert "현재 산출물 유형: SWVOC" in provider.user
+    assert "기존 내용" in provider.user
+    assert "사용자 수정 요청" in provider.user
+    assert "현재 산출물 유형에 해당하는 지시만 적용" in provider.system
+
+
 def test_v2_scenario_shape():
     content = artifacts.generate_v2("functional", "AMR 선택", "요구사항에 따라 AMR을 선택한다.")
     assert [row["type"] for row in content["scenarios"]] == ["BASIC", "VARIANT", "EXCEPTION"]
