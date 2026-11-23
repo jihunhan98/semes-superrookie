@@ -89,7 +89,13 @@ public class ArtifactService {
                 .orElseThrow(() -> new ApiErrors.RequirementNotFound(requirementId))
                 .getContent();
         AiArtifactDto.Response ai = aiClient.generateArtifact(
-                type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId),requirementRepository.findById(requirementId).orElseThrow().getReqKey(),issue.aiContent());
+                type.slug(), issue.getTitle(), issue.getQuote(), content, reason, existingOf(projectId, requirementId),requirementRepository.findById(requirementId).orElseThrow().getReqKey(),issue.aiContent(),
+                reason == null ? null : readJson(artifact.getContentJson()));
+        // A model failure returns a generic template. Preserve the current draft
+        // when the user requested a revision of this document.
+        if (reason != null && ("rule".equals(ai.engine()) || "unavailable".equals(ai.engine()))) {
+            throw new ApiErrors.Conflict("AI가 수정 요청을 처리하지 못했습니다. 기존 산출물은 유지됩니다.");
+        }
         artifact.regenerate(writeJson(ai.content()), ai.engine());
         artifactRepository.save(artifact);
         saveRevision(artifact, blankToNull(req.reason()), req.userId());
