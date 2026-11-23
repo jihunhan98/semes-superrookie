@@ -144,30 +144,6 @@ export default function IssueSplitPage() {
     setCandidates((prev) => [...(prev ?? []), { clientId: newClientId(), title: "", quote: "" }]);
   }
 
-  function mergeWithPrevious(index: number) {
-    setCandidates((previous) => {
-      if (!previous || index < 1) return previous;
-      const before = previous[index - 1]; const current = previous[index];
-      const merged = { ...before, quote: [before.quote, current.quote].filter(Boolean).join(" ") };
-      return previous.map((item, itemIndex) => itemIndex === index - 1 ? merged : item).filter((_, itemIndex) => itemIndex !== index);
-    });
-  }
-
-  function splitCandidate(index: number) {
-    setCandidates((previous) => {
-      if (!previous) return previous;
-      const current = previous[index]; const text = current.quote.trim();
-      let boundary = text.indexOf(". ");
-      if (boundary >= 0) boundary += 1;
-      if (boundary < 1) { const middle = Math.floor(text.length / 2); boundary = text.indexOf(" ", middle); }
-      if (boundary < 1 || boundary >= text.length - 1) return previous;
-      const first = text.slice(0, boundary).trim(); const second = text.slice(boundary).trim();
-      const next = [...previous]; next[index] = { ...current, quote: first };
-      next.splice(index + 1, 0, { clientId: newClientId(), title: `${current.title} · 추가 범위`, quote: second });
-      return next;
-    });
-  }
-
   const located = useMemo(() => {
     if (!req || !candidates) return [] as boolean[];
     return locateSpans(req.content, candidates.map((c) => c.quote)).located;
@@ -279,32 +255,6 @@ export default function IssueSplitPage() {
             <span className="tagv">🏷 v{req.version}</span>
           </div>
 
-          {/* AI에게 물어보기 — 확정본 수정 화면 1단계와 같은 자리. 선택 입력. */}
-          <div className="wcard ai-recheck-card" style={{ marginTop: 16, maxWidth: 1000 }}>
-            <div className="wcb">
-              <div className="fieldlab" style={{ marginTop: 0 }}>
-                AI에게 추가로 검토 요청 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
-              </div>
-              <textarea
-                className="reqta"
-                style={{ minHeight: 56 }}
-                value={aiReason}
-                onChange={(e) => setAiReason(e.target.value)}
-                placeholder="예: 알람 재할당과 우선순위 통일은 별도 이슈로 나눠줘."
-              />
-              <div className="wfoot" style={{ paddingTop: 10 }}>
-                <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
-                  {regenerating ? "AI가 다시 검토 중이에요…" : "AI 재검토"}
-                </button>
-              </div>
-              {regenError && (
-                <p className="lmsg err" style={{ marginTop: 8, marginBottom: 0 }}>
-                  {regenError}
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* 확정본 — 후보 구절마다 다른 색 형광펜. 아래 카드와 번호로 짝지어 본다. */}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1000 }}>
             <div className="wch">
@@ -320,11 +270,8 @@ export default function IssueSplitPage() {
             </div>
           </div>
 
-          {/* 이슈 후보 카드 — 나누기·합치기 버튼 대신 삭제·추가만 둔다. 합치려면
-              한쪽 구절을 복사해 다른 쪽에 붙여넣고 남는 카드를 삭제하면 되고,
-              나누려면 "이슈 추가"로 빈 카드를 만든 뒤 원래 카드에서 일부를
-              잘라 옮기면 된다 — 사람이 직접 복사·붙여넣기로 하는 편이 자동
-              나누기/합치기보다 결과를 예측하기 쉽다. */}
+          {/* 개발 이슈 분할안 — 제목과 근거 구절을 직접 수정하거나 이슈를 추가·삭제한다. */}
+          <h2 style={{ fontSize: 17, margin: "24px 0 0", maxWidth: 1000 }}>나눠진 개발 이슈</h2>
           <div className="issue-list" style={{ maxWidth: 1000 }}>
             {candidates.map((c, i) => {
               const color = PALETTE[i % PALETTE.length];
@@ -351,13 +298,14 @@ export default function IssueSplitPage() {
                     <textarea
                       className="quotein"
                       value={c.quote}
+                      ref={(element) => {
+                        if (!element) return;
+                        element.style.height = "auto";
+                        element.style.height = `${element.scrollHeight}px`;
+                      }}
                       onChange={(e) => updateCandidate(c.clientId, { quote: e.target.value })}
                       placeholder="이 이슈가 커버하는 요구사항 구절 — 직접 써도 됩니다"
                     />
-                    <div className="issue-split-tools">
-                      <button className="btn sm" disabled={i === 0} onClick={() => mergeWithPrevious(i)}>↑ 위 이슈와 합치기</button>
-                      <button className="btn sm" disabled={c.quote.trim().length < 3} onClick={() => splitCandidate(i)}>이 구절 둘로 나누기</button>
-                    </div>
                     {c.quote.trim() && !located[i] && (
                       <span className="nospan" style={{ marginTop: 6, display: "inline-block" }}>
                         원문에서 위치를 찾지 못함
@@ -368,8 +316,34 @@ export default function IssueSplitPage() {
               );
             })}
             <button type="button" className="addrow" onClick={addCandidate}>
-              ＋ 이슈 추가 — 나누려면 원래 카드 내용 일부를 잘라 여기로 옮기세요
+              ＋ 이슈 추가
             </button>
+          </div>
+
+          {/* AI 프롬프트로 분할안 재검토. */}
+          <div className="wcard ai-recheck-card" style={{ marginTop: 16, maxWidth: 1000 }}>
+            <div className="wcb">
+              <div className="fieldlab" style={{ marginTop: 0 }}>
+                AI 프롬프트로 재검토 <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 11.5 }}>· 선택 입력</span>
+              </div>
+              <textarea
+                className="reqta"
+                style={{ minHeight: 56 }}
+                value={aiReason}
+                onChange={(e) => setAiReason(e.target.value)}
+                placeholder="예: 알람 재할당과 우선순위 통일은 별도 이슈로 나눠줘."
+              />
+              <div className="wfoot" style={{ paddingTop: 10 }}>
+                <button className="btn sm" onClick={onRegenerate} disabled={regenerating}>
+                  {regenerating ? "AI가 다시 검토 중이에요…" : "AI 재검토"}
+                </button>
+              </div>
+              {regenError && (
+                <p className="lmsg err" style={{ marginTop: 8, marginBottom: 0 }}>
+                  {regenError}
+                </p>
+              )}
+            </div>
           </div>
 
           {confirmError && (
