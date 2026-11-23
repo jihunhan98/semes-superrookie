@@ -394,18 +394,30 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
     started = time.monotonic()
     title, quote = req.issueTitle or "", req.issueQuote or ""
     try:
+        sources = {e.reqKey: e.content for e in req.existing}
+        sources[req.reqKey] = req.requirementContent
         content = _ask_llm_artifact(
             req.type, title, quote, req.requirementContent, req.reason,
             req.existing, req.reqKey, req.issueContent, req.currentContent)
-        if not artifacts.is_valid_v2_shape(req.type, content):
-            raise ValueError("산출물의 필수 업무 내용이 비어 있습니다.")
-        sources = {e.reqKey: e.content for e in req.existing}
-        sources[req.reqKey] = req.requirementContent
-        validation.attach_source_evidence(content, req.type, req.reqKey, req.issueQuote, sources)
-        concerns = validation.validate_evidence(content, sources)
-        concerns += validation.numeric_concerns(content, "\n".join(sources.values()))
-        if concerns:
-            raise ValueError("; ".join(concerns[:5]))
+        for attempt in range(2):
+            if not artifacts.is_valid_v2_shape(req.type, content):
+                raise ValueError("산출물의 필수 업무 내용이 비어 있습니다.")
+            validation.attach_source_evidence(content, req.type, req.reqKey, req.issueQuote, sources)
+            evidence_errors = validation.validate_evidence(content, sources)
+            numeric_errors = validation.numeric_concerns(content, "\n".join(sources.values()))
+            if not evidence_errors and not numeric_errors:
+                break
+            if attempt == 0 and evidence_errors and not numeric_errors:
+                log.warning("산출물 근거 인용 검증 실패: type=%s errors=%s; 한 번 재요청", req.type, evidence_errors[:5])
+                correction = ("기존 산출물의 업무 내용을 유지하고 evidence만 수정하세요. "
+                              "field는 실제 산출물의 JSON 경로를, reqKey는 입력의 실제 요구사항 ID를, "
+                              "quote는 해당 ID의 요구사항 원문에서 복사한 연속 구절을 쓰세요. "
+                              "검증 오류: " + "; ".join(evidence_errors[:5]))
+                content = _ask_llm_artifact(
+                    req.type, title, quote, req.requirementContent, correction,
+                    req.existing, req.reqKey, req.issueContent, content)
+                continue
+            raise ValueError("; ".join((evidence_errors + numeric_errors)[:5]))
         content.setdefault("legacyExtras", {})["quality"] = {"status": "GROUNDED", "concerns": []}
         elapsed = int((time.monotonic() - started) * 1000)
         log.info("artifacts.generate type=%s engine=%s %dms", req.type, PROVIDER.name, elapsed)
@@ -676,10 +688,16 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
         user += f"\n재생성 시 참고할 내용: {reason}"
 
     user += "\n대상 요구사항 ID: " + req_key
+    allowed_req_keys = list(dict.fromkeys([req_key, *(e.reqKey for e in (existing or []))]))
+    user += "\n근거 인용에 사용할 수 있는 요구사항 ID: " + json.dumps(allowed_req_keys, ensure_ascii=False)
+    if isinstance(quote, str) and quote and quote in requirement_content:
+        user += "\n대상 요구사항에서 그대로 인용할 수 있는 구절: " + json.dumps(quote, ensure_ascii=False)
     user += "\n개발 이슈 본문:\n" + validation.checked_context({"issueContent": issue_content or {}})
     validation.checked_context(user)
-    evidence_rule = ('\n위 JSON 예시의 evidence는 반드시 출력한다. field는 근거를 연결할 실제 JSON 필드 경로, '
-                     'reqKey는 입력에 있는 실제 요구사항 ID, quote는 해당 요구사항 본문에 연속으로 존재하는 원문 구절이다. '
+    evidence_rule = ('\n위 JSON 예시의 evidence는 반드시 출력한다. field는 근거를 연결할 실제 JSON 필드 경로'
+                     '(예: scenarios[0].precondition), reqKey는 입력에 있는 실제 요구사항 ID, '
+                     'quote는 해당 요구사항 본문에 연속으로 존재하는 원문 구절이다. '
+                     '예시의 "실제 요구사항 ID"나 "원문 그대로의 구절"은 값으로 복사하지 않는다. '
                      '품질 기준이 원문에 없다면 비기능 요구사항에 임의의 수치나 동작을 만들지 말고 '
                      '명시되지 않았다고 서술한다. 이 경우 overview에는 대상 요구사항의 범위를 인용할 수 있다. '
                      '실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다.')
