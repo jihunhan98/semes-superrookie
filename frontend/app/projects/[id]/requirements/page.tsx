@@ -138,11 +138,7 @@ export default function RequirementListPage() {
             <div><span>AI 확인 항목</span><b>{rows.reduce((sum, row) => sum + row.findingCount, 0)}</b></div>
           </section>
 
-          <section className="rq-legend" aria-label="요구사항 처리 단계 색상 안내">
-            <div className="rq-legend-heading">
-              <strong>단계별 색상 안내</strong>
-              <span>동그라미 색상은 진행 단계를 나타냅니다</span>
-            </div>
+          <section className="rq-legend" aria-label="요구사항 처리 단계">
             <ul className="rq-legend-list">
               {STEP_LABELS.map((label, index) => (
                 <li key={label}>
@@ -152,7 +148,6 @@ export default function RequirementListPage() {
                 </li>
               ))}
             </ul>
-            <p>요구사항이 확정되면 완료로 표시합니다.</p>
           </section>
 
           <div className="rqbar">
