@@ -26,11 +26,20 @@ const STATE_COLOR: Record<ReqState, string> = {
   ON_HOLD: "#cf222e",
 };
 
+const STATUS_GUIDE: { state: ReqState; step: string; label: string }[] = [
+  { state: "RECEIVED", step: "1단계", label: "등록" },
+  { state: "IN_REVIEW", step: "2단계", label: "검토 중" },
+  { state: "PENDING_CONSENSUS", step: "2단계", label: "고객 합의 대기" },
+  { state: "CONFIRMED", step: "3·4단계", label: "요구사항 확정" },
+  { state: "REVISING", step: "2단계", label: "변경 중" },
+  { state: "ON_HOLD", step: "2단계", label: "보류" },
+];
+
 type StateFilter = "ALL" | "OPEN" | "CONFIRMED";
 
 function workflowStage(row: RequirementSummary) {
   if (row.workflow) return {number:row.workflow.step,label:row.workflow.label};
-  if (row.state === "CONFIRMED") return { number: 3, label: "도출 준비" };
+  if (row.state === "CONFIRMED") return { number: 3, label: "요구사항 확정" };
   if (row.state === "RECEIVED") return { number: 1, label: "등록" };
   return { number: 2, label: "검출·합의" };
 }
@@ -146,6 +155,23 @@ export default function RequirementListPage() {
             <div><span>AI 확인 항목</span><b>{rows.reduce((sum, row) => sum + row.findingCount, 0)}</b></div>
           </section>
 
+          <section className="rq-legend" aria-label="요구사항 상태 색상 안내">
+            <div className="rq-legend-heading">
+              <strong>동그라미 색상 안내</strong>
+              <span>요구사항 상태를 나타냅니다</span>
+            </div>
+            <ul className="rq-legend-list">
+              {STATUS_GUIDE.map(({ state, step, label }) => (
+                <li key={state}>
+                  <span className="rq-legend-dot" style={{ backgroundColor: STATE_COLOR[state] }} aria-hidden="true" />
+                  <span className="rq-legend-step">{step}</span>
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
+            <p>3·4단계의 초록색은 요구사항이 확정됐다는 뜻입니다. 산출물 진행 상태는 목록의 단계 문구에서 확인하세요.</p>
+          </section>
+
           <div className="rqbar">
             <div className="seg">
               <button className={stateFilter === "ALL" ? "on" : ""} onClick={() => setStateFilter("ALL")}>
@@ -208,7 +234,7 @@ export default function RequirementListPage() {
                   className="rqrow"
                   href={`/projects/${project.id}/requirements/${r.id}`}
                 >
-                  <span className="sdot" style={{ background: STATE_COLOR[r.state] }} />
+                  <span className="sdot" style={{ background: STATE_COLOR[r.state] }} title={`요구사항 상태: ${r.stateLabel}`} aria-hidden="true" />
                   <span className="rq-stage">
                     <b>{workflowStage(r).number}</b>
                     {workflowStage(r).label}
