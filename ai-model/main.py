@@ -199,6 +199,7 @@ class ArtifactGenerateRequest(BaseModel):
 
     reqKey: str = "TARGET"
     issueContent: dict = Field(default_factory=dict)
+    currentContent: dict | None = None  # 수정 요청 시 저장된 현재 산출물
 
 
 class ArtifactGenerateResponse(BaseModel):
@@ -404,7 +405,7 @@ def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
     if PROVIDER.enabled and req.type in _ARTIFACT_PROMPTS:
         try:
             llm_content = _ask_llm_artifact(
-                req.type, title, quote, req.requirementContent, req.reason, req.existing, req.reqKey, req.issueContent)
+                req.type, title, quote, req.requirementContent, req.reason, req.existing, req.reqKey, req.issueContent, req.currentContent)
             if not artifacts.is_valid_v2_shape(req.type, llm_content):
                 raise ValueError("산출물 필수 필드가 누락되었습니다.")
             sources = {e.reqKey:e.content for e in req.existing}
@@ -666,22 +667,39 @@ _ARTIFACT_PROMPTS = {
 }
 
 
+_ARTIFACT_LABELS = {
+    "voc": "SWVOC", "functional": "기능 요구사항",
+    "nonfunctional": "비기능 요구사항", "detail-design": "상세 설계",
+}
+
+
 def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: str,
                       reason: str | None, existing: list[ExistingRequirement] | None = None,
-                      req_key: str = "TARGET", issue_content: dict | None = None) -> dict:
-    """사내 LLM API로 산출물 1종의 초안을 요청한다."""
+                      req_key: str = "TARGET", issue_content: dict | None = None,
+                      current_content: dict | None = None) -> dict:
+    """Generate a document, or revise its saved version with a focused request."""
     user = f"개발 이슈 제목: {title}\n이 이슈가 커버하는 요구사항 구절: {quote}\n근거 요구사항 전문:\n{requirement_content}"
     user += _all_requirements(existing)
-    if reason:
+    revision_rule = ""
+    if reason and current_content is not None:
+        user += "\n현재 산출물 유형: " + _ARTIFACT_LABELS[type_]
+        user += "\n현재 저장된 산출물 JSON:\n" + validation.checked_context(current_content)
+        user += "\n사용자 수정 요청:\n" + reason
+        revision_rule = ("\n현재 산출물 JSON을 바탕으로 수정한다. 사용자 요청에 여러 산출물 유형이 "
+                         "언급돼 있더라도 현재 산출물 유형에 해당하는 지시만 적용한다. "
+                         "요청하지 않은 필드와 내용은 유지하고, 변경된 부분의 근거는 확정 "
+                         "요구사항 또는 제공된 기존 요구사항에서 확인한다. 근거 없는 값은 "
+                         "만들지 말고 확인 필요로 표시한다. 출력은 이 유형의 기존 JSON "
+                         "필드 구조를 유지한 완성된 산출물 하나로 반환한다.")
+    elif reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 
     user += "\n대상 요구사항 ID: " + req_key
-    user += "\n개발 이슈 본문:\n" + validation.checked_context({"issueContent":issue_content or {}})
+    user += "\n개발 이슈 본문:\n" + validation.checked_context({"issueContent": issue_content or {}})
     validation.checked_context(user)
     evidence_rule = '\n모든 산출물에 evidence 배열을 추가하라: [{"field":"scenarios.0.scenario 또는 해당 JSON 필드 경로","reqKey":"실제 요구사항 ID","quote":"그 요구사항 원문 그대로"}]. 실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다. 누락된 예외·경계 조건은 확인 필요로 표시한다.'
-    raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_] + evidence_rule, user)
+    raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_] + evidence_rule + revision_rule, user)
     return _parse_json(raw)
-
 
 def _parse_json(text: str) -> dict:
     """모델이 앞뒤에 군더더기를 붙여도 첫 JSON 객체를 뽑아 파싱한다.
