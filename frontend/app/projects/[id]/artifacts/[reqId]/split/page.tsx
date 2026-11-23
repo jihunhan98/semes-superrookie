@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
-import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import { locateSpans } from "../../../../../lib/highlight";
 import { ISSUE_PALETTE as PALETTE } from "../../../../../lib/issuePalette";
 import {
@@ -272,7 +271,6 @@ export default function IssueSplitPage() {
       <div className="body">
         {sidebarOpen && <ProjectSidebar projectId={project.id} projectName={project.name} active="artifacts" />}
         <main className="main">
-          <WorkflowStepper step={3} />
           <div className="crumb">
             <Link href={`/projects/${project.id}/requirements/${requirementId}`}><b>{req.reqKey}</b></Link> / 개발 이슈 도출
           </div>

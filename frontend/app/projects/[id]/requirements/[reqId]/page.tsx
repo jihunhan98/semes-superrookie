@@ -14,6 +14,7 @@ import {
   type RequirementDetail,
 } from "../../../../lib/api";
 import { getCurrentUser } from "../../../../lib/session";
+import { displayStep } from "../../../../lib/workflowDisplay";
 
 export default function RequirementDetailPage() {
   const router = useRouter();
@@ -108,15 +109,15 @@ export default function RequirementDetailPage() {
               <div className="detail-actions">
                 {req.state === "CONFIRMED" ? (
                   <>
-                    {!completed && <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/issues`}>3단계 · 이슈 도출</Link>}
-                    <Link className="btn" href={`/projects/${project.id}/requirements/${req.id}/review`}>{req.workflow?.bundleState === "CONFIRMED" ? "확정 산출물 보기" : "4단계 · 검토"}</Link>
+                    {!completed && <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/issues`}>개발 이슈 도출</Link>}
+                    <Link className="btn" href={`/projects/${project.id}/requirements/${req.id}/review`}>{completed ? "확정 산출물 보기" : "산출물 검토"}</Link>
                   </>
                 ) : (
-                  <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/edit`}>2단계 계속하기</Link>
+                  <Link className="btn prim" href={`/projects/${project.id}/requirements/${req.id}/edit`}>검토·수정 계속하기</Link>
                 )}
               </div>
             </div>
-            <WorkflowStepper step={req.workflow?.step ?? (req.state === "CONFIRMED" ? 3 : req.state === "RECEIVED" ? 1 : 2)} completed={completed} />
+            <WorkflowStepper step={displayStep(req.state)} />
           </section>
 
           <RequirementImpactPanel projectId={projectId} requirementId={requirementId} />

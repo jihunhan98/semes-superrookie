@@ -11,37 +11,20 @@ import {
   listRequirements,
   type AssigneeCandidate,
   type ProjectDetail,
-  type ReqState,
   type RequirementSummary,
 } from "../../../lib/api";
 import { getCurrentUser } from "../../../lib/session";
+import { displayStep, STEP_COLORS, STEP_LABELS } from "../../../lib/workflowDisplay";
 
-/** 상태별 점 색 — 화면정의서의 상태값 5단계와 같은 색을 쓴다. */
-const STATE_COLOR: Record<ReqState, string> = {
-  RECEIVED: "#9aa5b1",
-  IN_REVIEW: "#d4a72c",
-  PENDING_CONSENSUS: "#8250df",
-  CONFIRMED: "#1f883d",
-  REVISING: "#0969da",
-  ON_HOLD: "#cf222e",
-};
+type StateFilter = "ALL" | "OPEN" | "COMPLETED";
 
-const STATUS_GUIDE: { state: ReqState; step: string; label: string }[] = [
-  { state: "RECEIVED", step: "1단계", label: "등록" },
-  { state: "IN_REVIEW", step: "2단계", label: "검토 중" },
-  { state: "PENDING_CONSENSUS", step: "2단계", label: "고객 합의 대기" },
-  { state: "CONFIRMED", step: "3·4단계", label: "요구사항 확정" },
-  { state: "REVISING", step: "2단계", label: "변경 중" },
-  { state: "ON_HOLD", step: "2단계", label: "보류" },
-];
-
-type StateFilter = "ALL" | "OPEN" | "CONFIRMED";
+function isCompleted(row: RequirementSummary) {
+  return displayStep(row.state) === 3;
+}
 
 function workflowStage(row: RequirementSummary) {
-  if (row.workflow) return {number:row.workflow.step,label:row.workflow.label};
-  if (row.state === "CONFIRMED") return { number: 3, label: "요구사항 확정" };
-  if (row.state === "RECEIVED") return { number: 1, label: "등록" };
-  return { number: 2, label: "검출·합의" };
+  const number = displayStep(row.state);
+  return { number, label: STEP_LABELS[number - 1] };
 }
 
 export default function RequirementListPage() {
@@ -90,8 +73,8 @@ export default function RequirementListPage() {
     return rows.filter((r) => {
       // 아무도 선택 안 했으면 전체 통과, 선택했으면 그중 하나라도 맞으면 통과(OR).
       if (picked.length > 0 && (r.assigneeId === null || !picked.includes(r.assigneeId))) return false;
-      if (stateFilter === "CONFIRMED" && r.state !== "CONFIRMED") return false;
-      if (stateFilter === "OPEN" && r.state === "CONFIRMED") return false;
+      if (stateFilter === "COMPLETED" && !isCompleted(r)) return false;
+      if (stateFilter === "OPEN" && isCompleted(r)) return false;
       if (query.trim()) {
         const q = query.trim().toLowerCase();
         const hay = `${r.reqKey} ${r.content} ${r.assigneeName ?? ""}`.toLowerCase();
@@ -103,7 +86,7 @@ export default function RequirementListPage() {
 
   const counts = useMemo(() => {
     const all = rows?.length ?? 0;
-    const confirmed = rows?.filter((r) => r.state === "CONFIRMED").length ?? 0;
+    const confirmed = rows?.filter(isCompleted).length ?? 0;
     return { all, confirmed, open: all - confirmed };
   }, [rows]);
 
@@ -151,25 +134,25 @@ export default function RequirementListPage() {
           <section className="requirement-metrics" aria-label="요구사항 현황">
             <div><span>전체</span><b>{counts.all}</b></div>
             <div><span>진행 중</span><b>{counts.open}</b></div>
-            <div><span>확정</span><b>{counts.confirmed}</b></div>
+            <div><span>완료</span><b>{counts.confirmed}</b></div>
             <div><span>AI 확인 항목</span><b>{rows.reduce((sum, row) => sum + row.findingCount, 0)}</b></div>
           </section>
 
-          <section className="rq-legend" aria-label="요구사항 상태 색상 안내">
+          <section className="rq-legend" aria-label="요구사항 처리 단계 색상 안내">
             <div className="rq-legend-heading">
-              <strong>동그라미 색상 안내</strong>
-              <span>요구사항 상태를 나타냅니다</span>
+              <strong>단계별 색상 안내</strong>
+              <span>동그라미 색상은 진행 단계를 나타냅니다</span>
             </div>
             <ul className="rq-legend-list">
-              {STATUS_GUIDE.map(({ state, step, label }) => (
-                <li key={state}>
-                  <span className="rq-legend-dot" style={{ backgroundColor: STATE_COLOR[state] }} aria-hidden="true" />
-                  <span className="rq-legend-step">{step}</span>
+              {STEP_LABELS.map((label, index) => (
+                <li key={label}>
+                  <span className="rq-legend-dot" style={{ backgroundColor: STEP_COLORS[index] }} aria-hidden="true" />
+                  <span className="rq-legend-step">{index + 1}단계</span>
                   <span>{label}</span>
                 </li>
               ))}
             </ul>
-            <p>3·4단계의 초록색은 요구사항이 확정됐다는 뜻입니다. 산출물 진행 상태는 목록의 단계 문구에서 확인하세요.</p>
+            <p>요구사항이 확정되면 완료로 표시합니다.</p>
           </section>
 
           <div className="rqbar">
@@ -181,10 +164,10 @@ export default function RequirementListPage() {
                 진행중 {counts.open}
               </button>
               <button
-                className={stateFilter === "CONFIRMED" ? "on" : ""}
-                onClick={() => setStateFilter("CONFIRMED")}
+                className={stateFilter === "COMPLETED" ? "on" : ""}
+                onClick={() => setStateFilter("COMPLETED")}
               >
-                확정 {counts.confirmed}
+                완료 {counts.confirmed}
               </button>
             </div>
             <input
@@ -234,7 +217,7 @@ export default function RequirementListPage() {
                   className="rqrow"
                   href={`/projects/${project.id}/requirements/${r.id}`}
                 >
-                  <span className="sdot" style={{ background: STATE_COLOR[r.state] }} title={`요구사항 상태: ${r.stateLabel}`} aria-hidden="true" />
+                  <span className="sdot" style={{ background: STEP_COLORS[workflowStage(r).number - 1] }} title={`${workflowStage(r).number}단계 · ${workflowStage(r).label}`} aria-hidden="true" />
                   <span className="rq-stage">
                     <b>{workflowStage(r).number}</b>
                     {workflowStage(r).label}
@@ -244,12 +227,11 @@ export default function RequirementListPage() {
                   <span className="rt">
                     {r.version ? (
                       <span className="tagv">🏷 v{r.version}</span>
-                    ) : (
+                    ) : r.findingCount > 0 ? (
                       <span className="lbl" style={{ padding: "1px 9px", background: "var(--surface-muted)", color: "var(--muted)" }}>
-                        {r.stateLabel}
-                        {r.findingCount > 0 && ` · 검출 ${r.findingCount}`}
+                        검출 {r.findingCount}
                       </span>
-                    )}
+                    ) : null}
                     <span className="rasg">{r.assigneeName ?? "—"}</span>
                     <span className="rup">{r.updatedAt ?? ""}</span>
                   </span>

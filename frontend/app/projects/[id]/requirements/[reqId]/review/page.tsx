@@ -4,7 +4,6 @@ import {useEffect,useRef,useState} from "react";
 import {useParams,useRouter,useSearchParams} from "next/navigation";
 import Header from "../../../../../components/Header";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
-import WorkflowStepper from "../../../../../components/WorkflowStepper";
 import ReviewIcon from "../../../../../components/ReviewIcon";
 import ArtifactDocument from "../../../../../components/ArtifactDocument";
 import ArtifactRichText from "../../../../../components/ArtifactRichText";
@@ -119,7 +118,6 @@ export default function ReviewPage(){
   <div className="body">
    {sidebarOpen&&project&&!wide&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}
    <main className={`main jira-dc-ui ${styles.page}`}>
-    <WorkflowStepper step={4} completed={confirmed}/>
     <nav className={styles.breadcrumb} aria-label="현재 위치">
      <Link href={`/projects/${projectId}/artifacts`}>산출물</Link><span>/</span>
      <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><span aria-current="page">검토·확정</span>
