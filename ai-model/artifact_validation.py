@@ -20,16 +20,30 @@ def validate_evidence(content, sources):
         return ['산출물 필드별 원문 근거가 없습니다.']
     for item in evidence:
         if not isinstance(item, dict): errors.append('근거 형식 오류'); continue
-        quote = item.get('quote','')
-        if item.get('reqKey') not in sources or not quote or quote not in sources[item['reqKey']]:
-            errors.append('원문에 없는 근거 구절 또는 요구사항 ID입니다.')
+        quote = item.get('quote', '')
+        req_key = item.get('reqKey')
+        if not isinstance(req_key, str) or req_key not in sources:
+            errors.append(f'존재하지 않는 요구사항 ID: {req_key}')
+        elif not isinstance(quote, str) or not quote or quote not in sources[req_key]:
+            errors.append(f'요구사항 {req_key} 원문에 없는 근거 구절입니다.')
         path = item.get('field','')
-        current = content
         try:
-            for part in path.split('.'):
-                current = current[int(part)] if isinstance(current, list) else current[part]
-        except (KeyError, TypeError, ValueError, IndexError): errors.append(f'존재하지 않는 산출물 필드: {path}')
+            resolve_evidence_field(content, path)
+        except (KeyError, TypeError, ValueError, IndexError):
+            errors.append(f'존재하지 않는 산출물 필드: {path}')
     return errors
+
+
+def resolve_evidence_field(content, path):
+    """Read JSON paths in either scenarios.0.precondition or scenarios[0].precondition form."""
+    if not isinstance(path, str) or not re.fullmatch(
+        r'[A-Za-z_][A-Za-z0-9_]*(?:(?:\.[A-Za-z_][A-Za-z0-9_]*|\.\d+)|\[\d+\])*', path
+    ):
+        raise ValueError('Invalid evidence field path')
+    current = content
+    for part in re.findall(r'[A-Za-z_][A-Za-z0-9_]*|\d+', path):
+        current = current[int(part)] if isinstance(current, list) else current[part]
+    return current
 
 
 def attach_source_evidence(content, type_, req_key, issue_quote, sources):
