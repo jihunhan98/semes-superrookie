@@ -2,14 +2,14 @@
 import {type ReactNode} from "react";
 import ArtifactRichText from "./ArtifactRichText";
 import MermaidDiagram from "./MermaidDiagram";
-import {BUSINESS_LABELS,designDiagrams,documentScenarios,documentSections,documentValue,hasDocumentValue,supplementalFields} from "../lib/artifacts/document.mjs";
+import {BUSINESS_LABELS,designDiagrams,documentScenarios,documentSections,hasDocumentValue,supplementalFields} from "../lib/artifacts/document.mjs";
 import styles from "./ArtifactDocument.module.css";
 
 type DocumentType='issue'|'voc'|'functional'|'nonfunctional'|'detail-design';
-type Scenario={type:string;label:string;precondition?:unknown;scenario?:unknown;postcondition?:unknown;applicability?:string;reason?:string|null};
+type Scenario={type:string;label:string;precondition?:unknown;scenario?:unknown;postcondition?:unknown};
 const names:Record<string,string>=BUSINESS_LABELS;
 
-function Value({value,empty='작성된 내용이 없습니다.'}:{value:unknown;empty?:string}){
+function Value({value,empty='요구사항에 명시된 내용이 없습니다.'}:{value:unknown;empty?:string}){
  if(!hasDocumentValue(value))return <span className={styles.emptyValue}>{empty}</span>;
  if(typeof value==='string')return <ArtifactRichText text={value} diagramAppearance="jira"/>;
  if(Array.isArray(value))return <ol className={styles.valueList}>{value.map((row,i)=><li key={i}><Value value={row}/></li>)}</ol>;
@@ -29,23 +29,18 @@ export default function ArtifactDocument({content,type='issue'}:{content:Record<
  const scenarios=documentScenarios(content) as Scenario[];
  const diagrams=designDiagrams(content);
  const extras=supplementalFields(type,content) as {key:string;label:string;value:unknown}[];
- const applicability=documentValue(content,'asIsApplicability');
- const asIsReason=documentValue(content,'asIsReason');
  const evidence=Array.isArray(content.evidence)?content.evidence.filter((item):item is Record<string,unknown>=>Boolean(item)&&typeof item==='object'):[];
  return <div className={styles.document} data-document-type={type}>
   {sections.filter(item=>type!=='issue'||!['beforeState','afterState'].includes(item.key)).map(item=><Section key={item.key} title={item.label}><Value value={item.value}/></Section>)}
   {type==='issue'&&<Section title="변경 전·후"><div className={styles.comparison}>
-   {sections.filter(item=>['beforeState','afterState'].includes(item.key)).map(item=><section key={item.key}><h4>{item.label}</h4><Value value={item.value} empty={item.key==='beforeState'?'없음':'작성된 내용이 없습니다.'}/></section>)}
+   {sections.filter(item=>['beforeState','afterState'].includes(item.key)).map(item=><section key={item.key}><h4>{item.label}</h4><Value value={item.value} empty={item.key==='beforeState'?'없음':'요구사항에 명시된 내용이 없습니다.'}/></section>)}
   </div></Section>}
   {(type==='functional'||type==='nonfunctional')&&<Section title="동작 정의">
    <p className={styles.sectionHint}>기본·변형·예외 동작의 선행조건, 시나리오, 후행조건을 확인합니다.</p>
    <div className={styles.scenarios}>{scenarios.map(scenario=>{
-    const notApplicable=scenario.applicability==='NOT_APPLICABLE';
-    const unknown=!scenario.applicability||scenario.applicability==='UNKNOWN';
     return <article key={scenario.type} className={styles.scenario}>
-     <header className={styles.scenarioHead}><h4>{scenario.label}</h4><span className={`aui-lozenge aui-lozenge-subtle ${unknown?'aui-lozenge-moved':notApplicable?'':'aui-lozenge-success'}`}>{notApplicable?'해당 없음':unknown?'확인 필요':'적용'}</span></header>
-     <table className={`aui ${styles.formTable}`}><tbody>{[['precondition','선행조건'],['scenario','시나리오'],['postcondition','후행조건']].map(([field,label])=><tr key={field}><th scope="row">{label}</th><td><Value value={scenario[field as keyof Scenario]} empty={notApplicable?'해당 없음':'작성된 내용이 없습니다.'}/></td></tr>)}</tbody></table>
-     {scenario.reason&&<p className={styles.note}><strong>{notApplicable?'해당 없음 사유':'검토 사항'}</strong>{scenario.reason}</p>}
+     <header className={styles.scenarioHead}><h4>{scenario.label}</h4></header>
+     <table className={`aui ${styles.formTable}`}><tbody>{[['precondition','선행조건'],['scenario','시나리오'],['postcondition','후행조건']].map(([field,label])=><tr key={field}><th scope="row">{label}</th><td><Value value={scenario[field as keyof Scenario]}/></td></tr>)}</tbody></table>
     </article>;
    })}</div>
   </Section>}
@@ -54,10 +49,7 @@ export default function ArtifactDocument({content,type='issue'}:{content:Record<
    <Section title="변경 전·후 시퀀스 다이어그램">
     <div className={styles.diagramComparison}>
      <div className={styles.diagramColumn}><h4>변경 전 · As-Is</h4>
-      {applicability==='NOT_APPLICABLE'?<div className={styles.diagramEmpty}>해당 없음{typeof asIsReason==='string'&&<p>{asIsReason}</p>}</div>:<>
-       {(asIsReason||applicability==='UNKNOWN')&&<p className={styles.sectionHint}>{typeof asIsReason==='string'?asIsReason:'변경 전 적용 여부 확인 필요'}</p>}
-       <div className={styles.diagramCard}>{diagrams.before?<MermaidDiagram appearance="jira" code={diagrams.before} label="변경 전 처리 흐름" copyable/>:<div className={styles.diagramEmpty}>등록된 변경 전 시퀀스 다이어그램이 없습니다.</div>}</div>
-      </>}
+      <div className={styles.diagramCard}>{diagrams.before?<MermaidDiagram appearance="jira" code={diagrams.before} label="변경 전 처리 흐름" copyable/>:<div className={styles.diagramEmpty}>변경 전 처리 흐름은 요구사항에 명시되지 않았습니다.</div>}</div>
      </div>
      <div className={styles.diagramColumn}><h4>변경 후 · To-Be</h4><div className={styles.diagramCard}>{diagrams.after?<MermaidDiagram appearance="jira" code={diagrams.after} label="변경 후 처리 흐름" copyable/>:<div className={styles.diagramEmpty}>등록된 변경 후 시퀀스 다이어그램이 없습니다.</div>}</div></div>
     </div>

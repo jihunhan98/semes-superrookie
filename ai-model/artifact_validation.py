@@ -38,4 +38,4 @@ def numeric_concerns(content, source):
     normalize = lambda s: re.sub(r'\s+', '', s)
     known = {normalize(x) for x in re.findall(pattern, source)}
     found = {normalize(x) for x in re.findall(pattern, json.dumps(content, ensure_ascii=False))}
-    return [f'수치·단위·경계 조건의 근거 확인 필요: {x}' for x in sorted(found-known)]
+    return [f'근거가 없는 수치·단위·경계 조건: {x}' for x in sorted(found-known)]

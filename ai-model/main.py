@@ -387,43 +387,32 @@ def split(req: SplitRequest) -> SplitResponse:
 
 @app.post("/artifacts/generate", response_model=ArtifactGenerateResponse)
 def generate_artifact(req: ArtifactGenerateRequest) -> ArtifactGenerateResponse:
-    """산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) 초안 — 개발 이슈 1건당 1개.
+    """Return a complete AI-authored document; never publish an empty template."""
+    if not PROVIDER.enabled:
+        raise HTTPException(status_code=503, detail="AI 서버가 설정되지 않아 산출물을 생성할 수 없습니다.")
 
-    규칙 기반(artifacts.py)을 항상 먼저 만들어 결과를 보장하고, 사내 LLM이 설정돼
-    있으면 더 나은 초안으로 교체를 시도한다. LLM 응답이 화면이 기대하는 필드를
-    갖추지 못하면(형식이 어긋나거나 JSON이 아님) 그 결과를 버리고 규칙 결과로
-    되돌아간다 — 반쪽짜리 산출물이 저장되는 것보다 낫다.
-    """
     started = time.monotonic()
+    title, quote = req.issueTitle or "", req.issueQuote or ""
+    try:
+        content = _ask_llm_artifact(
+            req.type, title, quote, req.requirementContent, req.reason,
+            req.existing, req.reqKey, req.issueContent, req.currentContent)
+        if not artifacts.is_valid_v2_shape(req.type, content):
+            raise ValueError("산출물의 필수 업무 내용이 비어 있습니다.")
+        sources = {e.reqKey: e.content for e in req.existing}
+        sources[req.reqKey] = req.requirementContent
+        concerns = validation.validate_evidence(content, sources)
+        concerns += validation.numeric_concerns(content, "\n".join(sources.values()))
+        if concerns:
+            raise ValueError("; ".join(concerns[:5]))
+        content.setdefault("legacyExtras", {})["quality"] = {"status": "GROUNDED", "concerns": []}
+        elapsed = int((time.monotonic() - started) * 1000)
+        log.info("artifacts.generate type=%s engine=%s %dms", req.type, PROVIDER.name, elapsed)
+        return ArtifactGenerateResponse(content=content, engine=PROVIDER.name, elapsedMs=elapsed)
+    except Exception as exc:
+        log.warning("AI 산출물 생성 실패: %s", exc)
+        raise HTTPException(status_code=502, detail="AI 산출물을 완성하지 못했습니다. 다시 생성해주세요.") from exc
 
-    title = req.issueTitle or ""
-    quote = req.issueQuote or ""
-    content = artifacts.generate_v2(req.type, title, quote, req.requirementContent)
-    errors = []
-    engine = "rule"
-
-    if PROVIDER.enabled and req.type in _ARTIFACT_PROMPTS:
-        try:
-            llm_content = _ask_llm_artifact(
-                req.type, title, quote, req.requirementContent, req.reason, req.existing, req.reqKey, req.issueContent, req.currentContent)
-            if not artifacts.is_valid_v2_shape(req.type, llm_content):
-                raise ValueError("산출물 필수 필드가 누락되었습니다.")
-            sources = {e.reqKey:e.content for e in req.existing}
-            sources[req.reqKey] = req.requirementContent
-            errors = validation.validate_evidence(llm_content, sources)
-            errors += validation.numeric_concerns(llm_content, "\n".join(sources.values()))
-            content = llm_content
-            engine = PROVIDER.name
-        except Exception as e:
-            errors.append(str(e))
-            log.warning("산출물 생성/검증 실패: %s", e)
-
-    elapsed = int((time.monotonic() - started) * 1000)
-    log.info("artifacts.generate type=%s engine=%s %dms", req.type, engine, elapsed)
-
-    if engine == "rule": errors.append("AI 생성이 완료되지 않았습니다. 재검토가 필요합니다.")
-    content.setdefault("legacyExtras", {})["quality"] = {"status":"NEEDS_REVIEW" if errors else "GROUNDED", "concerns":errors}
-    return ArtifactGenerateResponse(content=content, engine=engine, elapsedMs=elapsed)
 
 @app.post("/v2/artifacts/batch", response_model=ArtifactBatchResponse)
 def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
@@ -433,12 +422,15 @@ def generate_batch(req: ArtifactBatchRequest) -> ArtifactBatchResponse:
         if requested not in allowed:
             outputs.append(ArtifactOutput(type=requested, status="FAILED", content=None, errors=["UNSUPPORTED_TYPE"]))
             continue
-        generated = generate_artifact(ArtifactGenerateRequest(type=allowed[requested],
-            issueTitle=req.issueTitle, issueQuote=req.issueQuote, requirementContent=req.requirementContent,
-            reqKey=req.reqKey, existing=req.existing, issueContent=req.issueContent))
-        quality = generated.content.get("legacyExtras", {}).get("quality", {})
-        outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED" if quality.get("status")=="GROUNDED" else "FAILED",
-            content=generated.content, errors=quality.get("concerns", [])))
+        try:
+            generated = generate_artifact(ArtifactGenerateRequest(type=allowed[requested],
+                issueTitle=req.issueTitle, issueQuote=req.issueQuote, requirementContent=req.requirementContent,
+                reqKey=req.reqKey, existing=req.existing, issueContent=req.issueContent))
+            outputs.append(ArtifactOutput(type=requested, status="SUCCEEDED",
+                content=generated.content, errors=[]))
+        except HTTPException as exc:
+            outputs.append(ArtifactOutput(type=requested, status="FAILED",
+                content=None, errors=[str(exc.detail)]))
     issue = {"title": req.issueTitle, "symptom": None, "improvementReq": req.issueQuote,
              "changeScope": None, "constraintsNote": None, "beforeState": None, "afterState": None}
     return ArtifactBatchResponse(issue=issue, outputs=outputs, engine=PROVIDER.name)
@@ -596,67 +588,62 @@ def _ask_llm_split(content: str, reason: str | None,
 # 시스템 프롬프트에 넣는다 — 이 맥락 없이 산출물을 생성하면 모듈명·용어가
 # 프로젝트와 무관하게 뭉뚱그려진 결과가 나오기 쉽다.
 _ARTIFACT_DOMAIN_CONTEXT = """[출력 언어]
-JSON의 키는 지정된 영문 그대로 두되, 모든 값(설명·역할·목적·내용 등)은 반드시 한국어 문장으로
-쓴다. 영어 단어·문장을 섞어 쓰지 않는다 — 클래스명·서비스명처럼 코드 식별자로 쓰이는 고유명사만
-예외로 영문을 허용한다.
+JSON 키는 지정한 영문 그대로 두고, 업무 설명은 한국어로 쓴다.
+[작성 원칙]
+개발 이슈, 확정 요구사항, 제공된 관련 요구사항을 종합해 모든 업무 필드를 AI가 작성한다.
+수치, 정책, 인명, 실제 코드 식별자를 근거 없이 만들지 않는다.
+근거에 없는 특정 정보는 null이나 사용자 작성 요청 대신
+"제공된 요구사항에 명시되지 않음"이라는 완성된 설명으로 기입한다.
+가능한 동작은 요구사항의 조건과 순서에 맞춰 구체적으로 작성한다.
+적용 여부, 검토 사항, 확인 필요 상태를 별도 필드로 출력하지 않는다."""
 
-[근거 정책]
-확정 요구사항과 출처가 함께 전달된 프로젝트 지식에 있는 사실만 사용한다. 자료에 없는 모듈명,
-수치, 정책, 클래스명은 추정하지 말고 null로 둔다. 다른 요구사항이 관련 있을 때만 용어를 맞춘다."""
-
-_VOC_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 SWVOC(고객 요구사항 정리)를 작성하는 전문가다.
+_VOC_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 SWVOC를 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
-
-주어진 개발 이슈(제목·구절)와 근거가 된 확정 요구사항 전문을 바탕으로 SWVOC를 작성하라.
-반드시 아래 JSON 형식으로만 답한다.
-{{"requester":null,"requestContent":"확정 본문·고객 취지에서 발췌한 요청사항",
-"specialNotes":null,"legacyExtras":{{}}}}"""
-
-_FUNCTIONAL_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 기능 요구사항 명세를 작성하는 전문가다.
-{_ARTIFACT_DOMAIN_CONTEXT}
-
-주어진 개발 이슈(제목·구절)와 근거가 된 확정 요구사항 전문을 바탕으로 기능 요구사항을 작성하라.
-기본·변형·예외 동작을 각각 작성한다. 자료에 없는 조건이나 결과는 null로 두고 applicability를
-"UNKNOWN"으로 표시하며 reason에 확인이 필요한 이유를 쓴다.
-반드시 아래 JSON 형식으로만 답한다.
-{{"overview":"기능 개요","constraintsNote":null,
-"scenarios":[
-{{"type":"BASIC","precondition":null,"scenario":"...","postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
-{{"type":"VARIANT","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
-{{"type":"EXCEPTION","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}}],
+요청자 이름이 제공되지 않으면 요청자 필드에 "제공된 요구사항에 명시되지 않음"이라고 쓴다.
+고객 요청 내용과 특이 사항은 요구사항 근거를 바탕으로 완성된 문장으로 쓴다.
+JSON만 반환:
+{{"requester":"요청자 또는 제공된 요구사항에 명시되지 않음",
+"requestContent":"확정 본문의 구체적인 고객 요청",
+"specialNotes":"관련 제약·특이 사항 또는 제공된 요구사항에 명시되지 않음",
 "legacyExtras":{{}}}}"""
 
-_NONFUNCTIONAL_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 비기능 요구사항
-(성능·신뢰성·가용성 등 품질 속성) 명세를 작성하는 전문가다.
+_FUNCTIONAL_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 기능 요구사항 명세를 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
-
-기본·변형·예외 동작을 품질 속성 관점으로 작성한다. 근거에 성능 수치나 장애 정책이 없으면
-절대 만들어내지 말고 null과 UNKNOWN으로 표시한다.
-반드시 아래 JSON 형식으로만 답한다.
-{{"overview":"비기능 개요","constraintsNote":null,
+기본·변형·예외 동작의 선행조건, 동작, 후행조건을 모두 문장으로 작성한다.
+변형 또는 예외가 근거에 없으면 그 동작이 정의되지 않았다는 사실을 각 필드에 직접 서술한다.
+근거 없는 오류 처리나 임의의 대기·재시도 정책은 추가하지 않는다.
+JSON만 반환:
+{{"overview":"기능 개요","constraintsNote":"요구사항의 제약 조건 또는 제공된 요구사항에 명시되지 않음",
 "scenarios":[
-{{"type":"BASIC","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
-{{"type":"VARIANT","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}},
-{{"type":"EXCEPTION","precondition":null,"scenario":null,"postcondition":null,"applicability":"UNKNOWN","reason":"..."}}],
+{{"type":"BASIC","precondition":"기본 동작의 선행조건","scenario":"기본 처리 흐름","postcondition":"기본 처리 결과"}},
+{{"type":"VARIANT","precondition":"변형 동작의 선행조건 또는 명시되지 않음","scenario":"변형 동작 또는 명시되지 않음","postcondition":"변형 결과 또는 명시되지 않음"}},
+{{"type":"EXCEPTION","precondition":"예외 발생 조건 또는 명시되지 않음","scenario":"예외 처리 또는 명시되지 않음","postcondition":"예외 결과 또는 명시되지 않음"}}],
 "legacyExtras":{{}}}}"""
 
-_DETAIL_DESIGN_PROMPT = f"""당신은 반도체 장비 소프트웨어(VCS/AMR) 개발 이슈의 Detail Design(상세 설계)을 작성하는 전문가다.
+_NONFUNCTIONAL_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 비기능 요구사항을 작성한다.
 {_ARTIFACT_DOMAIN_CONTEXT}
+성능·가용성·신뢰성 등 요구사항에 실제로 명시된 품질 기준을 정리한다.
+기본·변형·예외 동작의 선행조건, 동작, 후행조건을 모두 문장으로 작성한다.
+근거에 없는 성능 수치나 장애 정책은 만들지 않고 그 정보가 명시되지 않았다고 서술한다.
+JSON만 반환:
+{{"overview":"품질 요구사항 개요","constraintsNote":"근거가 있는 제약 또는 제공된 요구사항에 명시되지 않음",
+"scenarios":[
+{{"type":"BASIC","precondition":"기본 조건","scenario":"품질 기준의 기본 동작","postcondition":"기본 결과"}},
+{{"type":"VARIANT","precondition":"변형 조건 또는 명시되지 않음","scenario":"변형 동작 또는 명시되지 않음","postcondition":"변형 결과 또는 명시되지 않음"}},
+{{"type":"EXCEPTION","precondition":"예외 조건 또는 명시되지 않음","scenario":"예외 동작 또는 명시되지 않음","postcondition":"예외 결과 또는 명시되지 않음"}}],
+"legacyExtras":{{}}}}"""
 
-Class Diagram과 Sequence Diagram(변경 전 AS-IS · 변경 후 TO-BE)을 Mermaid 완성 코드로 설계하라.
-요구사항에 명시된 동작·역할·데이터를 바탕으로 개념 설계안을 작성한다.
-실제 구현 클래스·메서드가 제공되지 않았으므로 description에 "개념 설계 제안"임을 명시한다.
-이름을 제안할 수 있지만 기존 구현에서 확인된 클래스나 호출 관계라고 표현하지 않는다.
-변경 후 흐름은 요구사항에 근거한 제안이며, 수치와 정책을 임의로 추가하지 않는다.
-변경 전 흐름의 근거가 없으면 흐름을 추측하지 말고 sequenceDiagram 안에
-"변경 전 처리 흐름은 제공된 자료에서 확인되지 않음"이라는 Note만 넣고 asIsApplicability를
-"UNKNOWN"으로 둔다. Mermaid 코드의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다.
-반드시 아래 JSON 형식으로만 답한다.
-{{"description":"요구사항 근거에 따른 설계 설명",
+_DETAIL_DESIGN_PROMPT = f"""반도체 장비 소프트웨어 개발 이슈의 상세 설계를 작성한다.
+{_ARTIFACT_DOMAIN_CONTEXT}
+근거에 있는 역할과 흐름으로 클래스 다이어그램 및 변경 전·후 시퀀스 다이어그램을
+Mermaid 코드로 완성한다. 실제 구현 정보가 없으면 개념 설계안임을 description에 명시한다.
+변경 전 흐름의 근거가 없으면 그 사실을 Mermaid Note 하나로 표현하고 임의의 흐름을 만들지 않는다.
+Mermaid 코드의 개행은 JSON 문자열 규칙대로 \\n으로 쓴다.
+JSON만 반환:
+{{"description":"요구사항 근거에 따른 개념 설계 설명",
 "classDiagram":"classDiagram\\n    class 업무개념 {{\\n      +근거속성\\n    }}",
-"sequenceDiagramAsIs":"sequenceDiagram\\n    participant 검토자\\n    Note over 검토자: 변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
-"sequenceDiagramToBe":"sequenceDiagram\\n    participant 요청자 as 업무 역할\\n    요청자->>처리자: 근거가 있는 업무 동작",
-"asIsApplicability":"UNKNOWN","asIsReason":"변경 전 처리 흐름은 제공된 자료에서 확인되지 않음",
+"sequenceDiagramAsIs":"sequenceDiagram\\n    participant 검토자\\n    Note over 검토자: 변경 전 처리 흐름은 제공된 자료에 명시되지 않음",
+"sequenceDiagramToBe":"sequenceDiagram\\n    participant 요청자\\n    participant 처리자\\n    요청자->>처리자: 근거가 있는 업무 동작",
 "legacyExtras":{{}}}}"""
 
 _ARTIFACT_PROMPTS = {
@@ -687,17 +674,17 @@ def _ask_llm_artifact(type_: str, title: str, quote: str, requirement_content: s
         user += "\n사용자 수정 요청:\n" + reason
         revision_rule = ("\n현재 산출물 JSON을 바탕으로 수정한다. 사용자 요청에 여러 산출물 유형이 "
                          "언급돼 있더라도 현재 산출물 유형에 해당하는 지시만 적용한다. "
-                         "요청하지 않은 필드와 내용은 유지하고, 변경된 부분의 근거는 확정 "
-                         "요구사항 또는 제공된 기존 요구사항에서 확인한다. 근거 없는 값은 "
-                         "만들지 말고 확인 필요로 표시한다. 출력은 이 유형의 기존 JSON "
-                         "필드 구조를 유지한 완성된 산출물 하나로 반환한다.")
+                         "요청하지 않은 기존 내용은 유지하고 비어 있는 업무 필드는 "
+                         "확정 요구사항에 근거해 완성한다. 근거 없는 수치·정책은 "
+                         "추측하지 않고 자료에 명시되지 않았다고 설명한다. "
+                         "해당 유형의 완성된 산출물 하나만 반환한다.")
     elif reason:
         user += f"\n재생성 시 참고할 내용: {reason}"
 
     user += "\n대상 요구사항 ID: " + req_key
     user += "\n개발 이슈 본문:\n" + validation.checked_context({"issueContent": issue_content or {}})
     validation.checked_context(user)
-    evidence_rule = '\n모든 산출물에 evidence 배열을 추가하라: [{"field":"scenarios.0.scenario 또는 해당 JSON 필드 경로","reqKey":"실제 요구사항 ID","quote":"그 요구사항 원문 그대로"}]. 실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다. 누락된 예외·경계 조건은 확인 필요로 표시한다.'
+    evidence_rule = '\n모든 산출물에 evidence 배열을 추가하라: [{"field":"scenarios.0.scenario 또는 해당 JSON 필드 경로","reqKey":"실제 요구사항 ID","quote":"그 요구사항 원문 그대로"}]. 실제 이슈 본문의 범위와 제약을 반영하고 수치·단위·이상/초과/이하/미만을 유지한다. 근거에 없는 예외·경계 조건은 만들어내지 않고 요구사항에 명시되지 않았다고 서술한다.'
     raw = PROVIDER.generate(_ARTIFACT_PROMPTS[type_] + evidence_rule + revision_rule, user)
     return _parse_json(raw)
 

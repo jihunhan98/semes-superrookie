@@ -27,7 +27,7 @@ def voc(title: str, quote: str) -> dict:
     return {
         "description": f"'{title}' 관련 요구사항 취지를 정리한 내용 — 확정 본문에서 발췌.",
         "request": quote or title,
-        "notes": "AI 서버 미응답으로 생성된 기본 초안입니다 — 직접 보완해주세요.",
+        "notes": "요구사항에 별도 특이 사항이 명시되지 않았습니다.",
     }
 
 
@@ -42,7 +42,7 @@ def functional(title: str, quote: str) -> dict:
 
 def nonfunctional(title: str, quote: str) -> dict:
     base = functional(title, quote)
-    base["constraints"] = "AI 서버 미응답으로 생성된 기본 초안입니다 — 성능·가용성 기준을 직접 채워주세요."
+    base["constraints"] = "요구사항에 별도 성능·가용성 기준이 명시되지 않았습니다."
     return base
 
 
@@ -99,12 +99,12 @@ def generate_v2(type_: str, title: str, quote: str | None,
     if type_ in ("functional", "nonfunctional"):
         scenarios = [
             {"type": kind, "precondition": None, "scenario": quote if kind == "BASIC" else None,
-             "postcondition": None, "applicability": "UNKNOWN", "reason": None}
+             "postcondition": None}
             for kind in ("BASIC", "VARIANT", "EXCEPTION")
         ]
         return {"overview": quote, "constraintsNote": None, "scenarios": scenarios, "legacyExtras": extras}
     if type_ == "detail-design":
-        return dict(description=quote, classDiagram=None, sequenceDiagramAsIs=None, sequenceDiagramToBe=None, asIsApplicability="UNKNOWN", asIsReason="변경 전 처리 흐름은 요구사항에서 확인되지 않았습니다.", legacyExtras=extras)
+        return dict(description=quote, classDiagram=None, sequenceDiagramAsIs=None, sequenceDiagramToBe=None, legacyExtras=extras)
 
     return {}
 
@@ -204,14 +204,23 @@ def is_valid_shape(type_: str, content: object) -> bool:
 
 
 def is_valid_v2_shape(type_: str, content: object) -> bool:
-    if not isinstance(content, dict):
+    """Reject documents with empty business fields; the AI must finish the draft."""
+    if not isinstance(content, dict) or not isinstance(content.get("legacyExtras"), dict):
         return False
+
+    def filled(value: object) -> bool:
+        return isinstance(value, str) and bool(value.strip())
+
     if type_ == "voc":
-        return all(k in content for k in ("requester", "requestContent", "specialNotes", "legacyExtras"))
+        return all(filled(content.get(key)) for key in ("requester", "requestContent", "specialNotes"))
     if type_ in ("functional", "nonfunctional"):
         rows = content.get("scenarios")
-        return (all(k in content for k in ("overview", "constraintsNote", "scenarios", "legacyExtras"))
-                and isinstance(rows, list) and {r.get("type") for r in rows if isinstance(r, dict)} == {"BASIC", "VARIANT", "EXCEPTION"})
+        return (filled(content.get("overview")) and filled(content.get("constraintsNote"))
+                and isinstance(rows, list) and len(rows) == 3
+                and {row.get("type") for row in rows if isinstance(row, dict)} == {"BASIC", "VARIANT", "EXCEPTION"}
+                and all(isinstance(row, dict) and all(filled(row.get(field))
+                    for field in ("precondition", "scenario", "postcondition")) for row in rows))
     if type_ == "detail-design":
-        return all(k in content for k in ("description", "classDiagram", "sequenceDiagramAsIs", "sequenceDiagramToBe", "asIsApplicability", "asIsReason", "legacyExtras"))
+        return all(filled(content.get(key)) for key in
+                   ("description", "classDiagram", "sequenceDiagramAsIs", "sequenceDiagramToBe"))
     return False

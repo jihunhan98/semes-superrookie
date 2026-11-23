@@ -64,6 +64,7 @@ def test_detail_design_can_be_generated_without_source_registration(monkeypatch)
     source = 'IDLE 상태의 AMR에 작업을 배정한다.'
     content = artifacts.generate_v2('detail-design', '작업 배정', source, source)
     content.update(description='개념 설계 제안: '+source, classDiagram='classDiagram\n    class MatchingService',
+                   sequenceDiagramAsIs='sequenceDiagram\n    participant 검토자\n    Note over 검토자: 변경 전 자료 없음',
                    sequenceDiagramToBe='sequenceDiagram\n    participant MatchingService\n    Note over MatchingService: 작업 배정')
     content['evidence'] = [dict(field='description', reqKey='REQ03', quote=source)]
     provider = Provider(content)
@@ -77,3 +78,19 @@ def test_detail_design_can_be_generated_without_source_registration(monkeypatch)
     validated = main.validate_artifact(main.ArtifactValidationRequest(type='detail-design', reqKey='REQ03',
                   requirementContent=source, content=result.content))
     assert validated['valid']
+
+
+def test_ai_unavailable_does_not_return_an_empty_artifact(monkeypatch):
+    import main
+    monkeypatch.setattr(main, 'PROVIDER', type('Offline', (), {'enabled': False})())
+    with pytest.raises(HTTPException) as exc:
+        main.generate_artifact(main.ArtifactGenerateRequest(
+            type='functional', issueTitle='작업 배정', issueQuote='작업 배정',
+            requirementContent='작업 배정'))
+    assert exc.value.status_code == 503
+
+
+def test_empty_business_fields_are_not_complete():
+    import artifacts
+    empty = artifacts.generate_v2('functional', '배정', '작업 배정', '작업 배정')
+    assert not artifacts.is_valid_v2_shape('functional', empty)

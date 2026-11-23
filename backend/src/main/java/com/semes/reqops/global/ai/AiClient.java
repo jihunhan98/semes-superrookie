@@ -1,6 +1,7 @@
 package com.semes.reqops.global.ai;
 
 import lombok.extern.slf4j.Slf4j;
+import com.semes.reqops.global.exception.ApiErrors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -148,12 +149,7 @@ public class AiClient {
         }
     }
 
-    /**
-     * 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) 초안 — 개발 이슈 1건당 1개.
-     *
-     * <p>AI 서버 자체가 응답하지 않아도 산출물 화면이 빈 채로 뜨면 안 되므로, 실패 시
-     * "직접 작성해달라"는 안내만 담긴 최소한의 틀을 유형별로 돌려준다.
-     */
+    /** 산출물은 AI가 완성된 내용을 반환한 경우에만 저장한다. */
     public AiArtifactDto.Response generateArtifact(String type, String issueTitle, String issueQuote,
                                                     String requirementContent, String reason,
                                                     List<AiAnalyzeDto.Existing> existing) {
@@ -170,32 +166,16 @@ public class AiClient {
                     .retrieve()
                     .body(AiArtifactDto.Response.class);
 
-            if (res == null || res.content() == null || res.content().isEmpty()) {
-                return artifactUnavailable(type);
+            if (res == null || res.content() == null || res.content().isEmpty()
+                    || "rule".equals(res.engine()) || "unavailable".equals(res.engine())) {
+                throw new IllegalStateException("AI가 완성된 산출물을 반환하지 않았습니다.");
             }
             log.info("AI 산출물 초안 완료 — type={} engine={}", type, res.engine());
             return res;
         } catch (Exception e) {
-            log.warn("AI 서버 호출 실패 — 산출물 기본 틀로 진행합니다: {}", e.getMessage());
-            return artifactUnavailable(type);
+            log.warn("AI 산출물 생성 실패: {}", e.getMessage());
+            throw new ApiErrors.Conflict("AI 산출물을 생성하지 못했습니다. AI 서버를 확인하고 다시 시도해주세요.");
         }
-    }
-
-    private AiArtifactDto.Response artifactUnavailable(String type) {
-        String notice = "AI 서버에 연결하지 못해 초안을 만들지 못했습니다. 직접 작성해주세요.";
-        Map<String, Object> content = switch (type) {
-            case "voc" -> Map.of("description", notice, "request", "", "notes", "");
-            case "functional" -> Map.of("description", notice, "role", "", "purpose", "", "behaviors", List.of());
-            case "nonfunctional" -> Map.of(
-                    "description", notice, "role", "", "purpose", "", "behaviors", List.of(), "constraints", "");
-            case "detail-design" -> Map.of(
-                    "description", notice,
-                    "classDiagram", List.of(),
-                    "sequenceBeforeCode", "sequenceDiagram\n    Note over Host: " + notice,
-                    "sequenceAfterCode", "sequenceDiagram\n    Note over Host: " + notice);
-            default -> Map.of("description", notice);
-        };
-        return new AiArtifactDto.Response(content, "unavailable", 0);
     }
 
     private AiAnalyzeDto.Response call(AiAnalyzeDto.Request request, String fallbackContent) {

@@ -12,7 +12,7 @@ public class ArtifactContentValidator {
         Set<String> required=switch(type){
             case VOC -> Set.of("requester","requestContent","specialNotes","legacyExtras");
             case FUNCTIONAL, NONFUNCTIONAL -> Set.of("overview","constraintsNote","scenarios","legacyExtras");
-            case DETAIL_DESIGN -> Set.of("description","classDiagram","sequenceDiagramAsIs","sequenceDiagramToBe","asIsApplicability","asIsReason","legacyExtras");
+            case DETAIL_DESIGN -> Set.of("description","classDiagram","sequenceDiagramAsIs","sequenceDiagramToBe","legacyExtras");
         };
         if(!content.keySet().containsAll(required)) throw new ApiErrors.BadRequest(type+" 고정 양식 필드가 누락되었습니다: "+required);
         if(type==ArtifactType.FUNCTIONAL || type==ArtifactType.NONFUNCTIONAL) validateScenarios(content.get("scenarios"));

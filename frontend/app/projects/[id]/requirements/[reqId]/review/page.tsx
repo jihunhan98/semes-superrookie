@@ -125,7 +125,7 @@ export default function ReviewPage(){
     <header className={styles.heading}>
      <div><h1>산출물 검토</h1><p>{requirement?.reqKey??'요구사항'} · 개발 이슈 {data?.issues.length??0}개 · 산출물 {count} / {expected}</p></div>
      <span className={`aui-lozenge aui-lozenge-subtle ${confirmed?'aui-lozenge-success':incomplete?'aui-lozenge-moved':'aui-lozenge-inprogress'}`}>
-      {!data?'불러오는 중':confirmed?'전체 확정 완료':incomplete?'생성 확인 필요':'검토 중'}
+      {!data?'불러오는 중':confirmed?'전체 확정 완료':incomplete?(data?.generation?.failed?'생성 실패':'생성 중'):'검토 중'}
      </span>
     </header>
     {!data||!project||!requirement?<div className={styles.loading} role={error||notice?.error?'alert':'status'}>{error??notice?.text??'산출물과 개발 이슈를 불러오는 중입니다.'}</div>:<>

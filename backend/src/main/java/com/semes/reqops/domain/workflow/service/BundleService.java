@@ -76,6 +76,8 @@ public class BundleService {
             List<DevIssueArtifact> docs=artifacts.findByDevIssueIdOrderByArtifactTypeAsc(issue.getId());
             if(docs.size()!=4)
                 throw new ApiErrors.Conflict("산출물 4종이 생성된 후 확정해주세요.");
+            if(docs.stream().anyMatch(doc -> doc.getState()!=ArtifactState.CONFIRMED && ("unavailable".equals(doc.getEngine()) || "rule".equals(doc.getEngine()))))
+                throw new ApiErrors.Conflict("AI가 생성하지 못한 산출물이 있습니다. 생성 작업을 다시 실행해주세요.");
             // Confirm the saved drafts together; individual review is optional.
             issue.confirm();
             issues.saveAndFlush(issue);

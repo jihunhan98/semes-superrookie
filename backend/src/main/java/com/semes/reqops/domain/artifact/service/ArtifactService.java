@@ -5,6 +5,7 @@ import com.semes.reqops.domain.artifact.dto.ArtifactDto.ArtifactResponse;
 import com.semes.reqops.domain.artifact.dto.ArtifactDto.ConfirmRequest;
 import com.semes.reqops.domain.artifact.dto.ArtifactDto.RegenerateRequest;
 import com.semes.reqops.domain.artifact.entity.ArtifactType;
+import com.semes.reqops.domain.artifact.entity.ArtifactState;
 import com.semes.reqops.domain.artifact.entity.DevIssueArtifact;
 import com.semes.reqops.domain.artifact.repository.DevIssueArtifactRepository;
 import com.semes.reqops.domain.artifact.repository.ArtifactRevisionRepository;
@@ -37,12 +38,8 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 
 /**
- * 산출물 4종(SWVOC·기능·비기능 요구사항·Detail Design) 상세 — 개발 이슈 1건당 1개씩.
- *
- * <p>처음 열람할 때 저장된 내용이 없으면 그 자리에서 AI 초안을 만들어 DRAFT로
- * 저장한다(화면이 빈 채로 뜨면 안 되므로 — "이슈 나누기"의 preview와 달리 산출물
- * 화면은 별도 진입 단계가 없어 조회 자체가 최초 생성을 겸한다). 이후 조회는 저장된
- * 값을 그대로 돌려주고, 재생성·확정으로만 바뀐다.
+ * 개발 이슈별 산출물 4종을 저장하고 조회한다.
+ * AI가 완성하지 못한 대기용 빈 문서는 조회 결과로 제공하지 않는다.
  */
 @Slf4j
 @Service
@@ -71,6 +68,8 @@ public class ArtifactService {
 
         DevIssueArtifact artifact = artifactRepository.findByDevIssueIdAndArtifactType(issue.getId(), type)
                 .orElseThrow(() -> new ApiErrors.Conflict("산출물 초안이 아직 준비되지 않았습니다."));
+        if (artifact.getState()!=ArtifactState.CONFIRMED && ("unavailable".equals(artifact.getEngine()) || "rule".equals(artifact.getEngine())))
+            throw new ApiErrors.Conflict("AI 산출물이 아직 생성되지 않았습니다. 생성 완료 후 다시 열어주세요.");
         return toResponse(type, artifact);
     }
 
@@ -172,9 +171,9 @@ public class ArtifactService {
             List<Map<String,Object>> rows = List.of(scenario("BASIC"),scenario("VARIANT"),scenario("EXCEPTION"));
             return map("overview",null,"constraintsNote",null,"scenarios",rows,"legacyExtras",extras);
         }
-        return map("description",null,"classDiagram",null,"sequenceDiagramAsIs",null,"sequenceDiagramToBe",null,"asIsApplicability","UNKNOWN","asIsReason",null,"legacyExtras",extras);
+        return map("description",null,"classDiagram",null,"sequenceDiagramAsIs",null,"sequenceDiagramToBe",null,"legacyExtras",extras);
     }
-    private Map<String,Object> scenario(String type){return map("type",type,"precondition",null,"scenario",null,"postcondition",null,"applicability","UNKNOWN","reason",null);}
+    private Map<String,Object> scenario(String type){return map("type",type,"precondition",null,"scenario",null,"postcondition",null);}
     private Map<String,Object> map(Object... values){Map<String,Object> out=new java.util.LinkedHashMap<>();for(int i=0;i<values.length;i+=2)out.put((String)values[i],values[i+1]);return out;}
     private void saveRevision(DevIssueArtifact artifact,String reason,Long actor){String json=artifact.getContentJson();revisionRepository.save(new ArtifactRevision(artifact.getId(),revisionRepository.countByArtifactId(artifact.getId())+1,artifact.getState(),json,hash(json),reason,actor));}
     private String hash(String value){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
