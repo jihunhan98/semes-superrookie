@@ -29,7 +29,7 @@ writeFileSync(resolve(staging, 'build-info.json'), JSON.stringify({
   sourceCommit: commit,
   builtAt: new Date().toISOString(),
   buildId: readFileSync(at('.next/BUILD_ID'), 'utf8').trim(),
-  ui: 'ReqOps Agent UX - 4 step workflow',
+  ui: 'ReqOps Agent UX - 3 step requirement workflow',
 }, null, 2) + '\n');
 writeFileSync(resolve(staging, 'run.bat'), '@echo off\r\ncd /d "%~dp0"\r\nif "%PORT%"=="" set PORT=3000\r\ntype build-info.json\r\nnode server.js\r\npause\r\n');
 writeFileSync(resolve(staging, 'run.sh'), '#!/bin/sh\ncd "$(dirname "$0")"\nexport PORT="${PORT:-3000}"\ncat build-info.json\nexec node server.js\n', { mode: 0o755 });

@@ -29,10 +29,10 @@ echo.
 set "SKIPPED="
 if exist "backend\.env" for /f "usebackq tokens=1,* delims==" %%A in ("backend\.env") do if not "%%A"=="" set "%%A=%%B"
 set "WITH_BACKEND="
-set "DIST_MODE="
+set "DEV_MODE="
 for %%A in (%*) do (
   if /i "%%~A"=="--with-backend" set "WITH_BACKEND=1"
-  if /i "%%~A"=="--dist" set "DIST_MODE=1"
+  if /i "%%~A"=="--dev" set "DEV_MODE=1"
 )
 
 rem ── 1. AI 서버 (FastAPI · 8001) ──────────────────────────────
@@ -64,20 +64,19 @@ if defined WITH_BACKEND (
 )
 
 rem ── 2. 프론트 (Next.js · 3000) ───────────────────────────────
-rem  기본은 현재 소스 실행. 이전 빌드가 남아 있어도 최신 UI가 보이도록 한다.
-rem  빌드된 배포본은 --dist 옵션을 지정했을 때만 사용한다.
+rem  기본 실행은 배포본. 소스 개발 서버는 --dev 옵션으로 선택한다.
 set "FRONTCMD="
 set "FRONTMODE="
-if defined DIST_MODE (
-  if exist "frontend\dist\standalone\server.js" (
-    set "FRONTCMD=cd /d frontend\dist\standalone && node server.js"
-    set "FRONTMODE=배포본 (--dist)"
-    if exist "frontend\dist\standalone\build-info.json" type "frontend\dist\standalone\build-info.json"
+if defined DEV_MODE (
+  if exist "frontend\node_modules\next\dist\bin\next" (
+    set "FRONTCMD=cd /d frontend && npm run dev"
+    set "FRONTMODE=개발 서버"
   )
 ) else (
-  if exist "frontend\package.json" (
-    set "FRONTCMD=call frontend\start-source.bat"
-    set "FRONTMODE=현재 소스"
+  if exist "frontend\dist\standalone\server.js" (
+    set "FRONTCMD=cd /d frontend\dist\standalone && node server.js"
+    set "FRONTMODE=Agent UX 배포본"
+    if exist "frontend\dist\standalone\build-info.json" type "frontend\dist\standalone\build-info.json"
   )
 )
 
@@ -85,7 +84,7 @@ if defined FRONTCMD (
   echo  [3/3] 프론트 실행            http://localhost:3000/login  ^(%FRONTMODE%^)
   start "ReqOps - 프론트 (3000)" cmd /k "chcp 65001 >nul && %FRONTCMD%"
 ) else (
-  echo  [3/3] 프론트 건너뜀          실행할 소스 또는 배포본 없음
+  echo  [3/3] 프론트 건너뜀          node_modules 도 빌드 산출물도 없음
   set "SKIPPED=1"
   set "MSG_FRONT=1"
 )
@@ -117,8 +116,9 @@ if defined SKIPPED (
   if defined MSG_FRONT (
     echo.
     echo  프론트 - 선택한 실행 모드의 파일이 없습니다.
-    echo      run-all.bat                 ^(현재 소스 사용^)
-    echo    배포본 실행: run-all.bat --dist  ^(이전 화면이 나올 수 있음^)
+    echo      cd frontend ^&^& npm install       ^(개발 서버로 띄우려면^)
+    echo    기본 실행에는 frontend\dist\standalone 전체가 필요합니다.
+    echo    개발 서버는 run-all.bat --dev 로 실행하세요.
   )
   echo  ------------------------------------------
 )
