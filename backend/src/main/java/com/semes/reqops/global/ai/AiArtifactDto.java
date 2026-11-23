@@ -21,8 +21,10 @@ public final class AiArtifactDto {
      */
     public record Request(String type, String issueTitle, String issueQuote,
                           String requirementContent, String reason,
-                          List<AiAnalyzeDto.Existing> existing, String reqKey, Map<String,Object> issueContent) {
-        public Request(String type,String title,String quote,String content,String reason,List<AiAnalyzeDto.Existing> existing){this(type,title,quote,content,reason,existing,"TARGET",Map.of());}
+                          List<AiAnalyzeDto.Existing> existing, String reqKey, Map<String,Object> issueContent,
+                          Map<String,Object> currentContent) {
+        public Request(String type,String title,String quote,String content,String reason,List<AiAnalyzeDto.Existing> existing){this(type,title,quote,content,reason,existing,"TARGET",Map.of(),null);}
+        public Request(String type,String title,String quote,String content,String reason,List<AiAnalyzeDto.Existing> existing,String reqKey,Map<String,Object> issueContent){this(type,title,quote,content,reason,existing,reqKey,issueContent,null);}
     }
 
     /** @param engine llm-api | rule | unavailable(AI 서버 자체 미응답 — 백엔드가 채움) */
