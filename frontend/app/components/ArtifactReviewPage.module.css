@@ -67,3 +67,31 @@
 @media(max-width:650px){.page{padding:14px!important}.readerHead{padding:18px 16px 0}.readerBody{padding:0}.paper{padding:20px 16px}.issueInfo{padding:20px 16px;grid-template-columns:1fr}.tabs{padding:0 16px}.documentTabs>.tabs{padding-left:16px!important;padding-right:16px!important}.navigatorToggle{padding:12px 16px}.readerFoot{padding:12px 16px}.issueList{display:block}.issueItem{max-width:none;width:100%;margin:0 0 6px}.heading{flex-wrap:wrap}}
 .navigationCollapsed>.navigator{display:block}
 .workspaceWide>.navigator{display:none}
+
+/* AI revision request in the review reader. */
+.revisionCard{margin:30px 0 0;padding:22px;border:1px solid #bfdbfe;border-radius:10px;background:linear-gradient(145deg,#f7fbff,#fff 75%);box-shadow:0 4px 18px #0969da0a}
+.revisionHeading{display:flex;align-items:flex-start;gap:13px;margin-bottom:21px}
+.revisionBadge{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:#deebff;color:#0747a6;font-size:13px;font-weight:700}
+.revisionHeading h4{margin:0 0 3px;color:#1f2328;font-size:16px;font-weight:650;line-height:1.4}
+.revisionHeading p{margin:0;color:#57606a;font-size:12px;line-height:1.6}
+.revisionTargets{border:0;margin:0 0 18px;padding:0;min-width:0}
+.revisionTargets legend{display:block;width:100%;margin-bottom:9px;font-size:12px;font-weight:650;color:#344054}
+.revisionTargets>div{display:flex;flex-wrap:wrap;gap:7px}
+.revisionTarget,.revisionTargetSelected{display:inline-flex;gap:7px;align-items:center;padding:8px 11px;border:1px solid #d8dee4;border-radius:6px;background:#fff;color:#42526e;font-size:12px;line-height:1.3;cursor:pointer;user-select:none}
+.revisionTargetSelected{border-color:#80b4fa;background:#eef6ff;color:#0747a6;font-weight:600}
+.revisionTarget:hover,.revisionTargetSelected:hover{border-color:#0969da}
+.revisionTargets input{width:15px;height:15px;margin:0;accent-color:#0969da}
+.revisionTargets input:disabled{cursor:not-allowed}
+.revisionTargets label:has(input:disabled){opacity:.55;cursor:not-allowed}
+.revisionLabel{display:block;margin-bottom:8px;color:#344054;font-size:12px;font-weight:650}
+.revisionInput{display:block;box-sizing:border-box;width:100%;min-height:108px;resize:vertical;padding:12px 14px;border:1px solid #b8c4d5;border-radius:7px;background:#fff;color:#1f2328;font:inherit;font-size:13px;line-height:1.7;outline:none}
+.revisionInput::placeholder{color:#8693a5}
+.revisionInput:focus{border-color:#0969da;box-shadow:0 0 0 3px #0969da22}
+.revisionInput:disabled{background:#f6f8fa;cursor:not-allowed}
+.revisionFooter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.revisionFooter span{color:#57606a;font-size:11px;line-height:1.5}
+.revisionFooter button{flex:none}
+.revisionFeedback{margin:15px 0 0;padding:10px 12px;border-radius:6px;font-size:12px;line-height:1.7}
+.revisionFeedbackError{background:#fff1f0;color:#a32622;border:1px solid #ffccc7}
+.revisionFeedbackSuccess{background:#e8f6ee;color:#1a7f37;border:1px solid #a5d6b0}
+@media(max-width:650px){.revisionCard{padding:17px 14px}.revisionFooter{align-items:stretch;flex-direction:column}.revisionFooter button{width:100%}}
