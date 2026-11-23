@@ -50,7 +50,7 @@ public class WorkflowReadService {
   if(!"CONFIRMED".equals(requirementState)){step="RECEIVED".equals(requirementState)?1:2;label=step==1?"등록":"검출·합의";}
   else if("CONFIRMED".equals(bundleState)){step=4;label="확정 완료";}
   else if("REVIEW".equals(bundleState)){step=4;label="산출물 검토";}
-  else {step=3;label="GENERATING".equals(bundleState)?"산출물 생성 중":"ISSUES_READY".equals(bundleState)?"개발 이슈 도출 완료":"도출 준비";}
+  else {step=3;label="GENERATING".equals(bundleState)?"산출물 생성 중":"ISSUES_READY".equals(bundleState)?"개발 이슈 도출 완료":"요구사항 확정";}
   return new Progress(step,label,bundleState,issueCount,artifactCount,issueCount*4);
  }
 }
