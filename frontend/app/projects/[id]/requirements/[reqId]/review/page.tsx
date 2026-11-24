@@ -51,7 +51,7 @@ export default function ReviewPage(){
   getArtifact(projectId,requirementId,issue.issueKey,activeTab,user.id).then(document=>{cache.current.set(documentKey,document);if(active)setLoaded({key:documentKey,document,error:null});}).catch(cause=>{if(active)setLoaded({key:documentKey,document:null,error:cause instanceof Error?cause.message:'산출물을 불러오지 못했습니다.'});});
   return()=>{active=false;};
  },[documentKey,projectId,requirementId,issue?.issueKey,user?.id,activeTab,retry]);
- async function finish(){if(!data||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{const confirmed=await confirmBundle(projectId,requirementId,user.id,data.revision,crypto.randomUUID());if(confirmed.state!=='CONFIRMED')throw new Error('서버'+'에서 확정 완료 상태를 확인하지 못했습니다. 다시 조회해주세요.');accept(confirmed);setNotice({error:false,text:'개발 이슈와 산출물을 전체 확정했습니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'전체 확정하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
+ async function finish(){if(!data||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{const confirmed=await confirmBundle(projectId,requirementId,user.id,data.revision,crypto.randomUUID());if(confirmed.state!=='CONFIRMED')throw new Error('서버'+'에서 확정 완료 상태를 확인하지 못했습니다. 다시 조회해주세요.');accept(confirmed);router.push(`/projects/${projectId}/artifacts?confirmedReq=${requirementId}`);}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'전체 확정하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
  async function retryGeneration(){if(!data?.generation||!user||pending.current)return;pending.current=true;setBusy(true);setNotice(null);try{await retryJob(data.generation.id,user.id);await reload();setNotice({error:false,text:'실패한 산출물을 다시 생성합니다.'});}catch(cause){setNotice({error:true,text:cause instanceof Error?cause.message:'재시도하지 못했습니다.'});}finally{pending.current=false;setBusy(false);}}
  const count=data?.issues.reduce((n,item)=>n+ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length,0)??0;
  const expected=(data?.issues.length??0)*4,confirmed=data?.state==='CONFIRMED';
@@ -237,7 +237,7 @@ export default function ReviewPage(){
      {error&&<p className="aui-message aui-message-error" role="alert">{error}</p>}
      {notice&&<p className={`aui-message ${notice.error?'aui-message-error':'aui-message-success'}`} role={notice.error?'alert':'status'}>{notice.text}</p>}
      <footer className={styles.confirmBar}><div><strong>{confirmed?'개발 이슈와 산출물을 확정했습니다.':'검토한 내용으로 전체 확정합니다.'}</strong><p>{confirmed?'확정 후에도 모든 문서를 계속 열어볼 수 있습니다.':unsentRequest?'작성 중인 수정 요청을 보내거나 지운 뒤 확정하세요.':incomplete?'모든 산출물의 생성이 완료되면 전체 확정할 수 있습니다.':`${data.issues.length}개 개발 이슈와 ${count}개 산출물의 현재 내용을 함께 확정합니다.`}</p></div>
-      <button className="aui-button aui-button-primary" disabled={busy||!data.issues.length||confirmed||incomplete||unsentRequest} onClick={finish}>{confirmed?'전체 확정됨':busy?'확정 중…':'전체 확정'}</button>
+      {confirmed?<Link className="aui-button aui-button-primary" href={`/projects/${projectId}/artifacts`}>산출물 전체 목록으로</Link>:<button className="aui-button aui-button-primary" disabled={busy||!data.issues.length||incomplete||unsentRequest} onClick={finish}>{busy?'확정 중…':'전체 확정'}</button>}
      </footer>
     </>}
    </main>

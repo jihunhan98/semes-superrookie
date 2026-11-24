@@ -21,11 +21,23 @@ export default function ArtifactsPage(){
  const [project,setProject]=useState<ProjectDetail|null>(null),[rows,setRows]=useState<DeliverableGroup[]|null>(null);
  const [error,setError]=useState<string|null>(null),[sidebarOpen,setSidebarOpen]=useState(true),[retry,setRetry]=useState(0);
  const [query,setQuery]=useState(''),[status,setStatus]=useState('all'),[category,setCategory]=useState<Category>('all'),[expandedRequirements,setExpandedRequirements]=useState<number[]>([]),[expandedIssues,setExpandedIssues]=useState<number[]>([]),[page,setPage]=useState(0);
+ const [recentlyConfirmed,setRecentlyConfirmed]=useState<number|null>(null);
  useEffect(()=>{const small=window.matchMedia('(max-width:900px)');if(small.matches)setSidebarOpen(false);},[]);
  useEffect(()=>{
   setExpandedRequirements([]);setExpandedIssues([]);
   const user=getCurrentUser();if(!user){router.replace('/login');return;}let active=true;const c=new AbortController();setError(null);
-  Promise.all([getProject(projectId,user.id),listDeliverables(projectId,user.id,c.signal)]).then(([p,r])=>{if(active){setProject(p);setRows(r);}}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'산출물 목록을 불러오지 못했습니다.');});
+  Promise.all([getProject(projectId,user.id),listDeliverables(projectId,user.id,c.signal)]).then(([p,r])=>{if(active){
+   setProject(p);setRows(r);
+   const confirmedId=Number(new URLSearchParams(window.location.search).get('confirmedReq'));
+   const group=r.find(item=>item.requirementId===confirmedId);
+   if(Number.isSafeInteger(confirmedId)&&confirmedId>0&&group?.issues.length&&group.issues.every(item=>item.state==='CONFIRMED')){
+    setRecentlyConfirmed(confirmedId);
+    setExpandedRequirements([confirmedId]);
+    setExpandedIssues(group.issues.map(item=>item.id));
+    const firstIndex=r.slice(0,r.indexOf(group)).reduce((position,item)=>position+item.issues.length,0);
+    setPage(Math.floor(firstIndex/25));
+   }
+  }}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'산출물 목록을 불러오지 못했습니다.');});
   return()=>{active=false;c.abort();};
  },[projectId,router,retry]);
  const q=query.trim().toLowerCase();
@@ -40,6 +52,7 @@ export default function ArtifactsPage(){
   });
  });}
  const visible=matching(category),count=visible.reduce((n,row)=>n+(row.showIssue?1:0)+row.docs.length,0);
+ const completedGroup=rows?.find(group=>group.requirementId===recentlyConfirmed);
  const pages=Math.max(1,Math.ceil(visible.length/25)),safePage=Math.min(page,pages-1),slice=visible.slice(safePage*25,(safePage+1)*25);
  const groups=Array.from(new Set(slice.map(row=>row.group.requirementId))).map(id=>({group:slice.find(row=>row.group.requirementId===id)!.group,rows:slice.filter(row=>row.group.requirementId===id)}));
  const go=(req:number,issue:number,type?:string)=>`/projects/${projectId}/requirements/${req}/review?issue=${issue}${type?`&artifact=${type}`:''}`;
@@ -49,12 +62,13 @@ export default function ArtifactsPage(){
   <main className={`main jira-dc-ui ${styles.page}`}>
    <nav className={styles.breadcrumb} aria-label="현재 위치"><Link href={`/projects/${projectId}`}>{project?.name??'프로젝트'}</Link><span>/</span><span aria-current="page">산출물</span></nav>
    <header className={styles.heading}><div><h1>산출물</h1><p>요구사항별 개발 이슈와 연결된 산출물을 확인합니다. 화살표를 누르면 개발 이슈와 산출물이 펼쳐지고, 제목이나 본문을 누르면 해당 내용을 엽니다.</p></div></header>
+   {completedGroup&&<div className="aui-message aui-message-success" role="status"><p><strong>{completedGroup.reqKey}</strong>의 개발 이슈와 산출물을 전체 확정했습니다. 아래 목록에서 결과를 확인할 수 있습니다.</p><a href={`#requirement-${completedGroup.requirementId}`}>방금 확정한 항목 보기</a></div>}
    {error?<div className="aui-message aui-message-error" role="alert"><p>{error}</p><button className="aui-button" onClick={()=>setRetry(v=>v+1)}>다시 불러오기</button></div>:!rows||!project?<p className={styles.empty} role="status">개발 이슈와 산출물을 불러오는 중입니다.</p>:<>
     <div className={styles.filters}><label className={styles.search}><ReviewIcon name="search" size={17}/><input aria-label="산출물 검색" value={query} onChange={event=>{setQuery(event.target.value);setPage(0);}} placeholder="REQ ID, 개발 이슈·문서 ID, 제목·본문 검색"/></label><label className={styles.status}>확정 상태 <select value={status} aria-label="산출물 상태 필터" onChange={event=>{setStatus(event.target.value);setPage(0);}}><option value="all">전체</option><option value="confirmed">확정</option><option value="draft">미확정</option></select></label><button className="aui-button aui-button-link" onClick={clear}>필터 초기화</button></div>
     <div className={styles.categories} aria-label="산출물 종류 필터">{categories.map(tab=>{const records=matching(tab.type as Category).reduce((n,row)=>n+(row.showIssue?1:0)+row.docs.length,0);return <button className={`aui-button ${category===tab.type?'aui-button-primary':''}`} type="button" aria-pressed={category===tab.type} key={tab.type} onClick={()=>{setCategory(tab.type as Category);setPage(0);setExpandedRequirements([]);setExpandedIssues([]);}}>{tab.label} <span className="aui-badge">{records}</span></button>;})}</div>
     <div className={styles.resultBar}><p role="status">결과 <b>{count}</b>개 기록 · 개발 이슈 {visible.length}개 · 요구사항 {new Set(visible.map(row=>row.group.requirementId)).size}개</p><div><button className="aui-button aui-button-link" onClick={()=>{setExpandedRequirements(Array.from(new Set(visible.map(row=>row.group.requirementId))));setExpandedIssues(visible.map(row=>row.issue.id));}}>모두 펼치기</button><button className="aui-button aui-button-link" onClick={()=>{setExpandedRequirements([]);setExpandedIssues([]);}}>모두 접기</button></div></div>
     <div className={styles.groupList}>
-     {groups.map(({group,rows:issues})=><section className={styles.group} key={group.requirementId} aria-label={`${group.reqKey}의 개발 이슈`}>
+     {groups.map(({group,rows:issues})=><section id={`requirement-${group.requirementId}`} className={`${styles.group} ${group.requirementId===recentlyConfirmed?styles.recentGroup:''}`} key={group.requirementId} aria-label={`${group.reqKey}의 개발 이슈`}>
       <header className={styles.sourceHeading}><button type="button" className={styles.groupToggle} aria-expanded={expandedRequirements.includes(group.requirementId)} aria-controls={`issues-${group.requirementId}`} aria-label={`${group.reqKey} 개발 이슈 ${expandedRequirements.includes(group.requirementId)?'접기':'펼치기'}`} onClick={()=>setExpandedRequirements(ids=>ids.includes(group.requirementId)?ids.filter(id=>id!==group.requirementId):[...ids,group.requirementId])}>{expandedRequirements.includes(group.requirementId)?'▾':'▸'}</button><Link className={styles.sourceKey} href={`/projects/${projectId}/requirements/${group.requirementId}`}>{group.reqKey}</Link><Link className={styles.sourceContent} href={`/projects/${projectId}/requirements/${group.requirementId}`}>{group.content}</Link><span className={styles.sourceVersion}>{group.version?`v${group.version}`:'초안'} · {group.workflow.label}</span></header>
       <div id={`issues-${group.requirementId}`} className={styles.issueBranch} hidden={!expandedRequirements.includes(group.requirementId)}>
       {issues.map(({issue,showIssue,docs})=>{const closed=!expandedIssues.includes(issue.id);return <article className={styles.issue} key={issue.id}>
