@@ -68,6 +68,11 @@
 .navigationCollapsed>.navigator{display:block}
 .workspaceWide>.navigator{display:none}
 
+/* Issue and document references are navigable, shareable links. */
+.issueItem{text-decoration:none!important}.issueItem:hover{text-decoration:none!important}.issueItem h3{font-weight:650!important;color:#172b4d}
+.linkedDocuments a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 4px;border-radius:4px;color:#0969da!important;font-size:13px;text-decoration:none!important}.linkedDocuments a:hover{background:#eaf2ff;text-decoration:underline!important}.linkedDocuments a[aria-current=page]{background:#eaf2ff;font-weight:700}.linkedDocuments a small{color:#667085;white-space:nowrap}
+.relatedIssues{display:grid;gap:4px}.relatedIssues a{display:grid;gap:2px;padding:8px 5px;border-radius:4px;color:#172b4d!important;text-decoration:none!important;font-size:12px;line-height:1.4}.relatedIssues a:hover{background:#eaf2ff}.relatedIssues a small{color:#0969da;font-size:11px}.relatedIssues a span{overflow-wrap:anywhere}
+
 /* AI revision request in the review reader. */
 .revisionCard{margin:30px 0 0;padding:22px;border:1px solid #bfdbfe;border-radius:10px;background:linear-gradient(145deg,#f7fbff,#fff 75%);box-shadow:0 4px 18px #0969da0a}
 .revisionHeading{display:flex;align-items:flex-start;flex-wrap:wrap;gap:13px;margin-bottom:21px}

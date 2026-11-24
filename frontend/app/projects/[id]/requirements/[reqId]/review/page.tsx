@@ -73,12 +73,13 @@ export default function ReviewPage(){
  const visible=data?.issues.filter(item=>`${devId(item.id)} ${item.issueKey} ${item.title}`.toLowerCase().includes(filter.toLowerCase()))??[];
  const position=data?.issues.findIndex(item=>item.id===issue?.id)??0;
  const activeLabel=ARTIFACT_TYPES.find(type=>type.type===activeTab);
+ const issueHref=(id:number,tab?:ArtifactTypeSlug)=>`/projects/${projectId}/requirements/${requirementId}/review?issue=${id}${tab?`&artifact=${tab}`:''}`;
  function selectDocument(tab:Tab,id=issue?.id){
   if(id===undefined)return;
   setSelectedIssue(id);setActiveTab(tab);
   const next=new URLSearchParams(search.toString());next.set('issue',String(id));next.delete('issueKey');
   if(tab==='issue')next.delete('artifact');else next.set('artifact',tab);
-  router.replace(`/projects/${projectId}/requirements/${requirementId}/review?${next}`,{scroll:false});
+  router.push(`/projects/${projectId}/requirements/${requirementId}/review?${next}`,{scroll:false});
  }
  function chooseIssue(id:number){selectDocument('issue',id);}
  function showSource(){if(sourceRef.current){sourceRef.current.open=true;sourceRef.current.scrollIntoView({behavior:'smooth',block:'start'});}}
@@ -132,10 +133,10 @@ export default function ReviewPage(){
    <main className={`main jira-dc-ui ${styles.page}`}>
     <nav className={styles.breadcrumb} aria-label="현재 위치">
      <Link href={`/projects/${projectId}/artifacts`}>산출물</Link><span>/</span>
-     <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><span aria-current="page">검토·확정</span>
+     <Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement?.reqKey??'요구사항'}</Link><span>/</span><span aria-current="page">{issue?devId(issue.id):'개발 이슈'}</span>
     </nav>
     <header className={styles.heading}>
-     <div><h1>산출물 검토</h1><p>{requirement?.reqKey??'요구사항'} · 개발 이슈 {data?.issues.length??0}개 · 산출물 {count} / {expected}</p></div>
+     <div><h1>개발 이슈 상세</h1><p>{requirement?.reqKey??'요구사항'} · 연결된 개발 이슈 {data?.issues.length??0}개 · 산출물 {count} / {expected}</p></div>
      <span className={`aui-lozenge aui-lozenge-subtle ${confirmed?'aui-lozenge-success':incomplete?'aui-lozenge-moved':'aui-lozenge-inprogress'}`}>
       {!data?'불러오는 중':confirmed?'전체 확정 완료':incomplete?(data?.generation?.failed?'생성 실패':'생성 중'):'검토 중'}
      </span>
@@ -153,10 +154,10 @@ export default function ReviewPage(){
        <div className={styles.issueList}>
         {visible.map(item=>{
          const ready=ARTIFACT_TYPES.filter(type=>item.artifacts.some(doc=>doc.type===type.type)).length;
-         return <button key={item.id} type="button" className={`${styles.issueItem} ${issue?.id===item.id?styles.selected:''}`} aria-current={issue?.id===item.id?'true':undefined} onClick={()=>chooseIssue(item.id)}>
+         return <Link key={item.id} href={issueHref(item.id)} className={`${styles.issueItem} ${issue?.id===item.id?styles.selected:''}`} aria-current={issue?.id===item.id?'page':undefined} onClick={event=>{if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();chooseIssue(item.id);}}>
           <div className={styles.issueMeta}><span>{devId(item.id)}</span><small>{ready}/4</small></div><h3>{item.title}</h3>
           <div className={styles.docDots}>{ARTIFACT_TYPES.map(type=><span key={type.type} className={item.artifacts.some(doc=>doc.type===type.type)?styles.dotReady:''}><i/>{type.short}</span>)}</div>
-         </button>;
+         </Link>;
         })}
         {!visible.length&&<p className={styles.navEmpty}>{data.issues.length?'검색 결과가 없습니다.':'아직 개발 이슈가 없습니다.'}</p>}
        </div>
@@ -182,9 +183,9 @@ export default function ReviewPage(){
           const index=buttons.indexOf(event.target as HTMLAnchorElement),next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
           buttons[next].focus();buttons[next].click();
          }}>
-          {[{type:'issue',label:'개발 이슈'},...ARTIFACT_TYPES].map(type=><li key={type.type} role="presentation" className={`menu-item ${activeTab===type.type?'active-tab':''}`}><a href="#artifact-reader-panel" role="tab" id={`tab-${type.type}`} tabIndex={activeTab===type.type?0:-1} aria-selected={activeTab===type.type} aria-controls="artifact-reader-panel" onClick={event=>{event.preventDefault();selectDocument(type.type as Tab);}}>
+          {[{type:'issue',label:'개발 이슈'},...ARTIFACT_TYPES].map(type=><li key={type.type} role="presentation" className={`menu-item ${activeTab===type.type?'active-tab':''}`}><Link href={issueHref(issue.id,type.type==='issue'?undefined:type.type as ArtifactTypeSlug)} role="tab" id={`tab-${type.type}`} tabIndex={activeTab===type.type?0:-1} aria-selected={activeTab===type.type} aria-controls="artifact-reader-panel" onClick={event=>{if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();selectDocument(type.type as Tab);}}>
            {type.label}{type.type!=='issue'&&<span className={issue.artifacts.some(doc=>doc.type===type.type)?styles.tabReady:styles.tabMissing} aria-label={issue.artifacts.some(doc=>doc.type===type.type)?'생성됨':'미생성'}/>}
-          </a></li>)}
+          </Link></li>)}
          </ul>
         </div>
         <div className={styles.readerBody}>
@@ -227,7 +228,8 @@ export default function ReviewPage(){
           <section><h3>상세 정보</h3><dl><div><dt>유형</dt><dd>{activeTab==='issue'?'개발 이슈':activeLabel?.label}</dd></div><div><dt>문서 상태</dt><dd>{activeTab==='issue'?(confirmed?'확정':'검토 중'):!summary?'미생성':summary.state==='CONFIRMED'?'확정':'초안'}</dd></div>{summary&&<div><dt>문서 리비전</dt><dd>{summary.revision}</dd></div>}<div><dt>프로젝트</dt><dd>{project.name}</dd></div><div><dt>근거 요구사항</dt><dd><Link href={`/projects/${projectId}/requirements/${requirementId}`}>{requirement.reqKey}</Link></dd></div></dl></section>
           <section><h3>관계자</h3><dl><div><dt>요구사항 담당자</dt><dd>{requirement.assigneeName??'미지정'}</dd></div><div><dt>요청자</dt><dd>{[requirement.requesterDept,requirement.requesterName].filter(Boolean).join(' · ')||'미등록'}</dd></div></dl></section>
           <section><h3>날짜</h3><dl><div><dt>이슈 생성</dt><dd>{date(issue.createdAt)}</dd></div><div><dt>목표일</dt><dd>{date(issue.dueOn)}</dd></div>{doc?.document&&<div><dt>문서 저장</dt><dd>{date(doc.document.updatedAt)}</dd></div>}</dl></section>
-          <section><h3>연결 문서</h3><div className={styles.linkedDocuments}>{ARTIFACT_TYPES.map(type=><button type="button" key={type.type} onClick={()=>selectDocument(type.type as Tab)} aria-current={activeTab===type.type?'page':undefined}><span>{type.label}</span><small>{issue.artifacts.some(doc=>doc.type===type.type)?'열기':'미생성'}</small></button>)}</div></section>
+          <section><h3>연결 문서</h3><div className={styles.linkedDocuments}>{ARTIFACT_TYPES.map(type=><Link key={type.type} href={issueHref(issue.id,type.type as ArtifactTypeSlug)} onClick={event=>{if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();selectDocument(type.type as Tab);}} aria-current={activeTab===type.type?'page':undefined}><span>{type.label}</span><small>{issue.artifacts.some(doc=>doc.type===type.type)?'열기':'미생성'}</small></Link>)}</div></section>
+          {data.issues.length>1&&<section><h3>같은 요구사항의 개발 이슈</h3><div className={styles.relatedIssues}>{data.issues.filter(item=>item.id!==issue.id).map(item=><Link key={item.id} href={issueHref(item.id)} onClick={event=>{if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();chooseIssue(item.id);}}><small>{devId(item.id)}</small><span>{item.title}</span></Link>)}</div></section>}
          </aside>
         </div>
         <footer className={styles.readerFoot}><span>개발 이슈 {position+1} / {data.issues.length}</span><div><button type="button" className="aui-button" disabled={position<=0} onClick={()=>chooseIssue(data.issues[position-1].id)}>이전 이슈</button><button type="button" className="aui-button" disabled={position>=data.issues.length-1} onClick={()=>chooseIssue(data.issues[position+1].id)}>다음 이슈</button></div></footer>

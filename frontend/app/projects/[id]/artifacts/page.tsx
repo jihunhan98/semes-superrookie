@@ -1,5 +1,6 @@
 "use client";
-import {useEffect,useState} from "react";
+
+import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useParams,useRouter} from "next/navigation";
 import Header from "../../../components/Header";
@@ -7,81 +8,74 @@ import ProjectSidebar from "../../../components/ProjectSidebar";
 import ReviewIcon from "../../../components/ReviewIcon";
 import {getProject,type ProjectDetail} from "../../../lib/api";
 import {listDeliverables,type DeliverableGroup} from "../../../lib/api/v2";
-import {ARTIFACT_TYPES} from "../../../lib/artifacts/document.mjs";
 import {devId} from "../../../lib/identifiers";
 import {getCurrentUser} from "../../../lib/session";
 import "../../../components/jira/aui-9.12.0.scoped.css";
 import styles from "../../../components/ArtifactsIndex.module.css";
 import frame from "../../../components/ArtifactWorkspace.module.css";
-type Category='all'|'issue'|'voc'|'functional'|'nonfunctional'|'detail-design';
-const categories=[{type:'all',label:'전체'},{type:'issue',label:'개발 이슈'},...ARTIFACT_TYPES] as const;
-const prefix:Record<string,string>={voc:'VOC',functional:'FR',nonfunctional:'NFR','detail-design':'DD'};
+
+type IssueRow={requirementId:number;reqKey:string;id:number;issueKey:string;title:string;state:string};
+const PAGE_SIZE=25;
+
 export default function ArtifactsPage(){
  const router=useRouter(),params=useParams<{id:string}>(),projectId=Number(params.id);
  const [project,setProject]=useState<ProjectDetail|null>(null),[rows,setRows]=useState<DeliverableGroup[]|null>(null);
  const [error,setError]=useState<string|null>(null),[sidebarOpen,setSidebarOpen]=useState(true),[retry,setRetry]=useState(0);
- const [query,setQuery]=useState(''),[status,setStatus]=useState('all'),[category,setCategory]=useState<Category>('all'),[expandedRequirements,setExpandedRequirements]=useState<number[]>([]),[expandedIssues,setExpandedIssues]=useState<number[]>([]),[page,setPage]=useState(0);
+ const [query,setQuery]=useState(''),[status,setStatus]=useState('all'),[page,setPage]=useState(0);
  const [recentlyConfirmed,setRecentlyConfirmed]=useState<number|null>(null);
+
  useEffect(()=>{const small=window.matchMedia('(max-width:900px)');if(small.matches)setSidebarOpen(false);},[]);
  useEffect(()=>{
-  setExpandedRequirements([]);setExpandedIssues([]);
-  const user=getCurrentUser();if(!user){router.replace('/login');return;}let active=true;const c=new AbortController();setError(null);
-  Promise.all([getProject(projectId,user.id),listDeliverables(projectId,user.id,c.signal)]).then(([p,r])=>{if(active){
-   setProject(p);setRows(r);setExpandedRequirements(r.map(item=>item.requirementId));
-   const confirmedId=Number(new URLSearchParams(window.location.search).get('confirmedReq'));
-   const group=r.find(item=>item.requirementId===confirmedId);
-   if(Number.isSafeInteger(confirmedId)&&confirmedId>0&&group?.issues.length&&group.issues.every(item=>item.state==='CONFIRMED')){
-    setRecentlyConfirmed(confirmedId);
-    setExpandedRequirements([confirmedId]);
-    setExpandedIssues(group.issues.map(item=>item.id));
-    const firstIndex=r.slice(0,r.indexOf(group)).reduce((position,item)=>position+item.issues.length,0);
-    setPage(Math.floor(firstIndex/25));
-   }
-  }}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'산출물 목록을 불러오지 못했습니다.');});
-  return()=>{active=false;c.abort();};
+  const user=getCurrentUser();if(!user){router.replace('/login');return;}
+  let active=true;const controller=new AbortController();setError(null);
+  Promise.all([getProject(projectId,user.id),listDeliverables(projectId,user.id,controller.signal)])
+   .then(([p,result])=>{if(!active)return;setProject(p);setRows(result);
+    const confirmedId=Number(new URLSearchParams(window.location.search).get('confirmedReq'));
+    const index=result.flatMap(group=>group.issues.map(()=>group.requirementId)).findIndex(id=>id===confirmedId);
+    if(Number.isSafeInteger(confirmedId)&&confirmedId>0&&index>=0){
+     setRecentlyConfirmed(confirmedId);setPage(Math.floor(index/PAGE_SIZE));
+    }
+   }).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'개발 이슈 목록을 불러오지 못했습니다.');});
+  return()=>{active=false;controller.abort();};
  },[projectId,router,retry]);
- const q=query.trim().toLowerCase();
- function stateMatches(state:string){return status==='all'||(status==='confirmed')===(state==='CONFIRMED');}
- function matching(type:Category){return (rows??[]).flatMap(group=>{
-  const sourceMatch=`${group.reqKey} ${group.content}`.toLowerCase().includes(q);
-  return group.issues.flatMap(issue=>{
-   const issueMatch=sourceMatch||`${devId(issue.id)} ${issue.issueKey} ${issue.title}`.toLowerCase().includes(q);
-   const showIssue=(type==='all'||type==='issue')&&issueMatch&&stateMatches(issue.state);
-   const docs=issue.artifacts.filter(doc=>(type==='all'||type===doc.type)&&stateMatches(doc.state)&&(issueMatch||`${prefix[doc.type]}-${String(doc.id).padStart(6,'0')} ${ARTIFACT_TYPES.find(t=>t.type===doc.type)?.label??''}`.toLowerCase().includes(q)));
-   return showIssue||docs.length?[{group,issue,showIssue,docs}]:[];
-  });
- });}
- const visible=matching(category),count=visible.reduce((n,row)=>n+(row.showIssue?1:0)+row.docs.length,0);
- const completedGroup=rows?.find(group=>group.requirementId===recentlyConfirmed);
- const pages=Math.max(1,Math.ceil(visible.length/25)),safePage=Math.min(page,pages-1),slice=visible.slice(safePage*25,(safePage+1)*25);
- const groups=Array.from(new Set(slice.map(row=>row.group.requirementId))).map(id=>({group:slice.find(row=>row.group.requirementId===id)!.group,rows:slice.filter(row=>row.group.requirementId===id)}));
- const go=(req:number,issue:number,type?:string)=>`/projects/${projectId}/requirements/${req}/review?issue=${issue}${type?`&artifact=${type}`:''}`;
- const clear=()=>{setQuery('');setStatus('all');setCategory('all');setPage(0);setExpandedRequirements((rows??[]).map(item=>item.requirementId));setExpandedIssues([]);};
+
+ const issues=useMemo<IssueRow[]>(()=>rows?.flatMap(group=>group.issues.map(issue=>({
+  requirementId:group.requirementId,reqKey:group.reqKey,id:issue.id,issueKey:issue.issueKey,
+  title:issue.title,state:issue.state,
+ })))??[],[rows]);
+ const visible=useMemo(()=>issues.filter(issue=>{
+  if(status!=='all'&&(status==='confirmed')!==(issue.state==='CONFIRMED'))return false;
+  const term=query.trim().toLowerCase();
+  return !term||[devId(issue.id),issue.issueKey,issue.title,issue.reqKey].join(' ').toLowerCase().includes(term);
+ }),[issues,query,status]);
+ const pages=Math.max(1,Math.ceil(visible.length/PAGE_SIZE)),currentPage=Math.min(page,pages-1);
+ const selected=visible.slice(currentPage*PAGE_SIZE,(currentPage+1)*PAGE_SIZE);
+ const issueLink=(issue:IssueRow)=>`/projects/${projectId}/requirements/${issue.requirementId}/review?issue=${issue.id}`;
+ const confirmedGroup=rows?.find(group=>group.requirementId===recentlyConfirmed);
+
  return <div className={`appshell ${frame.frame}`}><Header projectName={project?.name} onToggleSidebar={()=>setSidebarOpen(value=>!value)}/><div className="body">
   {sidebarOpen&&project&&<ProjectSidebar projectId={projectId} projectName={project.name} active="artifacts"/>}
   <main className={`main jira-dc-ui ${styles.page}`}>
-   <nav className={styles.breadcrumb} aria-label="현재 위치"><Link href={`/projects/${projectId}`}>{project?.name??'프로젝트'}</Link><span>/</span><span aria-current="page">산출물</span></nav>
-   <header className={styles.heading}><div><h1>산출물</h1><p>요구사항별 개발 이슈와 연결된 산출물을 확인합니다. 화살표를 누르면 개발 이슈와 산출물이 펼쳐지고, 제목이나 본문을 누르면 해당 내용을 엽니다.</p></div></header>
-   {completedGroup&&<div className="aui-message aui-message-success" role="status"><p><strong>{completedGroup.reqKey}</strong>의 개발 이슈와 산출물을 전체 확정했습니다. 아래 목록에서 결과를 확인할 수 있습니다.</p><a href={`#requirement-${completedGroup.requirementId}`}>방금 확정한 항목 보기</a></div>}
-   {error?<div className="aui-message aui-message-error" role="alert"><p>{error}</p><button className="aui-button" onClick={()=>setRetry(v=>v+1)}>다시 불러오기</button></div>:!rows||!project?<p className={styles.empty} role="status">개발 이슈와 산출물을 불러오는 중입니다.</p>:<>
-    <div className={styles.filters}><label className={styles.search}><ReviewIcon name="search" size={17}/><input aria-label="산출물 검색" value={query} onChange={event=>{setQuery(event.target.value);setPage(0);}} placeholder="REQ ID, 개발 이슈·문서 ID, 제목·본문 검색"/></label><label className={styles.status}>확정 상태 <select value={status} aria-label="산출물 상태 필터" onChange={event=>{setStatus(event.target.value);setPage(0);}}><option value="all">전체</option><option value="confirmed">확정</option><option value="draft">미확정</option></select></label><button className="aui-button aui-button-link" onClick={clear}>필터 초기화</button></div>
-    <div className={styles.categories} aria-label="산출물 종류 필터">{categories.map(tab=>{const records=matching(tab.type as Category).reduce((n,row)=>n+(row.showIssue?1:0)+row.docs.length,0);return <button className={`aui-button ${category===tab.type?'aui-button-primary':''}`} type="button" aria-pressed={category===tab.type} key={tab.type} onClick={()=>{setCategory(tab.type as Category);setPage(0);setExpandedRequirements((rows??[]).map(item=>item.requirementId));setExpandedIssues([]);}}>{tab.label} <span className="aui-badge">{records}</span></button>;})}</div>
-    <div className={styles.resultBar}><p role="status">결과 <b>{count}</b>개 기록 · 개발 이슈 {visible.length}개 · 요구사항 {new Set(visible.map(row=>row.group.requirementId)).size}개</p><div><button className="aui-button aui-button-link" onClick={()=>{setExpandedRequirements(Array.from(new Set(visible.map(row=>row.group.requirementId))));setExpandedIssues(visible.map(row=>row.issue.id));}}>모두 펼치기</button><button className="aui-button aui-button-link" onClick={()=>{setExpandedRequirements([]);setExpandedIssues([]);}}>모두 접기</button></div></div>
-    <div className={styles.groupList}>
-     {groups.map(({group,rows:issues})=><section id={`requirement-${group.requirementId}`} className={`${styles.group} ${group.requirementId===recentlyConfirmed?styles.recentGroup:''}`} key={group.requirementId} aria-label={`${group.reqKey}의 개발 이슈`}>
-      <header className={styles.sourceHeading}><button type="button" className={styles.groupToggle} aria-expanded={expandedRequirements.includes(group.requirementId)} aria-controls={`issues-${group.requirementId}`} aria-label={`${group.reqKey} 개발 이슈 ${expandedRequirements.includes(group.requirementId)?'접기':'펼치기'}`} onClick={()=>setExpandedRequirements(ids=>ids.includes(group.requirementId)?ids.filter(id=>id!==group.requirementId):[...ids,group.requirementId])}>{expandedRequirements.includes(group.requirementId)?'▾':'▸'}</button><div className={styles.sourceIdentity}><span className={styles.levelLabel}>요구사항</span><Link className={styles.sourceKey} href={`/projects/${projectId}/requirements/${group.requirementId}`}>{group.reqKey}</Link><Link className={styles.sourceContent} href={`/projects/${projectId}/requirements/${group.requirementId}`}>{group.content}</Link></div><span className={styles.sourceVersion}>{group.issues.length}개 개발 이슈 · {group.version?`v${group.version}`:'초안'} · {group.workflow.label}</span></header>
-      <div id={`issues-${group.requirementId}`} className={styles.issueBranch} hidden={!expandedRequirements.includes(group.requirementId)}>
-      {issues.map(({issue,showIssue,docs})=>{const closed=!expandedIssues.includes(issue.id);return <article className={styles.issue} key={issue.id}>
-       <div className={styles.issueHeading}>{docs.length>0?<button type="button" className={styles.disclosure} aria-expanded={!closed} aria-controls={`docs-${issue.id}`} aria-label={`${devId(issue.id)} 산출물 ${closed?'펼치기':'접기'}`} onClick={()=>setExpandedIssues(ids=>closed?[...ids,issue.id]:ids.filter(id=>id!==issue.id))}>{closed?'▸':'▾'}</button>:<span className={styles.disclosure}/>}
-        <div className={styles.issueTitle}><span className={styles.levelLabel}>개발 이슈</span><Link className={styles.id} href={go(group.requirementId,issue.id)}>{devId(issue.id)}</Link><Link className={styles.title} href={go(group.requirementId,issue.id)}>{issue.title}</Link>{!showIssue&&<small>아래 산출물이 속한 개발 이슈 · 결과 수에 중복 포함하지 않음</small>}</div><span className={`aui-lozenge aui-lozenge-subtle ${issue.state==='CONFIRMED'?'aui-lozenge-success':'aui-lozenge-inprogress'}`}>{issue.state==='CONFIRMED'?'확정':'미확정'}</span><span className={styles.docCount}>산출물 {issue.artifacts.length}/4</span>
-       </div>
-       {docs.length>0&&<ul id={`docs-${issue.id}`} className={styles.docs} hidden={closed}>{docs.map(doc=>{const type=ARTIFACT_TYPES.find(t=>t.type===doc.type);return <li key={doc.id}><span className={styles.docType}>산출물 · {type?.label}</span><Link className={styles.docLink} href={go(group.requirementId,issue.id,doc.type)}><strong>{issue.title} · {type?.label}</strong><span>{prefix[doc.type]}-{String(doc.id).padStart(6,'0')}</span></Link><span className={`aui-lozenge aui-lozenge-subtle ${doc.state==='CONFIRMED'?'aui-lozenge-success':'aui-lozenge-inprogress'}`}>{doc.state==='CONFIRMED'?'확정':'초안'}</span><Link className="aui-button aui-button-link" href={go(group.requirementId,issue.id,doc.type)}>열기</Link></li>;})}</ul>}
-      </article>;})}
-      </div>
-     </section>)}
-     {!visible.length&&<div className={styles.empty}>{rows.length?'검색 조건에 맞는 개발 이슈·산출물이 없습니다.':'아직 도출된 개발 이슈가 없습니다. 요구사항을 확정한 뒤 개발 이슈와 산출물을 생성해주세요.'}</div>}
+   <nav className={styles.breadcrumb} aria-label="현재 위치"><Link href={`/projects/${projectId}`}>{project?.name??'프로젝트'}</Link><span>/</span><span aria-current="page">개발 이슈</span></nav>
+   <header className={styles.heading}><div><h1>개발 이슈</h1><p>이슈 제목을 선택하면 상세 내용과 연결된 산출물을 볼 수 있습니다.</p></div></header>
+   {confirmedGroup&&<div className="aui-message aui-message-success" role="status"><p><strong>{confirmedGroup.reqKey}</strong>의 개발 이슈와 산출물을 확정했습니다.</p>{confirmedGroup.issues[0]&&<Link href={`/projects/${projectId}/requirements/${confirmedGroup.requirementId}/review?issue=${confirmedGroup.issues[0].id}`}>확정한 이슈 상세 보기</Link>}</div>}
+   {error?<div className="aui-message aui-message-error" role="alert"><p>{error}</p><button className="aui-button" onClick={()=>setRetry(value=>value+1)}>다시 불러오기</button></div>:!rows||!project?<p className={styles.empty} role="status">개발 이슈를 불러오는 중입니다.</p>:<>
+    <div className={styles.filters}>
+     <label className={styles.search}><ReviewIcon name="search" size={17}/><input aria-label="개발 이슈 검색" value={query} onChange={event=>{setQuery(event.target.value);setPage(0);}} placeholder="이슈 제목 또는 ID 검색"/></label>
+     <label className={styles.status}>상태 <select value={status} aria-label="개발 이슈 상태 필터" onChange={event=>{setStatus(event.target.value);setPage(0);}}><option value="all">전체</option><option value="confirmed">확정</option><option value="draft">검토 중</option></select></label>
+     <button className="aui-button aui-button-link" onClick={()=>{setQuery('');setStatus('all');setPage(0);}}>필터 초기화</button>
     </div>
-    {pages>1&&<nav className={styles.pagination} aria-label="개발 이슈 목록 페이지"><button className="aui-button" disabled={safePage===0} onClick={()=>setPage(safePage-1)}>이전</button><span>{safePage+1} / {pages} · 페이지당 개발 이슈 25개</span><button className="aui-button" disabled={safePage===pages-1} onClick={()=>setPage(safePage+1)}>다음</button></nav>}
+    <div className={styles.resultBar} role="status">개발 이슈 <strong>{visible.length}</strong>개</div>
+    <div className={styles.list} role="list" aria-label="개발 이슈 목록">
+     {selected.map(issue=><div role="listitem" className={`${styles.row} ${issue.requirementId===recentlyConfirmed?styles.recentRow:''}`} key={issue.id}>
+      <div className={styles.issueIcon} aria-hidden="true"><ReviewIcon name="file" size={17}/></div>
+      <div className={styles.issueIdentity}><Link className={styles.title} href={issueLink(issue)}>{issue.title}</Link><div className={styles.metadata}><span>{devId(issue.id)}</span><span aria-hidden="true">·</span><span>{issue.reqKey}</span></div></div>
+      <span className={`aui-lozenge aui-lozenge-subtle ${issue.state==='CONFIRMED'?'aui-lozenge-success':'aui-lozenge-inprogress'}`}>{issue.state==='CONFIRMED'?'확정':'검토 중'}</span>
+      <span className={styles.chevron} aria-hidden="true">›</span>
+     </div>)}
+     {!visible.length&&<p className={styles.empty}>{issues.length?'검색 조건에 맞는 개발 이슈가 없습니다.':'아직 개발 이슈가 없습니다. 요구사항을 확정하고 이슈를 도출해주세요.'}</p>}
+    </div>
+    {pages>1&&<nav className={styles.pagination} aria-label="개발 이슈 페이지"><button className="aui-button" disabled={currentPage===0} onClick={()=>setPage(currentPage-1)}>이전</button><span>{currentPage+1} / {pages}</span><button className="aui-button" disabled={currentPage===pages-1} onClick={()=>setPage(currentPage+1)}>다음</button></nav>}
    </>}
   </main>
  </div></div>;
