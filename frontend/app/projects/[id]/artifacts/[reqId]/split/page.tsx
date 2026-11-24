@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Header from "../../../../../components/Header";
+import Modal from "../../../../../components/Modal";
 import ProjectSidebar from "../../../../../components/ProjectSidebar";
 import { locateSpans } from "../../../../../lib/highlight";
 import { ISSUE_PALETTE as PALETTE } from "../../../../../lib/issuePalette";
@@ -19,6 +20,23 @@ import {
 import { getCurrentUser } from "../../../../../lib/session";
 
 type Candidate = { clientId: string; title: string; quote: string };
+
+// ai-model/main.py의 _SPLIT_SYSTEM_PROMPT와 동일하게 유지한다.
+const ISSUE_SPLIT_PROMPT = `당신은 VCS/AMR 요구사항을 독립적으로 구현하고 검증할 수 있는 개발 이슈(Jira 티켓)로 나누는 전문가다.
+요구사항의 전체 목적과 결과를 먼저 파악한 뒤, 구현을 마쳤을 때 따로 검증할 수 있는 업무 결과를 찾는다.
+
+분할 원칙:
+1. 기본값은 이슈 1개다. 서로 다른 시작점과 업무 결과가 있고, 각 결과를 독립적으로 구현·시험·완료할 수 있을 때만 분리한다.
+2. 외부 이벤트 수신을 통한 생성과 사용자 메뉴를 통한 수동 생성처럼 진입 경로, 권한 또는 외부 연동 책임, 결과 확인 방법이 달라 각각 완료할 수 있다면 별도 이슈로 만든다.
+3. 한 경로를 완성하기 위한 메시지 형식, 입력 필드, 입력 제약, 권한, 상태 확인 가정, 외부 보고 여부는 그 경로의 이슈에 포함한다. 문장 수·화면 수·클래스 수만으로 분리하지 않는다.
+4. 서로 떨어져 있는 문장도 같은 경로의 조건이라면 같은 이슈에 포함한다. 원문 순서가 섞여 있다는 이유로 독립된 두 결과를 한 이슈로 합치지 않는다.
+5. 각 이슈의 quote에는 그 경로를 가장 잘 대표하는 원문의 연속된 구절 하나를 글자 그대로 넣는다. quote가 하나라고 해서 떨어진 다른 조건을 이슈 범위에서 빼지 않는다. 원문에 없는 구절을 만들거나 서로 다른 구절을 이어 붙이지 않는다.
+6. 태스크 저장 같은 공통 내부 구현을 고객에게 독립된 결과로 확인받는 별도 기능처럼 추가하지 않는다.
+7. 정의가 필요하다고만 적힌 필드·중복 허용 정책·메시지 값·오류 처리·보고 정책은 임의로 확정하지 않는다. 명시된 수동 생성의 미보고 조건을 외부 이벤트 생성까지 확대하지 않는다.
+8. title은 구현할 업무 결과가 보이게 간결하게 작성한다. 원문에 두 결과가 없으면 억지로 2개를 만들지 않는다.
+
+JSON만 반환한다. 설명이나 코드 블록을 붙이지 않는다.
+{"issues":[{"title":"구현할 업무 결과","quote":"원문에 실제 등장하는 연속된 대표 구절"}]}`;
 
 let clientIdSeq = 0;
 function newClientId() {
@@ -77,6 +95,7 @@ export default function IssueSplitPage() {
   const [req, setReq] = useState<RequirementDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [promptOpen, setPromptOpen] = useState(false);
 
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -252,8 +271,36 @@ export default function IssueSplitPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>개발 이슈 도출</h1>
+            <button
+              type="button"
+              className="issue-split-prompt-help"
+              title="개발 이슈 분할 프롬프트 확인"
+              aria-label="개발 이슈 분할 프롬프트 확인"
+              data-tooltip="분할 프롬프트 확인"
+              onClick={() => setPromptOpen(true)}
+            >
+              ?
+            </button>
             <span className="tagv">🏷 v{req.version}</span>
           </div>
+
+          {promptOpen && (
+            <Modal title="개발 이슈 분할 프롬프트" onClose={() => setPromptOpen(false)} wide>
+              <div className="issue-split-prompt-dialog">
+                <p>AI가 확정 요구사항을 개발 이슈로 나눌 때 사용하는 기준입니다.</p>
+                <h3>AI에 전달하는 시스템 프롬프트</h3>
+                <pre className="promptbox">{ISSUE_SPLIT_PROMPT}</pre>
+                <h3>함께 전달하는 내용</h3>
+                <p>
+                  확정 요구사항 본문을 전달합니다. 아래의 AI 재검토 칸에 입력한 내용은 참고 지시로 덧붙이고,
+                  같은 프로젝트의 다른 요구사항도 문맥으로 함께 전달합니다.
+                </p>
+                <p>
+                  AI를 사용할 수 없거나 유효한 이슈를 반환하지 않으면, 요구사항 전체를 근거로 한 이슈 1개를 제안합니다.
+                </p>
+              </div>
+            </Modal>
+          )}
 
           {/* 확정본 — 후보 구절마다 다른 색 형광펜. 아래 카드와 번호로 짝지어 본다. */}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1000 }}>

@@ -3427,3 +3427,13 @@ mark.hl2.on {
 .rq-legend-dot { display: inline-block; width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; box-shadow: 0 0 0 2px #fff; }
 .rq-legend-step { color: #64748b; font-size: 11px; font-weight: 650; }
 @media (max-width: 600px) { .rq-legend { padding: 14px; } .rq-legend-list { gap: 6px; } .rq-legend-list li { padding: 6px 8px; font-size: 11px; } }
+
+/* Developer issue split: prompt help and readable prompt dialog. */
+.issue-split-prompt-help { position: relative; display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1; font-family: inherit; cursor: pointer; }
+.issue-split-prompt-help:hover,.issue-split-prompt-help:focus-visible { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.issue-split-prompt-help:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.issue-split-prompt-help:hover::after,.issue-split-prompt-help:focus-visible::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%); z-index: 5; width: max-content; padding: 7px 10px; border-radius: 6px; background: #172b4d; color: #fff; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: var(--shadow); pointer-events: none; }
+.issue-split-prompt-dialog p { margin: 0 0 14px; font-size: 13px; line-height: 1.7; }
+.issue-split-prompt-dialog h3 { margin: 20px 0 9px; font-size: 14px; color: #172b4d; }
+.issue-split-prompt-dialog h3:first-of-type { margin-top: 8px; }
+.issue-split-prompt-dialog .promptbox { max-height: min(50vh, 520px); overflow-y: auto; font-size: 12px; line-height: 1.75; }
