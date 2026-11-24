@@ -40,6 +40,7 @@ public final class IssueDto {
 
     /** 사람이 최종 확정한 이슈 한 건. quote는 추적성을 위해 확정 요구사항의 연속 구절이어야 한다. */
     public record IssueInput(
+            Long issueId,
             @NotBlank @Size(max = 200) String title,
             @NotBlank @Size(max = 4000) String quote,
             String symptom,

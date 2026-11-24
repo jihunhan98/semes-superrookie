@@ -37,6 +37,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -101,8 +102,15 @@ public class DevIssueService {
                 .findByRequirementIdAndIssueStateNotOrderByDisplayOrderAsc(requirementId, "RETIRED");
         // Reordering/title edits preserve the immutable database ID and existing links.
         List<IssueInput> inputs = req.issues();
+        if (inputs.stream().map(IssueInput::issueId).filter(Objects::nonNull).distinct().count()
+                != inputs.stream().map(IssueInput::issueId).filter(Objects::nonNull).count()
+                || inputs.stream().map(IssueInput::issueId).filter(Objects::nonNull)
+                    .anyMatch(id -> previous.stream().noneMatch(old -> id.equals(old.getId())))) {
+            throw new ApiErrors.BadRequest("연결할 기존 개발 이슈를 확인할 수 없습니다.");
+        }
         List<DevIssue> created = new ArrayList<>();
-        List<IssueInput> newInputs=inputs.stream().filter(in->previous.stream().noneMatch(old->in.quote().trim().equals(old.getQuote()))).toList();
+        List<IssueInput> newInputs=inputs.stream().filter(in->previous.stream()
+                .noneMatch(old->in.issueId()!=null?in.issueId().equals(old.getId()):in.quote().trim().equals(old.getQuote()))).toList();
         List<Map<String,Object>> enriched=List.of();
         if(!newInputs.isEmpty()) {
             var response=aiClient.insight("/issues/enrich",Map.of("requirementContent",requirement.getContent(),
@@ -112,22 +120,29 @@ public class DevIssueService {
         }
         for(int i=0;i<inputs.size();i++) {
             IssueInput in=inputs.get(i);
-            DevIssue issue=previous.stream().filter(old->in.quote().trim().equals(old.getQuote())).findFirst().orElse(null);
+            DevIssue issue=previous.stream().filter(old->in.issueId()!=null?in.issueId().equals(old.getId()):in.quote().trim().equals(old.getQuote()))
+                    .filter(old->created.stream().noneMatch(saved->saved.getId().equals(old.getId()))).findFirst().orElse(null);
             boolean isNew=issue==null;
             if(isNew)issue=new DevIssue(requirementId,"I-"+UUID.randomUUID().toString().substring(0,12),in.title().trim(),in.quote().trim(),i,req.userId());
-            else saveRevision(issue,"수정 전 스냅샷",req.userId());
             Map<String,Object> aiBody=enriched.stream().filter(row->in.quote().trim().equals(row.get("quote"))).findFirst().orElse(Map.of());
+            String title=in.title().trim(),quote=in.quote().trim();
+            String symptom=defaultText(in.symptom(),isNew?(String)aiBody.get("symptom"):issue.getSymptom());
+            String improvement=defaultText(in.improvementReq(),isNew?(String)aiBody.get("improvementReq"):issue.getImprovementReq());
+            String scope=defaultText(in.changeScope(),isNew?(String)aiBody.get("changeScope"):issue.getChangeScope());
+            String constraints=defaultText(in.constraintsNote(),isNew?(String)aiBody.get("constraintsNote"):issue.getConstraintsNote());
+            String before=defaultText(in.beforeState(),isNew?(String)aiBody.get("beforeState"):issue.getBeforeState());
+            String after=defaultText(in.afterState(),isNew?(String)aiBody.get("afterState"):issue.getAfterState());
+            var due=in.dueOn()==null?issue.getDueOn():in.dueOn();
+            boolean changed=isNew||!Objects.equals(issue.getTitle(),title)||!Objects.equals(issue.getQuote(),quote)
+                    ||!Objects.equals(issue.getSymptom(),symptom)||!Objects.equals(issue.getImprovementReq(),improvement)
+                    ||!Objects.equals(issue.getChangeScope(),scope)||!Objects.equals(issue.getConstraintsNote(),constraints)
+                    ||!Objects.equals(issue.getBeforeState(),before)||!Objects.equals(issue.getAfterState(),after)||!Objects.equals(issue.getDueOn(),due);
+            if(changed&&!isNew)saveRevision(issue,"수정 전 스냅샷",req.userId());
             issue.reorder(i);
-            issue.updateBody(in.title().trim(),in.quote().trim(),
-                defaultText(in.symptom(),isNew?(String)aiBody.get("symptom"):issue.getSymptom()),
-                defaultText(in.improvementReq(),isNew?(String)aiBody.get("improvementReq"):issue.getImprovementReq()),
-                defaultText(in.changeScope(),isNew?(String)aiBody.get("changeScope"):issue.getChangeScope()),
-                defaultText(in.constraintsNote(),isNew?(String)aiBody.get("constraintsNote"):issue.getConstraintsNote()),
-                defaultText(in.beforeState(),isNew?(String)aiBody.get("beforeState"):issue.getBeforeState()),
-                defaultText(in.afterState(),isNew?(String)aiBody.get("afterState"):issue.getAfterState()),in.dueOn()==null?issue.getDueOn():in.dueOn());
+            if(changed)issue.updateBody(title,quote,symptom,improvement,scope,constraints,before,after,due);
             var bundle=bundleRepository.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId,1);
             if(bundle.isPresent())issue.assignBundle(bundle.get().getId());
-            DevIssue saved=devIssueRepository.save(issue);saveRevision(saved,"분할 확정",req.userId());created.add(saved);
+            DevIssue saved=devIssueRepository.save(issue);if(changed)saveRevision(saved,"분할 확정",req.userId());created.add(saved);
         }
         previous.stream().filter(old->created.stream().noneMatch(row->row.getId().equals(old.getId()))).forEach(old->{saveRevision(old,"재분할 전 스냅샷",req.userId());old.retire();devIssueRepository.save(old);});
         saveLineage(previous, created);

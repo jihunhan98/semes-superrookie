@@ -7,11 +7,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class AiJobService {
  private final AiJobRepository jobs; private final AiTaskRepository tasks; private final WorkBundleRepository bundles; private final ObjectMapper mapper;
  private final JdbcTemplate jdbc;
- @Transactional public AiJob enqueueGeneration(Long projectId,Long requirementId,Long userId,List<IssueResponse> issues){
-  String key="generate-"+requirementId+"-"+issues.stream().map(IssueResponse::id).toList().hashCode(); Optional<AiJob> old=jobs.findByProjectIdAndIdempotencyKey(projectId,key);if(old.isPresent())return old.get();
-  Long bundleId=bundles.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId,1).map(b->{b.generating();bundles.save(b);return b.getId();}).orElse(null);
-  AiJob job=jobs.save(new AiJob(projectId,requirementId,bundleId,"GENERATE",key,hash(key),userId,issues.size()*4));
-  for(IssueResponse issue:issues) for(String type:List.of("voc","functional","nonfunctional","detail-design")) try{tasks.save(new AiTask(job.getId(),issue.id()+":"+type,"BATCH",mapper.writeValueAsString(Map.of("projectId",projectId,"requirementId",requirementId,"issueKey",issue.issueKey(),"type",type,"userId",userId))));}catch(Exception e){throw new IllegalStateException(e);} return job;
+ @Transactional public AiJob enqueueGeneration(Long projectId,Long requirementId,Long userId,List<ArtifactImpactService.Target> targets){
+  var current=bundles.findFirstByRequirementIdAndCurrentOrderByRevisionNoDesc(requirementId,1).orElseThrow();
+  Long bundleId=current.getId();
+  String key="generate-"+bundleId+"-"+hash(targets.toString()).substring(0,16);
+  Optional<AiJob> old=jobs.findByProjectIdAndIdempotencyKey(projectId,key);if(old.isPresent())return old.get();
+  current.generating();if(targets.isEmpty())current.review();bundles.save(current);
+  AiJob job=new AiJob(projectId,requirementId,bundleId,"GENERATE",key,hash(key),userId,targets.size());
+  if(targets.isEmpty())job.progress(0,0);
+  job=jobs.save(job);
+  for(var target:targets) try{
+   Map<String,Object> input=new LinkedHashMap<>();input.put("projectId",projectId);input.put("requirementId",requirementId);
+   input.put("issueKey",target.issueKey());input.put("type",target.type());input.put("userId",userId);
+   if(target.reason()!=null)input.put("reason",target.reason());
+   tasks.save(new AiTask(job.getId(),target.issueId()+":"+target.type(),"BATCH",mapper.writeValueAsString(input)));
+  }catch(Exception e){throw new IllegalStateException(e);} return job;
  }
  @Transactional public AiJob enqueueAnalysis(Long projectId,Long requirementId,Long userId,String content){
   String key="analyze-"+requirementId+"-"+hash(content).substring(0,12);Optional<AiJob> old=jobs.findByProjectIdAndIdempotencyKey(projectId,key);if(old.isPresent())return old.get();

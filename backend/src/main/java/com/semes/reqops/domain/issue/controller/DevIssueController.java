@@ -24,6 +24,7 @@ public class DevIssueController {
     private final DevIssueService devIssueService;
     private final ArtifactService artifactService;
     private final AiJobService aiJobService;
+    private final com.semes.reqops.domain.job.service.ArtifactImpactService artifactImpactService;
 
     /** AI 분할 초안 — 아무것도 저장하지 않는다. 화면 진입 시·"AI 다시 나눠줘" 클릭 시 호출. */
     @PostMapping("/split-preview")
@@ -50,7 +51,8 @@ public class DevIssueController {
         for (IssueResponse issue : issues) {
             artifactService.ensurePlaceholders(issue.id(), request.userId());
         }
-        aiJobService.enqueueGeneration(projectId, requirementId, request.userId(), issues);
+        aiJobService.enqueueGeneration(projectId, requirementId, request.userId(),
+                artifactImpactService.plan(requirementId, issues));
         return issues;
     }
 

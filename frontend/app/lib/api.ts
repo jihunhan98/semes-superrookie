@@ -388,7 +388,7 @@ export function holdRequirement(
 // 요구사항 1건 ↔ 개발 이슈 N건(1:N).
 
 /** AI가 제안한 이슈 분할 후보 한 건 — 아직 저장 전. */
-export type IssueCandidate = { title: string; quote: string };
+export type IssueCandidate = { issueId?: number; title: string; quote: string };
 
 export type SplitPreviewResult = { issues: IssueCandidate[]; engine: string };
 

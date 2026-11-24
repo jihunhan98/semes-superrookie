@@ -19,7 +19,7 @@ import {
 } from "../../../../../lib/api";
 import { getCurrentUser } from "../../../../../lib/session";
 
-type Candidate = { clientId: string; title: string; quote: string };
+type Candidate = { clientId: string; issueId?: number; title: string; quote: string };
 
 // ai-model/main.py의 _SPLIT_SYSTEM_PROMPT와 동일하게 유지한다.
 const ISSUE_SPLIT_PROMPT = `당신은 VCS/AMR 요구사항을 독립적으로 구현하고 검증할 수 있는 개발 이슈(Jira 티켓)로 나누는 전문가다.
@@ -123,7 +123,11 @@ export default function IssueSplitPage() {
         // 이미 나눠 놓은 이슈가 있으면 그걸 이어서 고치고, 없으면 AI 초안부터 받는다.
         const existing = await listDevIssues(projectId, requirementId, user.id);
         if (existing.length > 0) {
-          router.replace(`/projects/${projectId}/requirements/${requirementId}/review`);
+          if (r.workflow?.bundleState !== "PLANNING") {
+            router.replace(`/projects/${projectId}/requirements/${requirementId}/review`);
+            return;
+          }
+          setCandidates(existing.map(i => ({clientId:newClientId(),issueId:i.id,title:i.title,quote:i.quote??""})));
           return;
         } else {
           const preview = await previewIssueSplit(projectId, requirementId, { userId: user.id, reason: "" });
@@ -143,7 +147,14 @@ export default function IssueSplitPage() {
         userId: user.id,
         reason: aiReason.trim(),
       });
-      setCandidates(preview.issues.map((i) => ({ clientId: newClientId(), title: i.title, quote: i.quote })));
+      const used=new Set<number>();
+      setCandidates(preview.issues.map((i,index) => {
+        const matches=candidates?.filter(old=>old.issueId&&!used.has(old.issueId)&&(old.quote===i.quote||old.title===i.title))??[];
+        const fallback=preview.issues.length===candidates?.length?candidates[index]:undefined;
+        const issueId=matches.length===1?matches[0].issueId:fallback?.issueId&&!used.has(fallback.issueId)?fallback.issueId:undefined;
+        if(issueId)used.add(issueId);
+        return { clientId: newClientId(), issueId, title: i.title, quote: i.quote };
+      }));
     } catch (err) {
       setRegenError(err instanceof Error ? err.message : "AI 분할에 실패했습니다.");
     } finally {
@@ -172,7 +183,7 @@ export default function IssueSplitPage() {
     const user = getCurrentUser();
     if (!user || !candidates || !req) return;
     const issues = candidates
-      .map((c) => ({ title: c.title.trim(), quote: c.quote.trim() }))
+      .map((c) => ({ issueId:c.issueId, title: c.title.trim(), quote: c.quote.trim() }))
       .filter((c) => c.title.length > 0);
     if (issues.length === 0) {
       setConfirmError("제목이 있는 이슈가 1개 이상 있어야 합니다.");
@@ -303,6 +314,7 @@ export default function IssueSplitPage() {
           )}
 
           {/* 확정본 — 후보 구절마다 다른 색 형광펜. 아래 카드와 번호로 짝지어 본다. */}
+          {req.workflow?.bundleState === "PLANNING" && candidates.some(c=>c.issueId) && <p className="lmsg" role="status">이전 개발 이슈를 가져왔습니다. 변경된 근거 구절은 새 확정본에 맞게 고쳐주세요. 유지한 이슈와 산출물은 기존 이력을 이어갑니다.</p>}
           <div className="wcard readonly" style={{ marginTop: 16, maxWidth: 1000 }}>
             <div className="wch">
               📄 확정본 v{req.version}
