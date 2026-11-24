@@ -101,3 +101,19 @@
 .revisionFeedbackError{background:#fff1f0;color:#a32622;border:1px solid #ffccc7}
 .revisionFeedbackSuccess{background:#e8f6ee;color:#1a7f37;border:1px solid #a5d6b0}
 @media(max-width:650px){.revisionCard{padding:17px 14px}.revisionFooter{align-items:stretch;flex-direction:column}.revisionFooter button{width:100%}}
+
+/* Linked deliverables live in the issue description, as in an issue detail view. */
+.issueDocuments{margin:30px 0 0;padding-top:25px;border-top:1px solid #d8dee4}
+.issueDocuments h3{margin:0;color:#172b4d;font-size:17px;font-weight:650}
+.issueDocuments>p{margin:4px 0 15px;color:#667085;font-size:12px}
+.issueDocumentLinks{overflow:hidden;border:1px solid #d8dee4;border-radius:7px}
+.issueDocumentLinks a{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 15px;color:#172b4d!important;text-decoration:none!important;background:#fff}
+.issueDocumentLinks a+a{border-top:1px solid #e7ebf0}
+.issueDocumentLinks a:hover{background:#f5f9ff;text-decoration:none!important}
+.issueDocumentLinks a:hover strong{color:#0969da;text-decoration:underline}
+.documentIcon{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:5px;background:#eaf2ff;color:#0969da}
+.documentLinkText{display:grid;gap:2px;min-width:0;flex:1}
+.documentLinkText strong{font-size:13px;font-weight:650;line-height:1.4}
+.documentLinkText small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#667085;font-size:11px}
+.documentLinkState{flex:none;color:#667085;font-size:11px}
+.issueDocumentLinks a>span:last-child{color:#8290a4;font-size:20px}

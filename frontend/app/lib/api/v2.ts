@@ -5,5 +5,5 @@ export const confirmBundle=(projectId:number,requirementId:number,userId:number,
 export const getJob=(id:number,signal?:AbortSignal)=>http<JobProgress>(`/api/v2/jobs/${id}`,{},signal);
 export const retryJob=(id:number,userId:number)=>http<JobProgress>(`/api/v2/jobs/${id}/retry`,{method:"POST",body:JSON.stringify({userId})});
 
-export type DeliverableGroup={requirementId:number;reqKey:string;content:string;version:string|null;state:string;workflow:import("../api").WorkflowProgress;issues:{id:number;issueKey:string;title:string;state:string;artifacts:import("../types/workflow").ArtifactSummary[]}[]};
+export type DeliverableGroup={requirementId:number;reqKey:string;content:string;version:string|null;state:string;workflow:import("../api").WorkflowProgress;issues:{id:number;issueKey:string;title:string;summary:string;state:string;artifacts:import("../types/workflow").ArtifactSummary[]}[]};
 export const listDeliverables=(projectId:number,userId:number,signal?:AbortSignal)=>http<DeliverableGroup[]>(`/api/v2/projects/${projectId}/deliverables?userId=${userId}`,{},signal);

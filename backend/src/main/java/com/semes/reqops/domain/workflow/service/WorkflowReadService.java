@@ -20,7 +20,7 @@ public class WorkflowReadService {
  private final DevIssueRepository issues;
  private final DevIssueArtifactRepository artifacts;
  public record Progress(int step,String label,String bundleState,int issueCount,int artifactCount,int expectedArtifactCount) {}
- public record IssueRow(Long id,String issueKey,String title,String state,List<ArtifactSummary> artifacts) {}
+ public record IssueRow(Long id,String issueKey,String title,String summary,String state,List<ArtifactSummary> artifacts) {}
  public record Snapshot(Progress progress,List<IssueRow> issues) {}
  public Map<Long,Snapshot> load(List<Requirement> requirements) {
   if(requirements.isEmpty()) return Map.of();
@@ -38,12 +38,18 @@ public class WorkflowReadService {
    var version=b==null?null:versionMap.get(b.getRequirementVersionId());
    boolean matches=b!=null&&version!=null&&Objects.equals(version.getRequirementId(),req.getId())&&Objects.equals(version.getVersion(),req.getVersion());
    var rows=active.stream().filter(i->matches&&i.getRequirementId().equals(req.getId())&&(i.getBundleId()==null||Objects.equals(i.getBundleId(),b.getId())))
-    .map(i->new IssueRow(i.getId(),i.getIssueKey(),i.getTitle(),i.getIssueState(),docs.getOrDefault(i.getId(),List.of()).stream().map(a->new ArtifactSummary(a.getId(),a.getArtifactType().slug(),a.getState().name(),a.getSchemaVersion(),a.getRowVersion())).toList())).toList();
+    .map(i->new IssueRow(i.getId(),i.getIssueKey(),i.getTitle(),summary(i.getImprovementReq(),i.getSymptom(),i.getQuote()),i.getIssueState(),docs.getOrDefault(i.getId(),List.of()).stream().map(a->new ArtifactSummary(a.getId(),a.getArtifactType().slug(),a.getState().name(),a.getSchemaVersion(),a.getRowVersion())).toList())).toList();
    String state=matches?b.getState().name():null;
    int count=rows.stream().mapToInt(i->i.artifacts().size()).sum();
    result.put(req.getId(),new Snapshot(progress(req.getState().name(),state,rows.size(),count),rows));
   }
   return result;
+ }
+ private static String summary(String... candidates) {
+  for (String candidate:candidates) {
+   if (candidate!=null&&!candidate.isBlank()) return candidate.replaceAll("\\s+"," ").trim();
+  }
+  return "";
  }
  public static Progress progress(String requirementState,String bundleState,int issueCount,int artifactCount) {
   int step;String label;
